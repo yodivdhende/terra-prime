@@ -1,0 +1,8 @@
+[build]
+builder="DOCKERFILE"
+dockerfilePath="./site/dockerfile"
+
+
+[deploy]
+restartPolicyMaxRetries=3
+restartPolicyType="ON_FAILURE"

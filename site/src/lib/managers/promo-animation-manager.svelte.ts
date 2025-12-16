@@ -9,7 +9,7 @@ class PromoAnimationManager {
   constructor() {
     setInterval(() => {
       const animation = this.animations[this.nextAnimationIndex];
-      if(animation == null) return; 
+      if (animation == null) return;
       animation(false);
       this.timeouts.push(
         setTimeout(() => {
@@ -17,16 +17,16 @@ class PromoAnimationManager {
           this.nextAnimationIndex = (this.nextAnimationIndex + 1) % this.animations.length;
         }, 4000)
       );
-    }, 1 * 60 * 1000);
+    }, 2 * 60 * 1000);
 
     onDestroy(() => {
       this.timeouts.forEach(timeout => clearTimeout(timeout));
     })
-  } 
+  }
 
-  public registerAnimation({animation}: {animation: (reverse: boolean) => void}) {
-      this.animations.push(animation)
-    }
+  public registerAnimation({ animation }: { animation: (reverse: boolean) => void }) {
+    this.animations.push(animation)
+  }
 
 }
 

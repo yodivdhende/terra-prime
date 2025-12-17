@@ -17,7 +17,7 @@ class PromoAnimationManager {
           this.nextAnimationIndex = (this.nextAnimationIndex + 1) % this.animations.length;
         }, 4000)
       );
-    }, 2 * 60 * 1000);
+    }, 1 * 60 * 1000);
 
     onDestroy(() => {
       this.timeouts.forEach(timeout => clearTimeout(timeout));

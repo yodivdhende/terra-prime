@@ -19,8 +19,8 @@
 	import FloorTexture from '$lib/assets/images/Grid.png';
 	import { Tween } from 'svelte/motion';
 	import { getPromoAnimationManagerContext } from '$lib/managers/promo-animation-manager.svelte';
-	
-	let { onWorldClick , ...props}: {onWorldClick: () => void} = $props();
+
+	let { onWorldClick, ...props }: { onWorldClick: () => void } = $props();
 	const ref = new Group();
 	const gltf = useGltf<{
 		nodes: Record<string, Mesh>;
@@ -42,12 +42,16 @@
 		emissive: new Color().setRGB(0, 1, 0),
 		emissiveIntensity: 1,
 		normalScale: new Vector2(1, -1),
-		side: 2,
-	})
+		side: 2
+	});
 	let sphereRotation = $state(0);
 	let promoAnimationManager = getPromoAnimationManagerContext();
-	promoAnimationManager.registerAnimation({animation: rowAnimation})
-	promoAnimationManager.registerAnimation({animation: constalationAnimation})
+	promoAnimationManager.registerAnimation({ animation: rowAnimation });
+	promoAnimationManager.registerAnimation({ animation: constalationAnimation });
+	let sphereScale = $derived.by(() => {
+		if (window.innerWidth < 500) return window.innerWidth / 500;
+		return 1;
+	});
 
 	function createSphere() {
 		let numberOfClicks = 0;
@@ -55,33 +59,36 @@
 			onHover: () => onPointerEnter(),
 			onHoverLeave: () => onPointerLeave(),
 			onClick: () => {
-				numberOfClicks ++;
-				if(numberOfClicks === 7) onWorldClick();
-				if(numberOfClicks === 1) setTimeout(() => numberOfClicks = 0, 1000);
+				numberOfClicks++;
+				if (numberOfClicks === 7) onWorldClick();
+				if (numberOfClicks === 1) setTimeout(() => (numberOfClicks = 0), 1000);
 			}
 		};
 	}
 
 	export function constalationAnimation(reverse = false) {
-			animateOnce($actions['CameraAction'], {reverse});
-			cameraZoom.set(reverse ? 200 : 80);
-			Object.entries($actions)
-				.filter(([name, _action]) => name.includes('Move'))
-				.forEach(([_, action]) => animateOnce(action, {reverse}));
+		animateOnce($actions['CameraAction'], { reverse });
+		cameraZoom.set(reverse ? 200 : 80);
+		Object.entries($actions)
+			.filter(([name, _action]) => name.includes('Move'))
+			.forEach(([_, action]) => animateOnce(action, { reverse }));
 	}
 
 	export function rowAnimation(reverse = false) {
-		cameraZoom.set(reverse ? 200: 80);
+		cameraZoom.set(reverse ? 200 : 80);
 		Object.entries($actions)
 			.filter(([name, _action]) => name.includes('Action') && !name.includes('Camera'))
-			.forEach(([_, action]) => animateOnce(action, {reverse}));
+			.forEach(([_, action]) => animateOnce(action, { reverse }));
 	}
 
-	function animateOnce(action: AnimationAction | undefined, {reverse}: {reverse?: boolean} = {}) {
+	function animateOnce(
+		action: AnimationAction | undefined,
+		{ reverse }: { reverse?: boolean } = {}
+	) {
 		if (!action) return;
 		action.paused = false;
 		action.clampWhenFinished = true;
-		if(reverse){
+		if (reverse) {
 			action.timeScale = action.timeScale * -1;
 		} else {
 			action.timeScale = Math.abs(action.timeScale);
@@ -89,7 +96,6 @@
 		action.setLoop(LoopOnce, 1);
 		action.play();
 	}
-
 
 	function createWorldTexture() {
 		const material = new MeshStandardMaterial();
@@ -120,7 +126,6 @@
 		material.transparent = true;
 		return material;
 	}
-
 </script>
 
 <T is={ref} dispose={false} {...props}>
@@ -156,6 +161,7 @@
 				material={wireframeMaterial}
 				position={[0, 1, 0]}
 				rotation.y={sphereRotation}
+				scale={[sphereScale, sphereScale, sphereScale]}
 				onpointerenter={sphereProps.Sphere01.onHover}
 				onpointerleave={sphereProps.Sphere01.onHoverLeave}
 				onclick={sphereProps.Sphere01.onClick}
@@ -166,6 +172,7 @@
 				material={wireframeMaterial}
 				position={[0, 1, 0]}
 				rotation.y={sphereRotation}
+				scale={[sphereScale, sphereScale, sphereScale]}
 			/>
 			<T.Mesh
 				name="Sphere03"
@@ -173,6 +180,7 @@
 				material={wireframeMaterial}
 				position={[0, 1, 0]}
 				rotation.y={sphereRotation}
+				scale={[sphereScale, sphereScale, sphereScale]}
 			/>
 			<T.Mesh
 				name="Sphere04"
@@ -180,6 +188,7 @@
 				material={wireframeMaterial}
 				position={[0, 1, 0]}
 				rotation.y={sphereRotation}
+				scale={[sphereScale, sphereScale, sphereScale]}
 			/>
 			<T.Mesh
 				name="Sphere05"
@@ -187,6 +196,7 @@
 				material={wireframeMaterial}
 				position={[0, 1, 0]}
 				rotation.y={sphereRotation}
+				scale={[sphereScale, sphereScale, sphereScale]}
 			/>
 			<T.Mesh
 				name="Sphere06"
@@ -194,6 +204,7 @@
 				material={wireframeMaterial}
 				position={[0, 1, 0]}
 				rotation.y={sphereRotation}
+				scale={[sphereScale, sphereScale, sphereScale]}
 			/>
 			<T.Mesh
 				name="Sphere07"
@@ -201,6 +212,7 @@
 				material={wireframeMaterial}
 				position={[0, 1, 0]}
 				rotation.y={sphereRotation}
+				scale={[sphereScale, sphereScale, sphereScale]}
 			/>
 			<T.Mesh
 				name="Torus01"
@@ -257,6 +269,7 @@
 				material={wireframeMaterial}
 				position={[0, 1, 0]}
 				rotation.y={sphereRotation}
+				scale={[sphereScale, sphereScale, sphereScale]}
 			/>
 			<T.Mesh
 				name="Sphere09"
@@ -264,6 +277,7 @@
 				material={wireframeMaterial}
 				position={[0, 1, 0]}
 				rotation.y={sphereRotation}
+				scale={[sphereScale, sphereScale, sphereScale]}
 			/>
 			<T.Mesh
 				name="Sphere10"
@@ -271,6 +285,7 @@
 				material={wireframeMaterial}
 				position={[0, 1, 0]}
 				rotation.y={sphereRotation}
+				scale={[sphereScale, sphereScale, sphereScale]}
 			/>
 			<T.Mesh
 				name="Sphere11"
@@ -278,6 +293,7 @@
 				material={wireframeMaterial}
 				position={[0, 1, 0]}
 				rotation.y={sphereRotation}
+				scale={[sphereScale, sphereScale, sphereScale]}
 			/>
 			<T.Mesh
 				name="Sphere12"
@@ -285,6 +301,7 @@
 				material={wireframeMaterial}
 				position={[0, 1, 0]}
 				rotation.y={sphereRotation}
+				scale={[sphereScale, sphereScale, sphereScale]}
 			/>
 			<T.Mesh
 				name="Sphere13"
@@ -292,6 +309,7 @@
 				material={wireframeMaterial}
 				position={[0, 1, 0]}
 				rotation.y={sphereRotation}
+				scale={[sphereScale, sphereScale, sphereScale]}
 			/>
 		</T.Group>
 	{:catch err}

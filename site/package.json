@@ -13,7 +13,8 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"host": "npm run dev -- --host 0.0.0.0",
-		"start": "node ./websocket-server"
+		"start": "node ./build/index.js",
+		"start:websocket": "node ./websocket-server"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",

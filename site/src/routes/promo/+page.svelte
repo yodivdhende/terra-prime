@@ -1,23 +1,20 @@
 <script lang="ts">
 	import { Canvas } from '@threlte/core';
 	import PromoAnimation from '$lib/assets/gltf/promo-animation.svelte';
-	import code from '$lib/assets/data/code.json';
 	import { fade, fly } from 'svelte/transition';
 	import pacman from '$lib/assets/images/pacman_open.gif';
 	import { Tween } from 'svelte/motion';
 	import { setPromoAnimationManagerContext } from '$lib/managers/promo-animation-manager.svelte';
 	import PromoSidePanel from '$lib/components/side-panels/promo-side-panel.svelte';
+	import CodeScroller from '$lib/components/code-scroller.svelte';
 
 	const targetDate = new Date('2026-03-1 00:00');
 	let timeLeft = $state();
 	let showInput = $state(false);
 	let showSidePanel = $state(false);
-	let leftCode = $state(code.join('\n'));
-	let codeIndex = 0;
-	let characterIndex = -1;
-	let textArea: HTMLTextAreaElement;
 	let pacmanLeftDefault = -200;
 	let pacmanLeft = new Tween(pacmanLeftDefault);
+	let codeValue = $state('');
 
 	const animationManager = setPromoAnimationManagerContext();
 	animationManager.registerAnimation({
@@ -28,38 +25,12 @@
 		timeLeft = getTimeLeft();
 	}, 1000);
 
-	setInterval(() => {
-		leftCode = updateCode();
-	}, 10);
-
-	$effect(() => {
-		if (leftCode) {
-			textArea.scrollTop = textArea.scrollHeight;
-		}
-	});
-
 	function getTimeLeft() {
 		const now = new Date();
 		const difference = Math.floor((targetDate.getTime() - now.getTime()) / 1000);
 		return difference;
 	}
 
-	function updateCode() {
-		characterIndex++;
-		let nextLine = '';
-		if (characterIndex >= code[codeIndex].length) {
-			characterIndex = 0;
-			codeIndex++;
-			nextLine = '\n';
-		}
-		if (codeIndex >= code.length) {
-			codeIndex = 0;
-			leftCode = code.join('\n');
-		}
-		return leftCode + nextLine + code[codeIndex].slice(characterIndex, characterIndex + 1);
-	}
-
-	let codeValue = $state('');
 	function onWorldClick() {
 		showInput = true;
 	}
@@ -91,7 +62,7 @@
 	/>
 	<div class="grid">
 		<div class="code">
-			<textarea bind:this={textArea}>{leftCode}</textarea>
+			<CodeScroller />
 		</div>
 		<div class="background">
 			<Canvas>
@@ -194,18 +165,6 @@
 		text-align: center;
 	}
 
-	textarea {
-		width: 100%;
-		height: 90%;
-		background: transparent;
-		color: #005500;
-		border: none;
-		resize: none;
-		font-family: 'Courier New', Courier, monospace;
-		font-size: 1rem;
-		overflow: hidden;
-	}
-
 	.side-panel {
 		position: absolute;
 		top: 0;
@@ -219,13 +178,10 @@
 		background-color: rgba(0, 0, 0, 0.95);
 		z-index: 2;
 	}
-<<<<<<< HEAD
 
 	@media (max-width: 768px) {
 		.side-panel {
 			width: 100%;
 		}
 	}
-=======
->>>>>>> 7830d61 (adjust avix code and styling)
 </style>

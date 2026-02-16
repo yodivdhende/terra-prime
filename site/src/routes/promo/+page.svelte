@@ -4,7 +4,7 @@
 	import { Tween } from 'svelte/motion';
 
 	// const targetDate = new Date('2026-03-1 00:00');
-	const targetDate = new Date(new Date().getTime() + 10000); // For testing, 10 seconds from now	
+	const targetDate = new Date(new Date().getTime() + 20000); // For testing, 10 seconds from now	
 	let timeLeft = $state<number | null>(null);
 	let fadeOut = new Tween(0);
 

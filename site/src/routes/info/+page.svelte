@@ -41,6 +41,8 @@
     
     .logo {
         margin-top: 20px;
+        height: 50vh;
+        margin-top: 25vh;
         animation-name: logoFadeIn;
         animation-duration: 6s;
         animation-fill-mode: forwards;

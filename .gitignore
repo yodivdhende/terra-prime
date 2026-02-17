@@ -25,3 +25,6 @@ site/vite.config.ts.timestamp-*
 #platformio
 cyd/.pio
 cyd/.vscode
+
+#google credentials
+*google-api-credentials.json

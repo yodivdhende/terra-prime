@@ -1,5 +1,11 @@
 <script lang="ts">
     import  logo  from '$lib/assets/images/Logo.png';
+	import { type PageProps } from './$types';	
+
+	let {data}: PageProps= $props();
+	$effect(() => {
+		console.log(data.values);
+	})
 </script>
 
 <main>
@@ -88,17 +94,17 @@
         0% {
             opacity: 0;
             height: 50vh;
-            margin-top: 25vh
+            margin-top: 25vh;
         }
         50% {
             opacity: 1;
             height: 50vh;
-            margin-top: 25vh
+            margin-top: 25vh;
         }
         50% {
             opacity: 1;
             height: 50vh;
-            margin-top: calc(50vh - 300px)
+            margin-top: calc(50vh - 300px);
         }
         100% {
             opacity: 1;

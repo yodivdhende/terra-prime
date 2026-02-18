@@ -1,20 +1,21 @@
 import { google } from 'googleapis';
-import { authenticate } from '@google-cloud/local-auth';
-import { fileURLToPath } from 'url';
-import path from 'path';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const credentialsPath = path.resolve(__dirname, '../server/google-api-credentials.json');
+import ServiceKey from '$lib/server/google-service-account-key.json';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
 export class GoogleSheetManager {
     private async getSheets() {
-        const auth = await authenticate({
-            keyfilePath: credentialsPath,
-            scopes: SCOPES,
-        })
-        return google.sheets({ version: 'v4', auth });
+        const client = await this.getClient(); 
+        return google.sheets({ version: 'v4', auth: client });
+    }
+    
+    private getClient() {
+        return new google.auth.JWT(
+            ServiceKey.client_email,
+            undefined,
+            ServiceKey.private_key,
+            SCOPES
+        );
     }
 
     public async getPlayTestSheetValues() {
@@ -24,6 +25,19 @@ export class GoogleSheetManager {
             range: 'A1:B10',
         });
         return result.data.values;  
+    }
+
+    public async appendPlayTestSheetValues(name: string, email: string) {
+        const sheets = await this.getSheets();
+        await sheets.spreadsheets.values.append({
+            spreadsheetId: '1ZNb4uCkKHMEpzW6w-v_ApPAQZumXS23u5XtUp_8Cfxc',
+            range: 'A1:B10',
+            valueInputOption: 'RAW',
+            insertDataOption: 'INSERT_ROWS',
+            requestBody: {
+                values: [[name, email]],
+            },
+        });
     }
 
 }

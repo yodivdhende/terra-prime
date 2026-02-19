@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import ServiceKey from '$lib/server/google-service-account-key.json';
+import { GOOGLE_CLIENT_EMAIL, GOOGLE_PRIVATE_KEY } from '$env/static/private';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
@@ -11,9 +11,9 @@ export class GoogleSheetManager {
     
     private getClient() {
         return new google.auth.JWT(
-            ServiceKey.client_email,
+            GOOGLE_CLIENT_EMAIL,
             undefined,
-            ServiceKey.private_key,
+            GOOGLE_PRIVATE_KEY,
             SCOPES
         );
     }

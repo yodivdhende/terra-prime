@@ -1,6 +1,11 @@
 FROM node:22-alpine AS builder 
 WORKDIR /app
 COPY package*.json ./
+
+ARG GOOGLE_CLIENT_EMAIL
+ARG GOOGLE_PRIVATE_KEY
+
+
 RUN npm ci
 COPY . .
 RUN npm run build

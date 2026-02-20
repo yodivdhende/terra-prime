@@ -17,5 +17,5 @@ COPY --from=builder /app/node_modules node_modules/
 COPY package.json .
 EXPOSE 4174
 ENV NODE_ENV=production
-CMD [ "node", "--env-file=.env", "build" ]
+CMD [ "node", "build" ]
 

@@ -5,6 +5,8 @@ COPY package*.json ./
 ARG GOOGLE_CLIENT_EMAIL
 ARG GOOGLE_PRIVATE_KEY
 
+RUN echo  $GOOGLE_CLIENT_EMAIL > .env && \
+    echo $GOOGLE_PRIVATE_KEY >> .env
 
 RUN npm ci
 COPY . .

@@ -7,10 +7,10 @@
 	}
 </script>
 
+<img src={logo} alt="TerraPrime Logo" class="logo" />
 <main>
-	<img src={logo} alt="TerraPrime Logo" class="logo" />
-	<div class="content">
-		<section>
+	<section class="glow-border grow-animation">
+		<div class="content">
 			<p>Terra Prime is een gloednieuwe volwassenen-LARP onder DHvT.</p>
 			<p>
 				Stap in een futuristische wereld waar actie, samenwerking en verbeelding centraal staan.
@@ -40,13 +40,13 @@
 				</div>
 				<button>Verstuur</button>
 			</form>
-		</section>
-	</div>
+		</div>
+	</section>
 </main>
 
 <style>
 	:root {
-		--logo-animation-duration: 6s;
+		--logo-animation-duration: 2s;
 		--content-animation-duration: 2s;
 		--text-animation-duration: 1;
 		--custom-green: #00aa00;
@@ -55,8 +55,12 @@
 	main {
 		display: grid;
 		grid-template-columns: 1fr;
-		grid-template-rows: min-content 1fr;
-		place-items: center;
+		grid-template-rows: min(310px, 70vw) min-content;
+		grid-template-areas: 
+		"logo"
+		"section";
+		justify-items: center;
+		align-items: start;
 		width: 100vw;
 		height: 100vh;
 		background-color: black;
@@ -65,27 +69,63 @@
 	}
 
 	.logo {
-		margin-top: 20px;
-		max-width: 80vw; 
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		z-index: 1;
+		transform: translate(-50%, -50%);
+		max-width: 80vw;
 		max-height: 80vh;
-		margin-top: calc(50vh - min(20vw, 40vh));
 		animation-name: logoFadeIn;
 		animation-duration: var(--logo-animation-duration);
 		animation-fill-mode: forwards;
 		animation-timing-function: cubic-bezier(0.8, 0, 0.2, 1);
 	}
 
-	.content {
-		opacity: 0;
-		width: 0;
+	@keyframes logoFadeIn {
+		0% {
+			opacity: 0;
+			max-width: 80vw;
+			max-height: 80vh;
+			top:50%;
+			transform: translate(-50%, -50%);
+		}
+		50% {
+			opacity: 1;
+			max-width: 80vw;
+			max-height: 80vh;
+			top:50%;
+			transform: translate(-50%, -50%);
+		}
+		100% {
+			opacity: 1;
+			max-width: min(500px, 80vw);
+			max-height: min(250px, 80vh);
+			top: 30px;
+			transform: translate(-50%, 0);
+		}
+	}
+	
+	section {
+		grid-area: section;
+		z-index: 2;
 		max-width: 800px;
-		border: 3px solid var(--custom-green);
-		border-radius: 10px;
-		padding: 0;
-		box-shadow: var(--custom-green) 0px 0px 10px;
-		overflow-x: none;
+		margin: 0 20px 30px;
+		overflow: hidden;
 		word-wrap: none;
 		background-color: black;
+	}
+
+	.glow-border {
+		border: 3px solid var(--custom-green);
+		border-radius: 10px;
+		box-shadow: var(--custom-green) 0px 0px 10px;
+	}
+
+	.grow-animation {
+		opacity: 0;
+		width: 0;
+		height: 0;
 		animation-name: contentFadeIn;
 		animation-duration: var(--content-animation-duration);
 		animation-delay: var(--logo-animation-duration);
@@ -93,19 +133,33 @@
 		animation-timing-function: ease-in-out;
 	}
 
-	section {
-		opacity: 0;
-		color: var(--custom-green);
-		font-size: 0;
-		overflow-x: none;
-		word-wrap: none;
-		animation-name: textFadeIn;
-		animation-duration: var(--text-animation-duration);
-		animation-delay: calc(var(--logo-animation-duration) + var(--content-animation-duration));
-		animation-fill-mode: forwards;
+	@keyframes contentFadeIn {
+		0% {
+			opacity: 0;
+			padding: 0;
+			width: 0;
+			height: 0; 
+		}
+		5% {
+			opacity: 1;
+			padding: 0;
+			width: 0;
+			height: 0;
+		}
+		100% {
+			opacity: 1;
+			padding: 1rem;
+			width: calc(100vw - 40px - 4rem);
+			height: 100%;
+		}
 	}
 
-	section p {
+	.content {
+		color: var(--custom-green);
+		font-family: 1.2em;
+	}
+
+	.content p {
 		margin-bottom: 1rem;
 	}
 
@@ -142,56 +196,4 @@
 		color: black;
 	}
 
-	@keyframes logoFadeIn {
-		0% {
-			opacity: 0;
-			width:max-content;
-			margin-top: calc(50vh - min(20vw, 40vh));
-		}
-		50% {
-			opacity: 1;
-			width:max-content;
-			margin-top: calc(50vh - min(20vw, 40vh));
-		}
-		100% {
-			opacity: 1;
-			width: 500px;
-			margin-top: 30px;
-		}
-	}
-
-	@keyframes contentFadeIn {
-		0% {
-			opacity: 0;
-			padding: 0;
-			width: 0;
-			height: 0;
-			min-height: 100px;
-		}
-		5% {
-			opacity: 1;
-			padding: 0;
-			width: 0;
-			height: 0;
-			min-height: 100px;
-		}
-		100% {
-			opacity: 1;
-			padding: 2rem;
-			width: 100%;
-			height: auto;
-			min-height: 60vh;
-		}
-	}
-
-	@keyframes textFadeIn {
-		0% {
-			opacity: 0;
-			font-size: 0;
-		}
-		100% {
-			opacity: 1;
-			font-size: 1.5em;
-		}
-	}
 </style>

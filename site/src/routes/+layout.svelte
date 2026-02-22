@@ -36,6 +36,12 @@
 	}
 
 	.dhvt-logo img {
-		width: 4rem;
+		width: 4em;
+	}
+
+	@media (max-width: 600px) {
+		.dhvt-logo {
+			font-size: 0.7rem;
+		}
 	}
 </style>

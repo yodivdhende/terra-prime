@@ -1,15 +1,25 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import logo from '$lib/assets/images/Logo.png';
+	import CodeScroller from '$lib/components/code-scroller.svelte';
+
+	const logoAnimationDuration = 5;
+	const contentAnimationDuration = 2;
+	let startCode = $state(false);
+
+	setTimeout(() => startCode = true , (logoAnimationDuration + contentAnimationDuration) * 1000);
 
 	function postSubmit() {
 		return () => {};
 	}
 </script>
 
-<img src={logo} alt="TerraPrime Logo" class="logo" />
+<div class="code">
+	<CodeScroller start={startCode} />
+</div>
+<img src={logo} alt="TerraPrime Logo" class="logo" style="--logo-animation-duration: {logoAnimationDuration}s"/>
 <main>
-	<section class="glow-border grow-animation">
+	<section class="glow-border grow-animation" style="--content-animation-duration: {contentAnimationDuration}s">
 		<div class="content">
 			<p>Terra Prime is een gloednieuwe volwassenen-LARP onder DHvT.</p>
 			<p>
@@ -28,6 +38,7 @@
 			</p>
 			<p>Jouw plaats wacht in de Federatie!</p>
 
+
 			<form method="post" use:enhance={postSubmit}>
 				<p>Deel namen met de playtest ?</p>
 				<div class="input">
@@ -38,7 +49,7 @@
 					<label for="playtest-email">Email:</label>
 					<input type="email" id="playtest-email" name="playtest-email" value="test@test.com" />
 				</div>
-				<button>Verstuur</button>
+				<button>Join de Federatie</button>
 			</form>
 		</div>
 	</section>
@@ -46,10 +57,19 @@
 
 <style>
 	:root {
-		--logo-animation-duration: 2s;
+		--logo-animation-duration: 5s;
 		--content-animation-duration: 2s;
-		--text-animation-duration: 1;
 		--custom-green: #00aa00;
+	}
+	
+	.code {
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 0;
+		width: 100%;
+		height: 100%;
+		background-color: black;
 	}
 
 	main {

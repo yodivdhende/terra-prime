@@ -1,7 +1,9 @@
 <script lang="ts">
 	import code from '$lib/assets/data/code.json';
 
-	let leftCode = $state(code.join('\n'));
+	let {start = true}: {start?: boolean} = $props();
+
+	let leftCode = $state(start ? code.join('\n') : '');
 	let codeIndex = 0;
 	let characterIndex = -1;
 	let textArea: HTMLTextAreaElement;
@@ -17,6 +19,10 @@
 	}, 10);
 
 	function updateCode() {
+		if(start === false){
+			leftCode = "";
+			return leftCode;
+		}
 		characterIndex++;
 		let nextLine = '';
 		if (characterIndex >= code[codeIndex].length) {

@@ -3,7 +3,7 @@
 	import logo from '$lib/assets/images/Logo.png';
 	import CodeScroller from '$lib/components/code-scroller.svelte';
 
-	const logoAnimationDuration = 5;
+	const logoAnimationDuration = 3;
 	const contentAnimationDuration = 2;
 	let startCode = $state(false);
 
@@ -14,12 +14,13 @@
 	}
 </script>
 
+<main style="--logo-animation-duration: {logoAnimationDuration}s; --content-animation-duration: {contentAnimationDuration}s">
 <div class="code">
-	<CodeScroller start={startCode} />
+	<CodeScroller start={startCode} speed={5} />
 </div>
-<img src={logo} alt="TerraPrime Logo" class="logo" style="--logo-animation-duration: {logoAnimationDuration}s"/>
-<main>
-	<section class="glow-border grow-animation" style="--content-animation-duration: {contentAnimationDuration}s">
+<img src={logo} alt="TerraPrime Logo" class="logo" />
+<div class="grid">
+	<section class="glow-border grow-animation" style="">
 		<div class="content">
 			<p>Terra Prime is een gloednieuwe volwassenen-LARP onder DHvT.</p>
 			<p>
@@ -53,13 +54,19 @@
 			</form>
 		</div>
 	</section>
+	</div>
 </main>
 
 <style>
 	:root {
-		--logo-animation-duration: 5s;
-		--content-animation-duration: 2s;
 		--custom-green: #00aa00;
+	}
+	main {
+		width: 100vw;
+		height: 100vh;
+		overflow: hidden;
+		position: relative;
+		background-color: black;
 	}
 	
 	.code {
@@ -72,7 +79,7 @@
 		background-color: black;
 	}
 
-	main {
+	.grid {
 		display: grid;
 		grid-template-columns: 1fr;
 		grid-template-rows: min(310px, 70vw) min-content;
@@ -83,9 +90,10 @@
 		align-items: start;
 		width: 100vw;
 		height: 100vh;
-		background-color: black;
 		overflow-x: hidden;
 		scrollbar-color: var(--custom-green) black;
+		background-color: black;
+
 	}
 
 	.logo {
@@ -175,11 +183,13 @@
 	}
 
 	.content {
+		font-family: 'Science Gothic', 'Courier New', Courier, monospace;
 		color: var(--custom-green);
-		font-family: 1.2em;
+		font-size: 1.2em;
 	}
 
 	.content p {
+		font-family: 'Science Gothic', 'Courier New', Courier, monospace;
 		margin-bottom: 1rem;
 	}
 

@@ -60,6 +60,7 @@
 <style>
 	:root {
 		--custom-green: #00aa00;
+		--font-green: #008800; 
 	}
 	main {
 		width: 100vw;
@@ -184,7 +185,7 @@
 
 	.content {
 		font-family: 'Science Gothic', 'Courier New', Courier, monospace;
-		color: var(--custom-green);
+		color: var(--font-green);
 		font-size: 1.2em;
 	}
 
@@ -206,7 +207,7 @@
 		border-bottom: 2px solid var(--custom-green);
 		outline: none;
 		font-size: 1.2em;
-		color: var(--custom-green);
+		color: var(--font-green);
 		background-color: black;
 	}
 
@@ -216,7 +217,7 @@
 		border: 2px solid var(--custom-green);
 		border-radius: 5px;
 		font-size: 1em;
-		color: var(--custom-green);
+		color: var(--font-green);
 		background-color: black;
 		cursor: pointer;
 	}

@@ -3,9 +3,9 @@
 	import Promo from '$lib/components/promo.svelte';
 	import { Tween } from 'svelte/motion';
 
-	// const targetDate = new Date('2026-03-1 00:00');
-	const targetDate = new Date(new Date().getTime() + 20000); // For testing, 10 seconds from now	
-	let timeLeft = $state<number | null>(null);
+	// const targetDate = new Date('2026-03-1 20:00');
+	let targetDate = new Date(new Date().getTime() - 10000); // For testing, 10 seconds from now	
+	let timeLeft = $state<number>(getTimeLeft());
 	let fadeOut = new Tween(0);
 
 	setInterval(() => {
@@ -22,13 +22,15 @@
 		if (fadeOut.current === 2) goto('/info');
 	})
 
-	function getTimeLeft() {
+	function getTimeLeft(): number {
 		const now = new Date();
 		const difference = Math.floor((targetDate.getTime() - now.getTime()) / 1000);
-		if (difference < 0) return 0;
+		if (difference < 0) {
+			targetDate = new Date(new Date().getTime() + 6000); // Reset for testingjk
+			return getTimeLeft()-1;
+		};
 		return difference;
 	}
-
 
 </script>
 

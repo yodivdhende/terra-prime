@@ -1,7 +1,7 @@
 <script lang="ts">
 	import code from '$lib/assets/data/code.json';
 
-	let {start = true}: {start?: boolean} = $props();
+	let {start = true, speed = 10}: {start?: boolean, speed?: number} = $props();
 
 	let leftCode = $state(start ? code.join('\n') : '');
 	let codeIndex = 0;
@@ -16,7 +16,7 @@
 
 	setInterval(() => {
 		leftCode = updateCode();
-	}, 10);
+	}, speed);
 
 	function updateCode() {
 		if(start === false){

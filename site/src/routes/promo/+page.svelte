@@ -8,7 +8,7 @@
 	import { setPromoAnimationManagerContext } from '$lib/managers/promo-animation-manager.svelte';
 	import PromoSidePanel from '$lib/components/side-panels/promo-side-panel.svelte';
 
-	const targetDate = new Date('2026-03-1 00:00');
+	const targetDate = new Date('2026-03-1 20:00');
 	let timeLeft = $state();
 	let showInput = $state(false);
 	let showSidePanel = $state(false);

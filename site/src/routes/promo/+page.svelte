@@ -219,13 +219,10 @@
 		background-color: rgba(0, 0, 0, 0.95);
 		z-index: 2;
 	}
-<<<<<<< HEAD
 
 	@media (max-width: 768px) {
 		.side-panel {
 			width: 100%;
 		}
 	}
-=======
->>>>>>> 7830d61 (adjust avix code and styling)
 </style>

@@ -3,8 +3,7 @@
 	import Promo from '$lib/components/promo.svelte';
 	import { Tween } from 'svelte/motion';
 
-	// const targetDate = new Date('2026-03-1 20:00');
-	let targetDate = new Date(new Date().getTime() - 10000); // For testing, 10 seconds from now	
+	let targetDate = new Date('2026-03-1 20:00');
 	let timeLeft = $state<number>(getTimeLeft());
 	let fadeOut = new Tween(0);
 

@@ -31,11 +31,11 @@ export class GoogleSheetManager {
         const sheets = await this.getSheets();
         await sheets.spreadsheets.values.append({
             spreadsheetId: '1ZNb4uCkKHMEpzW6w-v_ApPAQZumXS23u5XtUp_8Cfxc',
-            range: 'A1:B10',
+            range: 'A1:C10',
             valueInputOption: 'RAW',
             insertDataOption: 'INSERT_ROWS',
             requestBody: {
-                values: [[name, email]],
+                values: [[name, email, new Date()]],
             },
         });
         return { success: true };

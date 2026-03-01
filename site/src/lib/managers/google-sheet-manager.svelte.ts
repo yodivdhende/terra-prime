@@ -35,7 +35,7 @@ export class GoogleSheetManager {
             valueInputOption: 'RAW',
             insertDataOption: 'INSERT_ROWS',
             requestBody: {
-                values: [[name, email, new Date()]],
+                values: [[name, email, new Date().toString()]],
             },
         });
         return { success: true };

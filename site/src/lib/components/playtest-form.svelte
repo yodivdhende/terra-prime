@@ -3,7 +3,7 @@
 	import { isEmail, isNotEmptyString } from '$lib/validators/util-validations';
 	import type { ActionResult } from '@sveltejs/kit';
 
-	let formData = $state();
+	let formData: {success?: boolean, error?:boolean} | undefined = $state();
 
 	let formState: 'button' | 'form' | 'sended' = $state('button');
 	let showButton = $derived(formState === 'button');

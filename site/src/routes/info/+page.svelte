@@ -1,18 +1,16 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import logo from '$lib/assets/images/Logo.png';
 	import CodeScroller from '$lib/components/code-scroller.svelte';
 	import PlaytestForm from '$lib/components/playtest-form.svelte';
 
+
 	const logoAnimationDuration = 3;
 	const contentAnimationDuration = 2;
 	let startCode = $state(false);
+	let formData = $state();
 
 	setTimeout(() => (startCode = true), (logoAnimationDuration + contentAnimationDuration) * 1000);
 
-	function postSubmit() {
-		return () => {};
-	}
 </script>
 
 <main
@@ -92,9 +90,7 @@
 				</p>
 				<h2>Jouw plaats wacht in de Federatie!</h2>
 
-				<form method="post" use:enhance={postSubmit}>
-					<PlaytestForm />
-				</form>
+					<PlaytestForm formResult={formData as any}/>
 			</div>
 		</section>
 	</div>

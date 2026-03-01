@@ -19,34 +19,26 @@ export class GoogleSheetManager {
     }
 
     public async getPlayTestSheetValues() {
-        try {
-            const sheets = await this.getSheets();
-            const result = await sheets.spreadsheets.values.get({
-                spreadsheetId: '1ZNb4uCkKHMEpzW6w-v_ApPAQZumXS23u5XtUp_8Cfxc',
-                range: 'A1:B10',
-            });
-            return result.data.values;
-        } catch (error) {
-            console.error(error);
-        }
-
+        const sheets = await this.getSheets();
+        const result = await sheets.spreadsheets.values.get({
+            spreadsheetId: '1ZNb4uCkKHMEpzW6w-v_ApPAQZumXS23u5XtUp_8Cfxc',
+            range: 'A1:B10',
+        });
+        return result.data.values;
     }
 
     public async appendPlayTestSheetValues(name: string, email: string) {
-        try {
-            const sheets = await this.getSheets();
-            await sheets.spreadsheets.values.append({
-                spreadsheetId: '1ZNb4uCkKHMEpzW6w-v_ApPAQZumXS23u5XtUp_8Cfxc',
-                range: 'A1:B10',
-                valueInputOption: 'RAW',
-                insertDataOption: 'INSERT_ROWS',
-                requestBody: {
-                    values: [[name, email]],
-                },
-            });
-        } catch (error) {
-            console.error(error);
-        }
+        const sheets = await this.getSheets();
+        await sheets.spreadsheets.values.append({
+            spreadsheetId: '1ZNb4uCkKHMEpzW6w-v_ApPAQZumXS23u5XtUp_8Cfxc',
+            range: 'A1:B10',
+            valueInputOption: 'RAW',
+            insertDataOption: 'INSERT_ROWS',
+            requestBody: {
+                values: [[name, email]],
+            },
+        });
+        return { success: true };
     }
 
 }

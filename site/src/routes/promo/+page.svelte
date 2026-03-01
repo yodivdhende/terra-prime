@@ -60,5 +60,4 @@
 		pointer-events: none;
 
 	}
-
 </style>

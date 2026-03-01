@@ -101,11 +101,18 @@
 		--custom-green: #aaaaaa;
 		--font-green: #ffffff;
 		--section-padding: 2em;
+		--section-width: calc(100vw - 40px - 4rem);
 	}
 
 	@media (max-width: 600px) {
 		main {
 			--section-padding: 1em;
+			--section-width: 90vw;
+			font-size: 0.8rem;
+		}
+		
+		section { 
+			margin: 0 0 0 0 !important;
 		}
 	}
 
@@ -115,6 +122,7 @@
 		overflow: hidden;
 		position: relative;
 		font-family: 'Courier New', Courier, monospace;
+		font-size: 1rem;
 		background-color: black;
 	}
 
@@ -226,7 +234,7 @@
 		100% {
 			opacity: 1;
 			padding: var(--section-padding);
-			width: calc(100vw - 40px - 4rem);
+			width: var(--section-width);
 			height: 100%;
 		}
 	}

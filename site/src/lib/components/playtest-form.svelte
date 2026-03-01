@@ -15,13 +15,16 @@
 
 <main>
 	<div class={buttonClass}>
-		<button  onclick={() => setState('form')}>Join de Federatie</button>
+		<button onclick={() => setState('form')}>Jouw plaats wacht in de Federatie!</button>
 	</div>
 	<div class={formClass}>
 		<p>
-			Met deze playtest houden we een korte play dag waar we verschillend elementen van onze larp
-			willen uittesten. Plaatsen hiervoor zijn beperkt. Hierdoor kunnen we niet garanderen dat,
-			wanneer je inschrijft, je zult deel nemen. Verdere infromatie volgt.
+			De Federatie organiseert een beperkte praktijktest ter evaluatie van operationele systemen en
+			procedures binnen Terra Prime.<br />
+			Tijdens deze playtest worden verschillende elementen van de LARP-ervaring getest onder gecontroleerde
+			omstandigheden. Deelnameplaatsen zijn beperkt. Het indienen van een aanvraag garandeert dan ook
+			geen selectie.<br />
+			Geselecteerde kandidaten ontvangen verdere instructies via transmissie.
 		</p>
 		<div class="input">
 			<label for="playtest-name">Naam:</label>
@@ -31,18 +34,20 @@
 			<label for="playtest-email">Email:</label>
 			<input type="email" id="playtest-email" name="playtest-email" value="test@test.com" />
 		</div>
-		<button onclick={() => setState('sended')}>Verstuur aplicatie</button>
+		<button onclick={() => setState('sended')}>Verstuur kandidatuur</button>
 	</div>
 	<div class={messageClass}>
-		Bedankt voor de inschrijving. We zijn enorm dankbaar voor de intresse. Meer informatie volgt
-		later via mail. Nogmaals willen we de nadrukt leggen dat niet iedereen die zich inschrijft zal
-		kunnen deel nemen aan de playtest.
+		Hartelijk dank voor je interesse in onze praktijktest. We hebben je kandidatuur in goede orde
+		ontvangen.<br />
+		Meer informatie over de selectie volgt spoedig via e-mail. Graag maken wij je er nogmaals op attent
+		dat we wegens de grote belangstelling niet iedereen kunnen selecteren voor deelname aan deze testfase.
 	</div>
 </main>
 
 <style>
 	main {
-		border-top: 1px solid green;
+		margin-top: 1em;
+		border-top: 1px solid var(--font-green);
 		padding-top: 1em;
 	}
 
@@ -60,13 +65,21 @@
 	}
 
 	@keyframes scrollOpen {
-		0% { max-height: 0; }
-		100% { max-height: 500px; }
+		0% {
+			max-height: 0;
+		}
+		100% {
+			max-height: 500px;
+		}
 	}
 
 	@keyframes scrollClosed {
-		0% { max-height: 500px; }
-		100% { max-height: 0; }
+		0% {
+			max-height: 500px;
+		}
+		100% {
+			max-height: 0;
+		}
 	}
 
 	.input {

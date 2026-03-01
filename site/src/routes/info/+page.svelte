@@ -4,7 +4,7 @@
 	import CodeScroller from '$lib/components/code-scroller.svelte';
 	import PlaytestForm from '$lib/components/playtest-form.svelte';
 
-	const logoAnimationDuration = 1;
+	const logoAnimationDuration = 3;
 	const contentAnimationDuration = 2;
 	let startCode = $state(false);
 
@@ -107,7 +107,7 @@
 		--section-padding: 2em;
 	}
 
-	@media (min-width: 600px) {
+	@media (max-width: 600px) {
 		main {
 			--section-padding: 1em;
 		}
@@ -144,7 +144,8 @@
 		width: 100vw;
 		height: 100vh;
 		overflow-x: hidden;
-		scrollbar-color: var(--custom-green) black;
+		overflow-y: auto;
+		scrollbar-color: white black;
 		background-color: black;
 	}
 

@@ -97,8 +97,8 @@
 		height: 100vh;
 		overflow-x: hidden;
 		overflow-y: auto;
-		scrollbar-color: white black;
-		background-color: black;
+		scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
+		background-color: var(--color-bg);
 	}
 
 	.logo {
@@ -117,14 +117,14 @@
 		padding: var(--section-padding);
 		width: calc(100vw - 40px - 4rem);
 		height: 100%;
-		border: 3px solid var(--custom-green);
-		border-radius: 10px;
-		box-shadow: var(--custom-green) 0px 0px 10px;
+		border: var(--border-width) solid var(--color-border);
+		border-radius: var(--border-radius);
+		box-shadow: var(--glow-shadow);
 	}
 
 	.content {
-		font-family: 'Courier New', Courier, monospace;
-		color: var(--font-green);
+		font-family: var(--font-mono);
+		color: var(--color-text);
 	}
 
 	.content p {
@@ -132,14 +132,14 @@
 	}
 
 	.content h2 {
-		font-family: 'Science Gothic', 'Courier New', Courier, monospace;
+		font-family: var(--font-display);
 		font-size: 1.2em;
 		font-weight: bold;
 		margin: 1em 0;
 	}
 
 	.content h3 {
-		font-family: 'Science Gothic', 'Courier New', Courier, monospace;
+		font-family: var(--font-display);
 		font-weight: bold;
 		margin: 1em 0;
 	}

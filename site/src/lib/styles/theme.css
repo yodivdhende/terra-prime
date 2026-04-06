@@ -1,0 +1,28 @@
+:root {
+	/* Colors */
+	--color-bg: #000000;
+	--color-bg-panel: rgba(0, 0, 0, 0.95);
+	--color-border: #aaaaaa;
+	--color-text: #ffffff;
+	--color-accent: #00ff00;
+	--color-scrollbar-thumb: white;
+	--color-scrollbar-track: black;
+
+	/* Typography */
+	--font-mono: 'Courier New', Courier, monospace;
+	--font-display: 'Science Gothic', 'Courier New', Courier, monospace;
+
+	/* Spacing */
+	--section-padding: 2em;
+
+	/* Borders & effects */
+	--border-width: 3px;
+	--border-radius: 10px;
+	--glow-shadow: var(--color-border) 0px 0px 10px;
+}
+
+@media (max-width: 600px) {
+	:root {
+		--section-padding: 1em;
+	}
+}

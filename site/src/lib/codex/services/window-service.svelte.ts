@@ -21,4 +21,7 @@ export const windowService = createWindowService();
 export type CodexWindow = {
   id: string;
   state: 'open' | 'hidden' | 'closed';
+  dimension: { w: number, h: number };
+  position: { x: number, y: number, z: number };
+  content: string;
 }

@@ -15,7 +15,7 @@
 	let { children }: LayoutProps = $props();
 </script>
 
-<div class="scanlines" class:visible={scanlineVisible}></div>
+<div class="scanlines"></div>
 {@render children()}
 <div class="dhvt-logo">
 	<a href="https://dhvt.be"> powered by <img src={dhvtLogo} alt="DHVT Logo" /></a>

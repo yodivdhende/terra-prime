@@ -94,7 +94,39 @@
 	}
 
 	const progress = $derived(Math.round(((currentIndex + 1) / QUESTIONS.length) * 100));
+
+	const answerValues = ANSWERS.map((a) => a.value);
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (phase === 'intro') {
+			if (e.key === 'Enter') startQuiz();
+			return;
+		}
+
+		if (phase === 'result') {
+			if (e.key === 'Enter' || e.key === 'Escape') restartQuiz();
+			return;
+		}
+
+		if (phase === 'quiz') {
+			if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+				e.preventDefault();
+				const currentIdx = selectedAnswer === null ? -1 : answerValues.indexOf(selectedAnswer);
+				if (e.key === 'ArrowUp') {
+					selectedAnswer = answerValues[Math.max(0, currentIdx - 1)];
+				} else {
+					selectedAnswer = answerValues[Math.min(answerValues.length - 1, currentIdx + 1)];
+				}
+			} else if (e.key === 'Enter') {
+				nextQuestion();
+			} else if (e.key === 'Escape') {
+				prevQuestion();
+			}
+		}
+	}
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <main>
 	<div class="scanlines" class:visible={scanlineVisible}></div>
@@ -138,8 +170,9 @@
 							class="answer-btn"
 							class:selected={selectedAnswer === opt.value}
 							onclick={() => selectAnswer(opt.value)}
+							onfocus={() => selectAnswer(opt.value)}
 						>
-							{opt.label}
+							<span class="cursor">&gt;</span>* {opt.label}
 						</button>
 					{/each}
 				</div>
@@ -175,6 +208,10 @@
 </main>
 
 <style>
+	:root {
+		--accent: #00cc00;
+	}
+
 	main {
 		width: 100vw;
 		min-height: 100vh;
@@ -213,17 +250,16 @@
 	.panel {
 		width: 100%;
 		max-width: 720px;
-		border: 2px solid #aaaaaa;
-		border-radius: 6px;
+		border: 2px solid var(--accent);
 		box-shadow:
-			#aaaaaa 0 0 16px,
-			#aaaaaa 0 0 4px inset;
+			var(--accent) 0 0 16px,
+			var(--accent) 0 0 4px inset;
 		background-color: #050505;
 		overflow: hidden;
 	}
 
 	.header-bar {
-		background-color: #aaaaaa;
+		background-color: var(--accent);
 		color: black;
 		font-size: 0.75rem;
 		font-weight: bold;
@@ -238,7 +274,7 @@
 
 	.progress-fill {
 		height: 100%;
-		background-color: #aaaaaa;
+		background-color: var(--accent);
 		transition: width 0.3s ease;
 	}
 
@@ -273,30 +309,42 @@
 
 	.answer-btn {
 		background: transparent;
-		border: 1px solid #444;
+		border: none;
+		outline: none;
 		color: #aaa;
 		font-family: 'Courier New', Courier, monospace;
 		font-size: 0.9rem;
-		padding: 0.6rem 1rem;
+		padding: 0.3rem 0;
 		cursor: pointer;
 		text-align: left;
-		border-radius: 3px;
-		transition:
-			border-color 0.15s,
-			color 0.15s,
-			background-color 0.15s;
+		width: 100%;
+		transition: color 0.1s;
 	}
 
-	.answer-btn:hover {
-		border-color: #aaaaaa;
+	.answer-btn .cursor {
+		display: inline-block;
+		width: 1.2em;
+		color: var(--accent);
+		opacity: 0;
+		transition: opacity 0.1s;
+	}
+
+	.answer-btn:hover,
+	.answer-btn:focus-visible {
 		color: white;
-		background-color: #111;
+	}
+
+	.answer-btn:hover .cursor,
+	.answer-btn:focus-visible .cursor {
+		opacity: 1;
 	}
 
 	.answer-btn.selected {
-		border-color: #aaaaaa;
-		color: black;
-		background-color: #aaaaaa;
+		color: var(--accent);
+	}
+
+	.answer-btn.selected .cursor {
+		opacity: 1;
 	}
 
 	.nav-row {
@@ -307,7 +355,8 @@
 
 	.btn {
 		background: transparent;
-		border: 1px solid #aaaaaa;
+		border: 1px solid var(--accent);
+		outline: none;
 		color: white;
 		font-family: 'Courier New', Courier, monospace;
 		font-size: 0.9rem;
@@ -321,7 +370,7 @@
 	}
 
 	.btn:hover:not(:disabled) {
-		background-color: #aaaaaa;
+		background-color: var(--accent);
 		color: black;
 	}
 
@@ -351,7 +400,7 @@
 		line-height: 1.8;
 		color: #ddd;
 		font-size: 0.95rem;
-		border-left: 2px solid #aaaaaa;
+		border-left: 2px solid var(--accent);
 		padding-left: 1rem;
 	}
 

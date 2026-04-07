@@ -1,0 +1,38 @@
+{
+	"NEON_HAVEN": {
+		"name": "NEON HAVEN INFRASTRUCTURE",
+		"domain": "Bouw, infrastructuur, basecamp systems",
+		"description": "Neon Haven bouwt de wereld waarin Terra Prime overleeft. Van Hive Cities tot Basecamps en Transit Gates, als het bestaat, hebben zij het geplaatst.",
+		"result": "Uw profiel vertoont consistente patronen in relatie tot\nstructurele stabiliteit en gecontroleerde expansie.\nUw reacties suggereren een voorkeur voor systemen\ndie blijven functioneren, ongeacht externe druk.\nVerdere inzet binnen opbouwende omgevingen wordt overwogen.\nWelkom bij Neon Haven."
+	},
+	"AURION": {
+		"name": "AURION ENERGY",
+		"domain": "Energon productie & distributie",
+		"description": "Aurion controleert energie. Zonder Aurion is er geen transport, geen missie, geen Terra Prime.",
+		"result": "Uw profiel toont meetbare affiniteit met processen\nwaarby continuïteit en doorstroming centraal staan.\n\nU lijkt afgestemd op systemen die afhankelijk zijn van\nbalans tussen input en output.\n\nUw plaats binnen energienetwerken is niet onlogisch.\nWelkom bij Aurion."
+	},
+	"BIOSYNTH": {
+		"name": "BIOSYNTH CONSORTIUM",
+		"domain": "BioMatter, medische systemen, genetica",
+		"description": "BioSynth beheert leven zelf. Ze leveren herstel, verbetering en… selectie.",
+		"result": "Uw profiel wijst op een zekere flexibiliteit in relatie tot\nbiologische grenzen en aanpassing.\nEr is een waarneembare tolerantie voor verandering,\nzelfs wanneer deze niet volledig voorspelbaar is.\nVerdere evaluatie binnen adaptieve omgevingen is aangewezen.\nWelkom bij BioSynth."
+	},
+	"BLACKWATER": {
+		"name": "BLACKWATER DIRECTIVE",
+		"domain": "Militair, security, huurlingen",
+		"description": "Blackwater Directive levert geweld waar nodig. Zij voeren de missies uit die anderen niet durven.",
+		"result": "Uw profiel suggereert een consistente respons onder druk\nen een beperkte weerstand tegen directe interventie.\nEr is een duidelijke bereidheid tot handelen,\nongeacht volledigheid van informatie.\nUw inzet binnen operationele contexten wordt overwogen.\nWelkom bij Blackwater Directive."
+	},
+	"VANTAGE": {
+		"name": "VANTAGE CORE SYSTEMS",
+		"domain": "AI, data, control systems",
+		"description": "Vantage Core beheert informatie, simulaties en beslissingssystemen. Hun AI bepaalt welke missies slagen… en welke falen.",
+		"result": "Uw profiel vertoont coherentie met patronen van observatie,\nanalyse en interpretatie.\nEr is een merkbare neiging om systemen te vertrouwen\nboven individuele inschattingen.\nVerdere integratie binnen informatie-gedreven omgevingen\nwordt als passend beschouwd.\nWelkom bij Vantage."
+	},
+	"LUMEN_VEIL": {
+		"name": "LUMEN VEIL",
+		"domain": "Media, perceptie, morale control",
+		"description": "Lumen Veil beheert informatie naar het publiek. Wat mensen geloven over Terra Prime… komt van hen.",
+		"result": "Uw profiel suggereert gevoeligheid voor perceptie,\ninterpretatie en nuance.\n\nEr lijkt een impliciet begrip aanwezig van hoe realiteit\nkan verschuiven afhankelijk van perspectief.\n\nUw rol binnen communicatieve structuren wordt geëvalueerd.\nWelkom bij Lumen Veil."
+	}
+}

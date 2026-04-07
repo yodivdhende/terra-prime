@@ -25,11 +25,6 @@
 	let selectedAnswer = $state<Answer | null>(null);
 	let phase = $state<'intro' | 'quiz' | 'result'>('intro');
 	let result = $state<Company | null>(null);
-	let scanlineVisible = $state(false);
-
-	$effect(() => {
-		setTimeout(() => (scanlineVisible = true), 100);
-	});
 
 	function startQuiz() {
 		phase = 'quiz';
@@ -129,8 +124,6 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <main>
-	<div class="scanlines" class:visible={scanlineVisible}></div>
-
 	{#if phase === 'intro'}
 		<div class="panel intro-panel">
 			<div class="header-bar">+++ [ TERRA PRIME FEDERATIE — STEM TEST PROTOCOL ] +++</div>
@@ -225,26 +218,6 @@
 		box-sizing: border-box;
 		position: relative;
 		overflow: hidden;
-	}
-
-	.scanlines {
-		pointer-events: none;
-		position: fixed;
-		inset: 0;
-		z-index: 10;
-		opacity: 0;
-		transition: opacity 1s ease;
-		background: repeating-linear-gradient(
-			to bottom,
-			transparent 0px,
-			transparent 3px,
-			rgba(0, 0, 0, 0.15) 3px,
-			rgba(0, 0, 0, 0.15) 4px
-		);
-	}
-
-	.scanlines.visible {
-		opacity: 1;
 	}
 
 	.panel {

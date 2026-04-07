@@ -1,11 +1,13 @@
 <script lang="ts">
 	import Logo from '$lib/assets/images/Logo.png';
+	import DesktopIcons from '$lib/codex/components/desktop-icons.svelte';
 </script>
 
 <main>
 	<div class="background">
 		<img src={Logo} alt="terraprime logo" />
 	</div>
+	<DesktopIcons />
 </main>
 
 <style>

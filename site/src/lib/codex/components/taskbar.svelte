@@ -5,9 +5,9 @@
 
 <style>
 	main {
-		width: calc(100% - 6px);
+		width: 100%;
 		height: calc(100px - 6px);
-		border: 3px solid green;
-		background-color: black;
+		background-color: green;
+		color: black;
 	}
 </style>

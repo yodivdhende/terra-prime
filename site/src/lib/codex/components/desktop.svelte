@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Logo from '$lib/assets/images/Logo.png';
 	import DesktopIcons from '$lib/codex/components/desktop-icons.svelte';
+	import DesktopWindows from '$lib/codex/components/desktop-windows.svelte';
 </script>
 
 <main>
@@ -8,6 +9,7 @@
 		<img src={Logo} alt="terraprime logo" />
 	</div>
 	<DesktopIcons />
+	<DesktopWindows />
 </main>
 
 <style>

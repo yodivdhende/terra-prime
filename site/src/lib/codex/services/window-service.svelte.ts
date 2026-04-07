@@ -1,7 +1,16 @@
 import { v4 as uuidv4 } from 'uuid';
 
 function createWindowService() {
-  let windows = $state([] as CodexWindow[]);
+  let windows = $state([
+    {
+      id: uuidv4(),
+      state: 'open',
+      dimension: { w: 300, h: 300 },
+      position: { x: 300, y: 300 },
+      content: 'content',
+      title: 'title'
+    }
+  ] as CodexWindow[]);
   const openWindows = $derived(windows.filter(window => window.state === 'open'));
 
 
@@ -58,4 +67,5 @@ export type CodexWindow = {
   dimension: { w: number, h: number };
   position: { x: number, y: number, z: number };
   content: string;
+  title: string;
 }

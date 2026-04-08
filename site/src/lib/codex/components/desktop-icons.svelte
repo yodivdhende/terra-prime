@@ -21,24 +21,38 @@
 <style>
 	main {
 		display: grid;
-		margin: 32px 32px;
-		gap: 32px;
+		margin: 2rem;
+		gap: 1.5rem;
 		grid-template-columns: repeat(3, min-content);
+		align-content: start;
 	}
 
 	button {
 		display: flex;
 		flex-direction: column;
-		justify-content: center;
-		color: white;
+		align-items: center;
+		gap: 0.4rem;
+		color: var(--text-dim);
 		background: none;
 		outline: none;
-		border: none;
+		border: 1px solid transparent;
 		cursor: pointer;
+		padding: 0.5rem;
+		font-family: 'Courier New', Courier, monospace;
+		font-size: 0.7rem;
+		letter-spacing: 0.05em;
+		transition:
+			color 0.1s,
+			border-color 0.1s;
+	}
+
+	button:hover {
+		color: var(--accent);
+		border-color: var(--accent);
 	}
 
 	button:active {
-		background-color: green;
+		background-color: var(--accent);
 		color: black;
 	}
 </style>

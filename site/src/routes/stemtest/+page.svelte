@@ -201,9 +201,7 @@
 </main>
 
 <style>
-	:root {
-		--accent: #00cc00;
-	}
+	@import '$lib/styles/stemtest.css';
 
 	main {
 		width: 100vw;
@@ -227,7 +225,7 @@
 		box-shadow:
 			var(--accent) 0 0 16px,
 			var(--accent) 0 0 4px inset;
-		background-color: #050505;
+		background-color: var(--bg);
 		overflow: hidden;
 	}
 
@@ -242,7 +240,7 @@
 
 	.progress-bar {
 		height: 3px;
-		background-color: #222;
+		background-color: var(--progress-bg);
 	}
 
 	.progress-fill {
@@ -257,12 +255,12 @@
 
 	.system-msg {
 		font-size: 0.75rem;
-		color: #888;
+		color: var(--text-muted);
 		letter-spacing: 0.08em;
 	}
 
 	.warning {
-		color: #cc4444;
+		color: var(--warning);
 		font-size: 0.85rem;
 	}
 
@@ -284,7 +282,7 @@
 		background: transparent;
 		border: none;
 		outline: none;
-		color: #aaa;
+		color: var(--text-dim);
 		font-family: 'Courier New', Courier, monospace;
 		font-size: 0.9rem;
 		padding: 0.3rem 0;
@@ -353,25 +351,25 @@
 	}
 
 	.btn.secondary {
-		border-color: #555;
-		color: #aaa;
+		border-color: var(--border-dim);
+		color: var(--text-dim);
 	}
 
 	.btn.secondary:hover {
-		background-color: #333;
+		background-color: var(--hover-bg);
 		color: white;
 	}
 
 	.domain {
 		font-size: 0.8rem;
-		color: #888;
+		color: var(--text-muted);
 		letter-spacing: 0.1em;
 	}
 
 	.result-text {
 		white-space: pre-line;
 		line-height: 1.8;
-		color: #ddd;
+		color: var(--text-result);
 		font-size: 0.95rem;
 		border-left: 2px solid var(--accent);
 		padding-left: 1rem;
@@ -379,7 +377,7 @@
 
 	.description {
 		font-size: 0.85rem;
-		color: #777;
+		color: var(--text-subtle);
 		line-height: 1.6;
 		font-style: italic;
 	}

@@ -1,0 +1,19 @@
+:root {
+	/* Accent */
+	--accent: #00cc00;
+
+	/* Backgrounds */
+	--bg: #050505;
+	--progress-bg: #222;
+	--hover-bg: #333;
+
+	/* Text */
+	--text-muted: #888;
+	--text-dim: #aaa;
+	--text-subtle: #777;
+	--text-result: #ddd;
+
+	/* Semantic */
+	--warning: #cc4444;
+	--border-dim: #555;
+}

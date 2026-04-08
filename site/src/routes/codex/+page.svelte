@@ -9,11 +9,15 @@
 </main>
 
 <style>
+	@import '$lib/styles/stemtest.css';
+
 	main {
 		display: flex;
 		flex-direction: column;
 		width: 100vw;
 		height: 100vh;
 		overflow: hidden;
+		background-color: var(--bg);
+		font-family: 'Courier New', Courier, monospace;
 	}
 </style>

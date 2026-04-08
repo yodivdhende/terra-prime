@@ -17,7 +17,8 @@
 		position: relative;
 		width: 100%;
 		height: 100%;
-		background-color: black;
+		background-color: var(--bg);
+		overflow: hidden;
 	}
 
 	.background {
@@ -25,9 +26,13 @@
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
+		pointer-events: none;
+		user-select: none;
 	}
 
 	.background img {
 		max-width: 400px;
+		opacity: 0.06;
+		filter: grayscale(1);
 	}
 </style>

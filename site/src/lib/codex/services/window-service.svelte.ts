@@ -2,39 +2,42 @@ import { v4 as uuidv4 } from 'uuid';
 
 function createWindowService() {
   const windows = $state([
-    {
-      id: uuidv4(),
-      state: 'open',
-      dimension: { w: 300, h: 300 },
-      position: { x: 300, y: 300, z: 0 },
-      content: 'content',
-      title: 'title'
-    }
+    // {
+    //   id: uuidv4(),
+    //   state: 'open',
+    //   dimension: { w: 300, h: 300 },
+    //   position: { x: 300, y: 300, z: 0 },
+    //   content: 'content',
+    //   title: 'title'
+    // }
   ] as CodexWindow[]);
 
   function openWindow({ id, content }:
     { id?: CodexWindow['id'], content: CodexWindow['content'] }
-    | { id: CodexWindow['id'], content?: CodexWindow['content'] }
   ) {
-    if (content != null) createNewWindow(content);
-    if (id != null) updateStateToOpen(id);
+    console.log(id, content);
+    if (id != null) return updateStateToOpen(id);
+    return createNewWindow(content);
   }
 
   function updateStateToOpen(id: CodexWindow['id']): void {
     const selectedWindow = windows.find(window => window.id === id);
     if (selectedWindow == null) return;
     selectedWindow.state = 'open';
+    return id;
   }
 
   function createNewWindow(content: CodexWindow['content']) {
+    const id = uuidv4();
     windows.push({
-      id: uuidv4(),
+      id,
       state: 'open',
       dimension: { w: 300, h: 300 },
       position: { x: 100, y: 100, z: windows.length },
       content,
 
     } as CodexWindow);
+    return id;
   }
 
   function closeWindow(id: CodexWindow['id']) {

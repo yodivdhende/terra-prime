@@ -2,10 +2,11 @@
 	import { ICON_SERVICE, type Icon } from '$lib/codex/services/icon-service.svelte';
 	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
 
-	let icons = ICON_SERVICE.icons;
+	let icons = $derived(ICON_SERVICE.icons);
 
 	function openWindow(icon: Icon) {
-		WINDOW_SERVICE.openWindow({ content: icon.content });
+		const { windowContent, windowId } = $state.snapshot(icon);
+		icon.windowId = WINDOW_SERVICE.openWindow({ content: windowContent, id: windowId });
 	}
 </script>
 

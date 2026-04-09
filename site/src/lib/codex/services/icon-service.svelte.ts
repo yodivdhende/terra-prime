@@ -17,8 +17,9 @@ export const ICON_SERVICE = createIconService();
 
 export type Icon = {
   id: string;
-  icon: Component,
+  icon: Component;
   name: string;
-  windowContent: CodexWindow['content'],
+  windowContent: CodexWindow['content'];
+  windowId?: string;
 }
 

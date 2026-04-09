@@ -5,9 +5,9 @@
 </script>
 
 <main>
-	<div class="background">
-		<img src={Logo} alt="terraprime logo" />
+	<div class="background grid--background">
 		<div class="grid"></div>
+		<img src={Logo} alt="terraprime logo" />
 	</div>
 	<DesktopIcons />
 	<DesktopWindows />
@@ -36,20 +36,37 @@
 		user-select: none;
 	}
 
-	.background .grid {
+	.grid--background {
 		--dot-size: 2px;
+		--dot-opacity: 0.6;
+		--line-opacity: 0.2;
 		grid-area: background;
 		width: 100%;
 		height: 100%;
-		opacity: 0.3;
 		background-size: 100px 100px;
 		background-image:
-			radial-gradient(circle at top left, #ffffff var(--dot-size), transparent 1px),
-			radial-gradient(circle at top right, #ffffff var(--dot-size), transparent 1px),
-			radial-gradient(circle at bottom left, #ffffff var(--dot-size), transparent 1px),
-			radial-gradient(circle at bottom right, #ffffff var(--dot-size), transparent 1px),
-			linear-gradient(to right, #555555 1px, transparent 1px),
-			linear-gradient(to bottom, #555555 1px, transparent 1px);
+			radial-gradient(
+				circle at top left,
+				rgba(255, 255, 255, var(--dot-opacity)) var(--dot-size),
+				transparent 1px
+			),
+			radial-gradient(
+				circle at top right,
+				rgba(255, 255, 255, var(--dot-opacity)) var(--dot-size),
+				transparent 1px
+			),
+			radial-gradient(
+				circle at bottom left,
+				rgba(255, 255, 255, var(--dot-opacity)) var(--dot-size),
+				transparent 1px
+			),
+			radial-gradient(
+				circle at bottom right,
+				rgba(255, 255, 255, var(--dot-opacity)) var(--dot-size),
+				transparent 1px
+			),
+			linear-gradient(to right, rgba(255, 255, 255, var(--line-opacity)) 1px, transparent 1px),
+			linear-gradient(to bottom, rgba(255, 255, 255, var(--line-opacity)) 1px, transparent 1px);
 	}
 
 	.background img {

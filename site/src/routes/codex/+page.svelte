@@ -3,6 +3,9 @@
 	import Desktop from '$lib/codex/components/desktop.svelte';
 	import Taskbar from '$lib/codex/components/taskbar.svelte';
 
+	let crtEnabled = $state(false);
+	let scanlinesEnabled = $state(false);
+	let vignetteEnabled = $state(false);
 	let feImageEl: SVGFEImageElement;
 
 	onMount(() => {
@@ -57,13 +60,22 @@
 	</defs>
 </svg>
 
-<div class="crt-perspective">
-	<main>
+<div class="backdrop">
+	<main class:crt={crtEnabled}>
 		<Desktop></Desktop>
 		<Taskbar></Taskbar>
 	</main>
-	<div class="vignette"></div>
-	<div class="scanlines"></div>
+	{#if vignetteEnabled}<div class="vignette"></div>{/if}
+	{#if scanlinesEnabled}<div class="scanlines"></div>{/if}
+</div>
+<div class="toggles">
+	<button onclick={() => (crtEnabled = !crtEnabled)}>CRT {crtEnabled ? 'ON' : 'OFF'}</button>
+	<button onclick={() => (scanlinesEnabled = !scanlinesEnabled)}
+		>SCAN {scanlinesEnabled ? 'ON' : 'OFF'}</button
+	>
+	<button onclick={() => (vignetteEnabled = !vignetteEnabled)}
+		>VIG {vignetteEnabled ? 'ON' : 'OFF'}</button
+	>
 </div>
 
 <style>
@@ -78,10 +90,32 @@
 		background-color: var(--bg);
 		font-family: 'Courier New', Courier, monospace;
 		border-radius: 4px;
+	}
+
+	main.crt {
 		filter: url('#crt-barrel');
 	}
 
-	.crt-perspective {
+	.toggles {
+		position: absolute;
+		bottom: 8px;
+		left: 8px;
+		z-index: 10000;
+		display: flex;
+		gap: 4px;
+	}
+
+	.toggles button {
+		padding: 2px 8px;
+		font-family: 'Courier New', Courier, monospace;
+		font-size: 11px;
+		background: rgba(0, 0, 0, 0.6);
+		color: rgba(255, 255, 255, 0.5);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		cursor: pointer;
+	}
+
+	.backdrop {
 		position: relative;
 		width: 100vw;
 		height: 100vh;

@@ -1,7 +1,61 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import Desktop from '$lib/codex/components/desktop.svelte';
 	import Taskbar from '$lib/codex/components/taskbar.svelte';
+
+	let feImageEl: SVGFEImageElement;
+
+	onMount(() => {
+		const size = 256;
+		const canvas = document.createElement('canvas');
+		canvas.width = canvas.height = size;
+		const ctx = canvas.getContext('2d')!;
+		const imageData = ctx.createImageData(size, size);
+		const { data } = imageData;
+
+		const k = 0.3; // barrel distortion strength
+
+		for (let y = 0; y < size; y++) {
+			for (let x = 0; x < size; x++) {
+				const nx = (x / (size - 1)) * 2 - 1;
+				const ny = (y / (size - 1)) * 2 - 1;
+				const r2 = nx * nx + ny * ny;
+				const dx = nx * k * r2;
+				const dy = ny * k * r2;
+				const i = (y * size + x) * 4;
+				data[i] = Math.round(Math.max(0, Math.min(255, (dx + 1) * 127.5)));
+				data[i + 1] = Math.round(Math.max(0, Math.min(255, (dy + 1) * 127.5)));
+				data[i + 2] = 0;
+				data[i + 3] = 255;
+			}
+		}
+
+		ctx.putImageData(imageData, 0, 0);
+		feImageEl.setAttribute('href', canvas.toDataURL());
+	});
 </script>
+
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<filter
+			id="crt-barrel"
+			x="-5%"
+			y="-5%"
+			width="110%"
+			height="110%"
+			color-interpolation-filters="sRGB"
+		>
+			<feImage bind:this={feImageEl} result="map" preserveAspectRatio="none" />
+			<feDisplacementMap
+				in="SourceGraphic"
+				in2="map"
+				scale="120"
+				xChannelSelector="R"
+				yChannelSelector="G"
+			/>
+		</filter>
+	</defs>
+</svg>
 
 <div class="crt-perspective">
 	<main>
@@ -24,18 +78,14 @@
 		background-color: var(--bg);
 		font-family: 'Courier New', Courier, monospace;
 		border-radius: 4px;
-		transform: rotateX(1deg);
-		transform-origin: center center;
+		filter: url('#crt-barrel');
 	}
 
 	.crt-perspective {
 		position: relative;
 		width: 100vw;
 		height: 100vh;
-		perspective-origin: center;
-		perspective: 500px;
 		overflow: hidden;
-		transform-style: preserve-3d;
 		background-color: black;
 	}
 
@@ -45,8 +95,6 @@
 		pointer-events: none;
 		background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.6) 100%);
 		z-index: 9999;
-		transform: rotateX(1deg);
-		transform-origin: center center;
 	}
 
 	.scanlines {
@@ -63,7 +111,5 @@
 			rgba(0, 0, 0, 0.15) 3px,
 			rgba(0, 0, 0, 0.15) 4px
 		);
-		transform: rotateX(1deg);
-		transform-origin: center center;
 	}
 </style>

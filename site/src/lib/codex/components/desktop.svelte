@@ -10,6 +10,7 @@
 	</div>
 	<DesktopIcons />
 	<DesktopWindows />
+	<div class="vignette"></div>
 </main>
 
 <style>
@@ -21,16 +22,30 @@
 		overflow: hidden;
 	}
 
+	.vignette {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.6) 100%);
+		z-index: 9999;
+	}
+
 	.background {
 		position: absolute;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
+		display: grid;
+		grid-template:
+			'background' 1fr
+			/ 1fr;
+		align-items: center;
+		justify-items: center;
+		width: 100%;
+		height: 100%;
 		pointer-events: none;
 		user-select: none;
 	}
 
 	.background img {
+		grid-area: background;
 		max-width: 50vw;
 		max-height: 60vh;
 	}

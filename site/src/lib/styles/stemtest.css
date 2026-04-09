@@ -2,6 +2,9 @@
 	/* Accent */
 	--accent: #00cc00;
 
+	/* Phosphor glow */
+	--phosphor-glow: 0 0 4px #00ff41, 0 0 10px #00ff41, 0 0 20px #003b00;
+
 	/* Backgrounds */
 	--bg: #050505;
 	--progress-bg: #222;

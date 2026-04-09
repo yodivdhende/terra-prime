@@ -3,7 +3,7 @@
 	import { type CodexWindow } from '$lib/codex/services/window-service.svelte';
 	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
 
-	let { context = $bindable() }: { context: CodexWindow } = $props();
+let { context = $bindable() }: { context: CodexWindow } = $props();
 
 	let styleString = $derived(`
     top: ${context.position.y}px;
@@ -226,5 +226,6 @@
 		padding: 1rem;
 		font-size: 0.85rem;
 		line-height: 1.6;
+		text-shadow: var(--phosphor-glow);
 	}
 </style>

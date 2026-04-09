@@ -43,12 +43,16 @@
 		letter-spacing: 0.05em;
 		transition:
 			color 0.1s,
-			border-color 0.1s;
+			border-color 0.1s,
+			text-shadow 0.1s,
+			filter 0.1s;
 	}
 
 	button:hover {
 		color: var(--accent);
 		border-color: var(--accent);
+		text-shadow: var(--phosphor-glow);
+		filter: drop-shadow(0 0 6px #00ff41);
 	}
 
 	button:active {

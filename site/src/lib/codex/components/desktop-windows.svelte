@@ -2,12 +2,15 @@
 	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
 	import Window from '$lib/codex/components/window.svelte';
 
-	const windows = $derived(WINDOW_SERVICE.openWindows);
+	let windows = $derived(WINDOW_SERVICE.windows);
 </script>
 
+alhost:5173/codex
 <main>
-	{#each windows, index}
-		<Window bind:context={windows[index]} />
+	{#each windows as window, index (window.id)}
+		{#if window.state === 'open'}
+			<Window bind:context={windows[index]} />
+		{/if}
 	{/each}
 </main>
 

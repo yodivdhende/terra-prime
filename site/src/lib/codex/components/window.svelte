@@ -3,7 +3,7 @@
 	import { type CodexWindow } from '$lib/codex/services/window-service.svelte';
 	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
 
-let { context = $bindable() }: { context: CodexWindow } = $props();
+	let { context = $bindable() }: { context: CodexWindow } = $props();
 
 	let styleString = $derived(`
     top: ${context.position.y}px;
@@ -204,18 +204,21 @@ let { context = $bindable() }: { context: CodexWindow } = $props();
 
 	.header button {
 		background: none;
-		border: none;
 		color: black;
 		cursor: pointer;
-		padding: 0;
+		padding: 0.5em;
 		display: flex;
 		align-items: center;
-		opacity: 0.7;
-		transition: opacity 0.1s;
+		border: 1px solid transparent;
 	}
 
 	.header button:hover {
-		opacity: 1;
+		border: 1px solid var(--bg);
+	}
+
+	.header button:active {
+		background-color: var(--bg);
+		color: var(--accent);
 	}
 
 	.content {

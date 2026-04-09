@@ -43,7 +43,7 @@
 		grid-area: background;
 		width: 100%;
 		height: 100%;
-		background-size: 100px 100px;
+		background-size: calc(100vw / 10) calc(100vw / 10);
 		background-image:
 			radial-gradient(
 				circle at top left,

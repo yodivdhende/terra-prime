@@ -31,8 +31,7 @@
 	}
 
 	.background img {
-		max-width: 400px;
-		opacity: 0.06;
-		filter: grayscale(1);
+		max-width: 50vw;
+		max-height: 60vh;
 	}
 </style>

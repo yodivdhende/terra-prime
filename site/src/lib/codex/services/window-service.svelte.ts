@@ -11,7 +11,12 @@ function createWindowService() {
       title: 'title'
     }
   ] as CodexWindow[]);
-  const openWindows = $derived(windows.filter(window => window.state === 'open'));
+  const openWindows = $derived.by(() => {
+    return windows.filter(window => {
+      console.log('openWindow', window);
+      return window.state === 'open'
+    })
+  });
 
 
   function openWindow({ id, content }:
@@ -23,27 +28,27 @@ function createWindowService() {
   }
 
   function updateStateToOpen(id: CodexWindow['id']): void {
-    windows = windows.map(window => {
-      if (window.id === id) window.state = 'open';
-      return window
-    })
+    const selectedWindow = windows.find(window => window.id === id);
+    if (selectedWindow == null) return;
+    selectedWindow.state = 'open';
   }
 
   function createNewWindow(content: CodexWindow['content']) {
-    windows = [...windows, {
+    windows.push({
       id: uuidv4(),
       state: 'open',
       dimension: { w: 300, h: 300 },
       position: { x: 100, y: 100, z: windows.length },
       content,
 
-    } as CodexWindow]
+    } as CodexWindow);
   }
 
   function closeWindow(id: CodexWindow['id']) {
     const selectedWindow = windows.find(window => window.id === id);
     if (selectedWindow == null) return;
     selectedWindow.state = 'closed';
+    console.log('closeWindow', selectedWindow);
   }
 
   function focusWindow(id: CodexWindow['id']): void {

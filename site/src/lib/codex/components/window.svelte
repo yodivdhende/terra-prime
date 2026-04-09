@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { X } from '@lucide/svelte';
 	import { type CodexWindow } from '$lib/codex/services/window-service.svelte';
+	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
 
 	let { context = $bindable() }: { context: CodexWindow } = $props();
 
@@ -12,7 +13,7 @@
   `);
 
 	function closeWindow() {
-		context.status = 'closed';
+		WINDOW_SERVICE.closeWindow(context.id);
 	}
 
 	function draggable(node: HTMLElement) {

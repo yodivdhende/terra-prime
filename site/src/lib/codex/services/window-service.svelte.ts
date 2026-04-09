@@ -40,6 +40,12 @@ function createWindowService() {
     } as CodexWindow]
   }
 
+  function closeWindow(id: CodexWindow['id']) {
+    const selectedWindow = windows.find(window => window.id === id);
+    if (selectedWindow == null) return;
+    selectedWindow.state = 'closed';
+  }
+
   function focusWindow(id: CodexWindow['id']): void {
     const index = windows.findIndex(codexWindow => codexWindow.id === id);
     if (index < 0) return;
@@ -54,6 +60,7 @@ function createWindowService() {
     openWindows,
     openWindow,
     focusWindow,
+    closeWindow,
 
   }
 }

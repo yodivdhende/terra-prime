@@ -15,29 +15,12 @@
 	let { children }: LayoutProps = $props();
 </script>
 
-<div class="scanlines"></div>
 {@render children()}
 <div class="dhvt-logo">
 	<a href="https://dhvt.be"> powered by <img src={dhvtLogo} alt="DHVT Logo" /></a>
 </div>
 
 <style>
-	.scanlines {
-		pointer-events: none;
-		position: fixed;
-		inset: 0;
-		z-index: 10;
-		opacity: 1;
-		transition: opacity 1s ease;
-		background: repeating-linear-gradient(
-			to bottom,
-			transparent 0px,
-			transparent 3px,
-			rgba(0, 0, 0, 0.15) 3px,
-			rgba(0, 0, 0, 0.15) 4px
-		);
-	}
-
 	.dhvt-logo {
 		position: fixed;
 		bottom: 1rem;

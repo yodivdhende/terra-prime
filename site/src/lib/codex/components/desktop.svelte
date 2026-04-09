@@ -7,10 +7,10 @@
 <main>
 	<div class="background">
 		<img src={Logo} alt="terraprime logo" />
+		<div class="grid"></div>
 	</div>
 	<DesktopIcons />
 	<DesktopWindows />
-	<div class="vignette"></div>
 </main>
 
 <style>
@@ -20,14 +20,6 @@
 		height: 100%;
 		background-color: var(--bg);
 		overflow: hidden;
-	}
-
-	.vignette {
-		position: absolute;
-		inset: 0;
-		pointer-events: none;
-		background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.6) 100%);
-		z-index: 9999;
 	}
 
 	.background {
@@ -42,6 +34,22 @@
 		height: 100%;
 		pointer-events: none;
 		user-select: none;
+	}
+
+	.background .grid {
+		--dot-size: 2px;
+		grid-area: background;
+		width: 100%;
+		height: 100%;
+		opacity: 0.3;
+		background-size: 100px 100px;
+		background-image:
+			radial-gradient(circle at top left, #ffffff var(--dot-size), transparent 1px),
+			radial-gradient(circle at top right, #ffffff var(--dot-size), transparent 1px),
+			radial-gradient(circle at bottom left, #ffffff var(--dot-size), transparent 1px),
+			radial-gradient(circle at bottom right, #ffffff var(--dot-size), transparent 1px),
+			linear-gradient(to right, #555555 1px, transparent 1px),
+			linear-gradient(to bottom, #555555 1px, transparent 1px);
 	}
 
 	.background img {

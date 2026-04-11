@@ -2,14 +2,15 @@ import { v4 as uuidv4 } from 'uuid';
 
 function createWindowService() {
   const windows = $state([
-    // {
-    //   id: uuidv4(),
-    //   state: 'open',
-    //   dimension: { w: 300, h: 300 },
-    //   position: { x: 300, y: 300, z: 0 },
-    //   content: 'content',
-    //   title: 'title'
-    // }
+    {
+      id: uuidv4(),
+      type: 'pdf',
+      state: 'open',
+      dimension: { w: 300, h: 300 },
+      position: { x: 300, y: 300, z: 0 },
+      contentData: 'content',
+      title: 'title'
+    }
   ] as CodexWindow[]);
 
   function openWindow({ id, content }:
@@ -34,7 +35,7 @@ function createWindowService() {
       state: 'open',
       dimension: { w: 300, h: 300 },
       position: { x: 100, y: 100, z: windows.length },
-      content,
+      contentData: content,
 
     } as CodexWindow);
     return id;
@@ -70,9 +71,10 @@ export const WINDOW_SERVICE = createWindowService();
 
 export type CodexWindow = {
   id: string;
+  type: 'pdf';
   state: 'open' | 'hidden' | 'closed';
   dimension: { w: number, h: number };
   position: { x: number, y: number, z: number };
-  content: string;
+  contentData: string;
   title: string;
 }

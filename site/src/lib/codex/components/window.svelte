@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { X } from '@lucide/svelte';
+	import { type Snippet } from 'svelte';
 	import { type CodexWindow } from '$lib/codex/services/window-service.svelte';
 	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
 
-	let { context = $bindable() }: { context: CodexWindow } = $props();
+	let { context = $bindable(), content }: { context: CodexWindow; content: Snippet } = $props();
 
 	let styleString = $derived(`
     top: ${context.position.y}px;
@@ -161,7 +162,7 @@
 		<button onclick={closeWindow}> <X /> </button>
 	</div>
 	<div class="content">
-		{context.content}
+		{@render content?.()}
 	</div>
 </main>
 

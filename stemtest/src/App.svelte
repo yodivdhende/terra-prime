@@ -48,8 +48,8 @@
       } else if (e.key === "Escape") {
         quiz.prev();
       } else {
-        const num = Number(e.key);
-        if (num >= 1 && num <= 5) quiz.selectAnswer(ANSWERS[num - 1].value);
+        const match = e.code.match(/^(?:Digit|Numpad)([1-5])$/);
+        if (match) quiz.selectAnswer(ANSWERS[parseInt(match[1]) - 1].value);
       }
     }
   }

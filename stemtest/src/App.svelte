@@ -1,6 +1,7 @@
 <script lang="ts">
 	import companiesData from './lib/stemtest-companies.json';
 	import questionsData from './lib/stemtest-questions.json';
+	import './lib/reset.css';
 	import './lib/stemtest.css';
 
 	type Company = 'NEON_HAVEN' | 'AURION' | 'BIOSYNTH' | 'BLACKWATER' | 'VANTAGE' | 'LUMEN_VEIL';

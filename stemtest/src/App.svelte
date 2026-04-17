@@ -13,11 +13,12 @@
   const answerValues = ANSWERS.map((a) => a.value);
 
   $effect(() => {
-    window.addEventListener('keydown', handleKeydown, true);
-    return () => window.removeEventListener('keydown', handleKeydown, true);
+    window.addEventListener("keydown", handleKeydown, true);
+    return () => window.removeEventListener("keydown", handleKeydown, true);
   });
 
   function handleKeydown(e: KeyboardEvent) {
+    console.log("handleKeydown: ", e);
     if (quiz.phase === "intro") {
       if (e.key === "Enter") quiz.start();
       return;
@@ -32,11 +33,15 @@
       if (e.key === "ArrowUp" || e.key === "ArrowDown") {
         e.preventDefault();
         const currentIdx =
-          quiz.selectedAnswer === null ? -1 : answerValues.indexOf(quiz.selectedAnswer);
+          quiz.selectedAnswer === null
+            ? -1
+            : answerValues.indexOf(quiz.selectedAnswer);
         if (e.key === "ArrowUp") {
           quiz.selectAnswer(answerValues[Math.max(0, currentIdx - 1)]);
         } else {
-          quiz.selectAnswer(answerValues[Math.min(answerValues.length - 1, currentIdx + 1)]);
+          quiz.selectAnswer(
+            answerValues[Math.min(answerValues.length - 1, currentIdx + 1)],
+          );
         }
       } else if (e.key === "Enter") {
         quiz.next();
@@ -50,14 +55,17 @@
   }
 </script>
 
-
 <main>
   {#if quiz.phase === "intro"}
     <IntroPanel onStart={() => quiz.start()} />
   {/if}
 
   {#if quiz.phase === "quiz" && quiz.currentQuestion}
-    <QuizPanelFrame currentIndex={quiz.currentIndex} quizSize={quiz.quizSize} progress={quiz.progress}>
+    <QuizPanelFrame
+      currentIndex={quiz.currentIndex}
+      quizSize={quiz.quizSize}
+      progress={quiz.progress}
+    >
       <QuizPanel
         question={quiz.currentQuestion}
         selectedAnswer={quiz.selectedAnswer}
@@ -75,7 +83,10 @@
   {/if}
 
   {#if quiz.phase === "result" && quiz.resultCompany}
-    <ResultPanel company={quiz.resultCompany} onRestart={() => quiz.restart()} />
+    <ResultPanel
+      company={quiz.resultCompany}
+      onRestart={() => quiz.restart()}
+    />
   {/if}
 </main>
 

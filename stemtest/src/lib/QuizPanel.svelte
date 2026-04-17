@@ -25,14 +25,14 @@
 <div class="content">
 	<p class="question">{questions[currentIndex].text}</p>
 	<div class="answers">
-		{#each answers as opt}
+		{#each answers as opt, i}
 			<button
 				class="answer-btn"
 				class:selected={selectedAnswer === opt.value}
 				onclick={() => onSelectAnswer(opt.value)}
 				onfocus={() => onSelectAnswer(opt.value)}
 			>
-				<span class="cursor">&gt;</span>* {opt.label}
+				<span class="cursor">&gt;</span><span class="num">{i + 1}.</span> {opt.label}
 			</button>
 		{/each}
 	</div>
@@ -87,22 +87,33 @@
 		transition: opacity 0.1s;
 	}
 
+	.answer-btn.selected .cursor {
+		opacity: 1;
+	}
+
+	.answer-btn .num {
+		display: inline-block;
+		width: 1.5em;
+		color: var(--text-muted);
+		transition: color 0.1s;
+	}
+
 	.answer-btn:hover,
 	.answer-btn:focus-visible {
 		color: white;
 	}
 
-	.answer-btn:hover .cursor,
-	.answer-btn:focus-visible .cursor {
-		opacity: 1;
+	.answer-btn:hover .num,
+	.answer-btn:focus-visible .num {
+		color: var(--accent);
 	}
 
 	.answer-btn.selected {
 		color: var(--accent);
 	}
 
-	.answer-btn.selected .cursor {
-		opacity: 1;
+	.answer-btn.selected .num {
+		color: var(--accent);
 	}
 
 	.nav-row {

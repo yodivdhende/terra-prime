@@ -5,6 +5,7 @@
   import "./lib/stemtest.css";
   import IntroPanel from "./lib/IntroPanel.svelte";
   import QuizPanel from "./lib/QuizPanel.svelte";
+  import QuizPanelFooter from "./lib/QuizPanelFooter.svelte";
   import QuizPanelFrame from "./lib/QuizPanelFrame.svelte";
   import ResultPanel from "./lib/ResultPanel.svelte";
 
@@ -168,12 +169,15 @@
   {#if phase === "quiz"}
     <QuizPanelFrame {currentIndex} quizSize={QUIZ_SIZE} {progress}>
       <QuizPanel
-        {questions}
-        {currentIndex}
-        quizSize={QUIZ_SIZE}
+        question={questions[currentIndex]}
         {selectedAnswer}
         answers={ANSWERS}
         onSelectAnswer={selectAnswer}
+      />
+      <QuizPanelFooter
+        {currentIndex}
+        quizSize={QUIZ_SIZE}
+        {selectedAnswer}
         onNext={nextQuestion}
         onPrev={prevQuestion}
       />

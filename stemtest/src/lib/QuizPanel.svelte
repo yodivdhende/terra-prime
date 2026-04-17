@@ -2,28 +2,20 @@
 	type Answer = -2 | -1 | 0 | 1 | 2;
 
 	let {
-		questions,
-		currentIndex,
-		quizSize,
+		question,
 		selectedAnswer,
 		answers,
-		onSelectAnswer,
-		onNext,
-		onPrev
+		onSelectAnswer
 	}: {
-		questions: { text: string }[];
-		currentIndex: number;
-		quizSize: number;
+		question: { text: string };
 		selectedAnswer: Answer | null;
 		answers: { label: string; value: Answer }[];
 		onSelectAnswer: (value: Answer) => void;
-		onNext: () => void;
-		onPrev: () => void;
 	} = $props();
 </script>
 
 <div class="content">
-	<p class="question">{questions[currentIndex].text}</p>
+	<p class="question">{question.text}</p>
 	<div class="answers">
 		{#each answers as opt, i}
 			<button
@@ -35,14 +27,6 @@
 				<span class="cursor">&gt;</span><span class="num">{i + 1}.</span> {opt.label}
 			</button>
 		{/each}
-	</div>
-	<div class="nav-row">
-		<button class="btn secondary" onclick={onPrev} disabled={currentIndex === 0}>
-			[ VORIGE ]
-		</button>
-		<button class="btn" onclick={onNext} disabled={selectedAnswer === null}>
-			{currentIndex === quizSize - 1 ? '[ ANALYSEER ]' : '[ VOLGENDE ]'}
-		</button>
 	</div>
 </div>
 
@@ -62,7 +46,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
-		margin-bottom: 2rem;
 	}
 
 	.answer-btn {
@@ -116,48 +99,6 @@
 		color: var(--accent);
 	}
 
-	.nav-row {
-		display: flex;
-		justify-content: space-between;
-		gap: 1rem;
-	}
-
-	.btn {
-		background: transparent;
-		border: 1px solid var(--accent);
-		outline: none;
-		color: white;
-		font-family: 'Courier New', Courier, monospace;
-		font-size: 0.9rem;
-		padding: 0.6rem 1.5rem;
-		cursor: pointer;
-		letter-spacing: 0.05em;
-		border-radius: 3px;
-		transition:
-			background-color 0.15s,
-			color 0.15s;
-	}
-
-	.btn:hover:not(:disabled) {
-		background-color: var(--accent);
-		color: black;
-	}
-
-	.btn:disabled {
-		opacity: 0.3;
-		cursor: not-allowed;
-	}
-
-	.btn.secondary {
-		border-color: var(--border-dim);
-		color: var(--text-dim);
-	}
-
-	.btn.secondary:hover {
-		background-color: var(--hover-bg);
-		color: white;
-	}
-
 	@media (max-width: 500px) {
 		.content {
 			padding: 1.25rem;
@@ -165,10 +106,6 @@
 
 		.question {
 			font-size: 1rem;
-		}
-
-		.nav-row {
-			flex-direction: column-reverse;
 		}
 	}
 </style>

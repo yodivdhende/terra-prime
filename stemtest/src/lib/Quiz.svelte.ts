@@ -17,7 +17,9 @@ export const ANSWERS: { label: string; value: Answer }[] = [
 
 const QUIZ_SIZE = 10;
 
-const ALL_QUESTIONS = questionsData as { text: string; weights: Partial<Record<Company, number>> }[];
+export type Question = { text: string; type?: 'voice'; weights: Partial<Record<Company, number>> };
+
+const ALL_QUESTIONS = questionsData as Question[];
 const COMPANIES = companiesData as Record<Company, CompanyData>;
 
 export class Quiz {
@@ -25,7 +27,7 @@ export class Quiz {
 	readonly answers = ANSWERS;
 	readonly companies = COMPANIES;
 
-	questions = $state<{ text: string; weights: Partial<Record<Company, number>> }[]>([]);
+	questions = $state<Question[]>([]);
 	currentIndex = $state(0);
 	givenAnswers = $state<(Answer | null)[]>(Array(QUIZ_SIZE).fill(null));
 	selectedAnswer = $state<Answer | null>(null);
@@ -37,8 +39,11 @@ export class Quiz {
 	resultCompany = $derived(this.result ? COMPANIES[this.result] : null);
 
 	start() {
-		const shuffled = [...ALL_QUESTIONS].sort(() => Math.random() - 0.5);
-		this.questions = shuffled.slice(0, QUIZ_SIZE);
+		const voiceQuestions = ALL_QUESTIONS.filter(q => q.type === 'voice');
+		const regularQuestions = ALL_QUESTIONS.filter(q => q.type !== 'voice');
+		const shuffledRegular = regularQuestions.sort(() => Math.random() - 0.5);
+		const randomVoice = voiceQuestions[Math.floor(Math.random() * voiceQuestions.length)];
+		this.questions = [...shuffledRegular.slice(0, QUIZ_SIZE - 1), randomVoice];
 		this.givenAnswers = Array(QUIZ_SIZE).fill(null);
 		this.currentIndex = 0;
 		this.selectedAnswer = null;
@@ -48,6 +53,10 @@ export class Quiz {
 
 	selectAnswer(value: Answer) {
 		this.selectedAnswer = value;
+	}
+
+	get isVoiceQuestion() {
+		return this.currentQuestion?.type === 'voice';
 	}
 
 	next() {

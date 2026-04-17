@@ -5,12 +5,14 @@
 		currentIndex,
 		quizSize,
 		selectedAnswer,
+		canProceed,
 		onNext,
 		onPrev
 	}: {
 		currentIndex: number;
 		quizSize: number;
 		selectedAnswer: Answer | null;
+		canProceed?: boolean;
 		onNext: () => void;
 		onPrev: () => void;
 	} = $props();
@@ -20,7 +22,7 @@
 	<button class="btn secondary" onclick={onPrev} disabled={currentIndex === 0}>
 		[ VORIGE ]
 	</button>
-	<button class="btn" onclick={onNext} disabled={selectedAnswer === null}>
+	<button class="btn" onclick={onNext} disabled={!(canProceed ?? selectedAnswer !== null)}>
 		{currentIndex === quizSize - 1 ? '[ ANALYSEER ]' : '[ VOLGENDE ]'}
 	</button>
 </div>

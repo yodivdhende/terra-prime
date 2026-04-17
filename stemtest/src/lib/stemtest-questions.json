@@ -70,5 +70,15 @@
 	{
 		"text": "Realiteit is flexibeler dan de meeste mensen beseffen",
 		"weights": { "LUMEN_VEIL": 2, "BIOSYNTH": 1, "NEON_HAVEN": -2 }
+	},
+	{
+		"text": "Beschrijf in een paar woorden wat loyaliteit voor jou betekent.",
+		"type": "voice",
+		"weights": {}
+	},
+	{
+		"text": "Wat zou jij doen als je morgen de leiding had over een heel district?",
+		"type": "voice",
+		"weights": {}
 	}
 ]

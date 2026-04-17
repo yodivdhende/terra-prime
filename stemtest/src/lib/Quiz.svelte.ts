@@ -17,7 +17,7 @@ export const ANSWERS: { label: string; value: Answer }[] = [
 
 const QUIZ_SIZE = 10;
 
-export type Question = { text: string; type?: 'voice'; weights: Partial<Record<Company, number>> };
+export type Question = { text: string; type?: 'voice' | 'camera'; weights: Partial<Record<Company, number>> };
 
 const ALL_QUESTIONS = questionsData as Question[];
 const COMPANIES = companiesData as Record<Company, CompanyData>;
@@ -40,10 +40,12 @@ export class Quiz {
 
 	start() {
 		const voiceQuestions = ALL_QUESTIONS.filter(q => q.type === 'voice');
-		const regularQuestions = ALL_QUESTIONS.filter(q => q.type !== 'voice');
+		const cameraQuestions = ALL_QUESTIONS.filter(q => q.type === 'camera');
+		const regularQuestions = ALL_QUESTIONS.filter(q => q.type !== 'voice' && q.type !== 'camera');
 		const shuffledRegular = regularQuestions.sort(() => Math.random() - 0.5);
 		const randomVoice = voiceQuestions[Math.floor(Math.random() * voiceQuestions.length)];
-		this.questions = [...shuffledRegular.slice(0, QUIZ_SIZE - 1), randomVoice];
+		const randomCamera = cameraQuestions[Math.floor(Math.random() * cameraQuestions.length)];
+		this.questions = [...shuffledRegular.slice(0, QUIZ_SIZE - 2), randomVoice, randomCamera];
 		this.givenAnswers = Array(QUIZ_SIZE).fill(null);
 		this.currentIndex = 0;
 		this.selectedAnswer = null;

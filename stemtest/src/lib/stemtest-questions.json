@@ -80,5 +80,15 @@
 		"text": "Wat zou jij doen als je morgen de leiding had over een heel district?",
 		"type": "voice",
 		"weights": {}
+	},
+	{
+		"text": "Het systeem vereist een biometrische retinascan. Richt de lens op uw gezicht en activeer de scanner.",
+		"type": "camera",
+		"weights": {}
+	},
+	{
+		"text": "Identificatieprotocol geactiveerd. Laat het systeem uw fysionomie analyseren voor archivering.",
+		"type": "camera",
+		"weights": {}
 	}
 ]

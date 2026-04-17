@@ -4,6 +4,7 @@
   import IntroPanel from "./lib/IntroPanel.svelte";
   import QuizPanel from "./lib/QuizPanel.svelte";
   import VoicePanel from "./lib/VoicePanel.svelte";
+  import CameraPanel from "./lib/CameraPanel.svelte";
   import QuizPanelFooter from "./lib/QuizPanelFooter.svelte";
   import QuizPanelFrame from "./lib/QuizPanelFrame.svelte";
   import ResultPanel from "./lib/ResultPanel.svelte";
@@ -69,6 +70,12 @@
     >
       {#if quiz.currentQuestion.type === 'voice'}
         <VoicePanel
+          question={quiz.currentQuestion}
+          selectedAnswer={quiz.selectedAnswer}
+          onSelectAnswer={(v) => quiz.selectAnswer(v)}
+        />
+      {:else if quiz.currentQuestion.type === 'camera'}
+        <CameraPanel
           question={quiz.currentQuestion}
           selectedAnswer={quiz.selectedAnswer}
           onSelectAnswer={(v) => quiz.selectAnswer(v)}

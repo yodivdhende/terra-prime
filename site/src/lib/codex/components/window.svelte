@@ -176,20 +176,20 @@
 		position: absolute;
 		display: flex;
 		flex-direction: column;
-		border: 2px solid var(--accent);
+		border: 2px solid var(--color-accent);
 		box-shadow:
-			var(--accent) 0 0 16px,
-			var(--accent) 0 0 4px inset;
+			var(--color-accent) 0 0 16px,
+			var(--color-accent) 0 0 4px inset;
 		background-color: var(--bg);
-		font-family: 'Courier New', Courier, monospace;
+		font-family: var(--font-mono);
 		overflow: hidden;
 	}
 
 	.header {
 		display: flex;
 		align-items: center;
-		background-color: var(--accent);
-		color: black;
+		background-color: var(--color-accent);
+		color: var(--color-bg);
 		padding: 0.35rem 0.75rem;
 		cursor: grab;
 		font-size: 0.7rem;
@@ -210,7 +210,7 @@
 
 	.header button {
 		background: none;
-		color: black;
+		color: var(--color-bg);
 		cursor: pointer;
 		padding: 0.5em;
 		display: flex;
@@ -219,21 +219,21 @@
 	}
 
 	.header button:hover {
-		border: 1px solid var(--bg);
+		border: 1px solid var(--color-bg);
 	}
 
 	.header button:active {
-		background-color: var(--bg);
-		color: var(--accent);
+		background-color: var(--color-bg);
+		color: var(--color-accent);
 	}
 
 	.content {
 		flex: 1;
 		overflow: auto;
-		background-color: var(--bg);
-		color: var(--text-result);
+		background-color: var(--color-bg);
+		color: var(--color-text-result);
 		font-size: 0.85rem;
 		line-height: 1.6;
-		text-shadow: var(--phosphor-glow);
+		text-shadow: var(--phosphor-glow-shadow);
 	}
 </style>

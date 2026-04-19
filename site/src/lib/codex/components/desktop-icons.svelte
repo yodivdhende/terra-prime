@@ -54,14 +54,14 @@
 	}
 
 	button:hover {
-		color: var(--accent);
-		border-color: var(--accent);
-		text-shadow: var(--phosphor-glow);
-		filter: drop-shadow(0 0 6px #00ff41);
+		color: var(--color-accent);
+		border-color: var(--color-accent);
+		text-shadow: var(--phosphor-glow-color);
+		filter: drop-shadow(0 0 6px var(--phosphor-glow-color));
 	}
 
 	button:active {
-		background-color: var(--accent);
-		color: black;
+		background-color: var(--color-accent);
+		color: var(--color-bg);
 	}
 </style>

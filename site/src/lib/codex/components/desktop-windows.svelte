@@ -6,7 +6,6 @@
 	let windows = $derived(WINDOW_SERVICE.windows);
 </script>
 
-alhost:5173/codex
 <main>
 	{#each windows as window, index (window.id)}
 		{#if window.state === 'open'}

@@ -9,37 +9,20 @@ function createWindowService() {
       dimension: { w: 300, h: 300 },
       position: { x: 100, y: 100, z: 0 },
       contentData: 'content',
-      title: 'irene.pdf'
+      title: 'irene.pdf',
+      icon: { type: 'file' }
     }
   ] as CodexWindow[]);
 
-  function openWindow({ id, content, title }:
-    { id?: CodexWindow['id'], content: CodexWindow['contentData'], title: CodexWindow['title'] }
+  function openWindow({ id }: { id: CodexWindow['id'] }
   ) {
-    console.log(id, content, title);
-    if (id != null) return updateStateToOpen(id);
-    return createNewWindow({ content, title });
+    return updateStateToOpen(id);
   }
 
   function updateStateToOpen(id: CodexWindow['id']): string {
     const selectedWindow = windows.find(window => window.id === id);
     if (selectedWindow == null) return id;
     selectedWindow.state = 'open';
-    return id;
-  }
-
-  function createNewWindow({ content, title }:
-    { content: CodexWindow['contentData'], title: CodexWindow['title'] }
-  ) {
-    const id = uuidv4();
-    windows.push({
-      id,
-      state: 'open',
-      dimension: { w: 300, h: 300 },
-      position: { x: 100, y: 100, z: windows.length },
-      contentData: content,
-      title,
-    } as CodexWindow);
     return id;
   }
 
@@ -78,4 +61,9 @@ export type CodexWindow = {
   position: { x: number, y: number, z: number };
   contentData: string;
   title: string;
+  icon?: Icon;
+}
+
+export type Icon = {
+  type: 'file'
 }

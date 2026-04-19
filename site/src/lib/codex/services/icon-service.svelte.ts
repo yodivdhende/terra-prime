@@ -1,14 +1,15 @@
-import { v4 as uuidv4 } from 'uuid';
-import { Component } from "svelte";
-import { CodexWindow } from "./window-service.svelte";
-import { File } from '@lucide/svelte';
+import { WINDOW_SERVICE } from './window-service.svelte';
 
 function createIconService() {
-  const icons = $state([
-    {
-      id: uuidv4(), Icon: File, name: 'test', windowContent: 'Test'
-    },
-  ] as Icon[]);
+  const icons = $derived.by(() =>
+    WINDOW_SERVICE.windows
+      .filter(({ icon }) => icon != null)
+      .map(window => ({
+        windowId: window.id,
+        title: window.title,
+        type: window.icon!.type,
+      }))
+  )
 
   return {
     icons,
@@ -16,12 +17,4 @@ function createIconService() {
 }
 
 export const ICON_SERVICE = createIconService();
-
-export type Icon = {
-  id: string;
-  Icon: Component;
-  name: string;
-  windowContent: CodexWindow['contentData'];
-  windowId?: string;
-}
 

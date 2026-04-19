@@ -1,25 +1,28 @@
 <script lang="ts">
 	import { ICON_SERVICE, type Icon } from '$lib/codex/services/icon-service.svelte';
 	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
+	import { File } from '@lucide/svelte';
 
 	let icons = $derived(ICON_SERVICE.icons);
 
+	$inspect(icons);
+
 	function openWindow(icon: Icon) {
-		const { windowContent, windowId, title } = $state.snapshot(icon);
-		icon.windowId = WINDOW_SERVICE.openWindow({
-			content: windowContent,
-			id: windowId,
-			title: title
-		});
+		const { windowId } = $state.snapshot(icon);
+		icon.windowId = WINDOW_SERVICE.openWindow({ id: windowId });
 	}
 </script>
 
 <main>
 	{#each icons as icon (icon.id)}
-		<button onclick={() => openWindow(icon)}>
-			<icon.Icon size={64} strokeWidth={1} />
-			{icon.name}.
-		</button>
+		{#if icon.type === 'file'}
+			<button onclick={() => openWindow(icon)}>
+				<div class="icon">
+					<File size={64} strokeWidth={1} />
+				</div>
+				{icon.title}
+			</button>
+		{/if}
 	{/each}
 </main>
 
@@ -37,13 +40,13 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.4rem;
-		color: var(--text-dim);
-		background: none;
+		width: 100px;
+		color: var(--color-text-dim);
 		outline: none;
 		border: 1px solid transparent;
 		cursor: pointer;
 		padding: 0.5rem;
-		font-family: 'Courier New', Courier, monospace;
+		font-family: var(--font-mono);
 		font-size: 0.7rem;
 		letter-spacing: 0.05em;
 		transition:
@@ -51,6 +54,12 @@
 			border-color 0.1s,
 			text-shadow 0.1s,
 			filter 0.1s;
+		background-color: black;
+	}
+
+	.icon {
+		background-color: var(--color-bg);
+		z-index: 1;
 	}
 
 	button:hover {
@@ -60,8 +69,16 @@
 		filter: drop-shadow(0 0 6px var(--phosphor-glow-color));
 	}
 
+	button:hover .icon {
+		border-color: var(--color-accent);
+	}
+
 	button:active {
 		background-color: var(--color-accent);
 		color: var(--color-bg);
+	}
+
+	button:active .icon {
+		background-color: var(--color-accent);
 	}
 </style>

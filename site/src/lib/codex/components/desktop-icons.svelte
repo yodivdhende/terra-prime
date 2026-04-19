@@ -5,16 +5,20 @@
 	let icons = $derived(ICON_SERVICE.icons);
 
 	function openWindow(icon: Icon) {
-		const { windowContent, windowId } = $state.snapshot(icon);
-		icon.windowId = WINDOW_SERVICE.openWindow({ content: windowContent, id: windowId });
+		const { windowContent, windowId, title } = $state.snapshot(icon);
+		icon.windowId = WINDOW_SERVICE.openWindow({
+			content: windowContent,
+			id: windowId,
+			title: title
+		});
 	}
 </script>
 
 <main>
 	{#each icons as icon (icon.id)}
 		<button onclick={() => openWindow(icon)}>
-			<svelte:component this={icon.icon} size={64} strokeWidth={1} />
-			{icon.name}
+			<icon.Icon size={64} strokeWidth={1} />
+			{icon.name}.
 		</button>
 	{/each}
 </main>

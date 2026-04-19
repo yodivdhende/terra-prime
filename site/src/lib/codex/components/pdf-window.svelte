@@ -1,14 +1,21 @@
 <script lang="ts">
 	import Window from '$lib/codex/components/window.svelte';
-	import CodexWindow from '$lib/codex/services/winodw-service.svelte';
-	import pdfContent from '$lib/assets/documents/irene.pdf';
+	import { type CodexWindow } from '$lib/codex/services/window-service.svelte';
+	import pdfContent from '$lib/assets/documents/irene.pdf?url';
 
 	let { window }: { window: CodexWindow } = $props();
 </script>
 
 {#snippet pdf()}
-	<embed src={pdfContent} />
+	<embed src="{pdfContent}#toolbar=0&navpanes=0&scrollbar=0" />
 {/snippet}
+
 <Window bind:context={window} content={pdf} />
 
-<style></style>
+<style>
+	embed {
+		width: 100%;
+		height: calc(100% - 10px);
+		overflow: hidden;
+	}
+</style>

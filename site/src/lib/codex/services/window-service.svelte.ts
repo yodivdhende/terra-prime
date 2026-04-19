@@ -7,28 +7,30 @@ function createWindowService() {
       type: 'pdf',
       state: 'open',
       dimension: { w: 300, h: 300 },
-      position: { x: 300, y: 300, z: 0 },
+      position: { x: 100, y: 100, z: 0 },
       contentData: 'content',
-      title: 'title'
+      title: 'irene.pdf'
     }
   ] as CodexWindow[]);
 
-  function openWindow({ id, content }:
-    { id?: CodexWindow['id'], content: CodexWindow['content'] }
+  function openWindow({ id, content, title }:
+    { id?: CodexWindow['id'], content: CodexWindow['contentData'], title: CodexWindow['title'] }
   ) {
-    console.log(id, content);
+    console.log(id, content, title);
     if (id != null) return updateStateToOpen(id);
-    return createNewWindow(content);
+    return createNewWindow({ content, title });
   }
 
-  function updateStateToOpen(id: CodexWindow['id']): void {
+  function updateStateToOpen(id: CodexWindow['id']): string {
     const selectedWindow = windows.find(window => window.id === id);
-    if (selectedWindow == null) return;
+    if (selectedWindow == null) return id;
     selectedWindow.state = 'open';
     return id;
   }
 
-  function createNewWindow(content: CodexWindow['content']) {
+  function createNewWindow({ content, title }:
+    { content: CodexWindow['contentData'], title: CodexWindow['title'] }
+  ) {
     const id = uuidv4();
     windows.push({
       id,
@@ -36,7 +38,7 @@ function createWindowService() {
       dimension: { w: 300, h: 300 },
       position: { x: 100, y: 100, z: windows.length },
       contentData: content,
-
+      title,
     } as CodexWindow);
     return id;
   }
@@ -62,7 +64,6 @@ function createWindowService() {
     openWindow,
     focusWindow,
     closeWindow,
-
   }
 }
 

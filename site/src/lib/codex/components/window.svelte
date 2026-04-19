@@ -6,12 +6,15 @@
 
 	let { context = $bindable(), content }: { context: CodexWindow; content: Snippet } = $props();
 
-	let styleString = $derived(`
+	let styleString = $derived.by(() => {
+		if (context == null) return '';
+		return `
     top: ${context.position.y}px;
     left: ${context.position.x}px;
     width: ${context.dimension.w}px;
     height: ${context.dimension.h}px;
-  `);
+  `;
+	});
 
 	function closeWindow() {
 		WINDOW_SERVICE.closeWindow(context.id);
@@ -157,13 +160,15 @@
 </script>
 
 <main style={styleString} use:draggable use:resizable>
-	<div class="header">
-		<div class="title">{context.title}</div>
-		<button onclick={closeWindow}> <X /> </button>
-	</div>
-	<div class="content">
-		{@render content?.()}
-	</div>
+	{#if context}
+		<div class="header">
+			<div class="title">{context.title}</div>
+			<button onclick={closeWindow}> <X /> </button>
+		</div>
+		<div class="content">
+			{@render content?.()}
+		</div>
+	{/if}
 </main>
 
 <style>
@@ -227,7 +232,6 @@
 		overflow: auto;
 		background-color: var(--bg);
 		color: var(--text-result);
-		padding: 1rem;
 		font-size: 0.85rem;
 		line-height: 1.6;
 		text-shadow: var(--phosphor-glow);

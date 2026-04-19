@@ -11,7 +11,8 @@ alhost:5173/codex
 	{#each windows as window, index (window.id)}
 		{#if window.state === 'open'}
 			{#if window.type === 'pdf'}
-				<PdfWindow></PdfWindow>
+				<test></test>
+				<PdfWindow window={windows[index]}></PdfWindow>
 			{:else}
 				<Window bind:context={windows[index]} />
 			{/if}

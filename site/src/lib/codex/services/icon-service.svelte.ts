@@ -5,7 +5,9 @@ import { File } from '@lucide/svelte';
 
 function createIconService() {
   const icons = $state([
-    { id: uuidv4(), icon: File, name: 'test', windowContent: 'Test' },
+    {
+      id: uuidv4(), Icon: File, name: 'test', windowContent: 'Test'
+    },
   ] as Icon[]);
 
   return {
@@ -17,9 +19,9 @@ export const ICON_SERVICE = createIconService();
 
 export type Icon = {
   id: string;
-  icon: Component;
+  Icon: Component;
   name: string;
-  windowContent: CodexWindow['content'];
+  windowContent: CodexWindow['contentData'];
   windowId?: string;
 }
 

@@ -3,7 +3,6 @@
   import "./lib/stemtest.css";
   import IntroPanel from "./lib/IntroPanel.svelte";
   import QuizPanel from "./lib/QuizPanel.svelte";
-  import VoicePanel from "./lib/VoicePanel.svelte";
   import CameraPanel from "./lib/CameraPanel.svelte";
   import QuizPanelFooter from "./lib/QuizPanelFooter.svelte";
   import QuizPanelFrame from "./lib/QuizPanelFrame.svelte";
@@ -68,13 +67,7 @@
       quizSize={quiz.quizSize}
       progress={quiz.progress}
     >
-      {#if quiz.currentQuestion.type === 'voice'}
-        <VoicePanel
-          question={quiz.currentQuestion}
-          selectedAnswer={quiz.selectedAnswer}
-          onSelectAnswer={(v) => quiz.selectAnswer(v)}
-        />
-      {:else if quiz.currentQuestion.type === 'camera'}
+      {#if quiz.currentQuestion.type === 'camera'}
         <CameraPanel
           question={quiz.currentQuestion}
           selectedAnswer={quiz.selectedAnswer}

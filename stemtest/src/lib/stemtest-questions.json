@@ -72,16 +72,6 @@
 		"weights": { "LUMEN_VEIL": 2, "BIOSYNTH": 1, "NEON_HAVEN": -2 }
 	},
 	{
-		"text": "Beschrijf in een paar woorden wat loyaliteit voor jou betekent.",
-		"type": "voice",
-		"weights": {}
-	},
-	{
-		"text": "Wat zou jij doen als je morgen de leiding had over een heel district?",
-		"type": "voice",
-		"weights": {}
-	},
-	{
 		"text": "Het systeem vereist een biometrische retinascan. Richt de lens op uw gezicht en activeer de scanner.",
 		"type": "camera",
 		"weights": {}

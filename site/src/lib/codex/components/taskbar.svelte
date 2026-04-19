@@ -9,7 +9,7 @@
 		height: 48px;
 		flex-shrink: 0;
 		background-color: var(--color-bg);
-		border-top: 2px solid var(---color-accent);
+		border-top: 2px solid var(--color-accent);
 		box-shadow: var(---color-accent) 0 0 8px;
 		color: var(--color-text-dim);
 		font-family: var(--font-mono);

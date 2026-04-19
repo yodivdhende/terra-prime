@@ -79,7 +79,7 @@
 </div>
 
 <style>
-	@import '$lib/styles/stemtest.css';
+	@import '$lib/styles/theme.css';
 
 	main {
 		display: flex;

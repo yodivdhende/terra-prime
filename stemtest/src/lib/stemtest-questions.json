@@ -1,83 +1,118 @@
 [
 	{
 		"text": "Ik functioneer beter binnen duidelijke structuren dan in chaos",
-		"weights": { "NEON_HAVEN": 2, "VANTAGE": 1, "BLACKWATER": -1 }
+		"weights": { "DE_RIDDER": 2, "SYLVA_CORE": 1, "BLACKWATER": -1 }
 	},
 	{
 		"text": "Ik stel doelen en werk daar systematisch naartoe",
-		"weights": { "NEON_HAVEN": 2, "AURION": 1 }
+		"weights": { "DE_RIDDER": 2, "SYLVA_CORE": 1 }
 	},
 	{
 		"text": "Stabiliteit is belangrijker dan rechtvaardigheid",
-		"weights": { "NEON_HAVEN": 2, "AURION": 1, "BIOSYNTH": -1 }
+		"weights": { "DE_RIDDER": 2, "BLACKWATER": 1, "BIOCORP": -1 }
 	},
 	{
 		"text": "Efficiëntie is belangrijker dan comfort",
-		"weights": { "AURION": 2, "BLACKWATER": 1, "BIOSYNTH": -1 }
+		"weights": { "SYLVA_CORE": 2, "BLACKWATER": 1, "BIOCORP": -1 }
 	},
 	{
 		"text": "Ik denk vaak in termen van kosten vs opbrengst",
-		"weights": { "AURION": 2, "VANTAGE": 1 }
+		"weights": { "SYLVA_CORE": 2, "DE_RIDDER": 1 }
 	},
 	{
 		"text": "Overleven gaat boven eerlijkheid",
-		"weights": { "AURION": 2, "BLACKWATER": 1, "LUMEN_VEIL": -1 }
+		"weights": { "BLACKWATER": 2, "DE_RIDDER": 1, "LUMEN_VEIL": -1 }
 	},
 	{
 		"text": "Ik pas me snel aan nieuwe omstandigheden aan",
-		"weights": { "BIOSYNTH": 2, "BLACKWATER": 1, "NEON_HAVEN": -1 }
+		"weights": { "BIOCORP": 2, "BLACKWATER": 1, "DE_RIDDER": -1 }
 	},
 	{
 		"text": "Verbetering van het lichaam is logisch en wenselijk",
-		"weights": { "BIOSYNTH": 2, "VANTAGE": 1, "BLACKWATER": -1 }
+		"weights": { "BIOCORP": 2, "SYLVA_CORE": 1, "BLACKWATER": -1 }
 	},
 	{
 		"text": "Experimenten zijn noodzakelijk voor vooruitgang",
-		"weights": { "BIOSYNTH": 2, "VANTAGE": 1, "NEON_HAVEN": -1 }
+		"weights": { "BIOCORP": 2, "SYLVA_CORE": 1, "DE_RIDDER": -1 }
 	},
 	{
 		"text": "Ik neem graag beslissingen onder druk",
-		"weights": { "BLACKWATER": 2, "AURION": 1, "VANTAGE": -1 }
+		"weights": { "BLACKWATER": 2, "DE_RIDDER": 1, "SYLVA_CORE": -1 }
 	},
 	{
 		"text": "Ik ben bereid iemand op te offeren voor het succes van een missie",
-		"weights": { "BLACKWATER": 2, "AURION": 1, "BIOSYNTH": -1 }
+		"weights": { "BLACKWATER": 2, "DE_RIDDER": 1, "BIOCORP": -1 }
 	},
 	{
 		"text": "Ik ben bereid risico's te nemen zonder zekerheid",
-		"weights": { "BLACKWATER": 2, "BIOSYNTH": 1, "VANTAGE": -1 }
+		"weights": { "BLACKWATER": 2, "BIOCORP": 1, "SYLVA_CORE": -1 }
 	},
 	{
 		"text": "Ik vertrouw eerder systemen dan mensen",
-		"weights": { "VANTAGE": 2, "NEON_HAVEN": 1, "BLACKWATER": -1 }
+		"weights": { "SYLVA_CORE": 2, "DE_RIDDER": 1, "BLACKWATER": -1 }
 	},
 	{
 		"text": "AI moet belangrijke beslissingen mogen nemen",
-		"weights": { "VANTAGE": 2, "AURION": 1, "BLACKWATER": -1 }
+		"weights": { "SYLVA_CORE": 2, "DE_RIDDER": 1, "BLACKWATER": -1 }
 	},
 	{
 		"text": "Ik vertrouw data meer dan intuïtie",
-		"weights": { "VANTAGE": 2, "AURION": 1, "BLACKWATER": -1 }
+		"weights": { "SYLVA_CORE": 2, "DE_RIDDER": 1, "BLACKWATER": -1 }
 	},
 	{
 		"text": "Controle over informatie is macht",
-		"weights": { "LUMEN_VEIL": 2, "VANTAGE": 1 }
+		"weights": { "LUMEN_VEIL": 2, "SYLVA_CORE": 1 }
 	},
 	{
 		"text": "Ik zou mijn herinneringen aanpassen als dat nuttig is",
-		"weights": { "LUMEN_VEIL": 2, "BIOSYNTH": 1, "NEON_HAVEN": -1 }
+		"weights": { "LUMEN_VEIL": 2, "BIOCORP": 1, "DE_RIDDER": -1 }
 	},
 	{
 		"text": "Realiteit is flexibeler dan de meeste mensen beseffen",
-		"weights": { "LUMEN_VEIL": 2, "BIOSYNTH": 1, "NEON_HAVEN": -2 }
+		"weights": { "LUMEN_VEIL": 2, "BIOCORP": 1, "DE_RIDDER": -2 }
+	},
+	{
+		"text": "Sterke instituties zijn de ruggengraat van een stabiele samenleving",
+		"weights": { "DE_RIDDER": 2, "SYLVA_CORE": 1, "LUMEN_VEIL": -1 }
+	},
+	{
+		"text": "Ik zou mijn biologie aanpassen om beter te presteren",
+		"weights": { "BIOCORP": 2, "BLACKWATER": 1, "DE_RIDDER": -1 }
+	},
+	{
+		"text": "De waarheid is wat mensen bereid zijn te geloven",
+		"weights": { "LUMEN_VEIL": 2, "BIOCORP": 1, "SYLVA_CORE": -1 }
+	},
+	{
+		"text": "Een algoritme maakt betere beslissingen dan een mens",
+		"weights": { "SYLVA_CORE": 2, "BIOCORP": 1, "DE_RIDDER": -1 }
+	},
+	{
+		"text": "Ik voer opdrachten uit zonder uitleg te verwachten",
+		"weights": { "BLACKWATER": 2, "DE_RIDDER": 1, "LUMEN_VEIL": -1 }
+	},
+	{
+		"text": "Collectief welzijn weegt zwaarder dan individuele vrijheid",
+		"weights": { "DE_RIDDER": 2, "LUMEN_VEIL": 1, "BLACKWATER": -1 }
+	},
+	{
+		"text": "De grens tussen mens en machine is arbitrair",
+		"weights": { "BIOCORP": 2, "SYLVA_CORE": 1, "DE_RIDDER": -1 }
+	},
+	{
+		"text": "Informatie achterhouden is soms noodzakelijk voor het grotere goed",
+		"weights": { "LUMEN_VEIL": 2, "BLACKWATER": 1, "SYLVA_CORE": -1 }
+	},
+	{
+		"text": "Ik ben bereid mijn privacy op te geven voor veiligheid",
+		"weights": { "BLACKWATER": 2, "SYLVA_CORE": 1, "LUMEN_VEIL": -1 }
+	},
+	{
+		"text": "De mens is maakbaar, en dat is een kans",
+		"weights": { "BIOCORP": 2, "SYLVA_CORE": 1, "DE_RIDDER": -1 }
 	},
 	{
 		"text": "Het systeem vereist een biometrische retinascan. Richt de lens op uw gezicht en activeer de scanner.",
-		"type": "camera",
-		"weights": {}
-	},
-	{
-		"text": "Identificatieprotocol geactiveerd. Laat het systeem uw fysionomie analyseren voor archivering.",
 		"type": "camera",
 		"weights": {}
 	}

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import animals from './camera-animals.json';
+  import animals from "./camera-animals.json";
 
   type Answer = -2 | -1 | 0 | 1 | 2;
 
@@ -13,18 +13,23 @@
     onSelectAnswer: (value: Answer) => void;
   } = $props();
 
-  type ScanState = 'idle' | 'scanning' | 'done';
+  type ScanState = "idle" | "scanning" | "done";
 
-  const getRandomAnimal = () => animals[Math.floor(Math.random() * animals.length)];
+  const getRandomAnimal = () =>
+    animals[Math.floor(Math.random() * animals.length)];
 
-  let scanState = $state<ScanState>(selectedAnswer !== null ? 'done' : 'idle');
+  let scanState = $state<ScanState>(selectedAnswer !== null ? "done" : "idle");
   let scanProgress = $state(0);
-  let animal = $state(selectedAnswer !== null ? getRandomAnimal() : null as typeof animals[0] | null);
+  let animal = $state(
+    selectedAnswer !== null
+      ? getRandomAnimal()
+      : (null as (typeof animals)[0] | null),
+  );
   let scanTimeout: ReturnType<typeof setTimeout> | null = null;
   let progressInterval: ReturnType<typeof setInterval> | null = null;
 
   function startScan() {
-    scanState = 'scanning';
+    scanState = "scanning";
     scanProgress = 0;
 
     progressInterval = setInterval(() => {
@@ -36,7 +41,7 @@
       progressInterval = null;
       scanProgress = 100;
       animal = getRandomAnimal();
-      scanState = 'done';
+      scanState = "done";
       onSelectAnswer(0);
     }, 2600);
   }
@@ -46,7 +51,7 @@
     if (progressInterval) clearInterval(progressInterval);
     scanTimeout = null;
     progressInterval = null;
-    scanState = 'idle';
+    scanState = "idle";
     scanProgress = 0;
     animal = null;
   }
@@ -63,15 +68,17 @@
   <p class="question">{question.text}</p>
 
   <div class="scanner">
-    {#if scanState === 'idle'}
-      <p class="hint">// richt de lens op het onderwerp en activeer de biometrische scan</p>
+    {#if scanState === "idle"}
+      <p class="hint">
+        // richt de lens op het onderwerp en activeer de biometrische scan
+      </p>
       <button class="scan-btn" onclick={startScan} aria-label="Start scan">
         <span class="scan-icon">◉</span>
         <span class="scan-label">[ SCAN ]</span>
       </button>
     {/if}
 
-    {#if scanState === 'scanning'}
+    {#if scanState === "scanning"}
       <div class="scanning-ui">
         <div class="scan-lines" aria-hidden="true">
           {#each Array(8) as _, i}
@@ -85,19 +92,22 @@
       </div>
     {/if}
 
-    {#if scanState === 'done' && animal}
+    {#if scanState === "done" && animal}
       <div class="result-ui">
         <div class="result-header">
           <span class="result-icon">✓</span>
           <span class="result-label">BIOMETRISCHE SCAN VOLTOOID</span>
-          <button class="redo-btn" onclick={resetScan} aria-label="Opnieuw scannen">
+          <button
+            class="redo-btn"
+            onclick={resetScan}
+            aria-label="Opnieuw scannen"
+          >
             [ OPNIEUW ]
           </button>
         </div>
         <div class="ascii-box">
           <pre class="ascii-art">{animal.art}</pre>
         </div>
-        <p class="species-label"><span class="label-tag">SOORT GEDETECTEERD:</span> {animal.name}</p>
       </div>
     {/if}
   </div>
@@ -140,7 +150,9 @@
     align-items: center;
     gap: 0.6rem;
     border-radius: 3px;
-    transition: background-color 0.15s, color 0.15s;
+    transition:
+      background-color 0.15s,
+      color 0.15s;
     letter-spacing: 0.05em;
   }
 
@@ -179,9 +191,18 @@
   }
 
   @keyframes scanline {
-    0%   { opacity: 0; transform: scaleX(0.3); }
-    40%  { opacity: 0.9; transform: scaleX(1); }
-    100% { opacity: 0; transform: scaleX(0.6); }
+    0% {
+      opacity: 0;
+      transform: scaleX(0.3);
+    }
+    40% {
+      opacity: 0.9;
+      transform: scaleX(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scaleX(0.6);
+    }
   }
 
   .progress-wrap {
@@ -208,7 +229,9 @@
   }
 
   @keyframes blink {
-    50% { opacity: 0.4; }
+    50% {
+      opacity: 0.4;
+    }
   }
 
   .result-ui {

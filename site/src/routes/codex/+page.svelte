@@ -2,6 +2,11 @@
 	import { onMount } from 'svelte';
 	import Desktop from '$lib/codex/components/desktop.svelte';
 	import Taskbar from '$lib/codex/components/taskbar.svelte';
+	import { type PageProps } from './$types';
+
+	let { data }: PageProps = $props();
+
+	$inspect(data);
 
 	let crtEnabled = $state(false);
 	let scanlinesEnabled = $state(false);

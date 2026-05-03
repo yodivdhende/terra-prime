@@ -11,26 +11,15 @@
 		timeLeft = getTimeLeft();
 	}, 1000);
 
-	$effect(() => {
-		if (timeLeft !== null && timeLeft <= 0) {
-			fadeOut.set(2, { duration: 2000});
-		}
-	});
-
-	$effect(() => {
-		if (fadeOut.current === 2) goto('/info');
-	})
-
 	function getTimeLeft(): number {
 		const now = new Date();
 		const difference = Math.floor((targetDate.getTime() - now.getTime()) / 1000);
 		if (difference < 0) {
 			targetDate = new Date(new Date().getTime() + 6000); // Reset for testingjk
-			return getTimeLeft()-1;
-		};
+			return getTimeLeft() - 1;
+		}
 		return difference;
 	}
-
 </script>
 
 <main>
@@ -58,6 +47,5 @@
 		height: 100%;
 		background-color: black;
 		pointer-events: none;
-
 	}
 </style>

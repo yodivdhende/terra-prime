@@ -8,7 +8,7 @@
 
 	onMount(() => {
 		if (page.url.pathname === '/') {
-			goto('/promo');
+			goto('/codex');
 		}
 	});
 

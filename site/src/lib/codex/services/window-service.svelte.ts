@@ -14,6 +14,29 @@ function createWindowService() {
     }
   ] as CodexWindow[]);
 
+  function addWindows(items: { name: string, mimeType: string, id: string }[]): void {
+    const newWindows = items.filter(item => windows.every(window => window.id != item.id))
+      .forEach((item) => {
+        const windowIndex = windows.findIndex(window => window.id === item.id);
+        if (windowIndex >= 0) return
+
+        if (item.mimeType.includes('folder')) {
+          windows.push(
+            createFolderWindow(item.name, windows.length, item.id)
+          )
+          return;
+        }
+        if (item.mimeType.includes('pdf')) {
+          windows.push(
+            createPdfWindow(item.name, windows.length, item.id)
+          )
+          return;
+        }
+      })
+
+    console.log('windows', $state.snapshot(windows));
+  }
+
   function openWindow({ id }: { id: CodexWindow['id'] }
   ) {
     return updateStateToOpen(id);
@@ -42,11 +65,38 @@ function createWindowService() {
     });
   }
 
+  function createFolderWindow(name: string, index: number, id: string): CodexWindow {
+    return {
+      id,
+      type: 'dir',
+      state: 'closed',
+      dimension: { w: 300, h: 300 },
+      position: { x: 100 * index, y: 100 * index, z: index },
+      contentData: id,
+      title: name,
+      icon: { type: 'dir' },
+    }
+  }
+
+  function createPdfWindow(name: string, index: number, id: string): CodexWindow {
+    return {
+      id,
+      type: 'pdf',
+      state: 'closed',
+      dimension: { w: 300, h: 300 },
+      position: { x: 100 * index, y: 100 * index, z: index },
+      contentData: id,
+      title: name,
+      icon: { type: 'file' },
+    }
+  }
+
   return {
     windows,
     openWindow,
     focusWindow,
     closeWindow,
+    addWindows,
   }
 }
 
@@ -55,7 +105,7 @@ export const WINDOW_SERVICE = createWindowService();
 
 export type CodexWindow = {
   id: string;
-  type: 'pdf';
+  type: 'pdf' | 'dir';
   state: 'open' | 'hidden' | 'closed';
   dimension: { w: number, h: number };
   position: { x: number, y: number, z: number };
@@ -65,5 +115,5 @@ export type CodexWindow = {
 }
 
 export type Icon = {
-  type: 'file'
+  type: 'file' | 'dir'
 }

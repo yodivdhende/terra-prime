@@ -17,13 +17,12 @@ export class GoogleSheetManager {
   public async getHomeFiles() {
     const result = await this.getService().files.list({
       q: `'1FiG0BRYkVHD_0s6Hu236iNZaYo9lZfEQ' in parents and trashed = false`,
-      fields: 'nextPageToken, files(id, name)',
+      fields: 'nextPageToken, files(id, name, mimeType)',
       spaces: 'drive',
       supportsAllDrives: true,
       includeItemsFromAllDrives: true,
     })
-    console.dir(result);
-    return result.data;
+    return result.data.files.filter(file => file.name?.includes('_') === false);
   }
 }
 

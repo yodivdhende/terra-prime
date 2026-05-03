@@ -3,15 +3,15 @@
 	import Desktop from '$lib/codex/components/desktop.svelte';
 	import Taskbar from '$lib/codex/components/taskbar.svelte';
 	import { type PageProps } from './$types';
+	import { WINDOW_SERVICE } from '../../lib/codex/services/window-service.svelte';
 
 	let { data }: PageProps = $props();
-
-	$inspect(data);
-
 	let crtEnabled = $state(false);
 	let scanlinesEnabled = $state(false);
 	let vignetteEnabled = $state(false);
 	let feImageEl: SVGFEImageElement;
+
+	$effect(() => WINDOW_SERVICE.addWindows(data.files));
 
 	onMount(() => {
 		const size = 256;

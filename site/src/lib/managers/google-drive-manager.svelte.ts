@@ -22,7 +22,7 @@ export class GoogleSheetManager {
       supportsAllDrives: true,
       includeItemsFromAllDrives: true,
     })
-    return result.data.files.filter(file => file.name?.includes('_') === false);
+    return result.data.files.filter(file => file.name[0] !== '_');
   }
 
   public async getDocumentHtml(fileId: string): Promise<string> {

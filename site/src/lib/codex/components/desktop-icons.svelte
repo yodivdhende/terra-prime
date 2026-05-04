@@ -5,8 +5,6 @@
 
 	let icons = $derived(ICON_SERVICE.icons);
 
-	$inspect(icons);
-
 	function openWindow(icon: Icon) {
 		const { windowId } = $state.snapshot(icon);
 		icon.windowId = WINDOW_SERVICE.openWindow({ id: windowId });

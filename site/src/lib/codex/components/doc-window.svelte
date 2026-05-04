@@ -2,7 +2,7 @@
 	import Window from '$lib/codex/components/window.svelte';
 	import { type CodexWindow } from '$lib/codex/services/window-service.svelte';
 
-	let { window }: { window: CodexWindow } = $props();
+	let { window = $bindable() }: { window: CodexWindow } = $props();
 
 	let html = $state('');
 	let loading = $state(true);
@@ -46,6 +46,7 @@
 		padding: 1rem 1.25rem;
 		height: 100%;
 		overflow-y: auto;
+		color: var(--color-text) !important;
 	}
 
 	.status {

@@ -1,18 +1,5 @@
-import { v4 as uuidv4 } from 'uuid';
-
 function createWindowService() {
-  const windows = $state([
-    {
-      id: uuidv4(),
-      type: 'pdf',
-      state: 'open',
-      dimension: { w: 300, h: 300 },
-      position: { x: 100, y: 100, z: 0 },
-      contentData: 'content',
-      title: 'irene.pdf',
-      icon: { type: 'file' }
-    }
-  ] as CodexWindow[]);
+  const windows = $state([] as CodexWindow[]);
 
   function addWindows(items: { name: string, mimeType: string, id: string }[]): void {
     items.filter(item => windows.every(window => window.id != item.id))
@@ -39,8 +26,6 @@ function createWindowService() {
           return;
         }
       })
-
-    console.log('windows', $state.snapshot(windows));
   }
 
   function openWindow({ id }: { id: CodexWindow['id'] }

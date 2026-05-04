@@ -15,7 +15,7 @@ function createWindowService() {
   ] as CodexWindow[]);
 
   function addWindows(items: { name: string, mimeType: string, id: string }[]): void {
-    const newWindows = items.filter(item => windows.every(window => window.id != item.id))
+    items.filter(item => windows.every(window => window.id != item.id))
       .forEach((item) => {
         const windowIndex = windows.findIndex(window => window.id === item.id);
         if (windowIndex >= 0) return
@@ -92,7 +92,7 @@ function createWindowService() {
   }
 
   return {
-    windows,
+    get windows() { return windows; },
     openWindow,
     focusWindow,
     closeWindow,

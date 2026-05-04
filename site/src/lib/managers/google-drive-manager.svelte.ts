@@ -25,6 +25,15 @@ export class GoogleSheetManager {
     return result.data.files.filter(file => file.name?.includes('_') === false);
   }
 
+  public async getDocumentHtml(fileId: string): Promise<string> {
+    const response = await this.getService().files.export(
+      { fileId, mimeType: 'text/html' },
+      { responseType: 'arraybuffer' },
+    );
+    const buffer = response.data as ArrayBuffer;
+    return Buffer.from(buffer).toString('utf-8');
+  }
+
   public async getFileStream(fileId: string): Promise<ReadableStream> {
     const response = await this.getService().files.get(
       { fileId, alt: 'media' },

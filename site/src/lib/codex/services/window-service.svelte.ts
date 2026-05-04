@@ -32,6 +32,12 @@ function createWindowService() {
           )
           return;
         }
+        if (item.mimeType.includes('document')) {
+          windows.push(
+            createDocWindow(item.name, windows.length, item.id)
+          )
+          return;
+        }
       })
 
     console.log('windows', $state.snapshot(windows));
@@ -91,6 +97,19 @@ function createWindowService() {
     }
   }
 
+  function createDocWindow(name: string, index: number, id: string): CodexWindow {
+    return {
+      id,
+      type: 'doc',
+      state: 'closed',
+      dimension: { w: 400, h: 500 },
+      position: { x: 100 * index, y: 100 * index, z: index },
+      contentData: id,
+      title: name,
+      icon: { type: 'file' },
+    }
+  }
+
   return {
     get windows() { return windows; },
     openWindow,
@@ -105,7 +124,7 @@ export const WINDOW_SERVICE = createWindowService();
 
 export type CodexWindow = {
   id: string;
-  type: 'pdf' | 'dir';
+  type: 'pdf' | 'dir' | 'doc';
   state: 'open' | 'hidden' | 'closed';
   dimension: { w: number, h: number };
   position: { x: number, y: number, z: number };

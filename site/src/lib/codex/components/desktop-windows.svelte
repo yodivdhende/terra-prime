@@ -2,6 +2,7 @@
 	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
 	import Window from '$lib/codex/components/window.svelte';
 	import PdfWindow from '$lib/codex/components/pdf-window.svelte';
+	import DocWindow from '$lib/codex/components/doc-window.svelte';
 
 	let windows = $derived(WINDOW_SERVICE.windows);
 </script>
@@ -10,8 +11,9 @@
 	{#each windows as window, index (window.id)}
 		{#if window.state === 'open'}
 			{#if window.type === 'pdf'}
-				<test></test>
 				<PdfWindow window={windows[index]}></PdfWindow>
+			{:else if window.type === 'doc'}
+				<DocWindow window={windows[index]}></DocWindow>
 			{:else}
 				<Window bind:context={windows[index]} />
 			{/if}

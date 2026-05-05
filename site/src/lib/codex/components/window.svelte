@@ -174,6 +174,7 @@
 <style>
 	main {
 		position: absolute;
+		pointer-events: auto;
 		display: flex;
 		flex-direction: column;
 		border: var(--border-width) solid var(--color-main);
@@ -207,6 +208,7 @@
 		text-transform: uppercase;
 		user-select: none;
 		margin: 0.35rem 0.75rem;
+		font-size: 1.5em;
 	}
 
 	.header button {
@@ -216,15 +218,17 @@
 		padding: 0.5em;
 		display: flex;
 		align-items: center;
-		border: 1px solid var(--color-main);
+		border: var(--border-width) solid var(--color-main);
+		margin: calc(var(--border-width) * -1);
 	}
 
 	.header button:hover {
-		border: 1px solid var(--color-accent);
+		background-color: var(--color-accent);
+		color: var(--color-bg);
 	}
 
 	.header button:active {
-		background-color: var(--color-accent);
+		background-color: var(--color-main);
 		color: var(--color-bg);
 	}
 

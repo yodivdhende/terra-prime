@@ -5,9 +5,21 @@
 	let { window }: { window: CodexWindow } = $props();
 
 	const effects = [
-		{ label: 'CRT', get: () => EFFECTS_SERVICE.crt, set: (v: boolean) => (EFFECTS_SERVICE.crt = v) },
-		{ label: 'scanlines', get: () => EFFECTS_SERVICE.scanlines, set: (v: boolean) => (EFFECTS_SERVICE.scanlines = v) },
-		{ label: 'vignette', get: () => EFFECTS_SERVICE.vignette, set: (v: boolean) => (EFFECTS_SERVICE.vignette = v) },
+		{
+			label: 'CRT',
+			get: () => EFFECTS_SERVICE.crt,
+			set: (v: boolean) => (EFFECTS_SERVICE.crt = v)
+		},
+		{
+			label: 'scanlines',
+			get: () => EFFECTS_SERVICE.scanlines,
+			set: (v: boolean) => (EFFECTS_SERVICE.scanlines = v)
+		},
+		{
+			label: 'vignette',
+			get: () => EFFECTS_SERVICE.vignette,
+			set: (v: boolean) => (EFFECTS_SERVICE.vignette = v)
+		}
 	];
 </script>
 
@@ -17,11 +29,7 @@
 		{#each effects as effect}
 			<div class="row">
 				<span class="label">{effect.label}</span>
-				<button
-					class="toggle"
-					class:on={effect.get()}
-					onclick={() => effect.set(!effect.get())}
-				>
+				<button class="toggle" class:on={effect.get()} onclick={() => effect.set(!effect.get())}>
 					{effect.get() ? 'ON' : 'OFF'}
 				</button>
 			</div>
@@ -33,7 +41,6 @@
 	.settings {
 		padding: 1rem 1.25rem;
 		overflow-y: auto;
-		height: 100%;
 		color: var(--color-main);
 		display: flex;
 		flex-direction: column;
@@ -79,7 +86,10 @@
 		border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
 		cursor: pointer;
 		opacity: 0.5;
-		transition: opacity 0.15s, border-color 0.15s, color 0.15s;
+		transition:
+			opacity 0.15s,
+			border-color 0.15s,
+			color 0.15s;
 	}
 
 	.toggle.on {

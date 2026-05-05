@@ -14,14 +14,12 @@ export type Icon = {
 }
 
 export function createSettingsWindow(): CodexWindow {
-  const w = typeof window !== 'undefined' ? window.innerWidth : 1280;
-  const h = typeof window !== 'undefined' ? window.innerHeight : 800;
   return {
     id: 'settings',
     type: 'settings',
     state: 'open',
-    dimension: { w: Math.round(w * 0.3), h: Math.round(h * 0.5) },
-    position: { x: 50, y: 50, z: 0 },
+    dimension: { w: 400, h: 300 },
+    position: { x: 400, y: 50, z: 0 },
     contentData: 'settings',
     title: 'settings',
     icon: { type: 'settings' },
@@ -34,7 +32,7 @@ export function createFolderWindow(name: string, index: number, id: string): Cod
     type: 'dir',
     state: getState(name),
     dimension: { w: Math.round(window.innerWidth * 0.55), h: Math.round(window.innerHeight * 0.6) },
-    position: { x: 100 * index, y: 100 * index, z: index },
+    position: { x: 400 + 20 * index, y: 20 * index, z: index },
     contentData: id,
     title: formatName(name),
     icon: { type: 'dir' },
@@ -47,7 +45,7 @@ export function createPdfWindow(name: string, index: number, id: string): CodexW
     type: 'pdf',
     state: getState(name),
     dimension: { w: Math.round(window.innerWidth * 0.4), h: Math.round(window.innerHeight * 0.75) },
-    position: { x: 100 * index, y: 100 * index, z: index },
+    position: { x: 400 + 20 * index, y: 20 * index, z: index },
     contentData: id,
     title: formatName(name),
     icon: { type: 'file' },
@@ -60,7 +58,7 @@ export function createDocWindow(name: string, index: number, id: string): CodexW
     type: 'doc',
     state: getState(name),
     dimension: { w: Math.round(window.innerWidth * 0.45), h: Math.round(window.innerHeight * 0.65) },
-    position: { x: 100 * index, y: 100 * index, z: index },
+    position: { x: 400 + 20 * index, y: 20 * index, z: index },
     contentData: id,
     title: formatName(name),
     icon: { type: 'file' },
@@ -73,7 +71,7 @@ export function createImageWindow(name: string, index: number, id: string): Code
     type: 'image',
     state: getState(name),
     dimension: { w: Math.round(window.innerWidth * 0.35), h: Math.round(window.innerHeight * 0.55) },
-    position: { x: 100 * index, y: 100 * index, z: index },
+    position: { x: 400 + 20 * index, y: 20 * index, z: index },
     contentData: id,
     title: formatName(name),
     icon: { type: 'image' },

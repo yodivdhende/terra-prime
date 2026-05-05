@@ -176,10 +176,10 @@
 		position: absolute;
 		display: flex;
 		flex-direction: column;
-		border: 2px solid var(--color-accent);
+		border: var(--border-width) solid var(--color-main);
 		box-shadow:
-			var(--color-accent) 0 0 16px,
-			var(--color-accent) 0 0 4px inset;
+			var(--color-main) 0 0 16px,
+			var(--color-main) 0 0 4px inset;
 		background-color: var(--bg);
 		font-family: var(--font-mono);
 		overflow: hidden;
@@ -188,8 +188,9 @@
 	.header {
 		display: flex;
 		align-items: center;
-		background-color: var(--color-accent);
-		color: var(--color-bg);
+		background-color: var(--color-bg);
+		border-bottom: var(--border-width) solid var(--color-main);
+		color: var(--color-accent);
 		padding: 0.35rem 0.75rem;
 		cursor: grab;
 		font-size: 0.7rem;

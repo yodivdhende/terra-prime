@@ -55,7 +55,7 @@
 		align-items: center;
 		gap: 0.4rem;
 		width: 100px;
-		color: var(--color-text-dim);
+		color: var(--color-main-dim);
 		outline: none;
 		border: 1px solid transparent;
 		cursor: pointer;

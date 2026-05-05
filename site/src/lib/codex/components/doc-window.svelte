@@ -46,7 +46,7 @@
 		padding: 1rem 1.25rem;
 		height: 100%;
 		overflow-y: auto;
-		color: var(--color-text) !important;
+		color: var(--color-main) !important;
 	}
 
 	.status {

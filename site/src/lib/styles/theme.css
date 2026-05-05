@@ -2,14 +2,14 @@
 	/* Colors */
 	--color-bg: #000000;
 	--color-bg-panel: rgba(0, 0, 0, 0.95);
-	--color-border: #aaaaaa;
-	--color-text: #ffffff;
-	--color-text-dim: #aaa;
-	--color-text-result: #ddd;
+  --color-main: #ffffff;
+	--color-main-dim: #aaa;
+	--color-main-result: #ddd;
+	--color-border: var(--color-main-dim);
 	--color-accent: #00cc00;
-	--color-scrollbar-thumb: white;
-	--color-scrollbar-track: black;
   --color-warning: #cc4444;
+	--color-scrollbar-thumb: var(--color-main);
+	--color-scrollbar-track: var(--color-bg);
 
 	/* Typography */
 	--font-mono: 'Courier New', Courier, monospace;
@@ -26,13 +26,7 @@
   --phosphor-glow-color: #00ff41
 	--phosphor-glow-shadow: 0 0 4px var(---phosphor-glow-color), 0 0 10px var(--phosphor-glow-color), 0 0 20px #003b00;
 
-	--progress-bg: #222;
-	--hover-bg: #333;
 
-	--text-muted: #888;
-	--text-dim: #aaa;
-	--text-subtle: #777;
-	--text-result: #ddd;
 }
 
 @media (max-width: 600px) {

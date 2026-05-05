@@ -124,7 +124,7 @@
 
 	.content {
 		font-family: var(--font-mono);
-		color: var(--color-text);
+		color: var(--color-main);
 	}
 
 	.content p {

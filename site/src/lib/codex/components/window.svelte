@@ -231,7 +231,7 @@
 		flex: 1;
 		overflow: auto;
 		background-color: var(--color-bg);
-		color: var(--color-text-result);
+		color: var(--color-main-result);
 		font-size: 0.85rem;
 		line-height: 1.6;
 		text-shadow: var(--phosphor-glow-shadow);

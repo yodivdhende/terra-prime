@@ -39,8 +39,7 @@
 <style>
 	.doc-content {
 		padding: 1rem 1.25rem;
-		height: 100%;
-		overflow-y: auto;
+		overflow-y: hidden;
 		color: var(--color-main) !important;
 	}
 

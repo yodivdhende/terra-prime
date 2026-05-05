@@ -191,7 +191,6 @@
 		background-color: var(--color-bg);
 		border-bottom: var(--border-width) solid var(--color-main);
 		color: var(--color-accent);
-		padding: 0.35rem 0.75rem;
 		cursor: grab;
 		font-size: 0.7rem;
 		font-weight: bold;
@@ -207,25 +206,26 @@
 		flex: 1;
 		text-transform: uppercase;
 		user-select: none;
+		margin: 0.35rem 0.75rem;
 	}
 
 	.header button {
 		background: none;
-		color: var(--color-bg);
+		color: var(--color-main);
 		cursor: pointer;
 		padding: 0.5em;
 		display: flex;
 		align-items: center;
-		border: 1px solid transparent;
+		border: 1px solid var(--color-main);
 	}
 
 	.header button:hover {
-		border: 1px solid var(--color-bg);
+		border: 1px solid var(--color-accent);
 	}
 
 	.header button:active {
-		background-color: var(--color-bg);
-		color: var(--color-accent);
+		background-color: var(--color-accent);
+		color: var(--color-bg);
 	}
 
 	.content {

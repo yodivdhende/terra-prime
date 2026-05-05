@@ -92,7 +92,7 @@ function createWindowService() {
     return {
       id,
       type: 'doc',
-      state: 'closed',
+      state: 'open',
       dimension: { w: Math.round(window.innerWidth * 0.45), h: Math.round(window.innerHeight * 0.65) },
       position: { x: 100 * index, y: 100 * index, z: index },
       contentData: id,

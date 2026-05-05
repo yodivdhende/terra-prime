@@ -1,0 +1,90 @@
+export type CodexWindow = {
+  id: string;
+  type: 'pdf' | 'dir' | 'doc' | 'image' | 'settings';
+  state: 'open' | 'hidden' | 'closed';
+  dimension: { w: number, h: number };
+  position: { x: number, y: number, z: number };
+  contentData: string;
+  title: string;
+  icon?: Icon;
+}
+
+export type Icon = {
+  type: 'file' | 'dir' | 'image' | 'settings'
+}
+
+export function createSettingsWindow(): CodexWindow {
+  const w = typeof window !== 'undefined' ? window.innerWidth : 1280;
+  const h = typeof window !== 'undefined' ? window.innerHeight : 800;
+  return {
+    id: 'settings',
+    type: 'settings',
+    state: 'open',
+    dimension: { w: Math.round(w * 0.3), h: Math.round(h * 0.5) },
+    position: { x: 50, y: 50, z: 0 },
+    contentData: 'settings',
+    title: 'settings',
+    icon: { type: 'settings' },
+  };
+}
+
+export function createFolderWindow(name: string, index: number, id: string): CodexWindow {
+  return {
+    id,
+    type: 'dir',
+    state: getState(name),
+    dimension: { w: Math.round(window.innerWidth * 0.55), h: Math.round(window.innerHeight * 0.6) },
+    position: { x: 100 * index, y: 100 * index, z: index },
+    contentData: id,
+    title: formatName(name),
+    icon: { type: 'dir' },
+  }
+}
+
+export function createPdfWindow(name: string, index: number, id: string): CodexWindow {
+  return {
+    id,
+    type: 'pdf',
+    state: getState(name),
+    dimension: { w: Math.round(window.innerWidth * 0.4), h: Math.round(window.innerHeight * 0.75) },
+    position: { x: 100 * index, y: 100 * index, z: index },
+    contentData: id,
+    title: formatName(name),
+    icon: { type: 'file' },
+  }
+}
+
+export function createDocWindow(name: string, index: number, id: string): CodexWindow {
+  return {
+    id,
+    type: 'doc',
+    state: getState(name),
+    dimension: { w: Math.round(window.innerWidth * 0.45), h: Math.round(window.innerHeight * 0.65) },
+    position: { x: 100 * index, y: 100 * index, z: index },
+    contentData: id,
+    title: formatName(name),
+    icon: { type: 'file' },
+  }
+}
+
+export function createImageWindow(name: string, index: number, id: string): CodexWindow {
+  return {
+    id,
+    type: 'image',
+    state: getState(name),
+    dimension: { w: Math.round(window.innerWidth * 0.35), h: Math.round(window.innerHeight * 0.55) },
+    position: { x: 100 * index, y: 100 * index, z: index },
+    contentData: id,
+    title: formatName(name),
+    icon: { type: 'image' },
+  }
+}
+
+function getState(name: string): 'open' | 'closed' {
+  return name[0] === '!' ? 'open' : 'closed';
+}
+
+function formatName(name: string): string {
+  if (name[0] === '!') return name.substring(1);
+  return name;
+}

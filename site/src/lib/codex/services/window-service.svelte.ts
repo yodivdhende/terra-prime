@@ -1,5 +1,16 @@
+import {
+  createSettingsWindow,
+  createFolderWindow,
+  createPdfWindow,
+  createDocWindow,
+  createImageWindow,
+  type CodexWindow,
+} from './window-factories';
+
+export type { CodexWindow, Icon } from './window-factories';
+
 function createWindowService() {
-  const windows = $state([] as CodexWindow[]);
+  const windows = $state([createSettingsWindow()] as CodexWindow[]);
 
   function addWindows(items: { name: string, mimeType: string, id: string }[]): void {
     items.filter(item => windows.every(window => window.id != item.id))
@@ -34,8 +45,7 @@ function createWindowService() {
       })
   }
 
-  function openWindow({ id }: { id: CodexWindow['id'] }
-  ) {
+  function openWindow({ id }: { id: CodexWindow['id'] }) {
     return updateStateToOpen(id);
   }
 
@@ -62,58 +72,6 @@ function createWindowService() {
     });
   }
 
-  function createFolderWindow(name: string, index: number, id: string): CodexWindow {
-    return {
-      id,
-      type: 'dir',
-      state: 'closed',
-      dimension: { w: Math.round(window.innerWidth * 0.55), h: Math.round(window.innerHeight * 0.6) },
-      position: { x: 100 * index, y: 100 * index, z: index },
-      contentData: id,
-      title: name,
-      icon: { type: 'dir' },
-    }
-  }
-
-  function createPdfWindow(name: string, index: number, id: string): CodexWindow {
-    return {
-      id,
-      type: 'pdf',
-      state: 'closed',
-      dimension: { w: Math.round(window.innerWidth * 0.4), h: Math.round(window.innerHeight * 0.75) },
-      position: { x: 100 * index, y: 100 * index, z: index },
-      contentData: id,
-      title: name,
-      icon: { type: 'file' },
-    }
-  }
-
-  function createDocWindow(name: string, index: number, id: string): CodexWindow {
-    return {
-      id,
-      type: 'doc',
-      state: 'open',
-      dimension: { w: Math.round(window.innerWidth * 0.45), h: Math.round(window.innerHeight * 0.65) },
-      position: { x: 100 * index, y: 100 * index, z: index },
-      contentData: id,
-      title: name,
-      icon: { type: 'file' },
-    }
-  }
-
-  function createImageWindow(name: string, index: number, id: string): CodexWindow {
-    return {
-      id,
-      type: 'image',
-      state: 'closed',
-      dimension: { w: Math.round(window.innerWidth * 0.35), h: Math.round(window.innerHeight * 0.55) },
-      position: { x: 100 * index, y: 100 * index, z: index },
-      contentData: id,
-      title: name,
-      icon: { type: 'image' },
-    }
-  }
-
   return {
     get windows() { return windows; },
     openWindow,
@@ -124,19 +82,3 @@ function createWindowService() {
 }
 
 export const WINDOW_SERVICE = createWindowService();
-
-
-export type CodexWindow = {
-  id: string;
-  type: 'pdf' | 'dir' | 'doc' | 'image';
-  state: 'open' | 'hidden' | 'closed';
-  dimension: { w: number, h: number };
-  position: { x: number, y: number, z: number };
-  contentData: string;
-  title: string;
-  icon?: Icon;
-}
-
-export type Icon = {
-  type: 'file' | 'dir' | 'image'
-}

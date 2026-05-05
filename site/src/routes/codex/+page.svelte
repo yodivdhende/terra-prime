@@ -102,7 +102,7 @@
 		position: absolute;
 		inset: 0;
 		pointer-events: none;
-		background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.6) 100%);
+		background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
 		z-index: 9999;
 	}
 

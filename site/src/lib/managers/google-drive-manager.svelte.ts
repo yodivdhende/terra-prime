@@ -45,6 +45,19 @@ export class GoogleSheetManager {
     return Buffer.from(buffer).toString('utf-8');
   }
 
+  public async searchFiles(query: string) {
+    const escaped = query.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const result = await this.getService().files.list({
+      q: `name contains '${escaped}' and trashed = false`,
+      fields: 'files(id, name, mimeType)',
+      spaces: 'drive',
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
+      pageSize: 20,
+    });
+    return result.data.files?.filter(file => file.name[0] !== '_') ?? [];
+  }
+
   public async getFileStream(fileId: string): Promise<ReadableStream> {
     const response = await this.getService().files.get(
       { fileId, alt: 'media' },

@@ -1,12 +1,15 @@
 <script lang="ts">
+	import SearchBar from '$lib/codex/components/search-bar.svelte';
 </script>
 
-<main></main>
+<main>
+	<SearchBar />
+</main>
 
 <style>
 	main {
 		width: 100%;
-		height: 48px;
+		height: min-content;
 		flex-shrink: 0;
 		background-color: var(--color-bg);
 		border-top: 2px solid var(--color-accent);
@@ -19,5 +22,7 @@
 		align-items: center;
 		padding: 0 1rem;
 		gap: 1rem;
+		margin: 0 0 1em 1em;
+		padding: 0;
 	}
 </style>

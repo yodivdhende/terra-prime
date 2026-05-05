@@ -25,6 +25,12 @@ function createWindowService() {
           )
           return;
         }
+        if (item.mimeType.includes('image')) {
+          windows.push(
+            createImageWindow(item.name, windows.length, item.id)
+          )
+          return;
+        }
       })
   }
 
@@ -95,6 +101,19 @@ function createWindowService() {
     }
   }
 
+  function createImageWindow(name: string, index: number, id: string): CodexWindow {
+    return {
+      id,
+      type: 'image',
+      state: 'closed',
+      dimension: { w: Math.round(window.innerWidth * 0.35), h: Math.round(window.innerHeight * 0.55) },
+      position: { x: 100 * index, y: 100 * index, z: index },
+      contentData: id,
+      title: name,
+      icon: { type: 'image' },
+    }
+  }
+
   return {
     get windows() { return windows; },
     openWindow,
@@ -109,7 +128,7 @@ export const WINDOW_SERVICE = createWindowService();
 
 export type CodexWindow = {
   id: string;
-  type: 'pdf' | 'dir' | 'doc';
+  type: 'pdf' | 'dir' | 'doc' | 'image';
   state: 'open' | 'hidden' | 'closed';
   dimension: { w: number, h: number };
   position: { x: number, y: number, z: number };
@@ -119,5 +138,5 @@ export type CodexWindow = {
 }
 
 export type Icon = {
-  type: 'file' | 'dir'
+  type: 'file' | 'dir' | 'image'
 }

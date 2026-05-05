@@ -3,6 +3,7 @@
 	import Window from '$lib/codex/components/window.svelte';
 	import PdfWindow from '$lib/codex/components/pdf-window.svelte';
 	import DocWindow from '$lib/codex/components/doc-window.svelte';
+	import ImageWindow from '$lib/codex/components/image-window.svelte';
 
 	let windows = $derived(WINDOW_SERVICE.windows);
 </script>
@@ -14,6 +15,8 @@
 				<PdfWindow window={windows[index]}></PdfWindow>
 			{:else if window.type === 'doc'}
 				<DocWindow window={windows[index]}></DocWindow>
+			{:else if window.type === 'image'}
+				<ImageWindow window={windows[index]}></ImageWindow>
 			{:else}
 				<Window bind:context={windows[index]} />
 			{/if}

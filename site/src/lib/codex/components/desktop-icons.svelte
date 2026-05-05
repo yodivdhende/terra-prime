@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ICON_SERVICE, type Icon } from '$lib/codex/services/icon-service.svelte';
 	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
-	import { File, Folder } from '@lucide/svelte';
+	import { File, Folder, Image } from '@lucide/svelte';
 
 	let icons = $derived(ICON_SERVICE.icons);
 
@@ -25,6 +25,14 @@
 			<button onclick={() => openWindow(icon)}>
 				<div class="icon">
 					<Folder size={64} strokeWidth={1} />
+				</div>
+				{icon.title}
+			</button>
+		{/if}
+		{#if icon.type === 'image'}
+			<button onclick={() => openWindow(icon)}>
+				<div class="icon">
+					<Image size={64} strokeWidth={1} />
 				</div>
 				{icon.title}
 			</button>

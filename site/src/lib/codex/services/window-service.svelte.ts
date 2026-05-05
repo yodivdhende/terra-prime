@@ -67,7 +67,7 @@ function createWindowService() {
       id,
       type: 'dir',
       state: 'closed',
-      dimension: { w: Math.round(window.innerWidth * 0.3), h: Math.round(window.innerHeight * 0.4) },
+      dimension: { w: Math.round(window.innerWidth * 0.55), h: Math.round(window.innerHeight * 0.6) },
       position: { x: 100 * index, y: 100 * index, z: index },
       contentData: id,
       title: name,

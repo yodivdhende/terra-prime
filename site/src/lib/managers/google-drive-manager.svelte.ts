@@ -25,6 +25,17 @@ export class GoogleSheetManager {
     return result.data.files.filter(file => file.name[0] !== '_');
   }
 
+  public async getFolderFiles(folderId: string) {
+    const result = await this.getService().files.list({
+      q: `'${folderId}' in parents and trashed = false`,
+      fields: 'nextPageToken, files(id, name, mimeType)',
+      spaces: 'drive',
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
+    });
+    return result.data.files.filter(file => file.name[0] !== '_');
+  }
+
   public async getDocumentHtml(fileId: string): Promise<string> {
     const response = await this.getService().files.export(
       { fileId, mimeType: 'text/html' },

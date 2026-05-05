@@ -1,8 +1,7 @@
 <script lang="ts">
-	import Window from '$lib/codex/components/window.svelte';
 	import { type CodexWindow } from '$lib/codex/services/window-service.svelte';
 
-	let { window = $bindable() }: { window: CodexWindow } = $props();
+	let { window }: { window: CodexWindow } = $props();
 
 	let html = $state('');
 	let loading = $state(true);
@@ -27,19 +26,15 @@
 	});
 </script>
 
-{#snippet doc()}
-	<div class="doc-content">
-		{#if loading}
-			<span class="status">loading...</span>
-		{:else if failed}
-			<span class="status error">failed to load document</span>
-		{:else}
-			{@html html}
-		{/if}
-	</div>
-{/snippet}
-
-<Window bind:context={window} content={doc} />
+<div class="doc-content">
+	{#if loading}
+		<span class="status">loading...</span>
+	{:else if failed}
+		<span class="status error">failed to load document</span>
+	{:else}
+		{@html html}
+	{/if}
+</div>
 
 <style>
 	.doc-content {

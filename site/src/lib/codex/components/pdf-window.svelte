@@ -3,7 +3,7 @@
 
 	let { window }: { window: CodexWindow } = $props();
 
-	const pdfUrl = `/api/drive/${window.contentData}#toolbar=0&navpanes=0&scrollbar=0`;
+	const pdfUrl = $derived(`/api/drive/${window.contentData}#toolbar=0&navpanes=0&scrollbar=0`);
 </script>
 
 <embed src={pdfUrl} />

@@ -3,7 +3,7 @@
 
 	let { window }: { window: CodexWindow } = $props();
 
-	const imageUrl = `/api/drive/${window.contentData}`;
+	const imageUrl = $derived(`/api/drive/${window.contentData}`);
 </script>
 
 <img src={imageUrl} alt={window.title} />

@@ -12,22 +12,17 @@
 	let expanded = $state<Record<string, DirEntry[] | 'loading'>>({});
 	let selected = $state<DirEntry | null>(null);
 
-	let previewWindow = $derived(
-		selected == null
-			? null
-			: ({
-					...window,
-					contentData: selected.id,
-					title: selected.name,
-					type: selected.mimeType.includes('image')
-						? 'image'
-						: selected.mimeType.includes('pdf')
-							? 'pdf'
-							: selected.mimeType.includes('document')
-								? 'doc'
-								: 'doc',
-				} as CodexWindow)
-	);
+	let previewWindow = $derived.by(() => {
+		if (selected == null) return null;
+		const result: CodexWindow = {
+			...window,
+			contentData: selected.id,
+			title: selected.name,
+			type: entryType(selected.mimeType)
+		};
+
+		return result;
+	});
 
 	let previewable = $derived(
 		selected != null &&
@@ -78,6 +73,12 @@
 	function isFolder(entry: DirEntry) {
 		return entry.mimeType.includes('folder');
 	}
+
+	function entryType(mimeType: string): CodexWindow['type'] {
+		if (mimeType.includes('image')) return 'image';
+		if (mimeType.includes('pdf')) return 'pdf';
+		return 'doc';
+	}
 </script>
 
 <div class="dir-window">
@@ -112,7 +113,11 @@
 			style:padding-left="{0.75 + depth * 1}rem"
 			onclick={() => toggleFolder(entry)}
 		>
-			<span class="arrow">{expanded[entry.id] != null ? '▾' : '▸'}</span>
+			{#if expanded[entry.id] != null}
+				<span class="arrow">v</span>
+			{:else}
+				<span class="arrow">></span>
+			{/if}
 			<span class="name">{entry.name}</span>
 		</button>
 		{#if expanded[entry.id] === 'loading'}

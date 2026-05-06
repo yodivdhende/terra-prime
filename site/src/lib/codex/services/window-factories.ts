@@ -17,7 +17,7 @@ export function createSettingsWindow(): CodexWindow {
   return {
     id: 'settings',
     type: 'settings',
-    state: 'open',
+    state: 'closed',
     dimension: { w: 400, h: 300 },
     position: { x: 400, y: 50, z: 0 },
     contentData: 'settings',

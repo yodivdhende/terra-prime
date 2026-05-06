@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Logo from '$lib/assets/images/Logo.png';
+	import Logo from '$lib/assets/images/logo.gif';
 	import DesktopIcons from '$lib/codex/components/desktop-icons.svelte';
 	import DesktopWindows from '$lib/codex/components/desktop-windows.svelte';
 </script>

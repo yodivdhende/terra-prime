@@ -4,12 +4,17 @@ services:
     build:
       context: ./site
       dockerfile: dockerfile
+      target: dev
     ports:
-      - 4174:3000
+      - 5173:5173
+    volumes:
+      - ./site:/app
+      - /app/node_modules
     env_file:
       - ./site/.env
     depends_on:
-      - db
+      migrate:
+        condition: service_completed_successfully
 
   db:
     container_name: terra-prime-db
@@ -21,8 +26,28 @@ services:
       - MYSQL_DATABASE=testaliceDB
       - MYSQL_USER=yodi
       - MYSQL_PASSWORD=Tester@123
-    volumes:
-      - './db/scripts:/docker-entrypoint-initdb.d'
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  migrate:
+    container_name: terra-prime-migrate
+    build:
+      context: ./site
+      dockerfile: dockerfile
+      target: migrate-runner
+    env_file:
+      - ./site/.env
+    environment:
+      - MYSQLHOST=db
+      - MYSQLPORT=3306
+    depends_on:
+      db:
+        condition: service_healthy
+
   phpnyadmin:
     image: phpmyadmin/phpmyadmin
     ports:
@@ -42,5 +67,4 @@ services:
 
 networks:
   default:
-    external:
-      name: terra-prime
+    name: terra-prime

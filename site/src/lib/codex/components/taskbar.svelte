@@ -1,9 +1,11 @@
 <script lang="ts">
 	import SearchBar from '$lib/codex/components/search-bar.svelte';
+	import Tray from '$lib/codex/components/tray.svelte';
 </script>
 
 <main>
 	<SearchBar />
+	<Tray />
 </main>
 
 <style>

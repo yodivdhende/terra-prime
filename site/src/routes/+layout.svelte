@@ -8,7 +8,7 @@
 
 	onMount(() => {
 		if (page.url.pathname === '/') {
-			goto('/promo');
+			goto('/codex');
 		}
 	});
 
@@ -23,7 +23,7 @@
 <style>
 	.dhvt-logo {
 		position: fixed;
-		bottom: 1rem;
+		bottom: 100px;
 		right: 1rem;
 		z-index: 10;
 		color: white;

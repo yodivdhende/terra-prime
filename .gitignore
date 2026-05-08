@@ -1,6 +1,7 @@
-site/node_modules
+**/node_modules
 
 # Output
+stemtest/dist
 site/.output
 site/.vercel
 site/.netlify

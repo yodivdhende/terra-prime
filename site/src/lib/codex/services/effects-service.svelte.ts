@@ -1,7 +1,7 @@
 function createEffectsService() {
   let crt = $state(true);
   let scanlines = $state(true);
-  let vignette = $state(true);
+  let vignette = $state(false);
 
   return {
     get crt() { return crt; },

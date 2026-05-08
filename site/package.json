@@ -14,7 +14,9 @@
 		"lint": "prettier --check . && eslint .",
 		"host": "npm run dev -- --host 0.0.0.0",
 		"start": "node ./build/index.js",
-		"start:websocket": "node ./websocket-server"
+		"start:websocket": "node ./websocket-server",
+		"migrate": "tsx db/migrate.ts",
+		"seed": "tsx db/seed.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.1",
@@ -49,6 +51,7 @@
 		"express": "^5.2.1",
 		"googleapis": "^105.0.0",
 		"mysql2": "^3.22.1",
+		"tsx": "^4.19.4",
 		"three": "^0.180.0",
 		"uuid": "^11.1.0",
 		"ws": "^8.20.0"

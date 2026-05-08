@@ -18,7 +18,16 @@ RUN pnpm install --prod --frozen-lockfile
 
 FROM base AS build
 RUN pnpm install  --frozen-lockfile
-RUN pnpm run build 
+RUN pnpm run build
+
+FROM base AS dev
+RUN pnpm install --frozen-lockfile
+EXPOSE 5173
+CMD ["pnpm", "host"]
+
+FROM base AS migrate-runner
+COPY --from=build /app/node_modules node_modules/
+CMD ["pnpm", "migrate"]
 
 FROM base
 COPY --from=prod-deps /app/node_modules node_modules/

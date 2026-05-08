@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { BrainCircuit, Globe, Volume2 } from '@lucide/svelte';
 	import { onMount, onDestroy } from 'svelte';
+	import dhvtLogo from '$lib/assets/images/DEF_Logo_rgb_wit.png';
 
 	let time = $state('');
 
@@ -23,6 +24,9 @@
 	<Globe size={32} />
 	<Volume2 size={32} />
 	<BrainCircuit size={32} />
+	<a href="https://dhvt.be" target="_blank" rel="noopener" class="dhvt-link">
+		<img src={dhvtLogo} alt="DHVT" class="dhvt-logo" />
+	</a>
 	<span class="clock">{time}</span>
 </div>
 
@@ -41,6 +45,22 @@
 		height: 32px;
 		opacity: 0.7;
 		flex-shrink: 0;
+	}
+
+	.dhvt-link {
+		display: flex;
+		align-items: center;
+		opacity: 0.7;
+		transition: opacity 0.15s;
+	}
+
+	.dhvt-link:hover {
+		opacity: 1;
+	}
+
+	.dhvt-logo {
+		height: 1.5rem;
+		width: auto;
 	}
 
 	.clock {

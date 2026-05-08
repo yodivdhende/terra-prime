@@ -4,6 +4,7 @@
 	import DocWindow from '$lib/codex/components/doc-window.svelte';
 	import ImageWindow from '$lib/codex/components/image-window.svelte';
 	import SettingsWindow from '$lib/codex/components/settings-window.svelte';
+	import PlaytestWindow from '$lib/codex/components/playtest-window.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
 </script>
@@ -16,4 +17,6 @@
 	<ImageWindow {window} />
 {:else if window.type === 'settings'}
 	<SettingsWindow {window} />
+{:else if window.type === 'playtest'}
+	<PlaytestWindow {window} />
 {/if}

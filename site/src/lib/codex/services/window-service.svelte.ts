@@ -1,5 +1,6 @@
 import {
   createSettingsWindow,
+  createPlaytestWindow,
   createFolderWindow,
   createPdfWindow,
   createDocWindow,
@@ -10,7 +11,7 @@ import {
 export type { CodexWindow, Icon } from './window-factories';
 
 function createWindowService() {
-  const windows = $state([createSettingsWindow()] as CodexWindow[]);
+  const windows = $state([createSettingsWindow(), createPlaytestWindow()] as CodexWindow[]);
 
   function addWindows(items: { name: string, mimeType: string, id: string }[]): void {
     items.filter(item => windows.every(window => window.id != item.id))

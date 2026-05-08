@@ -3,6 +3,8 @@
 	import { isEmail, isNotEmptyString } from '$lib/validators/util-validations';
 	import type { ActionResult } from '@sveltejs/kit';
 
+	let { action = undefined }: { action?: string } = $props();
+
 	let formData: {success?: boolean, error?:boolean} | undefined = $state();
 
 	let formState: 'button' | 'form' | 'sended' = $state('button');
@@ -51,7 +53,7 @@
 		<button onclick={() => setState('form')}>Jouw plaats wacht in de Federatie!</button>
 	</div>
 
-	<form method="post" use:enhance={postSubmit}>
+	<form method="post" {action} use:enhance={postSubmit}>
 		<div class={formClass}>
 			<p>
 				De Federatie organiseert een beperkte praktijktest ter evaluatie van operationele systemen

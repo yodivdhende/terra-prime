@@ -1,6 +1,6 @@
 export type CodexWindow = {
   id: string;
-  type: 'pdf' | 'dir' | 'doc' | 'image' | 'settings';
+  type: 'pdf' | 'dir' | 'doc' | 'image' | 'settings' | 'playtest';
   state: 'open' | 'hidden' | 'closed';
   dimension: { w: number, h: number };
   position: { x: number, y: number, z: number };
@@ -10,7 +10,7 @@ export type CodexWindow = {
 }
 
 export type Icon = {
-  type: 'file' | 'dir' | 'image' | 'settings'
+  type: 'file' | 'dir' | 'image' | 'settings' | 'playtest'
 }
 
 export function createSettingsWindow(): CodexWindow {
@@ -76,6 +76,19 @@ export function createImageWindow(name: string, index: number, id: string): Code
     title: formatName(name),
     icon: { type: 'image' },
   }
+}
+
+export function createPlaytestWindow(): CodexWindow {
+  return {
+    id: 'playtest',
+    type: 'playtest',
+    state: 'closed',
+    dimension: { w: 480, h: 520 },
+    position: { x: 200, y: 80, z: 0 },
+    contentData: 'playtest',
+    title: 'playtest registratie',
+    icon: { type: 'playtest' },
+  };
 }
 
 function getState(name: string): 'open' | 'closed' {

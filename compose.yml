@@ -41,6 +41,9 @@ services:
       target: migrate-runner
     env_file:
       - ./site/.env
+    environment:
+      - MYSQLHOST=db
+      - MYSQLPORT=3306
     depends_on:
       db:
         condition: service_healthy

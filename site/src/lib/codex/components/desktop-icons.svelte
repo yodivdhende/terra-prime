@@ -3,7 +3,11 @@
 	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
 	import { File, Folder, Image, Settings, ClipboardPen } from '@lucide/svelte';
 
+	const LOCAL_TYPES = new Set(['settings', 'playtest']);
+
 	let icons = $derived(ICON_SERVICE.icons);
+	let localIcons = $derived(icons.filter(i => LOCAL_TYPES.has(i.type)));
+	let driveIcons = $derived(icons.filter(i => !LOCAL_TYPES.has(i.type)));
 
 	function openWindow(icon: Icon) {
 		const { windowId } = $state.snapshot(icon);
@@ -11,58 +15,68 @@
 	}
 </script>
 
+{#snippet iconButton(icon: Icon)}
+	{#if icon.type === 'file'}
+		<button onclick={() => openWindow(icon)}>
+			<div class="icon"><File size={64} strokeWidth={1} /></div>
+			{icon.title}
+		</button>
+	{/if}
+	{#if icon.type === 'dir'}
+		<button onclick={() => openWindow(icon)}>
+			<div class="icon"><Folder size={64} strokeWidth={1} /></div>
+			{icon.title}
+		</button>
+	{/if}
+	{#if icon.type === 'image'}
+		<button onclick={() => openWindow(icon)}>
+			<div class="icon"><Image size={64} strokeWidth={1} /></div>
+			{icon.title}
+		</button>
+	{/if}
+	{#if icon.type === 'settings'}
+		<button onclick={() => openWindow(icon)}>
+			<div class="icon"><Settings size={64} strokeWidth={1} /></div>
+			{icon.title}
+		</button>
+	{/if}
+	{#if icon.type === 'playtest'}
+		<button onclick={() => openWindow(icon)}>
+			<div class="icon"><ClipboardPen size={64} strokeWidth={1} /></div>
+			{icon.title}
+		</button>
+	{/if}
+{/snippet}
+
 <main>
-	{#each icons as icon (icon.windowId)}
-		{#if icon.type === 'file'}
-			<button onclick={() => openWindow(icon)}>
-				<div class="icon">
-					<File size={64} strokeWidth={1} />
-				</div>
-				{icon.title}
-			</button>
-		{/if}
-		{#if icon.type === 'dir'}
-			<button onclick={() => openWindow(icon)}>
-				<div class="icon">
-					<Folder size={64} strokeWidth={1} />
-				</div>
-				{icon.title}
-			</button>
-		{/if}
-		{#if icon.type === 'image'}
-			<button onclick={() => openWindow(icon)}>
-				<div class="icon">
-					<Image size={64} strokeWidth={1} />
-				</div>
-				{icon.title}
-			</button>
-		{/if}
-		{#if icon.type === 'settings'}
-			<button onclick={() => openWindow(icon)}>
-				<div class="icon">
-					<Settings size={64} strokeWidth={1} />
-				</div>
-				{icon.title}
-			</button>
-		{/if}
-		{#if icon.type === 'playtest'}
-			<button onclick={() => openWindow(icon)}>
-				<div class="icon">
-					<ClipboardPen size={64} strokeWidth={1} />
-				</div>
-				{icon.title}
-			</button>
-		{/if}
-	{/each}
+	<section class="local">
+		{#each localIcons as icon (icon.windowId)}
+			{@render iconButton(icon)}
+		{/each}
+	</section>
+	<section class="drive">
+		{#each driveIcons as icon (icon.windowId)}
+			{@render iconButton(icon)}
+		{/each}
+	</section>
 </main>
 
 <style>
 	main {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		justify-content: space-between;
+		pointer-events: none;
+	}
+
+	section {
 		display: grid;
 		margin: 2rem;
 		gap: 1.5rem;
 		grid-template-columns: repeat(3, min-content);
 		align-content: start;
+		pointer-events: auto;
 	}
 
 	button {

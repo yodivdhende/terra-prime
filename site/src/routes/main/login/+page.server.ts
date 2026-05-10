@@ -11,8 +11,8 @@ export const actions = {
 				body: JSON.stringify({ email, password })
 			});
 			if (response.ok) {
-				const { roles } = await response.json();
-				return { success: { roles } };
+				const { roles, name } = await response.json();
+				return { success: { roles, name } };
 			}
             const error = await response.json();
 			return { error };

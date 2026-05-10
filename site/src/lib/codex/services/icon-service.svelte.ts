@@ -3,7 +3,7 @@ import { WINDOW_SERVICE } from './window-service.svelte';
 export type Icon = {
   windowId: string;
   title: string;
-  type: 'file' | 'dir' | 'image' | 'settings' | 'playtest';
+  type: 'file' | 'dir' | 'image' | 'settings' | 'playtest' | 'login';
   side: 'left' | 'right';
 }
 

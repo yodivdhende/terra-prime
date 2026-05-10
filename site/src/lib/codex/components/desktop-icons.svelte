@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ICON_SERVICE, type Icon } from '$lib/codex/services/icon-service.svelte';
 	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
-	import { File, Folder, Image, Settings, ClipboardPen } from '@lucide/svelte';
+	import { File, Folder, Image, Settings, ClipboardPen, UserRound } from '@lucide/svelte';
 
 	let icons = $derived(ICON_SERVICE.icons);
 	let localIcons = $derived(icons.filter(i => i.side === 'left'));
@@ -41,6 +41,12 @@
 	{#if icon.type === 'playtest'}
 		<button onclick={() => openWindow(icon)}>
 			<div class="icon"><ClipboardPen size={64} strokeWidth={1} /></div>
+			{icon.title}
+		</button>
+	{/if}
+	{#if icon.type === 'login'}
+		<button onclick={() => openWindow(icon)}>
+			<div class="icon"><UserRound size={64} strokeWidth={1} /></div>
 			{icon.title}
 		</button>
 	{/if}

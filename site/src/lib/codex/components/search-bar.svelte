@@ -9,7 +9,7 @@
 	let results = $state<DriveFile[]>([]);
 	let searching = $state(false);
 	let debounceTimer: ReturnType<typeof setTimeout>;
-	let inputEl: HTMLInputElement;
+	let inputEl: HTMLInputElement | undefined = $state();
 
 	function toggle() {
 		expanded = !expanded;

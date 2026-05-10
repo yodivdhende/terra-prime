@@ -8,6 +8,7 @@
 	--color-border: var(--color-main-dim);
 	--color-accent: #00cc00;
   --color-warning: #cc4444;
+  --color-error: #cc0000;
 	--color-scrollbar-thumb: var(--color-main);
 	--color-scrollbar-track: var(--color-bg);
 

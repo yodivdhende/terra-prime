@@ -66,9 +66,23 @@ export class GoogleSheetManager {
     const nodeStream = response.data as unknown as NodeJS.ReadableStream;
     return new ReadableStream({
       start(controller) {
-        nodeStream.on('data', (chunk) => controller.enqueue(chunk));
-        nodeStream.on('end', () => controller.close());
-        nodeStream.on('error', (err) => controller.error(err));
+        const onData = (chunk: Buffer) => controller.enqueue(chunk);
+        const onEnd = () => {
+          nodeStream.removeListener('data', onData);
+          nodeStream.removeListener('error', onError);
+          controller.close();
+        };
+        const onError = (err: Error) => {
+          nodeStream.removeListener('data', onData);
+          nodeStream.removeListener('end', onEnd);
+          controller.error(err);
+        };
+        nodeStream.on('data', onData);
+        nodeStream.once('end', onEnd);
+        nodeStream.once('error', onError);
+      },
+      cancel() {
+        (nodeStream as NodeJS.ReadableStream & { destroy?: () => void }).destroy?.();
       },
     });
   }

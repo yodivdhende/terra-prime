@@ -10,6 +10,7 @@
 	let feImageEl: SVGFEImageElement;
 
 	$effect(() => WINDOW_SERVICE.addWindows(data.files));
+	$effect(() => WINDOW_SERVICE.setLoginEnabled(data.loginEnabled));
 
 	onMount(() => {
 		const size = 256;

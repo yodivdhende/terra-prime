@@ -12,7 +12,17 @@ import {
 export type { CodexWindow, Icon } from './window-factories';
 
 function createWindowService() {
-  const windows = $state([createSettingsWindow(), createPlaytestWindow(), createLoginWindow()] as CodexWindow[]);
+  const windows = $state([createSettingsWindow(), createPlaytestWindow()] as CodexWindow[]);
+
+  function setLoginEnabled(enabled: boolean) {
+    const exists = windows.some(w => w.id === 'login');
+    if (enabled && !exists) {
+      windows.push(createLoginWindow());
+    } else if (!enabled && exists) {
+      const index = windows.findIndex(w => w.id === 'login');
+      if (index >= 0) windows.splice(index, 1);
+    }
+  }
 
   function addWindows(items: { name: string, mimeType: string, id: string }[]): void {
     items.filter(item => windows.every(window => window.id != item.id))
@@ -80,6 +90,7 @@ function createWindowService() {
     focusWindow,
     closeWindow,
     addWindows,
+    setLoginEnabled,
   }
 }
 

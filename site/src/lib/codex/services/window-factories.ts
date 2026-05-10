@@ -10,7 +10,8 @@ export type CodexWindow = {
 }
 
 export type Icon = {
-  type: 'file' | 'dir' | 'image' | 'settings' | 'playtest'
+  type: 'file' | 'dir' | 'image' | 'settings' | 'playtest';
+  side: 'left' | 'right';
 }
 
 export function createSettingsWindow(): CodexWindow {
@@ -22,11 +23,11 @@ export function createSettingsWindow(): CodexWindow {
     position: { x: 400, y: 50, z: 0 },
     contentData: 'settings',
     title: 'settings',
-    icon: { type: 'settings' },
+    icon: { type: 'settings', side: 'left' },
   };
 }
 
-export function createFolderWindow(name: string, index: number, id: string): CodexWindow {
+export function createFolderWindow({ name, index, id, side }: { name: string, index: number, id: string, side: 'left' | 'right' }): CodexWindow {
   return {
     id,
     type: 'dir',
@@ -35,11 +36,11 @@ export function createFolderWindow(name: string, index: number, id: string): Cod
     position: { x: 400 + 20 * index, y: 20 * index, z: index },
     contentData: id,
     title: formatName(name),
-    icon: { type: 'dir' },
+    icon: { type: 'dir', side },
   }
 }
 
-export function createPdfWindow(name: string, index: number, id: string): CodexWindow {
+export function createPdfWindow({ name, index, id, side }: { name: string, index: number, id: string, side: 'left' | 'right' }): CodexWindow {
   return {
     id,
     type: 'pdf',
@@ -48,11 +49,11 @@ export function createPdfWindow(name: string, index: number, id: string): CodexW
     position: { x: 400 + 20 * index, y: 20 * index, z: index },
     contentData: id,
     title: formatName(name),
-    icon: { type: 'file' },
+    icon: { type: 'file', side },
   }
 }
 
-export function createDocWindow(name: string, index: number, id: string): CodexWindow {
+export function createDocWindow({ name, index, id, side }: { name: string, index: number, id: string, side: 'left' | 'right' }): CodexWindow {
   return {
     id,
     type: 'doc',
@@ -61,11 +62,11 @@ export function createDocWindow(name: string, index: number, id: string): CodexW
     position: { x: 400 + 20 * index, y: 20 * index, z: index },
     contentData: id,
     title: formatName(name),
-    icon: { type: 'file' },
+    icon: { type: 'file', side },
   }
 }
 
-export function createImageWindow(name: string, index: number, id: string): CodexWindow {
+export function createImageWindow({ name, index, id, side }: { name: string, index: number, id: string, side: 'left' | 'right' }): CodexWindow {
   return {
     id,
     type: 'image',
@@ -74,7 +75,7 @@ export function createImageWindow(name: string, index: number, id: string): Code
     position: { x: 400 + 20 * index, y: 20 * index, z: index },
     contentData: id,
     title: formatName(name),
-    icon: { type: 'image' },
+    icon: { type: 'image', side },
   }
 }
 
@@ -87,7 +88,7 @@ export function createPlaytestWindow(): CodexWindow {
     position: { x: 200, y: 80, z: 0 },
     contentData: 'playtest',
     title: 'playtest registratie',
-    icon: { type: 'playtest' },
+    icon: { type: 'playtest', side: 'left' },
   };
 }
 

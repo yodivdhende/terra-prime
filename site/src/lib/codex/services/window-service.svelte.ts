@@ -21,25 +21,25 @@ function createWindowService() {
 
         if (item.mimeType.includes('folder')) {
           windows.push(
-            createFolderWindow(item.name, windows.length, item.id)
+            createFolderWindow({ name: item.name, index: windows.length, id: item.id, side: 'right' })
           )
           return;
         }
         if (item.mimeType.includes('pdf')) {
           windows.push(
-            createPdfWindow(item.name, windows.length, item.id)
+            createPdfWindow({ name: item.name, index: windows.length, id: item.id, side: 'right' })
           )
           return;
         }
         if (item.mimeType.includes('document')) {
           windows.push(
-            createDocWindow(item.name, windows.length, item.id)
+            createDocWindow({ name: item.name, index: windows.length, id: item.id, side: 'right' })
           )
           return;
         }
         if (item.mimeType.includes('image')) {
           windows.push(
-            createImageWindow(item.name, windows.length, item.id)
+            createImageWindow({ name: item.name, index: windows.length, id: item.id, side: 'right' })
           )
           return;
         }

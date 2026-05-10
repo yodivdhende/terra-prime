@@ -3,11 +3,9 @@
 	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
 	import { File, Folder, Image, Settings, ClipboardPen } from '@lucide/svelte';
 
-	const LOCAL_TYPES = new Set(['settings', 'playtest']);
-
 	let icons = $derived(ICON_SERVICE.icons);
-	let localIcons = $derived(icons.filter(i => LOCAL_TYPES.has(i.type)));
-	let driveIcons = $derived(icons.filter(i => !LOCAL_TYPES.has(i.type)));
+	let localIcons = $derived(icons.filter(i => i.side === 'left'));
+	let driveIcons = $derived(icons.filter(i => i.side === 'right'));
 
 	function openWindow(icon: Icon) {
 		const { windowId } = $state.snapshot(icon);

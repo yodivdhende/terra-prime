@@ -12,6 +12,9 @@ services:
       - /app/node_modules
     env_file:
       - ./site/.env
+    environment:
+      - MYSQLHOST=db
+      - MYSQLPORT=3306
     depends_on:
       migrate:
         condition: service_completed_successfully

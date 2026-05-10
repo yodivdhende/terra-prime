@@ -1,11 +1,11 @@
 <script lang="ts">
 	import SearchBar from '$lib/codex/components/search-bar.svelte';
-	import Tray from '$lib/codex/components/tray.svelte';
+	import TaskIcons from './task-icons.svelte';
 </script>
 
 <main>
 	<SearchBar />
-	<Tray />
+	<TaskIcons />
 </main>
 
 <style>

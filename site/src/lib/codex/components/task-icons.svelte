@@ -40,18 +40,10 @@
 		height: 100%;
 	}
 
-	.tray svg {
-		width: 32px;
-		height: 32px;
-		opacity: 0.7;
-		flex-shrink: 0;
-	}
-
 	.dhvt-link {
 		display: flex;
 		align-items: center;
 		opacity: 0.7;
-		transition: opacity 0.15s;
 	}
 
 	.dhvt-link:hover {
@@ -59,7 +51,7 @@
 	}
 
 	.dhvt-logo {
-		height: 1.5rem;
+		height: 2.5rem;
 		width: auto;
 	}
 

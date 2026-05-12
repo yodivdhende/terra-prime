@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type CodexWindow } from '$lib/codex/services/window-service.svelte';
+	import { type CodexWindow } from '$lib/codex/services/window-manager.svelte';
 	import PlaytestForm from '$lib/components/playtest-form.svelte';
 
 	let { window }: { window: CodexWindow } = $props();

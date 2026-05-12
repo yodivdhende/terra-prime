@@ -2,12 +2,12 @@
 	import SearchBar from '$lib/codex/components/search-bar.svelte';
 	import TaskIcons from './task-icons.svelte';
 	import { UserRound } from '@lucide/svelte';
-	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
+	import { WINDOW_MANAGER } from '$lib/codex/services/window-manager.svelte';
 	import { credentialStore } from '$lib/local-utils/credential-store.svelte';
 
 	function openLogin() {
-		WINDOW_SERVICE.openWindow({ id: 'login' });
-		WINDOW_SERVICE.focusWindow('login');
+		WINDOW_MANAGER.openWindow({ id: 'login' });
+		WINDOW_MANAGER.focusWindow('login');
 	}
 </script>
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ICON_SERVICE, type Icon } from '$lib/codex/services/icon-service.svelte';
-	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
+	import { WINDOW_MANAGER } from '$lib/codex/services/window-manager.svelte';
 	import { File, Folder, Image, Settings, ClipboardPen, UserRound } from '@lucide/svelte';
 
 	let icons = $derived(ICON_SERVICE.icons);
@@ -9,7 +9,7 @@
 
 	function openWindow(icon: Icon) {
 		const { windowId } = $state.snapshot(icon);
-		icon.windowId = WINDOW_SERVICE.openWindow({ id: windowId });
+		icon.windowId = WINDOW_MANAGER.openWindow({ id: windowId });
 	}
 </script>
 

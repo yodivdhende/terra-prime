@@ -11,7 +11,7 @@ import {
 
 export type { CodexWindow, Icon } from './window-factories';
 
-function createWindowService() {
+function createWindowManager() {
   const windows = $state([createSettingsWindow(), createPlaytestWindow()] as CodexWindow[]);
 
   function setLoginEnabled(enabled: boolean) {
@@ -94,4 +94,4 @@ function createWindowService() {
   }
 }
 
-export const WINDOW_SERVICE = createWindowService();
+export const WINDOW_MANAGER = createWindowManager();

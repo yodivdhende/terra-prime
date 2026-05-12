@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
+	import { WINDOW_MANAGER } from '$lib/codex/services/window-manager.svelte';
 	import Window from '$lib/codex/components/window.svelte';
 	import WindowContent from '$lib/codex/components/window-content.svelte';
 	import DirWindow from '$lib/codex/components/dir-window.svelte';
 
-	let windows = $derived(WINDOW_SERVICE.windows);
+	let windows = $derived(WINDOW_MANAGER.windows);
 </script>
 
 <main>

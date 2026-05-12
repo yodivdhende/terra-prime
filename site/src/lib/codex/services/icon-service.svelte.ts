@@ -1,4 +1,4 @@
-import { WINDOW_SERVICE } from './window-service.svelte';
+import { WINDOW_MANAGER } from './window-manager.svelte';
 
 export type Icon = {
   windowId: string;
@@ -8,7 +8,7 @@ export type Icon = {
 }
 
 function createIconService() {
-  const icons = $derived(WINDOW_SERVICE.windows.map(window => {
+  const icons = $derived(WINDOW_MANAGER.windows.map(window => {
     if (window.icon == null) return null;
     return {
       windowId: window.id,

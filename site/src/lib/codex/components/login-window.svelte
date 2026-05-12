@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { credentialStore } from '$lib/local-utils/credential-store.svelte';
-	import { WINDOW_SERVICE, type CodexWindow } from '$lib/codex/services/window-service.svelte';
+	import { WINDOW_MANAGER, type CodexWindow } from '$lib/codex/services/window-manager.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
 
@@ -25,7 +25,7 @@
 				credentialStore.roles = result.data.success.roles;
 				credentialStore.name = result.data.success.name ?? '';
 				errorMessage = null;
-				WINDOW_SERVICE.closeWindow(window.id);
+				WINDOW_MANAGER.closeWindow(window.id);
 			} else if (result.type === 'success' && result.data?.error) {
 				errorMessage = JSON.stringify(result.data.error);
 			}

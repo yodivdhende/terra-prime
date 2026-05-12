@@ -3,14 +3,14 @@
 	import Desktop from '$lib/codex/components/desktop.svelte';
 	import Taskbar from '$lib/codex/components/taskbar.svelte';
 	import { type PageProps } from './$types';
-	import { WINDOW_SERVICE } from '../../lib/codex/services/window-service.svelte';
+	import { WINDOW_MANAGER } from '../../lib/codex/services/window-manager.svelte';
 	import { EFFECTS_SERVICE } from '$lib/codex/services/effects-service.svelte';
 
 	let { data }: PageProps = $props();
 	let feImageEl: SVGFEImageElement;
 
-	$effect(() => WINDOW_SERVICE.addWindows(data.files));
-	$effect(() => WINDOW_SERVICE.setLoginEnabled(data.loginEnabled));
+	$effect(() => WINDOW_MANAGER.addWindows(data.files));
+	$effect(() => WINDOW_MANAGER.setLoginEnabled(data.loginEnabled));
 
 	onMount(() => {
 		const size = 256;

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { X } from '@lucide/svelte';
 	import { type Snippet } from 'svelte';
-	import { type CodexWindow } from '$lib/codex/services/window-service.svelte';
-	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
+	import { type CodexWindow } from '$lib/codex/services/window-manager.svelte';
+	import { WINDOW_MANAGER } from '$lib/codex/services/window-manager.svelte';
 
 	let { context = $bindable(), content }: { context: CodexWindow; content: Snippet } = $props();
 
@@ -17,7 +17,7 @@
 	});
 
 	function closeWindow() {
-		WINDOW_SERVICE.closeWindow(context.id);
+		WINDOW_MANAGER.closeWindow(context.id);
 	}
 
 	function draggable(node: HTMLElement) {

@@ -62,9 +62,7 @@ CREATE TABLE `Event_Character_Budget` (
   `Event`          int NOT NULL,
   `Character`      int NOT NULL,
   `BudgetIncrease` int NOT NULL DEFAULT 0,
-  PRIMARY KEY (`Event`, `Character`),
-  CONSTRAINT `ecb_event`     FOREIGN KEY (`Event`)     REFERENCES `Events` (`Id`),
-  CONSTRAINT `ecb_character` FOREIGN KEY (`Character`) REFERENCES `Characters` (`Id`)
+  PRIMARY KEY (`Event`, `Character`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `Event_Character_Discounts_Items` (
@@ -72,10 +70,7 @@ CREATE TABLE `Event_Character_Discounts_Items` (
   `Character` int NOT NULL,
   `Item`      int NOT NULL,
   `Discount`  int NOT NULL DEFAULT 0,
-  PRIMARY KEY (`Event`, `Character`, `Item`),
-  CONSTRAINT `ecdi_event`     FOREIGN KEY (`Event`)     REFERENCES `Events` (`Id`),
-  CONSTRAINT `ecdi_character` FOREIGN KEY (`Character`) REFERENCES `Characters` (`Id`),
-  CONSTRAINT `ecdi_item`      FOREIGN KEY (`Item`)      REFERENCES `Items` (`Id`)
+  PRIMARY KEY (`Event`, `Character`, `Item`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `Event_Character_Discounts_Implants` (
@@ -83,10 +78,7 @@ CREATE TABLE `Event_Character_Discounts_Implants` (
   `Character` int NOT NULL,
   `Implant`   int NOT NULL,
   `Discount`  int NOT NULL DEFAULT 0,
-  PRIMARY KEY (`Event`, `Character`, `Implant`),
-  CONSTRAINT `ecdim_event`     FOREIGN KEY (`Event`)     REFERENCES `Events` (`Id`),
-  CONSTRAINT `ecdim_character` FOREIGN KEY (`Character`) REFERENCES `Characters` (`Id`),
-  CONSTRAINT `ecdim_implant`   FOREIGN KEY (`Implant`)   REFERENCES `Implants` (`Id`)
+  PRIMARY KEY (`Event`, `Character`, `Implant`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `Event_Character_Discounts_Skills` (
@@ -94,10 +86,7 @@ CREATE TABLE `Event_Character_Discounts_Skills` (
   `Character` int NOT NULL,
   `Skill`     int NOT NULL,
   `Discount`  int NOT NULL DEFAULT 0,
-  PRIMARY KEY (`Event`, `Character`, `Skill`),
-  CONSTRAINT `ecds_event`     FOREIGN KEY (`Event`)     REFERENCES `Events` (`Id`),
-  CONSTRAINT `ecds_character` FOREIGN KEY (`Character`) REFERENCES `Characters` (`Id`),
-  CONSTRAINT `ecds_skill`     FOREIGN KEY (`Skill`)     REFERENCES `Skills` (`Id`)
+  PRIMARY KEY (`Event`, `Character`, `Skill`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `Implants` (
@@ -284,6 +273,25 @@ ALTER TABLE `Session_Roles`
 
 ALTER TABLE `Skills`
   ADD CONSTRAINT `Skills_ibfk_1` FOREIGN KEY (`Group`) REFERENCES `Skill_Groups` (`Id`);
+
+ALTER TABLE `Event_Character_Budget`
+  ADD CONSTRAINT `ecb_event`     FOREIGN KEY (`Event`)     REFERENCES `Events` (`Id`),
+  ADD CONSTRAINT `ecb_character` FOREIGN KEY (`Character`) REFERENCES `Characters` (`Id`);
+
+ALTER TABLE `Event_Character_Discounts_Items`
+  ADD CONSTRAINT `ecdi_event`     FOREIGN KEY (`Event`)     REFERENCES `Events` (`Id`),
+  ADD CONSTRAINT `ecdi_character` FOREIGN KEY (`Character`) REFERENCES `Characters` (`Id`),
+  ADD CONSTRAINT `ecdi_item`      FOREIGN KEY (`Item`)      REFERENCES `Items` (`Id`);
+
+ALTER TABLE `Event_Character_Discounts_Implants`
+  ADD CONSTRAINT `ecdim_event`     FOREIGN KEY (`Event`)     REFERENCES `Events` (`Id`),
+  ADD CONSTRAINT `ecdim_character` FOREIGN KEY (`Character`) REFERENCES `Characters` (`Id`),
+  ADD CONSTRAINT `ecdim_implant`   FOREIGN KEY (`Implant`)   REFERENCES `Implants` (`Id`);
+
+ALTER TABLE `Event_Character_Discounts_Skills`
+  ADD CONSTRAINT `ecds_event`     FOREIGN KEY (`Event`)     REFERENCES `Events` (`Id`),
+  ADD CONSTRAINT `ecds_character` FOREIGN KEY (`Character`) REFERENCES `Characters` (`Id`),
+  ADD CONSTRAINT `ecds_skill`     FOREIGN KEY (`Skill`)     REFERENCES `Skills` (`Id`);
 
 COMMIT;
 

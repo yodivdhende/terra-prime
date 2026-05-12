@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
-
-	let { window }: { window: CodexWindow } = $props();
+	import RegisterStepEvents from './register-step-events.svelte';
 
 	type Step = { id: number; label: string };
 
@@ -9,13 +7,18 @@
 		{ id: 0, label: 'events' },
 		{ id: 1, label: 'characters' },
 		{ id: 2, label: 'create character' },
-		{ id: 3, label: 'confirm' },
+		{ id: 3, label: 'confirm' }
 	];
 
 	let currentStep = $state(0);
+	let selectedEventId = $state<number | null>(null);
+
+	const canAdvance = $derived(
+		currentStep === 0 ? selectedEventId !== null : currentStep < steps.length - 1
+	);
 
 	function next() {
-		if (currentStep < steps.length - 1) currentStep++;
+		if (canAdvance) currentStep++;
 	}
 
 	function back() {
@@ -37,10 +40,7 @@
 
 	<div class="content">
 		{#if currentStep === 0}
-			<div class="placeholder">
-				<p class="label">step 1 — select an event</p>
-				<p class="hint">placeholder: list of open events</p>
-			</div>
+			<RegisterStepEvents bind:selectedEventId />
 		{:else if currentStep === 1}
 			<div class="placeholder">
 				<p class="label">step 2 — your characters</p>
@@ -61,7 +61,7 @@
 
 	<footer>
 		<button onclick={back} disabled={currentStep === 0}>back</button>
-		<button onclick={next} disabled={currentStep === steps.length - 1}>next</button>
+		<button onclick={next} disabled={!canAdvance}>next</button>
 	</footer>
 </div>
 
@@ -89,7 +89,9 @@
 		opacity: 0.35;
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
-		transition: opacity 0.15s, color 0.15s;
+		transition:
+			opacity 0.15s,
+			color 0.15s;
 	}
 
 	.step.done {
@@ -146,7 +148,9 @@
 		color: var(--color-main);
 		border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
 		cursor: pointer;
-		transition: border-color 0.15s, color 0.15s;
+		transition:
+			border-color 0.15s,
+			color 0.15s;
 	}
 
 	button:hover:not(:disabled) {

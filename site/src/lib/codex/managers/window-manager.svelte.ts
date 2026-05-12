@@ -2,6 +2,7 @@ import {
   createSettingsWindow,
   createPlaytestWindow,
   createLoginWindow,
+  createRegisterWindow,
   createFolderWindow,
   createPdfWindow,
   createDocWindow,
@@ -22,6 +23,13 @@ function createWindowManager() {
       const index = windows.findIndex(w => w.id === 'login');
       if (index >= 0) windows.splice(index, 1);
     }
+  }
+
+  function setRegisterEnabled(isLoggedIn: boolean) {
+    const created = createRegisterWindow(isLoggedIn);
+    const index = windows.findIndex(w => w.id === 'register');
+    if (created && index < 0) windows.push(created);
+    else if (!created && index >= 0) windows.splice(index, 1);
   }
 
   function addWindows(items: { name: string, mimeType: string, id: string }[]): void {
@@ -91,6 +99,7 @@ function createWindowManager() {
     closeWindow,
     addWindows,
     setLoginEnabled,
+    setRegisterEnabled,
   }
 }
 

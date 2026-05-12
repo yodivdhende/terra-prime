@@ -11,6 +11,7 @@
 
 	$effect(() => WINDOW_MANAGER.addWindows(data.files));
 	$effect(() => WINDOW_MANAGER.setLoginEnabled(data.loginEnabled));
+	$effect(() => WINDOW_MANAGER.setRegisterEnabled(data.loginEnabled));
 
 	onMount(() => {
 		const size = 256;

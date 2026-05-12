@@ -5,13 +5,16 @@
 	import { type PageProps } from './$types';
 	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
 	import { EFFECTS_MANAGER } from '$lib/codex/managers/effects-manager.svelte';
+	import { FEATURE_MANAGER } from '$lib/codex/managers/feature-manager.svelte';
+	import { CREDENTIAL_STORE } from '$lib/local-utils/credential-manager.svelte';
 
 	let { data }: PageProps = $props();
 	let feImageEl: SVGFEImageElement;
 
+	$effect(() => FEATURE_MANAGER.setFlags({ loginEnabled: data.loginEnabled }));
 	$effect(() => WINDOW_MANAGER.addWindows(data.files));
-	$effect(() => WINDOW_MANAGER.setLoginEnabled(data.loginEnabled));
-	$effect(() => WINDOW_MANAGER.setRegisterEnabled(data.loginEnabled));
+	$effect(() => WINDOW_MANAGER.setRegisterEnabled(CREDENTIAL_STORE.isLogedIn));
+	$effect(() => WINDOW_MANAGER.setLoginEnabled(FEATURE_MANAGER.loginEnabled));
 
 	onMount(() => {
 		const size = 256;

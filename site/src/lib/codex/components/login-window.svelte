@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { credentialStore } from '$lib/local-utils/credential-store.svelte';
+	import { CREDENTIAL_STORE } from '$lib/local-utils/credential-manager.svelte';
 	import { WINDOW_MANAGER, type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
@@ -20,10 +20,11 @@
 	}
 
 	function handleLogin() {
-		async ({ result }) => {
+		return async ({ result }) => {
+			console.log('handleLogin', { result });
 			if (result.type === 'success' && result.data?.success) {
-				credentialStore.roles = result.data.success.roles;
-				credentialStore.name = result.data.success.name ?? '';
+				CREDENTIAL_STORE.roles = result.data.success.roles;
+				CREDENTIAL_STORE.name = result.data.success.name ?? '';
 				errorMessage = null;
 				WINDOW_MANAGER.closeWindow(window.id);
 			} else if (result.type === 'success' && result.data?.error) {
@@ -36,10 +37,18 @@
 <div class="login">
 	<form method="POST" action="/main/login" use:enhance={handleLogin}>
 		<label for="login-email">Email</label>
-		<input type="email" name="email" id="login-email" />
+		<!-- TODO remove value after testing -->
+		<input type="email" name="email" id="login-email" value="yodi.vandenhende@gmail.com" />
 		<label for="login-password">Password</label>
 		<div class="password">
-			<input type={passwordInputType} name="password" id="login-password" onkeydown={login} />
+			<!-- TODO remove value after testing -->
+			<input
+				type={passwordInputType}
+				name="password"
+				id="login-password"
+				onkeydown={login}
+				value="Tester@123"
+			/>
 			<button type="button" onclick={toggleShowPassword}>
 				{showPassword ? '◎' : '◉'}
 			</button>

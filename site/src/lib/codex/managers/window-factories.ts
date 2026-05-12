@@ -79,7 +79,8 @@ export function createImageWindow({ name, index, id, side }: { name: string, ind
   }
 }
 
-export function createLoginWindow(): CodexWindow {
+export function createLoginWindow({ shouldCreate }: { shouldCreate: boolean }): CodexWindow | null {
+  if (shouldCreate === false) return null
   return {
     id: 'login',
     type: 'login',
@@ -105,8 +106,8 @@ export function createPlaytestWindow(): CodexWindow {
   };
 }
 
-export function createRegisterWindow(isLoggedIn: boolean): CodexWindow | null {
-  if (!isLoggedIn) return null;
+export function createRegisterWindow({ shouldCreate }: { shouldCreate: boolean }): CodexWindow | null {
+  if (shouldCreate === false) return null;
   return {
     id: 'register',
     type: 'register',

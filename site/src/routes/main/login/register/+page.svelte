@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { credentialStore } from "$lib/local-utils/credential-store.svelte";
+	import { CREDENTIAL_STORE } from "$lib/local-utils/credential-manager.svelte";
 	import type { PageProps } from "./$types";
 
 	let showPassword = $state(false);
@@ -18,7 +18,7 @@
 		if(form?.error) console.error(form.error);
 		if(form?.success) {
 			const {roles} = form.success;
-			credentialStore.roles = roles;
+			CREDENTIAL_STORE.roles = roles;
 		}
 	})
 

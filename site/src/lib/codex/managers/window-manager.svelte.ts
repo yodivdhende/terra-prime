@@ -16,18 +16,25 @@ function createWindowManager() {
   const windows = $state([createSettingsWindow(), createPlaytestWindow()] as CodexWindow[]);
 
   function setLoginEnabled(enabled: boolean) {
-    const exists = windows.some(w => w.id === 'login');
-    if (enabled && !exists) {
-      windows.push(createLoginWindow());
-    } else if (!enabled && exists) {
-      const index = windows.findIndex(w => w.id === 'login');
-      if (index >= 0) windows.splice(index, 1);
-    }
+    const created = createLoginWindow({ shouldCreate: enabled });
+    const index = windows.findIndex(w => w.id === 'login');
+    console.log('setLoginEnabled', {
+      enabled,
+      created,
+      index,
+    })
+    if (created && index < 0) windows.push(created);
+    else if (!created && index >= 0) windows.splice(index, 1);
   }
 
   function setRegisterEnabled(isLoggedIn: boolean) {
-    const created = createRegisterWindow(isLoggedIn);
+    const created = createRegisterWindow({ shouldCreate: isLoggedIn });
     const index = windows.findIndex(w => w.id === 'register');
+    console.log('setRegisterEnabled', {
+      isLoggedIn,
+      created,
+      index,
+    })
     if (created && index < 0) windows.push(created);
     else if (!created && index >= 0) windows.splice(index, 1);
   }

@@ -3,7 +3,8 @@
 	import TaskIcons from './task-icons.svelte';
 	import { UserRound } from '@lucide/svelte';
 	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
-	import { credentialStore } from '$lib/local-utils/credential-store.svelte';
+	import { CREDENTIAL_STORE } from '$lib/local-utils/credential-manager.svelte';
+	import { FEATURE_MANAGER } from '../managers/feature-manager.svelte';
 
 	function openLogin() {
 		WINDOW_MANAGER.openWindow({ id: 'login' });
@@ -13,12 +14,14 @@
 
 <main>
 	<SearchBar />
-	<button class="login-btn" onclick={openLogin} aria-label="Login">
-		<UserRound size={32} />
-		{#if credentialStore.name}
-			<span class="username">{credentialStore.name}</span>
-		{/if}
-	</button>
+	{#if FEATURE_MANAGER.loginEnabled}
+		<button class="login-btn" onclick={openLogin} aria-label="Login">
+			<UserRound size={32} />
+			{#if CREDENTIAL_STORE.name}
+				<span class="username">{CREDENTIAL_STORE.name}</span>
+			{/if}
+		</button>
+	{/if}
 	<TaskIcons />
 </main>
 
@@ -31,7 +34,7 @@
 		border: var(--border-width) solid var(--color-accent);
 		padding: 1em;
 		margin: calc(var(--border-width) * -1);
-		color: var(--color-main);
+		color: var(--coor-main);
 		cursor: pointer;
 		transition:
 			color 0.15s,

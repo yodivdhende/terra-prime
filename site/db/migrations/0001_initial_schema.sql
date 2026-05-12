@@ -48,7 +48,8 @@ CREATE TABLE `Events` (
   `Name` varchar(254) DEFAULT NULL,
   `StartTime` datetime DEFAULT NULL,
   `EndTime` datetime DEFAULT NULL,
-  `Status` ENUM('Draft','Open', 'Live', 'Canceled') DEFAULT 'Draft'
+  `Status` ENUM('Draft','Open', 'Live', 'Canceled') DEFAULT 'Draft',
+  `Budget` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `Event_Participants` (
@@ -57,16 +58,60 @@ CREATE TABLE `Event_Participants` (
   `CharacterVersion` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE `Event_Character_Budget` (
+  `Event`          int NOT NULL,
+  `Character`      int NOT NULL,
+  `BudgetIncrease` int NOT NULL DEFAULT 0,
+  PRIMARY KEY (`Event`, `Character`),
+  CONSTRAINT `ecb_event`     FOREIGN KEY (`Event`)     REFERENCES `Events` (`Id`),
+  CONSTRAINT `ecb_character` FOREIGN KEY (`Character`) REFERENCES `Characters` (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `Event_Character_Discounts_Items` (
+  `Event`     int NOT NULL,
+  `Character` int NOT NULL,
+  `Item`      int NOT NULL,
+  `Discount`  int NOT NULL DEFAULT 0,
+  PRIMARY KEY (`Event`, `Character`, `Item`),
+  CONSTRAINT `ecdi_event`     FOREIGN KEY (`Event`)     REFERENCES `Events` (`Id`),
+  CONSTRAINT `ecdi_character` FOREIGN KEY (`Character`) REFERENCES `Characters` (`Id`),
+  CONSTRAINT `ecdi_item`      FOREIGN KEY (`Item`)      REFERENCES `Items` (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `Event_Character_Discounts_Implants` (
+  `Event`     int NOT NULL,
+  `Character` int NOT NULL,
+  `Implant`   int NOT NULL,
+  `Discount`  int NOT NULL DEFAULT 0,
+  PRIMARY KEY (`Event`, `Character`, `Implant`),
+  CONSTRAINT `ecdim_event`     FOREIGN KEY (`Event`)     REFERENCES `Events` (`Id`),
+  CONSTRAINT `ecdim_character` FOREIGN KEY (`Character`) REFERENCES `Characters` (`Id`),
+  CONSTRAINT `ecdim_implant`   FOREIGN KEY (`Implant`)   REFERENCES `Implants` (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `Event_Character_Discounts_Skills` (
+  `Event`     int NOT NULL,
+  `Character` int NOT NULL,
+  `Skill`     int NOT NULL,
+  `Discount`  int NOT NULL DEFAULT 0,
+  PRIMARY KEY (`Event`, `Character`, `Skill`),
+  CONSTRAINT `ecds_event`     FOREIGN KEY (`Event`)     REFERENCES `Events` (`Id`),
+  CONSTRAINT `ecds_character` FOREIGN KEY (`Character`) REFERENCES `Characters` (`Id`),
+  CONSTRAINT `ecds_skill`     FOREIGN KEY (`Skill`)     REFERENCES `Skills` (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 CREATE TABLE `Implants` (
   `Id` int NOT NULL,
   `Name` varchar(255) NOT NULL,
-  `Description` text NOT NULL
+  `Description` text NOT NULL,
+  `Cost` int NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `Items` (
   `Id` int NOT NULL,
   `Name` varchar(255) NOT NULL,
-  `Description` text NOT NULL
+  `Description` text NOT NULL,
+  `Cost` int NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `Messages` (
@@ -105,7 +150,8 @@ CREATE TABLE `Skills` (
   `Id` int NOT NULL,
   `Group` int DEFAULT NULL,
   `Name` varchar(255) DEFAULT NULL,
-  `Description` text
+  `Description` text,
+  `Cost` int NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `Skill_Groups` (

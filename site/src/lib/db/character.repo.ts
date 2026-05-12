@@ -29,6 +29,19 @@ class CharacterRepo {
 		}
 	}
 
+	public async getByOwner(ownerId: number): Promise<Character[]> {
+		const connection = await mysqlconnFn();
+		const [result] = await connection.execute(
+			`SELECT c.Id as id, c.Name as name, c.Owner as ownerId, u.Name as ownerName
+			 FROM Characters c
+			 JOIN Users u ON u.Id = c.Owner
+			 WHERE c.Owner = ?`,
+			[ownerId]
+		);
+		if (!Array.isArray(result)) return [];
+		return (result as any[]).filter(isCharacter);
+	}
+
 	public async getForUser(userId: number) {
 		const connection = await mysqlconnFn();
 		const [result] = await connection.execute(`${this.characterSelector} WHERE u.id = ?`, [userId]);

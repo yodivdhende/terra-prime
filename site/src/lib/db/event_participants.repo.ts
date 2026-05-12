@@ -84,6 +84,54 @@ class EventParticipatnsRepo {
 		}
 	}
 
+	public async getEventsForCharacters(characterIds: number[]): Promise<{ characterId: number; eventId: number; eventName: string }[]> {
+		if (characterIds.length === 0) return [];
+		try {
+			const connection = await mysqlconnFn();
+			const [result] = await connection.query(
+				`SELECT
+					cv.Character as characterId,
+					e.Id as eventId,
+					e.Name as eventName
+				FROM Event_Participants ep
+				JOIN Character_Versions cv ON cv.Id = ep.CharacterVersion
+				JOIN Events e ON e.Id = ep.Event
+				WHERE cv.Character IN (?)`,
+				[characterIds]
+			);
+			if (!Array.isArray(result) || result.length === 0) return [];
+			const rows: { characterId: number; eventId: number; eventName: string }[] = [];
+			for (const row of result as any[]) {
+				if (typeof row.characterId !== 'number' || typeof row.eventId !== 'number' || typeof row.eventName !== 'string') continue;
+				rows.push({ characterId: row.characterId, eventId: row.eventId, eventName: row.eventName });
+			}
+			return rows;
+		} catch (err) {
+			throw err;
+		}
+	}
+
+	public async getUserParticipation({ eventId, userId }: { eventId: number; userId: number }): Promise<{ characterId: number; characterVersionId: number } | undefined> {
+		try {
+			const connection = await mysqlconnFn();
+			const [result] = await connection.execute(
+				`SELECT
+					cv.Character as characterId,
+					ep.CharacterVersion as characterVersionId
+				FROM Event_Participants ep
+				JOIN Character_Versions cv ON cv.Id = ep.CharacterVersion
+				WHERE ep.Event = ? AND ep.User = ?`,
+				[eventId, userId]
+			);
+			if (!Array.isArray(result) || result.length === 0) return undefined;
+			const [row] = result as any[];
+			if (typeof row.characterId !== 'number' || typeof row.characterVersionId !== 'number') return undefined;
+			return { characterId: row.characterId, characterVersionId: row.characterVersionId };
+		} catch (err) {
+			throw err;
+		}
+	}
+
 	public async getParticipantForCharacter({
 		eventId,
 		characterId

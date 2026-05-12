@@ -1,5 +1,6 @@
 <script lang="ts">
 	import RegisterStepEvents from './register-step-events.svelte';
+	import RegisterStepCharacters from './register-step-characters.svelte';
 
 	type Step = { id: number; label: string };
 
@@ -12,17 +13,30 @@
 
 	let currentStep = $state(0);
 	let selectedEventId = $state<number | null>(null);
+	let selectedCharacterId = $state<number | null>(null);
 
 	const canAdvance = $derived(
-		currentStep === 0 ? selectedEventId !== null : currentStep < steps.length - 1
+		currentStep === 0 ? selectedEventId !== null :
+		currentStep === 1 ? selectedCharacterId !== null :
+		currentStep < steps.length - 1
 	);
 
 	function next() {
-		if (canAdvance) currentStep++;
+		if (!canAdvance) return;
+		// skip "create character" step when a character is already selected
+		if (currentStep === 1) {
+			currentStep = 3;
+		} else {
+			currentStep++;
+		}
 	}
 
 	function back() {
-		if (currentStep > 0) currentStep--;
+		if (currentStep === 3 && selectedCharacterId !== null) {
+			currentStep = 1;
+		} else if (currentStep > 0) {
+			currentStep--;
+		}
 	}
 </script>
 
@@ -42,10 +56,11 @@
 		{#if currentStep === 0}
 			<RegisterStepEvents bind:selectedEventId />
 		{:else if currentStep === 1}
-			<div class="placeholder">
-				<p class="label">step 2 — your characters</p>
-				<p class="hint">placeholder: characters overview</p>
-			</div>
+			<RegisterStepCharacters
+				bind:selectedCharacterId
+				selectedEventId={selectedEventId!}
+				oncreatenew={() => { currentStep = 2; }}
+			/>
 		{:else if currentStep === 2}
 			<div class="placeholder">
 				<p class="label">step 3 — create a character</p>

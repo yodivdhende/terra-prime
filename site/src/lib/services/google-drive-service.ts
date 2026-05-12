@@ -3,7 +3,7 @@ import { VITE_GOOGLE_CLIENT_EMAIL, VITE_GOOGLE_PRIVATE_KEY } from '$env/static/p
 
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
-export class GoogleSheetManager {
+export class GoogleDriveService {
   private getService() {
     const auth = new google.auth.JWT(
       VITE_GOOGLE_CLIENT_EMAIL,
@@ -88,6 +88,6 @@ export class GoogleSheetManager {
   }
 }
 
-export function getGoogleDriveManager() {
-  return new GoogleSheetManager();
+export function getGoogleDriveService() {
+  return new GoogleDriveService();
 }

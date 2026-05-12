@@ -1,4 +1,4 @@
-import { isUser, userRepo } from '$lib/db/user.repo.svelte';
+import { isUser, userRepo } from '$lib/db/user.repo';
 import { isNumberOrError } from '$lib/request.utils';
 import { RequestError } from '$lib/types/errors';
 import { handleRequest } from '$lib/utils/request';

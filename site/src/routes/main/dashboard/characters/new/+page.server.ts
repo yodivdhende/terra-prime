@@ -1,4 +1,4 @@
-import { userRepo } from "$lib/db/user.repo.svelte";
+import { userRepo } from "$lib/db/user.repo";
 import { handleRequest } from "$lib/utils/request";
 import type { PageServerLoad } from "./$types";
 

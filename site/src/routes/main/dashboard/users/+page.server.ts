@@ -1,5 +1,5 @@
 import {error} from '@sveltejs/kit'
-import { userRepo } from "$lib/db/user.repo.svelte";
+import { userRepo } from "$lib/db/user.repo";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async () => {

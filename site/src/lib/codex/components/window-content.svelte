@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type CodexWindow } from '$lib/codex/services/window-manager.svelte';
+	import { type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
 	import PdfWindow from '$lib/codex/components/pdf-window.svelte';
 	import DocWindow from '$lib/codex/components/doc-window.svelte';
 	import ImageWindow from '$lib/codex/components/image-window.svelte';

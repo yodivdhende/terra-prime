@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { credentialStore } from '$lib/local-utils/credential-store.svelte';
-	import { WINDOW_MANAGER, type CodexWindow } from '$lib/codex/services/window-manager.svelte';
+	import { WINDOW_MANAGER, type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
 

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { X } from '@lucide/svelte';
 	import { type Snippet } from 'svelte';
-	import { type CodexWindow } from '$lib/codex/services/window-manager.svelte';
-	import { WINDOW_MANAGER } from '$lib/codex/services/window-manager.svelte';
+	import { type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
+	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
 
 	let { context = $bindable(), content }: { context: CodexWindow; content: Snippet } = $props();
 

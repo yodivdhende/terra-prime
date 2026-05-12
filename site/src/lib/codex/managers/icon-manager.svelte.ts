@@ -7,7 +7,7 @@ export type Icon = {
   side: 'left' | 'right';
 }
 
-function createIconService() {
+function createIconManager() {
   const icons = $derived(WINDOW_MANAGER.windows.map(window => {
     if (window.icon == null) return null;
     return {
@@ -23,5 +23,4 @@ function createIconService() {
   }
 }
 
-export const ICON_SERVICE = createIconService();
-
+export const ICON_MANAGER = createIconManager();

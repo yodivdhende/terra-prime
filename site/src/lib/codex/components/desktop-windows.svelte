@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { WINDOW_MANAGER } from '$lib/codex/services/window-manager.svelte';
+	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
 	import Window from '$lib/codex/components/window.svelte';
 	import WindowContent from '$lib/codex/components/window-content.svelte';
 	import DirWindow from '$lib/codex/components/dir-window.svelte';

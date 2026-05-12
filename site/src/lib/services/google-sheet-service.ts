@@ -3,7 +3,7 @@ import { VITE_GOOGLE_CLIENT_EMAIL, VITE_GOOGLE_PRIVATE_KEY } from '$env/static/p
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
-export class GoogleSheetManager {
+export class GoogleSheetService {
     private async getSheets() {
         const client = await this.getClient();
         return google.sheets({ version: 'v4', auth: client });
@@ -43,6 +43,6 @@ export class GoogleSheetManager {
 
 }
 
-export function getGoogleSheetManager() {
-    return new GoogleSheetManager();
+export function getGoogleSheetService() {
+    return new GoogleSheetService();
 }

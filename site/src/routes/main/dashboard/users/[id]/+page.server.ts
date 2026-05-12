@@ -1,4 +1,4 @@
-import { userRepo, type User } from "$lib/db/user.repo.svelte";
+import { userRepo, type User } from "$lib/db/user.repo";
 import type { PageServerLoad } from "./$types";
 import { error } from "@sveltejs/kit";
 

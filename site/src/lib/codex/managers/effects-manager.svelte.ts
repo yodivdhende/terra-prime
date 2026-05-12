@@ -1,4 +1,4 @@
-function createEffectsService() {
+function createEffectsManager() {
   let crt = $state(false);
   let scanlines = $state(true);
   let vignette = $state(false);
@@ -13,4 +13,4 @@ function createEffectsService() {
   };
 }
 
-export const EFFECTS_SERVICE = createEffectsService();
+export const EFFECTS_MANAGER = createEffectsManager();

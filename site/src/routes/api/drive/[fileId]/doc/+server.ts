@@ -1,5 +1,5 @@
 import { type RequestHandler } from '@sveltejs/kit';
-import { getGoogleDriveManager } from '$lib/managers/google-drive-manager.svelte';
+import { getGoogleDriveService } from '$lib/services/google-drive-service';
 
 function swapBlackAndWhite(html: string): string {
   return html
@@ -32,7 +32,7 @@ function swapBlackAndWhite(html: string): string {
 
 export const GET: RequestHandler = async ({ params }) => {
   const { fileId } = params;
-  const html = await getGoogleDriveManager().getDocumentHtml(fileId);
+  const html = await getGoogleDriveService().getDocumentHtml(fileId);
   return new Response(swapBlackAndWhite(html), {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',

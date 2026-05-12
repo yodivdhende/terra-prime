@@ -1,10 +1,10 @@
 import { error } from '@sveltejs/kit'
 import type { PageServerLoad } from "./$types";
-import { getGoogleDriveManager } from "$lib/managers/google-drive-manager.svelte"
+import { getGoogleDriveService } from "$lib/services/google-drive-service"
 
 export const load: PageServerLoad = async ({ locals }) => {
   try {
-    const files = await getGoogleDriveManager().getHomeFiles();
+    const files = await getGoogleDriveService().getHomeFiles();
     return {
       files,
       loginEnabled: locals.featureFlags['Login'] ?? false,

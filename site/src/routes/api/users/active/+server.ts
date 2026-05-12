@@ -1,4 +1,4 @@
-import { userRepo } from '$lib/db/user.repo.svelte';
+import { userRepo } from '$lib/db/user.repo';
 import { NoAccesRequest, RequestError } from '$lib/types/errors';
 import { getSessionToken } from '$lib/utils/cookies';
 import { authGuard, handleRequest } from '$lib/utils/request';

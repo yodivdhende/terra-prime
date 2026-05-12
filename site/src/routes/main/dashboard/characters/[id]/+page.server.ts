@@ -1,6 +1,6 @@
 import { characterRepo, type Character } from '$lib/db/character.repo';
 import type { PageServerLoad } from './$types';
-import { userRepo } from '$lib/db/user.repo.svelte';
+import { userRepo } from '$lib/db/user.repo';
 import { handleRequest } from '$lib/utils/request';
 import { RequestError } from '$lib/types/errors';
 

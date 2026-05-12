@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { ICON_SERVICE, type Icon } from '$lib/codex/services/icon-service.svelte';
-	import { WINDOW_MANAGER } from '$lib/codex/services/window-manager.svelte';
+	import { ICON_MANAGER, type Icon } from '$lib/codex/managers/icon-manager.svelte';
+	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
 	import { File, Folder, Image, Settings, ClipboardPen, UserRound } from '@lucide/svelte';
 
-	let icons = $derived(ICON_SERVICE.icons);
+	let icons = $derived(ICON_MANAGER.icons);
 	let localIcons = $derived(icons.filter(i => i.side === 'left'));
 	let driveIcons = $derived(icons.filter(i => i.side === 'right'));
 

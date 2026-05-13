@@ -7,7 +7,7 @@ import { json, type RequestHandler } from "@sveltejs/kit";
 
 export const GET: RequestHandler = async ({ cookies }) => {
 	return handleRequest(async () => {
-		await authGuardForUser(getSessionToken(cookies), [UserRole.admin]);
+		await authGuardForUser(getSessionToken(cookies), [UserRole.admin, UserRole.user]);
 		return json(await implantRepo.getAll());
 	});
 };

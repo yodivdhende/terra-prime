@@ -60,14 +60,14 @@ services:
       - PMA_PORT=3306
     stdin_open: true
 
-  tunnel:
-    container_name: cloudflared-tunnel
-    image: cloudflare/cloudflared:latest
-    restart: unless-stopped
-    command: tunnel --no-autoupdate  run
-    environment:
-      - TUNNEL_TOKEN=eyJhIjoiMjliYTJlMmJiMmM1NjUwNTJiZGZlZjMwOTczYjY0NmYiLCJ0IjoiN2ZkZGIwODUtOTBkOS00ZjcwLWJhNjQtNzFiODU3ODQxYTM2IiwicyI6Ik1UTmtNelZtTmpNdFpUQmlPQzAwTkdSakxXSXdOalV0TW1Fd01HUmlPV1k1TWpkbCJ9
-
+  # tunnel:
+  #   container_name: cloudflared-tunnel
+  #   image: cloudflare/cloudflared:latest
+  #   restart: unless-stopped
+  #   command: tunnel --no-autoupdate  run
+  #   environment:
+  #     - TUNNEL_TOKEN=eyJhIjoiMjliYTJlMmJiMmM1NjUwNTJiZGZlZjMwOTczYjY0NmYiLCJ0IjoiN2ZkZGIwODUtOTBkOS00ZjcwLWJhNjQtNzFiODU3ODQxYTM2IiwicyI6Ik1UTmtNelZtTmpNdFpUQmlPQzAwTkdSakxXSXdOalV0TW1Fd01HUmlPV1k1TWpkbCJ9
+  #
 networks:
   default:
     name: terra-prime

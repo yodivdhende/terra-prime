@@ -46,12 +46,12 @@ All handlers use `handleRequest()` for error handling and extract tokens via `ge
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/api/skills` | admin | List all skills |
+| GET | `/api/skills` | admin/user | List all skills (with `cost`) |
 | PUT | `/api/skills` | admin | Create/update skill; body: `Skill` |
 | GET | `/api/skills/[id]` | admin | Get skill by ID |
 | POST | `/api/skills/[id]` | admin | Update skill; body: `Skill` |
 | DELETE | `/api/skills/[id]` | admin | Delete skill |
-| GET | `/api/skills/groups` | admin | List all skill groups |
+| GET | `/api/skills/groups` | admin/user | List all skill groups |
 | PUT | `/api/skills/groups` | admin | Create/update skill group; body: `SkillGroup` |
 | GET | `/api/skills/groups/[id]` | admin | Get skill group by ID |
 | POST | `/api/skills/groups/[id]` | admin | Update skill group; body: `SkillGroup` |
@@ -63,7 +63,7 @@ All handlers use `handleRequest()` for error handling and extract tokens via `ge
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/api/items` | admin | List all items |
+| GET | `/api/items` | admin/user | List all items (with `cost`) |
 | PUT | `/api/items` | admin | Create/update item; body: `Item` |
 | GET | `/api/items/[id]` | admin | Get item by ID |
 | POST | `/api/items/[id]` | admin | Update item; body: `Item` |
@@ -75,7 +75,7 @@ All handlers use `handleRequest()` for error handling and extract tokens via `ge
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/api/implants` | admin | List all implants |
+| GET | `/api/implants` | admin/user | List all implants (with `cost`) |
 | PUT | `/api/implants` | admin | Create/update implant; body: `Implant` |
 | GET | `/api/implants/[id]` | admin | Get implant by ID |
 | POST | `/api/implants/[id]` | admin | Update implant; body: `Implant` |
@@ -116,7 +116,7 @@ Event dates (`start`, `end`) are sent as ISO strings and converted to `Date` obj
 | GET | `/api/events` | admin | List all events |
 | PUT | `/api/events` | admin | Create event; body: `LarpEvent` (dates as ISO strings) |
 | GET | `/api/events/open` | admin/user | List events with status `Open` |
-| GET | `/api/events/[eventId]` | admin | Get event by ID |
+| GET | `/api/events/[eventId]` | admin/user | Get event by ID (includes `budget`) |
 | POST | `/api/events/[eventId]` | admin | Update event; body: `LarpEvent` (dates as ISO strings) |
 | DELETE | `/api/events/[eventId]` | admin | Delete event |
 

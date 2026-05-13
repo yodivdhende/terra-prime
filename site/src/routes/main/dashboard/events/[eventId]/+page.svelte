@@ -7,7 +7,7 @@
 	import { page } from '$app/state';
 	import type { Skill } from '$lib/db/skills.repo';
 	import SkillsOverview from '$lib/components/skills-overview.svelte';
-	import SkillsShop from '$lib/components/skills-shop.svelte';
+	import ShopSkills from '$lib/codex/components/shop-skills.svelte';
 	import ImplantsShop from '$lib/components/implants-shop.svelte';
 	import ItemsShop from '$lib/components/items-shop.svelte';
 	import type { Implant } from '$lib/db/implants.repo';
@@ -48,6 +48,15 @@
 	function goToShop(shopRoute: 'skills' | 'implants' | 'items') {
 		shop = shopRoute;
 	}
+
+	const skillCostById = $derived(new Map(skills.map((s) => [s.id, s.cost ?? 0])));
+	const skillsSpent = $derived(
+		characterVersionManager.skills.reduce(
+			(sum, s) => sum + (skillCostById.get(s.id) ?? 0) * s.value,
+			0
+		)
+	);
+	const skillsRemaining = $derived((event?.budget ?? 0) - skillsSpent);
 </script>
 
 <main>
@@ -99,7 +108,12 @@
 		</aside>
 		<section>
 			{#if shop === 'skills'}
-				<SkillsShop {skills} />
+				<ShopSkills
+					catalog={skills}
+					bind:selected={characterVersionManager.skills}
+					remaining={skillsRemaining}
+					budget={event?.budget ?? 0}
+				/>
 			{/if}
 			{#if shop === 'implants'}
 				<ImplantsShop {implants} />

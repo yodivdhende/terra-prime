@@ -8,7 +8,8 @@ class ItemRepo {
         SELECT
           i.Id as id,
           i.Name as name,
-          i.Description as description
+          i.Description as description,
+          i.Cost as cost
         FROM Items i
         `);
 			if (Array.isArray(result) === false) return [];
@@ -35,7 +36,8 @@ class ItemRepo {
         SELECT
           i.Id as id,
           i.Name as name,
-          i.Description as description
+          i.Description as description,
+          i.Cost as cost
         FROM Items i
 		WHERE i.Id = ?
         `,
@@ -59,7 +61,8 @@ class ItemRepo {
         SELECT
           i.Id as id,
           i.Name as name,
-          i.Description as description
+          i.Description as description,
+          i.Cost as cost
         FROM Items i
         WHERE I.id in (:ids)
         `,
@@ -146,6 +149,7 @@ export type Item = {
 	id: number | null;
 	name: string;
 	description: string;
+	cost?: number;
 };
 
 export function isItem(item: unknown): item is Item {

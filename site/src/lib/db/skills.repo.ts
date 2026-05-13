@@ -9,6 +9,7 @@ class SkillRepo {
 					s.Id as id,
 					s.Name as name,
 					s.Description as description,
+					s.Cost as cost,
 					sg.Id as groupId,
 					sg.Name as groupName
 				FROM Skills s
@@ -40,6 +41,7 @@ class SkillRepo {
 					s.Id as id,
 					s.Name as name,
 					s.Description as description,
+					s.Cost as cost,
 					sg.Id as groupId,
 					sg.Name as groupName
 				FROM Skills s
@@ -312,6 +314,7 @@ export type Skill = {
 	description: string;
 	groupId: number;
 	groupName: string;
+	cost?: number;
 };
 
 export function isSkill(skill: unknown): skill is Skill {

@@ -1,6 +1,9 @@
 <script lang="ts">
 	import RegisterStepEvents from './register-step-events.svelte';
 	import RegisterStepCharacters from './register-step-characters.svelte';
+	import RegisterStepCreateCharacter, {
+		type CharacterDraft
+	} from './register-step-create-character.svelte';
 
 	type Step = { id: number; label: string };
 
@@ -14,10 +17,21 @@
 	let currentStep = $state(0);
 	let selectedEventId = $state<number | null>(null);
 	let selectedCharacterId = $state<number | null>(null);
+	let characterDraft = $state<CharacterDraft>({
+		name: '',
+		skills: [],
+		items: [],
+		implants: []
+	});
+
+	const draftReady = $derived(
+		characterDraft.name.trim().length > 0
+	);
 
 	const canAdvance = $derived(
 		currentStep === 0 ? selectedEventId !== null :
 		currentStep === 1 ? selectedCharacterId !== null :
+		currentStep === 2 ? draftReady :
 		currentStep < steps.length - 1
 	);
 
@@ -62,10 +76,10 @@
 				oncreatenew={() => { currentStep = 2; }}
 			/>
 		{:else if currentStep === 2}
-			<div class="placeholder">
-				<p class="label">step 3 — create a character</p>
-				<p class="hint">placeholder: character creator form</p>
-			</div>
+			<RegisterStepCreateCharacter
+				bind:draft={characterDraft}
+				selectedEventId={selectedEventId!}
+			/>
 		{:else if currentStep === 3}
 			<div class="placeholder">
 				<p class="label">step 4 — confirm registration</p>

@@ -3,7 +3,15 @@ import { BadRequest } from "$lib/types/errors";
 import { UserRole } from "$lib/types/roles";
 import { getSessionToken } from "$lib/utils/cookies";
 import { authGuardForUser, handleRequest } from "$lib/utils/request";
-import type { RequestHandler } from "@sveltejs/kit";
+import { json, type RequestHandler } from "@sveltejs/kit";
+
+export const GET: RequestHandler = async ({ cookies }) => {
+	return handleRequest(async () => {
+		const { userId } = await authGuardForUser(getSessionToken(cookies), [UserRole.user]);
+		const versions = await characterVersionRepo.getFullVersionsForUser(userId);
+		return json(versions);
+	});
+};
 
 export const PUT: RequestHandler = async ({cookies, request}) => {
   return handleRequest(async ()=>{
@@ -12,5 +20,4 @@ export const PUT: RequestHandler = async ({cookies, request}) => {
     if(isCharacterVersionBare(characterVersion)) throw new BadRequest();
     return characterVersionRepo.save(characterVersion);
   });
-
 }

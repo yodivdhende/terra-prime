@@ -98,6 +98,7 @@ All handlers use `handleRequest()` for error handling and extract tokens via `ge
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
+| GET | `/api/characters/versions` | user | List all versions for the current user with full detail: character info, last event, skills (id/group/value), item ids, implant ids |
 | PUT | `/api/characters/versions` | user | Create character version; body: `CharacterVersionBare`; returns saved version |
 | GET | `/api/characters/versions/[versionId]` | user | Get character version by ID |
 | PUT | `/api/characters/versions/[versionId]` | user | Update character version; body: `CharacterVersionBare`; returns updated version |

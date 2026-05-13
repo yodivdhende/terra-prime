@@ -38,7 +38,7 @@
 	<form method="POST" action="/main/login" use:enhance={handleLogin}>
 		<label for="login-email">Email</label>
 		<!-- TODO remove value after testing -->
-		<input type="email" name="email" id="login-email" value="yodi.vandenhende@gmail.com" />
+		<input type="email" name="email" id="login-email" value="yodi.vandenhende+player2@gmail.com" />
 		<label for="login-password">Password</label>
 		<div class="password">
 			<!-- TODO remove value after testing -->

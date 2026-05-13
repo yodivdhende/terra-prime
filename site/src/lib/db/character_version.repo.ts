@@ -289,6 +289,151 @@ class CharacterVersionRepo {
 			{ characterVerionId }
 		);
 	}
+
+	public async getFullVersionsForUser(userId: number): Promise<FullCharacterVersion[]> {
+		const connection = await mysqlconnFn();
+		const [versionRows] = await connection.execute(
+			`SELECT
+				cv.Id as versionId,
+				cv.Name as versionName,
+				c.Id as characterId,
+				c.Name as characterName,
+				u.Id as ownerId,
+				u.Name as ownerName
+			FROM Character_Versions cv
+			JOIN Characters c ON c.Id = cv.Character
+			JOIN Users u ON u.Id = c.Owner
+			WHERE c.Owner = ?`,
+			[userId]
+		);
+		if (!Array.isArray(versionRows) || versionRows.length === 0) return [];
+
+		const versionIds = (versionRows as any[])
+			.map((r) => r.versionId)
+			.filter((id): id is number => typeof id === 'number');
+		if (versionIds.length === 0) return [];
+
+		const [items, implants, skills, lastEvents] = await Promise.allSettled([
+			this.getItemsforCharacterVersions(versionIds),
+			this.getImplantsforCharacterVersions(versionIds),
+			this.getSkillsWithGroupForVersions(versionIds),
+			this.getLastEventsForVersions(versionIds)
+		]);
+
+		const result: FullCharacterVersion[] = [];
+		for (const row of versionRows as any[]) {
+			if (typeof row.versionId !== 'number') continue;
+			if (typeof row.versionName !== 'string') continue;
+			if (typeof row.characterId !== 'number') continue;
+			if (typeof row.characterName !== 'string') continue;
+			if (typeof row.ownerId !== 'number') continue;
+			if (typeof row.ownerName !== 'string') continue;
+
+			const versionSkills =
+				valueOrLogOfPromiseSetteld(skills)
+					?.filter((s) => s.characterVersionId === row.versionId)
+					.map(({ skillId, groupId, groupName, value }) => ({ id: skillId, group: groupId, groupName, value })) ?? [];
+
+			const versionItems =
+				valueOrLogOfPromiseSetteld(items)
+					?.filter((i) => i.characterVersionId === row.versionId)
+					.map(({ itemId }) => itemId) ?? [];
+
+			const versionImplants =
+				valueOrLogOfPromiseSetteld(implants)
+					?.filter((i) => i.characterVersionId === row.versionId)
+					.map(({ implantId }) => implantId) ?? [];
+
+			const lastEvent =
+				valueOrLogOfPromiseSetteld(lastEvents)?.find(
+					(e) => e.characterVersionId === row.versionId
+				) ?? null;
+
+			result.push({
+				characterId: row.characterId,
+				characterName: row.characterName,
+				ownerId: row.ownerId,
+				ownerName: row.ownerName,
+				versionId: row.versionId,
+				versionName: row.versionName,
+				lastEvent: lastEvent ? { id: lastEvent.eventId, name: lastEvent.eventName } : null,
+				skills: versionSkills,
+				items: versionItems,
+				implants: versionImplants
+			});
+		}
+		return result;
+	}
+
+	private async getSkillsWithGroupForVersions(
+		ids: number[]
+	): Promise<{ characterVersionId: number; skillId: number; groupId: number; groupName: string; value: number }[]> {
+		const connection = await mysqlconnFn();
+		const [result] = await connection.query(
+			`SELECT
+				cvs.CharacterVersion as characterVersionId,
+				cvs.Skill as skillId,
+				s.Group as groupId,
+				sg.Name as groupName,
+				cvs.Value as value
+			FROM Character_Version_Skills cvs
+			JOIN Skills s ON s.Id = cvs.Skill
+			JOIN Skill_Groups sg ON sg.Id = s.Group
+			WHERE cvs.CharacterVersion IN (?)`,
+			[ids]
+		);
+		if (!Array.isArray(result) || result.length === 0) return [];
+		const skills: { characterVersionId: number; skillId: number; groupId: number; groupName: string; value: number }[] =
+			[];
+		for (const item of result as any[]) {
+			if (typeof item.characterVersionId !== 'number') continue;
+			if (typeof item.skillId !== 'number') continue;
+			if (typeof item.groupId !== 'number') continue;
+			if (typeof item.groupName !== 'string') continue;
+			if (typeof item.value !== 'number') continue;
+			skills.push({
+				characterVersionId: item.characterVersionId,
+				skillId: item.skillId,
+				groupId: item.groupId,
+				groupName: item.groupName,
+				value: item.value
+			});
+		}
+		return skills;
+	}
+
+	private async getLastEventsForVersions(
+		ids: number[]
+	): Promise<{ characterVersionId: number; eventId: number; eventName: string }[]> {
+		const connection = await mysqlconnFn();
+		const [result] = await connection.query(
+			`SELECT
+				ep.CharacterVersion as characterVersionId,
+				e.Id as eventId,
+				e.Name as eventName
+			FROM Event_Participants ep
+			JOIN Events e ON e.Id = ep.Event
+			WHERE ep.CharacterVersion IN (?)
+			ORDER BY e.StartTime DESC`,
+			[ids]
+		);
+		if (!Array.isArray(result) || result.length === 0) return [];
+		const seen = new Set<number>();
+		const lastEvents: { characterVersionId: number; eventId: number; eventName: string }[] = [];
+		for (const item of result as any[]) {
+			if (typeof item.characterVersionId !== 'number') continue;
+			if (typeof item.eventId !== 'number') continue;
+			if (typeof item.eventName !== 'string') continue;
+			if (seen.has(item.characterVersionId)) continue;
+			seen.add(item.characterVersionId);
+			lastEvents.push({
+				characterVersionId: item.characterVersionId,
+				eventId: item.eventId,
+				eventName: item.eventName
+			});
+		}
+		return lastEvents;
+	}
 }
 export const characterVersionRepo = new CharacterVersionRepo();
 
@@ -354,3 +499,16 @@ export function isCharacterVersionBare(value: unknown): value is CharacterVersio
 		value.implants.every((implant) => typeof implant === 'number')
 	);
 }
+
+export type FullCharacterVersion = {
+	characterId: number;
+	characterName: string;
+	ownerId: number;
+	ownerName: string;
+	versionId: number;
+	versionName: string;
+	lastEvent: { id: number; name: string } | null;
+	skills: { id: number; group: number; groupName: string; value: number }[];
+	items: number[];
+	implants: number[];
+};

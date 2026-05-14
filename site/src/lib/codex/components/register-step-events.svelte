@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { StringLarpEvent } from '$lib/db/event.repo';
-
-	let { selectedEventId = $bindable(null) }: { selectedEventId: number | null } = $props();
+	import { REGISTER_MANAGER } from '../managers/register-manager.svelte';
 
 	let event = $state<StringLarpEvent | null>(null);
 	let loading = $state(true);
@@ -11,7 +10,7 @@
 		if (res.ok) {
 			const events: StringLarpEvent[] = await res.json();
 			event = events[0] ?? null;
-			selectedEventId = event?.id ?? null;
+			if (event) REGISTER_MANAGER.selectEvent(event.id);
 		}
 		loading = false;
 	}

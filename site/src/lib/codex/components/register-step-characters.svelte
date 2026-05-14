@@ -30,23 +30,13 @@
 		implants: number[];
 	};
 
-	let {
-		selectedCharacterId = $bindable<number | null>(null),
-		selectedVersionId = $bindable<number | null>(null),
-		selectedEventId,
-		oncreatenew
-	}: {
-		selectedCharacterId: number | null;
-		selectedVersionId: number | null;
-		selectedEventId: number;
-		oncreatenew: () => void;
-	} = $props();
+	import { REGISTER_MANAGER } from '../managers/register-manager.svelte';
 
 	let characters = $state<CharacterWithVersions[]>([]);
 	let loading = $state(true);
 
 	$effect(() => {
-		load(selectedEventId);
+		load(REGISTER_MANAGER.selectedEventId!);
 	});
 
 	async function load(eventId: number) {
@@ -79,22 +69,20 @@
 
 		if (meRes.status === 200) {
 			const { characterId } = await meRes.json();
-			selectedCharacterId = characterId;
-		} else if (selectedCharacterId != null) {
-			const stillOwned = characters.some((c) => c.id === selectedCharacterId);
-			if (!stillOwned) selectedCharacterId = null;
+			REGISTER_MANAGER.preselectCharacter(characterId);
+		} else if (REGISTER_MANAGER.selectedCharacterId != null) {
+			const stillOwned = characters.some((c) => c.id === REGISTER_MANAGER.selectedCharacterId);
+			if (!stillOwned) REGISTER_MANAGER.clearCharacter();
 		}
 
 		loading = false;
 	}
 
 	function select(char: CharacterWithVersions) {
-		if (selectedCharacterId === char.id) {
-			selectedCharacterId = null;
-			selectedVersionId = null;
+		if (REGISTER_MANAGER.selectedCharacterId === char.id) {
+			REGISTER_MANAGER.clearCharacter();
 		} else {
-			selectedCharacterId = char.id;
-			selectedVersionId = char.versions[0]?.id ?? null;
+			REGISTER_MANAGER.selectCharacter(char.id, char.versions[0]?.id ?? null);
 		}
 	}
 </script>
@@ -105,7 +93,7 @@
 	{:else}
 		<ul class="char-list">
 			{#each characters as char (char.id)}
-				<li class="character-group" class:selected={selectedCharacterId === char.id}>
+				<li class="character-group" class:selected={REGISTER_MANAGER.selectedCharacterId === char.id}>
 					<div class="char-header">
 						<span class="char-name">{char.name}</span>
 					</div>
@@ -114,7 +102,7 @@
 							<li
 								class="version"
 								role="option"
-								aria-selected={selectedCharacterId === char.id}
+								aria-selected={REGISTER_MANAGER.selectedCharacterId === char.id}
 								tabindex="0"
 								onclick={() => select(char)}
 								onkeydown={(e) => {
@@ -151,9 +139,9 @@
 				role="option"
 				aria-selected={false}
 				tabindex="0"
-				onclick={oncreatenew}
+				onclick={REGISTER_MANAGER.goToCreateCharacter}
 				onkeydown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') oncreatenew();
+					if (e.key === 'Enter' || e.key === ' ') REGISTER_MANAGER.goToCreateCharacter();
 				}}
 			>
 				<span class="char-name">+ create new character</span>

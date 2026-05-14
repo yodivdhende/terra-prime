@@ -1,15 +1,5 @@
-<script lang="ts" module>
-	export type CharacterDraftSkill = { id: number; value: number };
-	export type CharacterDraftItem = { id: number; count: number };
-	export type CharacterDraft = {
-		name: string;
-		skills: CharacterDraftSkill[];
-		items: CharacterDraftItem[];
-		implants: number[];
-	};
-</script>
-
 <script lang="ts">
+	import { REGISTER_MANAGER } from '../managers/register-manager.svelte';
 	import CharacterNameInput from './character-name-input.svelte';
 	import CharacterCreateNav, { type Step } from './character-create-nav.svelte';
 	import ShopSkills, { type ShopSkill } from './shop-skills.svelte';
@@ -22,14 +12,6 @@
 		budget?: number | null;
 	};
 
-	let {
-		draft = $bindable<CharacterDraft>({ name: '', skills: [], items: [], implants: [] }),
-		selectedEventId
-	}: {
-		draft: CharacterDraft;
-		selectedEventId: number;
-	} = $props();
-
 	let skills = $state<ShopSkill[]>([]);
 	let items = $state<ShopItem[]>([]);
 	let implants = $state<ShopImplant[]>([]);
@@ -41,6 +23,8 @@
 	const skillCostById = $derived(new Map(skills.map((s) => [s.id, s.cost ?? 0])));
 	const itemCostById = $derived(new Map(items.map((i) => [i.id, i.cost ?? 0])));
 	const implantCostById = $derived(new Map(implants.map((i) => [i.id, i.cost ?? 0])));
+
+	const draft = $derived(REGISTER_MANAGER.characterDraft);
 
 	const skillsSpent = $derived(
 		draft.skills.reduce((sum, s) => sum + (skillCostById.get(s.id) ?? 0) * s.value, 0)
@@ -63,7 +47,7 @@
 	);
 
 	$effect(() => {
-		load(selectedEventId);
+		load(REGISTER_MANAGER.selectedEventId!);
 	});
 
 	async function load(eventId: number) {

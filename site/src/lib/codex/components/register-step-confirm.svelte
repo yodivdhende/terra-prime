@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { CharacterDraft } from './register-step-create-character.svelte';
+	import { REGISTER_MANAGER } from '../managers/register-manager.svelte';
 	import CharacterVersion, {
 		type CharacterVersionSkill,
 		type CharacterVersionItem,
@@ -7,18 +7,6 @@
 	} from './character-version.svelte';
 
 	type EventSummary = { id: number; name: string };
-
-	let {
-		selectedEventId,
-		selectedCharacterId,
-		selectedVersionId,
-		characterDraft
-	}: {
-		selectedEventId: number;
-		selectedCharacterId: number | null;
-		selectedVersionId: number | null;
-		characterDraft: CharacterDraft;
-	} = $props();
 
 	let event = $state<EventSummary | null>(null);
 	let displayCharacterName = $state('');
@@ -31,10 +19,12 @@
 	let error = $state<string | null>(null);
 	let success = $state(false);
 
-	const isNewCharacter = $derived(selectedCharacterId === null);
-
 	$effect(() => {
-		loadSummary(selectedEventId, selectedVersionId, selectedCharacterId);
+		loadSummary(
+			REGISTER_MANAGER.selectedEventId!,
+			REGISTER_MANAGER.selectedVersionId,
+			REGISTER_MANAGER.selectedCharacterId
+		);
 	});
 
 	async function loadSummary(eventId: number, versionId: number | null, charId: number | null) {
@@ -80,6 +70,7 @@
 					});
 				}
 			} else {
+				const { characterDraft } = REGISTER_MANAGER;
 				displayCharacterName = characterDraft.name;
 				displayVersionName = undefined;
 				displaySkills = characterDraft.skills.flatMap((ds) => {
@@ -111,10 +102,10 @@
 		submitting = true;
 		error = null;
 		try {
-			const body = isNewCharacter
-				? { draft: characterDraft }
-				: { characterVersionId: selectedVersionId };
-			const res = await fetch(`/api/events/${selectedEventId}/participants/me`, {
+			const body = REGISTER_MANAGER.isNewCharacter
+				? { draft: REGISTER_MANAGER.characterDraft }
+				: { characterVersionId: REGISTER_MANAGER.selectedVersionId };
+			const res = await fetch(`/api/events/${REGISTER_MANAGER.selectedEventId}/participants/me`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(body)
@@ -144,7 +135,7 @@
 		<div class="event-row">
 			<span class="event-label">event</span>
 			<span class="event-name">{event?.name ?? '—'}</span>
-			{#if isNewCharacter}
+			{#if REGISTER_MANAGER.isNewCharacter}
 				<span class="badge">new character</span>
 			{/if}
 		</div>

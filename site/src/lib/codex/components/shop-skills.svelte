@@ -25,7 +25,7 @@
 	import SoftwareAndHakcingIcon from '$lib/assets/images/SkillLogo-SoftwareAndHakcing.svg?raw';
 	import Icon from './icon.svelte';
 	import SegmentBar from './segment-bar.svelte';
-	import type { CharacterDraftSkill } from './register-step-create-character.svelte';
+	import type { CharacterDraftSkill } from '$lib/codex/managers/register-manager.svelte';
 
 	const GROUP_COLOR: Record<number, string> = {
 		1: '#f0c040',

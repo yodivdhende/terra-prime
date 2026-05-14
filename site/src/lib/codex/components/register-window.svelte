@@ -1,101 +1,38 @@
 <script lang="ts">
+	import { REGISTER_MANAGER } from '../managers/register-manager.svelte';
 	import RegisterStepEvents from './register-step-events.svelte';
 	import RegisterStepCharacters from './register-step-characters.svelte';
-	import RegisterStepCreateCharacter, {
-		type CharacterDraft
-	} from './register-step-create-character.svelte';
+	import RegisterStepCreateCharacter from './register-step-create-character.svelte';
 	import RegisterStepConfirm from './register-step-confirm.svelte';
-
-	type Step = { id: number; label: string };
-
-	const steps: Step[] = [
-		{ id: 0, label: 'events' },
-		{ id: 1, label: 'characters' },
-		{ id: 2, label: 'create character' },
-		{ id: 3, label: 'confirm' }
-	];
-
-	let currentStep = $state(0);
-	let selectedEventId = $state<number | null>(null);
-	let selectedCharacterId = $state<number | null>(null);
-	let selectedVersionId = $state<number | null>(null);
-	let characterDraft = $state<CharacterDraft>({
-		name: '',
-		skills: [],
-		items: [],
-		implants: []
-	});
-
-	const draftReady = $derived(
-		characterDraft.name.trim().length > 0
-	);
-
-	const canAdvance = $derived(
-		currentStep === 0 ? selectedEventId !== null :
-		currentStep === 1 ? selectedCharacterId !== null :
-		currentStep === 2 ? draftReady :
-		currentStep < steps.length - 1
-	);
-
-	function next() {
-		if (!canAdvance) return;
-		// skip "create character" step when a character is already selected
-		if (currentStep === 1) {
-			currentStep = 3;
-		} else {
-			currentStep++;
-		}
-	}
-
-	function back() {
-		if (currentStep === 3 && selectedCharacterId !== null) {
-			currentStep = 1;
-		} else if (currentStep > 0) {
-			currentStep--;
-		}
-	}
 </script>
 
 <div class="register">
 	<nav class="steps">
-		{#each steps as step (step.id)}
-			<span class="step" class:active={step.id === currentStep} class:done={step.id < currentStep}>
+		{#each REGISTER_MANAGER.steps as step (step.id)}
+			<span class="step" class:active={step.id === REGISTER_MANAGER.currentStep} class:done={step.id < REGISTER_MANAGER.currentStep}>
 				{step.label}
 			</span>
-			{#if step.id < steps.length - 1}
+			{#if step.id < REGISTER_MANAGER.steps.length - 1}
 				<span class="sep">›</span>
 			{/if}
 		{/each}
 	</nav>
 
 	<div class="content">
-		{#if currentStep === 0}
-			<RegisterStepEvents bind:selectedEventId />
-		{:else if currentStep === 1}
-			<RegisterStepCharacters
-				bind:selectedCharacterId
-				bind:selectedVersionId
-				selectedEventId={selectedEventId!}
-				oncreatenew={() => { currentStep = 2; }}
-			/>
-		{:else if currentStep === 2}
-			<RegisterStepCreateCharacter
-				bind:draft={characterDraft}
-				selectedEventId={selectedEventId!}
-			/>
-		{:else if currentStep === 3}
-			<RegisterStepConfirm
-				selectedEventId={selectedEventId!}
-				selectedCharacterId={selectedCharacterId}
-				selectedVersionId={selectedVersionId}
-				characterDraft={characterDraft}
-			/>
+		{#if REGISTER_MANAGER.currentStep === 0}
+			<RegisterStepEvents />
+		{:else if REGISTER_MANAGER.currentStep === 1}
+			<RegisterStepCharacters />
+		{:else if REGISTER_MANAGER.currentStep === 2}
+			<RegisterStepCreateCharacter />
+		{:else if REGISTER_MANAGER.currentStep === 3}
+			<RegisterStepConfirm />
 		{/if}
 	</div>
 
 	<footer>
-		<button onclick={back} disabled={currentStep === 0}>back</button>
-		<button onclick={next} disabled={!canAdvance}>next</button>
+		<button onclick={REGISTER_MANAGER.back} disabled={REGISTER_MANAGER.currentStep === 0}>back</button>
+		<button onclick={REGISTER_MANAGER.next} disabled={!REGISTER_MANAGER.canAdvance}>next</button>
 	</footer>
 </div>
 

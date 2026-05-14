@@ -9,7 +9,7 @@
 	--color-accent: #00cc00;
   --color-warning: #cc4444;
   --color-error: #cc0000;
-	--color-scrollbar-thumb: var(--color-main);
+	--color-scrollbar-thumb: var(--color-accent);
 	--color-scrollbar-track: var(--color-bg);
 
 	/* Typography */
@@ -28,6 +28,28 @@
 	--phosphor-glow-shadow: 0 0 4px var(---phosphor-glow-color), 0 0 10px var(--phosphor-glow-color), 0 0 20px #003b00;
 
 
+}
+
+.scroll {
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
+}
+
+.scroll::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+.scroll::-webkit-scrollbar-track {
+	background: var(--color-scrollbar-track);
+}
+
+.scroll::-webkit-scrollbar-thumb {
+	background: var(--color-scrollbar-thumb);
+}
+
+.scroll::-webkit-scrollbar-thumb:hover {
+	background: var(--color-main-dim);
 }
 
 @media (max-width: 600px) {

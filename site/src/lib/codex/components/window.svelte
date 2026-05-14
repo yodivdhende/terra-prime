@@ -165,7 +165,7 @@
 			<div class="title">{context.title}</div>
 			<button onclick={closeWindow}> <X /> </button>
 		</div>
-		<div class="content">
+		<div class="content scroll">
 			{@render content?.()}
 		</div>
 	{/if}

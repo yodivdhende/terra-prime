@@ -1,18 +1,17 @@
 <script lang="ts">
 	import { afterNavigate } from '$app/navigation';
-	import { CREDENTIAL_STORE } from '$lib/local-utils/credential-manager.svelte';
+	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 	import { sectionManager } from '$lib/managers/section-manager.svelte';
 
-	const roles = $derived(CREDENTIAL_STORE.roles);
+	const roles = $derived(CREDENTIAL_MANAGER.roles);
 
 	afterNavigate((navigation) => {
-		if (navigation.to?.url.pathname === "/") {
+		if (navigation.to?.url.pathname === '/') {
 			sectionManager.showSection = false;
-		}
-		else {
+		} else {
 			sectionManager.showSection = true;
 		}
-	})
+	});
 </script>
 
 <nav>

@@ -3,17 +3,21 @@
 
 	let { selectedEventId = $bindable(null) }: { selectedEventId: number | null } = $props();
 
-	let events = $state<StringLarpEvent[]>([]);
+	let event = $state<StringLarpEvent | null>(null);
 	let loading = $state(true);
 
-	async function loadEvents() {
+	async function loadEvent() {
 		const res = await fetch('/api/events/open');
-		if (res.ok) events = await res.json();
+		if (res.ok) {
+			const events: StringLarpEvent[] = await res.json();
+			event = events[0] ?? null;
+			selectedEventId = event?.id ?? null;
+		}
 		loading = false;
 	}
 
 	$effect(() => {
-		loadEvents();
+		loadEvent();
 	});
 
 	function formatDate(d: string) {
@@ -24,25 +28,13 @@
 <div class="events">
 	{#if loading}
 		<p class="status">loading…</p>
-	{:else if events.length === 0}
+	{:else if !event}
 		<p class="status empty">no open events at this time</p>
 	{:else}
-		<ul>
-			{#each events as event (event.id)}
-				<li
-					class="event"
-					class:selected={selectedEventId === event.id}
-					role="option"
-					aria-selected={selectedEventId === event.id}
-					tabindex="0"
-					onclick={() => { selectedEventId = event.id; }}
-					onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectedEventId = event.id; }}
-				>
-					<span class="name">{event.name}</span>
-					<span class="dates">{formatDate(event.start)} – {formatDate(event.end)}</span>
-				</li>
-			{/each}
-		</ul>
+		<div class="event">
+			<span class="name">{event.name}</span>
+			<span class="dates">{formatDate(event.start)} – {formatDate(event.end)}</span>
+		</div>
 	{/if}
 </div>
 
@@ -53,15 +45,6 @@
 		height: 100%;
 	}
 
-	ul {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 0.4rem;
-	}
-
 	.event {
 		display: flex;
 		justify-content: space-between;
@@ -69,28 +52,11 @@
 		gap: 1rem;
 		padding: 0.6rem 0.75rem;
 		border: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
-		cursor: pointer;
-		transition: border-color 0.15s, background 0.15s;
-		outline: none;
-	}
-
-	.event:hover,
-	.event:focus {
-		border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
-	}
-
-	.event.selected {
-		border-color: var(--color-accent);
-		background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 	}
 
 	.name {
 		font-size: 0.8rem;
 		letter-spacing: 0.04em;
-	}
-
-	.event.selected .name {
-		color: var(--color-accent);
 	}
 
 	.dates {

@@ -9,22 +9,30 @@ function createCredentialManager() {
   let _name: string = $state('');
   const _isLogedIn: boolean = $derived(_roles.length > 0);
 
-  function clearUserRoles() {
-    window.localStorage.removeItem(storageKey);
+  function initFromStorage() {
+    if (document.cookie.includes('session-token') === false) {
+      clearUserCredentials();
+      return;
+    }
+
+    const rolesString = window.localStorage.getItem(storageKey);
+    const name = window.localStorage.getItem(nameStorageKey);
+
+    if (rolesString != null) _roles = JSON.parse(rolesString);
+    if (name != null) _name = name;
   }
 
-  function isLogedIn() {
-    return document.cookie.includes('session-token') !== false;
+
+
+  function clearUserCredentials() {
+    window.localStorage.removeItem(storageKey);
+    window.localStorage.removeItem(nameStorageKey)
   }
 
   return {
     get roles(): UserRole[] {
       if (_roles.length > 0) return _roles;
-      if (browser) {
-        if (document.cookie.includes('session-token') === false) clearUserRoles();
-        const storageValueString = window.localStorage.getItem(storageKey);
-        if (storageValueString) return JSON.parse(storageValueString);
-      }
+      if (browser) initFromStorage();
       return _roles;
     },
     set roles(value: UserRole[]) {
@@ -33,7 +41,7 @@ function createCredentialManager() {
     },
     get name(): string {
       if (_name) return _name;
-      if (browser) return window.localStorage.getItem(nameStorageKey) ?? '';
+      if (browser) initFromStorage();
       return _name;
     },
     set name(value: string) {
@@ -46,4 +54,4 @@ function createCredentialManager() {
   };
 }
 
-export const CREDENTIAL_STORE = createCredentialManager();
+export const CREDENTIAL_MANAGER = createCredentialManager();

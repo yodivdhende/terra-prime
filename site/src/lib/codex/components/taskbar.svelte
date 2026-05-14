@@ -3,7 +3,7 @@
 	import TaskIcons from './task-icons.svelte';
 	import { UserRound } from '@lucide/svelte';
 	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
-	import { CREDENTIAL_STORE } from '$lib/local-utils/credential-manager.svelte';
+	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 	import { FEATURE_MANAGER } from '../managers/feature-manager.svelte';
 
 	function openLogin() {
@@ -17,8 +17,8 @@
 	{#if FEATURE_MANAGER.loginEnabled}
 		<button class="login-btn" onclick={openLogin} aria-label="Login">
 			<UserRound size={32} />
-			{#if CREDENTIAL_STORE.name}
-				<span class="username">{CREDENTIAL_STORE.name}</span>
+			{#if CREDENTIAL_MANAGER.name}
+				<span class="username">{CREDENTIAL_MANAGER.name}</span>
 			{/if}
 		</button>
 	{/if}

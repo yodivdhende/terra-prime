@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { CREDENTIAL_STORE } from "$lib/local-utils/credential-manager.svelte";
-	import type { PageProps } from "./$types";
+	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
+	import type { PageProps } from './$types';
 
 	let showPassword = $state(false);
 	let passwordInputType = $derived.by(() => (showPassword ? 'text' : 'password'));
@@ -13,15 +13,14 @@
 		showPassword = !showPassword;
 	}
 
-	let {form}: PageProps = $props();
-	$effect(() =>{
-		if(form?.error) console.error(form.error);
-		if(form?.success) {
-			const {roles} = form.success;
-			CREDENTIAL_STORE.roles = roles;
+	let { form }: PageProps = $props();
+	$effect(() => {
+		if (form?.error) console.error(form.error);
+		if (form?.success) {
+			const { roles } = form.success;
+			CREDENTIAL_MANAGER.roles = roles;
 		}
-	})
-
+	});
 </script>
 
 <main>
@@ -42,7 +41,12 @@
 				{/if}
 			</div>
 			<div class="password">
-				<input type={passwordInputType} name="passwordConfirm" id="passwordConfirm" value={password} />
+				<input
+					type={passwordInputType}
+					name="passwordConfirm"
+					id="passwordConfirm"
+					value={password}
+				/>
 				{#if showPassword}
 					<button onclick={toggleShowPassword}>◎</button>
 				{:else}
@@ -51,7 +55,7 @@
 			</div>
 			<button> Register </button>
 		</form>
-	  <a href="/login">Login</a>
+		<a href="/login">Login</a>
 	</div>
 </main>
 
@@ -76,14 +80,13 @@
 		border: 1px solid white;
 		border-radius: 5px;
 	}
-  
-  .login-container form{
+
+	.login-container form {
 		display: grid;
 		gap: 1em;
-  }
+	}
 
 	.password {
 		display: flex;
 	}
-
 </style>

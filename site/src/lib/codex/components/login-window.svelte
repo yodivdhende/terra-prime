@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { CREDENTIAL_STORE } from '$lib/local-utils/credential-manager.svelte';
+	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 	import { WINDOW_MANAGER, type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
@@ -23,8 +23,8 @@
 		return async ({ result }) => {
 			console.log('handleLogin', { result });
 			if (result.type === 'success' && result.data?.success) {
-				CREDENTIAL_STORE.roles = result.data.success.roles;
-				CREDENTIAL_STORE.name = result.data.success.name ?? '';
+				CREDENTIAL_MANAGER.roles = result.data.success.roles;
+				CREDENTIAL_MANAGER.name = result.data.success.name ?? '';
 				errorMessage = null;
 				WINDOW_MANAGER.closeWindow(window.id);
 			} else if (result.type === 'success' && result.data?.error) {

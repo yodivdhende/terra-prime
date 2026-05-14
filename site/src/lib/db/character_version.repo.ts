@@ -348,7 +348,7 @@ class CharacterVersionRepo {
 			const versionItems =
 				valueOrLogOfPromiseSetteld(items)
 					?.filter((i) => i.characterVersionId === row.versionId)
-					.map(({ itemId }) => itemId) ?? [];
+					.map(({ itemId, count }) => ({ id: itemId, count })) ?? [];
 
 			const versionImplants =
 				valueOrLogOfPromiseSetteld(implants)
@@ -520,6 +520,6 @@ export type FullCharacterVersion = {
 	versionName: string;
 	lastEvent: { id: number; name: string } | null;
 	skills: { id: number; group: number; groupName: string; value: number }[];
-	items: number[];
+	items: { id: number; count: number }[];
 	implants: number[];
 };

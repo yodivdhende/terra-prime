@@ -11,8 +11,6 @@
 	let { data }: PageProps = $props();
 	let feImageEl: SVGFEImageElement;
 
-	$inspect(CREDENTIAL_MANAGER.isLogedIn);
-
 	$effect(() => FEATURE_MANAGER.setFlags({ loginEnabled: data.loginEnabled }));
 	$effect(() => WINDOW_MANAGER.addWindows(data.files));
 	$effect(() => WINDOW_MANAGER.setRegisterEnabled(CREDENTIAL_MANAGER.isLogedIn));

@@ -77,6 +77,10 @@
 </script>
 
 <div class="create-character">
+	<div class="mode-label">
+		{REGISTER_MANAGER.editMode ? 'editing version' : 'new character'}
+	</div>
+
 	{#if loading}
 		<p class="status">loading…</p>
 	{:else if error}
@@ -113,6 +117,14 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
+	}
+
+	.mode-label {
+		font-size: 0.65rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		opacity: 0.35;
+		padding: 0 0 0.5rem 0;
 	}
 
 	.layout {

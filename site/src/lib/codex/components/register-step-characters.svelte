@@ -9,6 +9,8 @@
 		name: string;
 		lastEvent: { id: number; name: string } | null;
 		skills: { id: number; group: number; groupName: string; value: number }[];
+		items: { id: number; count: number }[];
+		implants: number[];
 		itemCount: number;
 		implantCount: number;
 	};
@@ -26,7 +28,7 @@
 		versionName: string;
 		lastEvent: { id: number; name: string } | null;
 		skills: { id: number; group: number; groupName: string; value: number }[];
-		items: number[];
+		items: { id: number; count: number }[];
 		implants: number[];
 	};
 
@@ -60,7 +62,9 @@
 					name: v.versionName,
 					lastEvent: v.lastEvent,
 					skills: v.skills,
-					itemCount: v.items.length,
+					items: v.items,
+					implants: v.implants,
+					itemCount: v.items.reduce((s, i) => s + i.count, 0),
 					implantCount: v.implants.length
 				});
 			}
@@ -78,12 +82,13 @@
 		loading = false;
 	}
 
-	function select(char: CharacterWithVersions) {
-		if (REGISTER_MANAGER.selectedCharacterId === char.id) {
-			REGISTER_MANAGER.clearCharacter();
-		} else {
-			REGISTER_MANAGER.selectCharacter(char.id, char.versions[0]?.id ?? null);
-		}
+	function selectVersion(char: CharacterWithVersions, ver: VersionSummary) {
+		REGISTER_MANAGER.goToEditVersion(char.id, ver.id, {
+			name: ver.name,
+			skills: ver.skills.map((s) => ({ id: s.id, value: s.value })),
+			items: ver.items,
+			implants: ver.implants
+		});
 	}
 </script>
 
@@ -104,9 +109,9 @@
 								role="option"
 								aria-selected={REGISTER_MANAGER.selectedCharacterId === char.id}
 								tabindex="0"
-								onclick={() => select(char)}
+								onclick={() => selectVersion(char, ver)}
 								onkeydown={(e) => {
-									if (e.key === 'Enter' || e.key === ' ') select(char);
+									if (e.key === 'Enter' || e.key === ' ') selectVersion(char, ver);
 								}}
 							>
 								<div class="version-header">

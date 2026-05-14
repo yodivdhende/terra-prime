@@ -21,7 +21,6 @@
 
 	function handleLogin() {
 		return async ({ result }) => {
-			console.log('handleLogin', { result });
 			if (result.type === 'success' && result.data?.success) {
 				CREDENTIAL_MANAGER.roles = result.data.success.roles;
 				CREDENTIAL_MANAGER.name = result.data.success.name ?? '';

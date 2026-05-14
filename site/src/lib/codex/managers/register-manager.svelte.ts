@@ -20,6 +20,7 @@ function createRegisterManager() {
 	let selectedCharacterId = $state<number | null>(null);
 	let selectedVersionId = $state<number | null>(null);
 	let characterDraft = $state<CharacterDraft>({ name: '', skills: [], items: [], implants: [] });
+	let editMode = $state(false);
 
 	const draftReady = $derived(characterDraft.name.trim().length > 0);
 
@@ -42,7 +43,12 @@ function createRegisterManager() {
 	}
 
 	function back() {
-		if (currentStep === 3 && selectedCharacterId !== null) {
+		if (currentStep === 3 && editMode) {
+			currentStep = 2;
+		} else if (currentStep === 3 && selectedCharacterId !== null) {
+			currentStep = 1;
+		} else if (currentStep === 2) {
+			editMode = false;
 			currentStep = 1;
 		} else if (currentStep > 0) {
 			currentStep--;
@@ -68,6 +74,15 @@ function createRegisterManager() {
 	}
 
 	function goToCreateCharacter() {
+		editMode = false;
+		currentStep = 2;
+	}
+
+	function goToEditVersion(charId: number, versionId: number, draft: CharacterDraft) {
+		selectedCharacterId = charId;
+		selectedVersionId = versionId;
+		characterDraft = { ...draft };
+		editMode = true;
 		currentStep = 2;
 	}
 
@@ -88,6 +103,7 @@ function createRegisterManager() {
 		get characterDraft() { return characterDraft; },
 		get canAdvance() { return canAdvance; },
 		get isNewCharacter() { return isNewCharacter; },
+		get editMode() { return editMode; },
 		next,
 		back,
 		selectEvent,
@@ -95,6 +111,7 @@ function createRegisterManager() {
 		preselectCharacter,
 		clearCharacter,
 		goToCreateCharacter,
+		goToEditVersion,
 		reset,
 	};
 }

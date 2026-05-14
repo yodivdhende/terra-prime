@@ -69,23 +69,18 @@ class CharacterRepo {
 			.filter((value) => value != null);
 	}
 
-	public async save(character: NewCharacter | Character) {
+	public async save(character: NewCharacter | Character): Promise<number | undefined> {
+		if (isCharacter(character)) { await this.edit(character); return character.id; }
 		if (isNewCharacter(character)) return this.create(character);
-		if (isCharacter(character)) return this.edit(character);
 	}
 
-	private async create(character: NewCharacter) {
-		try {
-			(await mysqlconnFn()).execute(
-				`
-				INSERT Characters (Name, Owner)
-				VALUE (?, ?)
-			`,
-				[character.name, character.ownerId]
-			);
-		} catch (error) {
-			throw error;
-		}
+	private async create(character: NewCharacter): Promise<number> {
+		const connection = await mysqlconnFn();
+		const [result] = await connection.execute(
+			`INSERT INTO Characters (Name, Owner) VALUES (?, ?)`,
+			[character.name, character.ownerId]
+		);
+		return (result as any).insertId as number;
 	}
 
 	private async edit(character: Character) {

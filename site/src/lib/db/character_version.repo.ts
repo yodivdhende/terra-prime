@@ -57,20 +57,19 @@ class CharacterVersionRepo {
 		return this.create(characterVersion);
 	}
 
-	public async create(characterVerion: CharacterVersionBare): Promise<number> {
+	public async create(characterVersion: CharacterVersionBare): Promise<number> {
 		const connection = await mysqlconnFn();
-		const [results] = await connection.execute(
-			` 
-				INSERT INTO Character_Versions (Character, Name)
-				VALUES (:characterId, :name)
-			`,
-			{
-				characterId: characterVerion.id,
-				name: characterVerion.name
-			}
+		const [result] = await connection.execute(
+			`INSERT INTO Character_Versions (Character, Name) VALUES (?, ?)`,
+			[characterVersion.characterId, characterVersion.name]
 		);
-		console.log('create version', results);
-		return 0;
+		const versionId = (result as any).insertId as number;
+		await Promise.all([
+			characterVersion.skills.length > 0 ? this.saveSkills({ versionId, skills: characterVersion.skills }) : Promise.resolve(),
+			characterVersion.items.length > 0 ? this.saveItems({ versionId, items: characterVersion.items }) : Promise.resolve(),
+			characterVersion.implants.length > 0 ? this.saveImplants({ versionId, implants: characterVersion.implants }) : Promise.resolve(),
+		]);
+		return versionId;
 	}
 
 	public async update(characterVersion: CharacterVersionBare): Promise<number> {
@@ -190,15 +189,27 @@ class CharacterVersionRepo {
 		);
 	}
 
+	public async saveItems({ versionId, items }: { versionId: number; items: CharacterVersionItem[] }) {
+		const connection = await mysqlconnFn();
+		await connection.query(
+			`INSERT INTO Character_Version_Items (CharacterVersion, Item, Count) VALUES ?`,
+			[items.map((item) => [versionId, item.id, item.count])]
+		);
+	}
+
+	public async saveImplants({ versionId, implants }: { versionId: number; implants: number[] }) {
+		const connection = await mysqlconnFn();
+		await connection.query(
+			`INSERT INTO Character_Version_Implants (CharacterVersion, Implant) VALUES ?`,
+			[implants.map((id) => [versionId, id])]
+		);
+	}
+
 	private async deleteSkills(versionId: number): Promise<void> {
 		const connection = await mysqlconnFn();
 		await connection.query(
-			`
-			DELETE
-      FROM Character_Version_Skills cvs
-      WHERE cvs.CharacterVersion in (:charcterVerionId)
-      `,
-			{ charcterVerionId: versionId }
+			`DELETE FROM Character_Version_Skills cvs WHERE cvs.CharacterVersion = ?`,
+			[versionId]
 		);
 	}
 

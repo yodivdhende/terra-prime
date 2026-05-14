@@ -17,7 +17,8 @@ export const PUT: RequestHandler = async ({cookies, request}) => {
   return handleRequest(async ()=>{
 		await authGuardForUser(getSessionToken(cookies), [UserRole.user]);
     const characterVersion = await request.json();
-    if(isCharacterVersionBare(characterVersion)) throw new BadRequest();
-    return characterVersionRepo.save(characterVersion);
+    if(!isCharacterVersionBare(characterVersion)) throw new BadRequest();
+    const id = await characterVersionRepo.save(characterVersion);
+    return json({ id });
   });
 }

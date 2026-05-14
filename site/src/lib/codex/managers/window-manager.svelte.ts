@@ -18,11 +18,6 @@ function createWindowManager() {
   function setLoginEnabled(enabled: boolean) {
     const created = createLoginWindow({ shouldCreate: enabled });
     const index = windows.findIndex(w => w.id === 'login');
-    console.log('setLoginEnabled', {
-      enabled,
-      created,
-      index,
-    })
     if (created && index < 0) windows.push(created);
     else if (!created && index >= 0) windows.splice(index, 1);
   }
@@ -30,11 +25,6 @@ function createWindowManager() {
   function setRegisterEnabled(isLoggedIn: boolean) {
     const created = createRegisterWindow({ shouldCreate: isLoggedIn });
     const index = windows.findIndex(w => w.id === 'register');
-    console.log('setRegisterEnabled', {
-      isLoggedIn,
-      created,
-      index,
-    })
     if (created && index < 0) windows.push(created);
     else if (!created && index >= 0) windows.splice(index, 1);
   }

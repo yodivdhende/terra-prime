@@ -17,8 +17,8 @@ export const PUT: RequestHandler = async ({ cookies, request }) => {
 		await authGuard(getSessionToken(cookies), ['user']);
 		const body = await request.json();
 		if (isNewCharacter(body) == false) throw new BadRequest();
-		characterRepo.save(body);
-		return new Response();
+		const id = await characterRepo.save(body);
+		return json({ id });
 	});
 };
 

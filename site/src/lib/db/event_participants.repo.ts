@@ -11,18 +11,11 @@ class EventParticipatnsRepo {
 		userId: number;
 		characterVersionId: number;
 	}) {
-		try {
-			const connection = await mysqlconnFn();
-			await connection.execute(
-				`
-          INSERT Event_Participants (Event, User, CharacterVersion)
-          VALUES (:eventId,userId,characterVersionId)
-        `,
-				{ eventId, userId, characterVersionId }
-			);
-		} catch (err) {
-			throw err;
-		}
+		const connection = await mysqlconnFn();
+		await connection.execute(
+			`INSERT INTO Event_Participants (Event, User, CharacterVersion) VALUES (?, ?, ?)`,
+			[eventId, userId, characterVersionId]
+		);
 	}
 
 	public async withdraw({

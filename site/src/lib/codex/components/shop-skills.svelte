@@ -24,6 +24,7 @@
 	import SocialogyAndDiplomacyIcon from '$lib/assets/images/SkillLogo-SocialogyAndDiplomacy.svg?raw';
 	import SoftwareAndHakcingIcon from '$lib/assets/images/SkillLogo-SoftwareAndHakcing.svg?raw';
 	import Icon from './icon.svelte';
+	import SegmentBar from './segment-bar.svelte';
 	import type { CharacterDraftSkill } from './register-step-create-character.svelte';
 
 	const GROUP_COLOR: Record<number, string> = {
@@ -48,8 +49,6 @@
 		sociologyanddiplomacy: SocialogyAndDiplomacyIcon,
 		softwareandhacking: SoftwareAndHakcingIcon
 	};
-
-	const SEGMENTS = 10;
 
 	let {
 		catalog,
@@ -90,13 +89,8 @@
 		return selected.find((s) => s.id === id)?.value ?? 0;
 	}
 
-	function setSkillValue(skill: ShopSkill, segment: number) {
+	function setSkillValue(skill: ShopSkill, newValue: number) {
 		if (skill.id == null) return;
-		const current = getValue(skill.id);
-		const newValue = current === segment ? segment - 1 : segment;
-		const costDelta = (newValue - current) * (skill.cost ?? 0);
-		if (costDelta > remaining) return;
-
 		if (newValue === 0) {
 			selected = selected.filter((s) => s.id !== skill.id);
 		} else if (selected.some((s) => s.id === skill.id)) {
@@ -147,22 +141,14 @@
 								<span class="entry-cost muted">{skillCost}/pt</span>
 							{/if}
 						</div>
-						<div class="bar">
-							{#each { length: SEGMENTS } as _, i}
-								{@const segmentValue = i + 1}
-								{@const isFilled = currentValue >= segmentValue}
-								{@const costToReach = isFilled ? 0 : (segmentValue - currentValue) * skillCost}
-								{@const blocked = !isFilled && costToReach > remaining}
-								<button
-									class="segment"
-									class:filled={isFilled}
-									style:--color={group.color}
-									disabled={blocked}
-									onclick={() => setSkillValue(skill, segmentValue)}
-									aria-label="Set {skill.name} to {segmentValue * 10}%"
-								></button>
-							{/each}
-						</div>
+						<SegmentBar
+						value={currentValue}
+						color={group.color}
+						{remaining}
+						cost={skillCost}
+						name={skill.name}
+						onchange={(v) => setSkillValue(skill, v)}
+					/>
 					</li>
 				{/each}
 			</ul>
@@ -294,39 +280,6 @@
 
 	.entry-cost.muted {
 		opacity: 0.4;
-	}
-
-	.bar {
-		display: flex;
-		gap: 2px;
-	}
-
-	.segment {
-		flex: 1;
-		height: 10px;
-		border: none;
-		border-radius: 2px;
-		background: rgba(255, 255, 255, 0.08);
-		cursor: pointer;
-		padding: 0;
-		transition: background 0.15s;
-	}
-
-	.segment:hover:not(:disabled) {
-		background: rgba(255, 255, 255, 0.2);
-	}
-
-	.segment.filled {
-		background: var(--color);
-	}
-
-	.segment.filled:hover {
-		opacity: 0.8;
-	}
-
-	.segment:disabled {
-		opacity: 0.2;
-		cursor: not-allowed;
 	}
 
 	.empty {

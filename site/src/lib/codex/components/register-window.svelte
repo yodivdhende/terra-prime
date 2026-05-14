@@ -4,6 +4,7 @@
 	import RegisterStepCreateCharacter, {
 		type CharacterDraft
 	} from './register-step-create-character.svelte';
+	import RegisterStepConfirm from './register-step-confirm.svelte';
 
 	type Step = { id: number; label: string };
 
@@ -17,6 +18,7 @@
 	let currentStep = $state(0);
 	let selectedEventId = $state<number | null>(null);
 	let selectedCharacterId = $state<number | null>(null);
+	let selectedVersionId = $state<number | null>(null);
 	let characterDraft = $state<CharacterDraft>({
 		name: '',
 		skills: [],
@@ -72,6 +74,7 @@
 		{:else if currentStep === 1}
 			<RegisterStepCharacters
 				bind:selectedCharacterId
+				bind:selectedVersionId
 				selectedEventId={selectedEventId!}
 				oncreatenew={() => { currentStep = 2; }}
 			/>
@@ -81,10 +84,12 @@
 				selectedEventId={selectedEventId!}
 			/>
 		{:else if currentStep === 3}
-			<div class="placeholder">
-				<p class="label">step 4 — confirm registration</p>
-				<p class="hint">placeholder: final registration summary</p>
-			</div>
+			<RegisterStepConfirm
+				selectedEventId={selectedEventId!}
+				selectedCharacterId={selectedCharacterId}
+				selectedVersionId={selectedVersionId}
+				characterDraft={characterDraft}
+			/>
 		{/if}
 	</div>
 
@@ -140,25 +145,6 @@
 		flex: 1;
 		overflow-y: auto;
 		padding: 1.25rem;
-	}
-
-	.placeholder {
-		border: 1px dashed color-mix(in srgb, var(--color-accent) 25%, transparent);
-		padding: 1.5rem;
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-	}
-
-	.label {
-		font-size: 0.8rem;
-		color: var(--color-accent);
-		opacity: 0.8;
-	}
-
-	.hint {
-		font-size: 0.7rem;
-		opacity: 0.4;
 	}
 
 	footer {

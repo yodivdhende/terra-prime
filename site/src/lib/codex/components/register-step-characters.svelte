@@ -32,10 +32,12 @@
 
 	let {
 		selectedCharacterId = $bindable<number | null>(null),
+		selectedVersionId = $bindable<number | null>(null),
 		selectedEventId,
 		oncreatenew
 	}: {
 		selectedCharacterId: number | null;
+		selectedVersionId: number | null;
 		selectedEventId: number;
 		oncreatenew: () => void;
 	} = $props();
@@ -86,8 +88,14 @@
 		loading = false;
 	}
 
-	function select(id: number) {
-		selectedCharacterId = selectedCharacterId === id ? null : id;
+	function select(char: CharacterWithVersions) {
+		if (selectedCharacterId === char.id) {
+			selectedCharacterId = null;
+			selectedVersionId = null;
+		} else {
+			selectedCharacterId = char.id;
+			selectedVersionId = char.versions[0]?.id ?? null;
+		}
 	}
 </script>
 
@@ -108,9 +116,9 @@
 								role="option"
 								aria-selected={selectedCharacterId === char.id}
 								tabindex="0"
-								onclick={() => select(char.id)}
+								onclick={() => select(char)}
 								onkeydown={(e) => {
-									if (e.key === 'Enter' || e.key === ' ') select(char.id);
+									if (e.key === 'Enter' || e.key === ' ') select(char);
 								}}
 							>
 								<div class="version-header">

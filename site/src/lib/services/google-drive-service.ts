@@ -22,7 +22,7 @@ export class GoogleDriveService {
       supportsAllDrives: true,
       includeItemsFromAllDrives: true,
     })
-    return result.data.files?.filter(file => file.name[0] != '_');
+    return result.data.files?.filter(file => file.name != null && file.name[0] != '_') ?? [];
   }
 
   public async getFolderFiles(folderId: string) {
@@ -33,7 +33,7 @@ export class GoogleDriveService {
       supportsAllDrives: true,
       includeItemsFromAllDrives: true,
     });
-    return result.data.files.filter(file => file.name[0] !== '_');
+    return result.data.files?.filter(file => file.name != null && file.name[0] !== '_') ?? [];
   }
 
   public async getDocumentHtml(fileId: string): Promise<string> {
@@ -55,7 +55,7 @@ export class GoogleDriveService {
       includeItemsFromAllDrives: true,
       pageSize: 20,
     });
-    return result.data.files?.filter(file => file.name[0] !== '_') ?? [];
+    return result.data.files?.filter(file => file.name != null && file.name[0] !== '_') ?? [];
   }
 
   public async getFileStream(fileId: string): Promise<ReadableStream> {

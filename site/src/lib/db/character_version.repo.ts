@@ -13,14 +13,14 @@ class CharacterVersionRepo {
       `);
 		if (Array.isArray(results) === false) return [];
 		if (results.length === 0) return [];
-		const ids = results.map(({ id }) => id).filter((id) => typeof id === 'number');
+		const ids = (results as any[]).map(({ id }) => id).filter((id): id is number => typeof id === 'number');
 		const [items, implants, skills] = await Promise.allSettled([
 			this.getItemsforCharacterVersions(ids),
 			this.getImplantsforCharacterVersions(ids),
 			this.getSkillsForCharacterVerions(ids)
 		]);
 		const characterVersions: CharacterVersionBare[] = [];
-		for (let characterItem of results) {
+		for (let characterItem of results as any[]) {
 			if ('id' in characterItem === false || typeof characterItem.id != 'number') continue;
 			if ('characterId' in characterItem === false || typeof characterItem.characterId != 'number')
 				continue;
@@ -228,14 +228,14 @@ class CharacterVersionRepo {
 		);
 		if (Array.isArray(results) === false) return [];
 		if (results.length === 0) return [];
-		const existingIds = results.map(({ id }) => id).filter((id) => typeof id === 'number');
+		const existingIds = (results as any[]).map(({ id }) => id).filter((id): id is number => typeof id === 'number');
 		const [items, implants, skills] = await Promise.allSettled([
 			this.getItemsforCharacterVersions(existingIds),
 			this.getImplantsforCharacterVersions(existingIds),
 			this.getSkillsForCharacterVerions(existingIds)
 		]);
 		const characterVersions: CharacterVersionBare[] = [];
-		for (let characterItem of results) {
+		for (let characterItem of results as any[]) {
 			if ('id' in characterItem === false || typeof characterItem.id != 'number') continue;
 			if ('characterId' in characterItem === false || typeof characterItem.characterId != 'number')
 				continue;

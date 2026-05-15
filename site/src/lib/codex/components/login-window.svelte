@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 	import { WINDOW_MANAGER, type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
+	import type { ActionResult } from '@sveltejs/kit';
 
 	let { window }: { window: CodexWindow } = $props();
 
@@ -20,7 +21,7 @@
 	}
 
 	function handleLogin() {
-		return async ({ result }) => {
+		return async ({ result }: { result: ActionResult }) => {
 			if (result.type === 'success' && result.data?.success) {
 				CREDENTIAL_MANAGER.roles = result.data.success.roles;
 				CREDENTIAL_MANAGER.name = result.data.success.name ?? '';

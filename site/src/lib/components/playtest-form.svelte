@@ -7,7 +7,7 @@
 
 	let formData: {success?: boolean, error?:boolean} | undefined = $state();
 
-	let formState: 'button' | 'form' | 'sended' = $state('button');
+	let formState: 'button' | 'form' | 'sended' = $state('button' as 'button' | 'form' | 'sended');
 	let showButton = $derived(formState === 'button');
 	let showForm = $derived(formState === 'form' && formData == null);
 	let showMessage = $derived(formData != null);

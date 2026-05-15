@@ -1,9 +1,12 @@
 <script lang="ts">
+	import { type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
 	import { REGISTER_MANAGER } from '../managers/register-manager.svelte';
 	import RegisterStepEvents from './register-step-events.svelte';
 	import RegisterStepCharacters from './register-step-characters.svelte';
 	import RegisterStepCreateCharacter from './register-step-create-character.svelte';
 	import RegisterStepConfirm from './register-step-confirm.svelte';
+
+	let { window }: { window: CodexWindow } = $props();
 </script>
 
 <div class="register">

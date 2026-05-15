@@ -10,7 +10,7 @@
 		if (res.ok) {
 			const events: StringLarpEvent[] = await res.json();
 			event = events[0] ?? null;
-			if (event) REGISTER_MANAGER.selectEvent(event.id);
+			if (event && event.id != null) REGISTER_MANAGER.selectEvent(event.id);
 		}
 		loading = false;
 	}

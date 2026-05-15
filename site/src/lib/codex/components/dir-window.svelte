@@ -120,10 +120,11 @@
 			{/if}
 			<span class="name">{entry.name}</span>
 		</button>
-		{#if expanded[entry.id] === 'loading'}
+		{@const children = expanded[entry.id]}
+		{#if children === 'loading'}
 			<span class="status" style:padding-left="{0.75 + (depth + 1) * 1}rem">loading...</span>
-		{:else if Array.isArray(expanded[entry.id])}
-			{#each expanded[entry.id] as child}
+		{:else if Array.isArray(children)}
+			{#each children as child}
 				{@render treeEntry(child, depth + 1)}
 			{/each}
 		{/if}

@@ -18,11 +18,11 @@
 	} from '$lib/managers/event-character-version-manager.svelte';
 
 	let { data }: PageProps = $props();
-	let event: LarpEvent | null = data.event;
-	let characters: Character[] = data.characters;
-	let skills: Skill[] = data.skills;
-	let implants: Implant[] = data.implants;
-	let items: Item[] = data.items;
+	const event: LarpEvent | null = $derived(data.event);
+	const characters: Character[] = $derived(data.characters);
+	const skills: Skill[] = $derived(data.skills);
+	const implants: Implant[] = $derived(data.implants);
+	const items: Item[] = $derived(data.items);
 	let selectedCharacterId: string | null = $state(page.url.searchParams.get('character'));
 	setEventCharacterVersionManager();
 	const characterVersionManager = getEventCharacterVersionManager();

@@ -78,8 +78,6 @@
 </div>
 
 <style>
-	@import '$lib/styles/theme.css';
-
 	main {
 		display: flex;
 		flex-direction: column;

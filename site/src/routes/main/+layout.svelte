@@ -22,7 +22,15 @@
 		</section>
 	{/if}
 	{#if sidePanelManager.component != null}
-		<div role="button" class="backdrop" onclick={() => sidePanelManager.close()}></div>
+		<div
+			role="button"
+			tabindex="0"
+			class="backdrop"
+			onclick={() => sidePanelManager.close()}
+			onkeydown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') sidePanelManager.close();
+			}}
+		></div>
 		<aside>
 			<button onclick={() => sidePanelManager.close()}><CircleX /></button>
 			<sidePanelManager.component />

@@ -1,9 +1,10 @@
 <script lang='ts'>
 	import { goto } from "$app/navigation";
+	import { untrack } from "svelte";
 	import type { PageProps } from "./$types";
 
     let {data}: PageProps = $props();
-    let user = data.user
+    let user = $state(untrack(() => data.user))
 
     async function save() {
         if(user == null)return;

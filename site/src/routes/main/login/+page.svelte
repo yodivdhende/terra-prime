@@ -20,11 +20,13 @@
 	}
 
 	let { form }: PageProps = $props();
-	if (form?.error) console.error(form.error);
-	if (form?.success) {
-		const { roles } = form.success;
-		CREDENTIAL_MANAGER.roles = roles;
-	}
+	$effect(() => {
+		if (form?.error) console.error(form.error);
+		if (form?.success) {
+			const { roles } = form.success;
+			CREDENTIAL_MANAGER.roles = roles;
+		}
+	});
 </script>
 
 <main>

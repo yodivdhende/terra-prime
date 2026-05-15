@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { REGISTER_MANAGER } from '../managers/register-manager.svelte';
+	import { type RegisterManager } from '../managers/register-manager.svelte';
+	import { type CharacterManager } from '../managers/character-manager.svelte';
 	import CharacterVersion, {
 		type CharacterVersionSkill,
 		type CharacterVersionItem,
@@ -7,6 +8,11 @@
 	} from './character-version.svelte';
 
 	type EventSummary = { id: number; name: string };
+
+	let {
+		REGISTER_MANAGER,
+		CHARACTER_MANAGER
+	}: { REGISTER_MANAGER: RegisterManager; CHARACTER_MANAGER: CharacterManager } = $props();
 
 	let event = $state<EventSummary | null>(null);
 	let displayCharacterName = $state('');
@@ -55,12 +61,22 @@
 					displaySkills = (version.skills as any[]).flatMap((s) => {
 						const skill = skillMap.get(s.id);
 						return skill
-							? [{ id: s.id, name: skill.name, group: s.group, groupName: s.groupName, value: s.value }]
+							? [
+									{
+										id: s.id,
+										name: skill.name,
+										group: s.group,
+										groupName: s.groupName,
+										value: s.value
+									}
+								]
 							: [];
 					});
 					displayItems = (version.items as number[]).flatMap((id) => {
 						const item = itemMap.get(id);
-						return item ? [{ id, name: item.name, description: item.description || undefined }] : [];
+						return item
+							? [{ id, name: item.name, description: item.description || undefined }]
+							: [];
 					});
 					displayImplants = (version.implants as number[]).flatMap((id) => {
 						const implant = implantMap.get(id);
@@ -70,20 +86,30 @@
 					});
 				}
 			} else {
-				const { characterDraft } = REGISTER_MANAGER;
-				displayCharacterName = characterDraft.name;
+				const { draft } = CHARACTER_MANAGER;
+				displayCharacterName = draft.name || draft.version.name;
 				displayVersionName = undefined;
-				displaySkills = characterDraft.skills.flatMap((ds) => {
+				displaySkills = draft.version.skills.flatMap((ds) => {
 					const skill = skillMap.get(ds.id);
 					return skill
-						? [{ id: ds.id, name: skill.name, group: skill.groupId, groupName: skill.groupName, value: ds.value }]
+						? [
+								{
+									id: ds.id,
+									name: skill.name,
+									group: skill.groupId,
+									groupName: skill.groupName,
+									value: ds.value
+								}
+							]
 						: [];
 				});
-				displayItems = characterDraft.items.flatMap((di) => {
+				displayItems = draft.version.items.flatMap((di) => {
 					const item = itemMap.get(di.id);
-					return item ? [{ id: di.id, name: item.name, description: item.description || undefined }] : [];
+					return item
+						? [{ id: di.id, name: item.name, description: item.description || undefined }]
+						: [];
 				});
-				displayImplants = characterDraft.implants.flatMap((id) => {
+				displayImplants = draft.version.implants.flatMap((id) => {
 					const implant = implantMap.get(id);
 					return implant
 						? [{ id, name: implant.name, description: implant.description || undefined }]
@@ -102,9 +128,7 @@
 		submitting = true;
 		error = null;
 		try {
-			const body = REGISTER_MANAGER.isNewCharacter
-				? { draft: REGISTER_MANAGER.characterDraft }
-				: { characterVersionId: REGISTER_MANAGER.selectedVersionId };
+			const body = { draft: CHARACTER_MANAGER.draft };
 			const res = await fetch(`/api/my/events/${REGISTER_MANAGER.selectedEventId}/participants`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -206,7 +230,9 @@
 		border: 1px solid color-mix(in srgb, var(--color-accent) 50%, transparent);
 		cursor: pointer;
 		align-self: flex-start;
-		transition: border-color 0.15s, opacity 0.15s;
+		transition:
+			border-color 0.15s,
+			opacity 0.15s;
 	}
 
 	.confirm-btn:hover:not(:disabled) {

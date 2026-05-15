@@ -1,16 +1,22 @@
 <script lang="ts">
-	import { REGISTER_MANAGER } from '../managers/register-manager.svelte';
 	import CharacterNameInput from './character-name-input.svelte';
 	import CharacterCreateNav, { type Step } from './character-create-nav.svelte';
 	import ShopSkills, { type ShopSkill } from './shop-skills.svelte';
 	import ShopItems, { type ShopItem } from './shop-items.svelte';
 	import ShopImplants, { type ShopImplant } from './shop-implants.svelte';
+	import type { RegisterManager } from '../managers/register-manager.svelte';
+	import type { CharacterManager } from '../managers/character-manager.svelte';
 
 	type EventResponse = {
 		id: number;
 		name: string;
 		budget?: number | null;
 	};
+
+	let {
+		REGISTER_MANAGER,
+		CHARACTER_MANAGER
+	}: { REGISTER_MANAGER: RegisterManager; CHARACTER_MANAGER: CharacterManager } = $props();
 
 	let skills = $state<ShopSkill[]>([]);
 	let items = $state<ShopItem[]>([]);
@@ -24,23 +30,24 @@
 	const itemCostById = $derived(new Map(items.map((i) => [i.id, i.cost ?? 0])));
 	const implantCostById = $derived(new Map(implants.map((i) => [i.id, i.cost ?? 0])));
 
-	const draft = $derived(REGISTER_MANAGER.characterDraft);
+	const character = $derived(CHARACTER_MANAGER.character);
+	const version = $derived(CHARACTER_MANAGER.version);
 
 	const skillsSpent = $derived(
-		draft.skills.reduce((sum, s) => sum + (skillCostById.get(s.id) ?? 0) * s.value, 0)
+		version.skills.reduce((sum, s) => sum + (skillCostById.get(s.id) ?? 0) * s.value, 0)
 	);
 	const itemsSpent = $derived(
-		draft.items.reduce((sum, i) => sum + (itemCostById.get(i.id) ?? 0) * i.count, 0)
+		version.items.reduce((sum, i) => sum + (itemCostById.get(i.id) ?? 0) * i.count, 0)
 	);
-	const itemsTotal = $derived(draft.items.reduce((sum, i) => sum + i.count, 0));
+	const itemsTotal = $derived(version.items.reduce((sum, i) => sum + i.count, 0));
 	const implantsSpent = $derived(
-		draft.implants.reduce((sum, id) => sum + (implantCostById.get(id) ?? 0), 0)
+		version.implants.reduce((sum, id) => sum + (implantCostById.get(id) ?? 0), 0)
 	);
 	const spent = $derived(skillsSpent + itemsSpent + implantsSpent);
 	const remaining = $derived(budget - spent);
 
 	const skillsForGroups = $derived(
-		draft.skills.flatMap((ds) => {
+		version.skills.flatMap((ds) => {
 			const s = skills.find((sk) => sk.id === ds.id);
 			return s ? [{ id: ds.id, group: s.groupId, groupName: s.groupName, value: ds.value }] : [];
 		})
@@ -89,23 +96,23 @@
 		<div class="layout">
 			<CharacterCreateNav
 				bind:activeStep
-				name={draft.name}
-				skills={{ count: draft.skills.length, groups: skillsForGroups, spent: skillsSpent }}
-				items={{ count: draft.items.length, total: itemsTotal, spent: itemsSpent }}
-				implants={{ count: draft.implants.length, spent: implantsSpent }}
+				name={version.name}
+				skills={{ count: version.skills.length, groups: skillsForGroups, spent: skillsSpent }}
+				items={{ count: version.items.length, total: itemsTotal, spent: itemsSpent }}
+				implants={{ count: version.implants.length, spent: implantsSpent }}
 				{budget}
 				{remaining}
 			/>
 
 			<div class="shop scroll">
 				{#if activeStep === 'details'}
-					<CharacterNameInput bind:value={draft.name} />
+					<CharacterNameInput bind:value={version.name} />
 				{:else if activeStep === 'skills'}
-					<ShopSkills catalog={skills} bind:selected={draft.skills} {remaining} />
+					<ShopSkills catalog={skills} bind:selected={version.skills} {remaining} />
 				{:else if activeStep === 'items'}
-					<ShopItems catalog={items} bind:selected={draft.items} {remaining} />
+					<ShopItems catalog={items} bind:selected={version.items} {remaining} />
 				{:else if activeStep === 'implants'}
-					<ShopImplants catalog={implants} bind:selected={draft.implants} {remaining} />
+					<ShopImplants catalog={implants} bind:selected={version.implants} {remaining} />
 				{/if}
 			</div>
 		</div>

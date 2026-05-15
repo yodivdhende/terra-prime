@@ -32,7 +32,14 @@
 		implants: number[];
 	};
 
-	import { REGISTER_MANAGER } from '../managers/register-manager.svelte';
+	import type { CharacterManager } from '../managers/character-manager.svelte';
+	import type { RegisterManager } from '../managers/register-manager.svelte';
+	import { SvelteMap } from 'svelte/reactivity';
+
+	let {
+		REGISTER_MANAGER,
+		CHARACTER_MANAGER
+	}: { REGISTER_MANAGER: RegisterManager; CHARACTER_MANAGER: CharacterManager } = $props();
 
 	let characters = $state<CharacterWithVersions[]>([]);
 	let loading = $state(true);
@@ -43,52 +50,60 @@
 
 	async function load(eventId: number) {
 		loading = true;
-		const [versionsRes, meRes] = await Promise.all([
-			fetch('/api/my/characters/versions'),
-			fetch(`/api/my/events/${eventId}/participants`)
-		]);
+		const versionsRes = await fetch('/api/my/characters/versions');
 
 		if (versionsRes.ok) {
 			const versions: FullCharacterVersion[] = await versionsRes.json();
-			const map = new Map<number, CharacterWithVersions>();
-			for (const v of versions) {
-				if (!map.has(v.characterId)) {
-					map.set(v.characterId, { id: v.characterId, name: v.characterName, versions: [] });
+			const map = new SvelteMap<number, CharacterWithVersions>();
+			for (const version of versions) {
+				if (!map.has(version.characterId)) {
+					map.set(version.characterId, {
+						id: version.characterId,
+						name: version.characterName,
+						versions: []
+					});
 				}
-				const char = map.get(v.characterId)!;
+				const char = map.get(version.characterId)!;
 
 				char.versions.push({
-					id: v.versionId,
-					name: v.versionName,
-					lastEvent: v.lastEvent,
-					skills: v.skills,
-					items: v.items,
-					implants: v.implants,
-					itemCount: v.items.reduce((s, i) => s + i.count, 0),
-					implantCount: v.implants.length
+					id: version.versionId,
+					name: version.versionName,
+					lastEvent: version.lastEvent,
+					skills: version.skills,
+					items: version.items,
+					implants: version.implants,
+					itemCount: version.items.reduce((s, i) => s + i.count, 0),
+					implantCount: version.implants.length
 				});
+
+				if (version.lastEvent?.id === eventId) {
+					CHARACTER_MANAGER.character = { id: version.characterId, name: version.characterName };
+					CHARACTER_MANAGER.version = {
+						id: version.versionId,
+						name: version.versionName,
+						skills: version.skills,
+						items: version.items,
+						implants: version.implants
+					};
+				}
 			}
 			characters = Array.from(map.values());
-		}
-
-		if (meRes.status === 200) {
-			const { characterId } = await meRes.json();
-			REGISTER_MANAGER.preselectCharacter(characterId);
-		} else if (REGISTER_MANAGER.selectedCharacterId != null) {
-			const stillOwned = characters.some((c) => c.id === REGISTER_MANAGER.selectedCharacterId);
-			if (!stillOwned) REGISTER_MANAGER.clearCharacter();
 		}
 
 		loading = false;
 	}
 
 	function selectVersion(char: CharacterWithVersions, ver: VersionSummary) {
-		REGISTER_MANAGER.goToEditVersion(char.id, ver.id, {
-			name: ver.name,
-			skills: ver.skills.map((s) => ({ id: s.id, value: s.value })),
-			items: ver.items,
-			implants: ver.implants
-		});
+		CHARACTER_MANAGER.character = { ...char };
+		CHARACTER_MANAGER.version = {
+			...ver,
+			skills: ver.skills.map((s) => ({ id: s.id, value: s.value }))
+		};
+	}
+
+	function createNewCharacter(): void {
+		CHARACTER_MANAGER.reset();
+		REGISTER_MANAGER.next();
 	}
 </script>
 
@@ -98,7 +113,7 @@
 	{:else}
 		<ul class="char-list">
 			{#each characters as char (char.id)}
-				<li class="character-group" class:selected={REGISTER_MANAGER.selectedCharacterId === char.id}>
+				<li class="character-group" class:selected={CHARACTER_MANAGER.character.id === char.id}>
 					<div class="char-header">
 						<span class="char-name">{char.name}</span>
 					</div>
@@ -107,7 +122,8 @@
 							<li
 								class="version"
 								role="option"
-								aria-selected={REGISTER_MANAGER.selectedCharacterId === char.id}
+								aria-selected={CHARACTER_MANAGER.version.id === ver.id}
+								class:selected={CHARACTER_MANAGER.version.id === ver.id}
 								tabindex="0"
 								onclick={() => selectVersion(char, ver)}
 								onkeydown={(e) => {
@@ -144,9 +160,9 @@
 				role="option"
 				aria-selected={false}
 				tabindex="0"
-				onclick={REGISTER_MANAGER.goToCreateCharacter}
+				onclick={createNewCharacter}
 				onkeydown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') REGISTER_MANAGER.goToCreateCharacter();
+					if (e.key === 'Enter' || e.key === ' ') createNewCharacter();
 				}}
 			>
 				<span class="char-name">+ create new character</span>
@@ -215,6 +231,10 @@
 
 	.version:hover,
 	.version:focus {
+		background: color-mix(in srgb, var(--color-accent) 5%, transparent);
+	}
+
+	.version.selected {
 		background: color-mix(in srgb, var(--color-accent) 5%, transparent);
 	}
 

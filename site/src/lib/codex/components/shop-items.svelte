@@ -8,7 +8,7 @@
 </script>
 
 <script lang="ts">
-	import type { CharacterDraftItem } from '$lib/codex/managers/register-manager.svelte';
+	import type { CharacterDraftItem } from '$lib/codex/managers/character-manager.svelte';
 
 	let {
 		catalog,

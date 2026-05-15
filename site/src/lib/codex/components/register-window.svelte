@@ -1,18 +1,29 @@
 <script lang="ts">
 	import { type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
-	import { REGISTER_MANAGER } from '../managers/register-manager.svelte';
+	import { createRegisterManager, type RegisterManager } from '../managers/register-manager.svelte';
 	import RegisterStepEvents from './register-step-events.svelte';
 	import RegisterStepCharacters from './register-step-characters.svelte';
 	import RegisterStepCreateCharacter from './register-step-create-character.svelte';
 	import RegisterStepConfirm from './register-step-confirm.svelte';
+	import {
+		createCharacterManager,
+		type CharacterManager
+	} from '../managers/character-manager.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
+
+	const CHARACTER_MANAGER: CharacterManager = createCharacterManager();
+	const REGISTER_MANAGER: RegisterManager = createRegisterManager(CHARACTER_MANAGER);
 </script>
 
 <div class="register">
 	<nav class="steps">
 		{#each REGISTER_MANAGER.steps as step (step.id)}
-			<span class="step" class:active={step.id === REGISTER_MANAGER.currentStep} class:done={step.id < REGISTER_MANAGER.currentStep}>
+			<span
+				class="step"
+				class:active={step.id === REGISTER_MANAGER.currentStep}
+				class:done={step.id < REGISTER_MANAGER.currentStep}
+			>
 				{step.label}
 			</span>
 			{#if step.id < REGISTER_MANAGER.steps.length - 1}
@@ -23,18 +34,20 @@
 
 	<div class="content">
 		{#if REGISTER_MANAGER.currentStep === 0}
-			<RegisterStepEvents />
+			<RegisterStepEvents {REGISTER_MANAGER} />
 		{:else if REGISTER_MANAGER.currentStep === 1}
-			<RegisterStepCharacters />
+			<RegisterStepCharacters {REGISTER_MANAGER} {CHARACTER_MANAGER} />
 		{:else if REGISTER_MANAGER.currentStep === 2}
-			<RegisterStepCreateCharacter />
+			<RegisterStepCreateCharacter {REGISTER_MANAGER} {CHARACTER_MANAGER} />
 		{:else if REGISTER_MANAGER.currentStep === 3}
-			<RegisterStepConfirm />
+			<RegisterStepConfirm {REGISTER_MANAGER} {CHARACTER_MANAGER} />
 		{/if}
 	</div>
 
 	<footer>
-		<button onclick={REGISTER_MANAGER.back} disabled={REGISTER_MANAGER.currentStep === 0}>back</button>
+		<button onclick={REGISTER_MANAGER.back} disabled={REGISTER_MANAGER.currentStep === 0}
+			>back</button
+		>
 		<button onclick={REGISTER_MANAGER.next} disabled={!REGISTER_MANAGER.canAdvance}>next</button>
 	</footer>
 </div>

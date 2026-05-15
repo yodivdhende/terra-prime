@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { StringLarpEvent } from '$lib/db/event.repo';
-	import { REGISTER_MANAGER } from '../managers/register-manager.svelte';
+	import { type RegisterManager } from '../managers/register-manager.svelte';
 
+	let { REGISTER_MANAGER }: { REGISTER_MANAGER: RegisterManager } = $props();
 	let event = $state<StringLarpEvent | null>(null);
 	let loading = $state(true);
 
@@ -20,7 +21,11 @@
 	});
 
 	function formatDate(d: string) {
-		return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+		return new Date(d).toLocaleDateString('en-GB', {
+			day: 'numeric',
+			month: 'short',
+			year: 'numeric'
+		});
 	}
 </script>
 

@@ -45,7 +45,7 @@
 			const implantMap = new Map<number, any>((implantsData as any[]).map((i) => [i.id, i]));
 
 			if (charId !== null && versionId !== null) {
-				const versions: any[] = await fetch('/api/characters/versions').then((r) =>
+				const versions: any[] = await fetch('/api/my/characters/versions').then((r) =>
 					r.ok ? r.json() : []
 				);
 				const version = versions.find((v) => v.versionId === versionId);
@@ -105,7 +105,7 @@
 			const body = REGISTER_MANAGER.isNewCharacter
 				? { draft: REGISTER_MANAGER.characterDraft }
 				: { characterVersionId: REGISTER_MANAGER.selectedVersionId };
-			const res = await fetch(`/api/events/${REGISTER_MANAGER.selectedEventId}/participants/me`, {
+			const res = await fetch(`/api/my/events/${REGISTER_MANAGER.selectedEventId}/participants`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(body)

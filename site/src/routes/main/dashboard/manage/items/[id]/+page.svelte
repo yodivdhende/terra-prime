@@ -25,7 +25,7 @@
 				}
 			})
 			if(result.ok) {
-				await invalidate('/api/characters');
+				await invalidate('/api/my/characters');
 				await goto('.');
 			}
 		} catch( err) {

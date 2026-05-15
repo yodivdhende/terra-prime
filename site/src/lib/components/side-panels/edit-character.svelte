@@ -21,7 +21,7 @@
             body: JSON.stringify(character),
         })
         if(response.ok){
-            invalidate('/api/characters');
+            invalidate('/api/my/characters');
             sidePanelManager.close();
         }
     }

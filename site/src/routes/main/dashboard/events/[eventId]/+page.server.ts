@@ -49,7 +49,7 @@ async function getEvent({eventId, fetch}: {eventId: unknown, fetch: Fetch}): Pro
 }
 
 async function getCharacters({fetch}: {fetch: Fetch}): Promise<Character[]> {
-	return (await fetch(`/api/characters`,{ method: 'GET' }))?.json() ?? [];
+	return (await fetch(`/api/my/characters`,{ method: 'GET' }))?.json() ?? [];
 }
  
 async function getSkills({fetch}: {fetch: Fetch}): Promise<Skill[]> {

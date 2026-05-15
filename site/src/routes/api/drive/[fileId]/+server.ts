@@ -3,6 +3,7 @@ import { getGoogleDriveService } from '$lib/services/google-drive-service';
 
 export const GET: RequestHandler = async ({ params }) => {
 	const { fileId } = params;
+	if (!fileId) throw error(400, 'missing fileId');
 	const stream = await getGoogleDriveService().getFileStream(fileId);
 	return new Response(stream, {
 		headers: {

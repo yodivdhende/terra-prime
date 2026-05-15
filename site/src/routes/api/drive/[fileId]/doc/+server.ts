@@ -1,4 +1,4 @@
-import { type RequestHandler } from '@sveltejs/kit';
+import { error, type RequestHandler } from '@sveltejs/kit';
 import { getGoogleDriveService } from '$lib/services/google-drive-service';
 
 function swapBlackAndWhite(html: string): string {
@@ -32,6 +32,7 @@ function swapBlackAndWhite(html: string): string {
 
 export const GET: RequestHandler = async ({ params }) => {
   const { fileId } = params;
+  if (!fileId) throw error(400, 'missing fileId');
   const html = await getGoogleDriveService().getDocumentHtml(fileId);
   return new Response(swapBlackAndWhite(html), {
     headers: {

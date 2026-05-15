@@ -36,9 +36,8 @@ All handlers use `handleRequest()` for error handling and extract tokens via `ge
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | `/api/users` | admin | List all users |
-| GET | `/api/users/active` | user | Get the currently authenticated user |
 | GET | `/api/users/[id]` | Public | Get user by ID |
-| POST | `/api/users/[id]` | Public | Update user; body: `User` |
+| POST | `/api/users/[id]` | Public | Update user; body: `{ user: User }` |
 
 ---
 
@@ -87,9 +86,8 @@ All handlers use `handleRequest()` for error handling and extract tokens via `ge
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/api/characters` | admin/user | Admins see all; users see only their own |
+| GET | `/api/characters` | admin | List all characters |
 | PUT | `/api/characters` | user | Create character; body: `newCharacter` |
-| GET | `/api/characters/with-events` | user | Characters owned by current user, each with an `events` array |
 | GET | `/api/characters/[characterId]` | user | Get character by ID |
 | POST | `/api/characters/[characterId]` | user | Update character; body: `Character \| newCharacter` |
 | GET | `/api/characters/[characterId]/events/[eventId]` | user | Get the character version used for a specific event |
@@ -98,10 +96,9 @@ All handlers use `handleRequest()` for error handling and extract tokens via `ge
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/api/characters/versions` | user | List all versions for the current user with full detail: character info, last event, skills (id/group/value), item ids, implant ids |
-| PUT | `/api/characters/versions` | user | Create character version; body: `CharacterVersionBare`; returns saved version |
+| PUT | `/api/characters/versions` | user | Create character version; body: `CharacterVersionBare`; returns `{ id }` |
 | GET | `/api/characters/versions/[versionId]` | user | Get character version by ID |
-| PUT | `/api/characters/versions/[versionId]` | user | Update character version; body: `CharacterVersionBare`; returns updated version |
+| PUT | `/api/characters/versions/[versionId]` | user | Update character version; body: `CharacterVersionBare`; returns saved id |
 | GET | `/api/characters/versions/[versionId]/full` | user | Get full version detail — **not yet implemented** |
 | PUT | `/api/characters/versions/[versionId]/skills` | user | Replace version skills; body: `CharacterVersionSkill[]` |
 
@@ -127,7 +124,6 @@ Event dates (`start`, `end`) are sent as ISO strings and converted to `Date` obj
 | GET | `/api/events/[eventId]/participants` | admin | List all participants for event |
 | PUT | `/api/events/[eventId]/participants` | admin | Register a participant; body: `{ eventId, userId, characterVerionId }` |
 | DELETE | `/api/events/[eventId]/participants` | admin | Remove participant; body: `EventParticipant` |
-| GET | `/api/events/[eventId]/participants/me` | user | Get current user's own participation; 204 if not registered |
 | GET | `/api/events/[eventId]/participants/characters/[characterId]` | user | Get participation record for a specific character |
 
 ---
@@ -142,3 +138,18 @@ All drive endpoints are public (no auth).
 | GET | `/api/drive/[fileId]` | Stream file as PDF (`Cache-Control: private, max-age=3600`) |
 | GET | `/api/drive/[fileId]/dir` | List files in a Drive folder |
 | GET | `/api/drive/[fileId]/doc` | Export Google Doc as HTML; black/white colors are inverted for dark-mode compatibility |
+
+---
+
+## My (current-user scoped)
+
+All endpoints under `/api/my/...` operate on the authenticated user. Auth: `user` role unless stated otherwise. Use these instead of branching on roles inside a shared handler.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/my/user` | Get the currently authenticated user |
+| GET | `/api/my/characters` | List characters owned by the current user |
+| GET | `/api/my/characters/with-events` | List the current user's characters, each with an `events` array |
+| GET | `/api/my/characters/versions` | List all versions for the current user with full detail: character info, last event, skills (id/group/value), item ids, implant ids |
+| GET | `/api/my/events/[eventId]/participants` | Get the current user's participation for an event; 204 if not registered |
+| POST | `/api/my/events/[eventId]/participants` | Register the current user for an event; body either `{ characterVersionId }` to reuse an existing version, or `{ draft: { name, skills, items, implants } }` to create a new character + version on the fly; returns 201 |

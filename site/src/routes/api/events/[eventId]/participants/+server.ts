@@ -18,11 +18,12 @@ export const PUT: RequestHandler = async ({ cookies, request }) => {
 	return handleRequest(async () => {
 		await authGuard(getSessionToken(cookies), ['admin']);
 		const {eventId, userId, characterVerionId} = await request.json();
-		return	await eventParticipantsRepo.participate({
+		await eventParticipantsRepo.participate({
 			eventId: isNumberOrError(eventId),
 			userId: isNumberOrError(userId),
 			characterVersionId: isNumberOrError(characterVerionId),
 		});
+		return new Response();
 	});
 };
 
@@ -31,7 +32,7 @@ export const DELETE: RequestHandler = async ({ cookies, request }) => {
 		await authGuard(getSessionToken(cookies), ['admin']);
 		const body = await request.json();
 		if (isEventParticapant(body) == false) throw new BadRequest();
-		eventParticipantsRepo.withdraw(body);
+		await eventParticipantsRepo.withdraw({ eventId: body.eventId, characterVersionId: body.characterVersion });
 		return new Response();
 	});
 };

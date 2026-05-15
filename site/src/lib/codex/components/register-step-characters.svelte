@@ -44,8 +44,8 @@
 	async function load(eventId: number) {
 		loading = true;
 		const [versionsRes, meRes] = await Promise.all([
-			fetch('/api/characters/versions'),
-			fetch(`/api/events/${eventId}/participants/me`)
+			fetch('/api/my/characters/versions'),
+			fetch(`/api/my/events/${eventId}/participants`)
 		]);
 
 		if (versionsRes.ok) {

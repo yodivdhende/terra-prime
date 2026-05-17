@@ -8,15 +8,15 @@
 </script>
 
 <script lang="ts">
-	import type { CharacterDraftItem } from '$lib/codex/managers/character-manager.svelte';
+	import type { VersionItem } from '$lib/codex/managers/character-manager.svelte';
 
 	let {
 		catalog,
-		selected = $bindable<CharacterDraftItem[]>([]),
+		selected = $bindable<VersionItem[]>([]),
 		remaining
 	}: {
 		catalog: ShopItem[];
-		selected: CharacterDraftItem[];
+		selected: VersionItem[];
 		remaining: number;
 	} = $props();
 
@@ -38,7 +38,10 @@
 		if (existing) {
 			selected = selected.map((i) => (i.id === item.id ? { ...i, count: i.count + 1 } : i));
 		} else {
-			selected = [...selected, { id: item.id, count: 1 }];
+			selected = [
+				...selected,
+				{ id: item.id, name: item.name, description: item.description, count: 1 }
+			];
 		}
 	}
 

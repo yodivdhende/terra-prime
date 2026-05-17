@@ -35,7 +35,6 @@
 
 	$effect(() => {
 		if (data.characterVersion == null) return;
-		console.log('new data.characterVerion', { data: data.characterVersion });
 		characterVersionManager.reset();
 		characterVersionManager.setCharacterVersion(data.characterVersion);
 	});

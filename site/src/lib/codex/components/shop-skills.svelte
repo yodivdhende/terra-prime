@@ -25,7 +25,7 @@
 	import SoftwareAndHakcingIcon from '$lib/assets/images/SkillLogo-SoftwareAndHakcing.svg?raw';
 	import Icon from './icon.svelte';
 	import SegmentBar from './segment-bar.svelte';
-	import type { CharacterDraftSkill } from '$lib/codex/managers/character-manager.svelte';
+	import type { VersionSkill } from '$lib/codex/managers/character-manager.svelte';
 
 	const GROUP_COLOR: Record<number, string> = {
 		1: '#f0c040',
@@ -52,12 +52,12 @@
 
 	let {
 		catalog,
-		selected = $bindable<CharacterDraftSkill[]>([]),
+		selected = $bindable<VersionSkill[]>([]),
 		remaining,
 		budget = 0
 	}: {
 		catalog: ShopSkill[];
-		selected: CharacterDraftSkill[];
+		selected: VersionSkill[];
 		remaining: number;
 		budget?: number;
 	} = $props();
@@ -96,7 +96,16 @@
 		} else if (selected.some((s) => s.id === skill.id)) {
 			selected = selected.map((s) => (s.id === skill.id ? { ...s, value: newValue } : s));
 		} else {
-			selected = [...selected, { id: skill.id, value: newValue }];
+			selected = [
+				...selected,
+				{
+					id: skill.id,
+					name: skill.name,
+					group: skill.groupId,
+					groupName: skill.groupName,
+					value: newValue
+				}
+			];
 		}
 	}
 </script>

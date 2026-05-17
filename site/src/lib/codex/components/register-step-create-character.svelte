@@ -41,7 +41,7 @@
 	);
 	const itemsTotal = $derived(version.items.reduce((sum, i) => sum + i.count, 0));
 	const implantsSpent = $derived(
-		version.implants.reduce((sum, id) => sum + (implantCostById.get(id) ?? 0), 0)
+		version.implants.reduce((sum, i) => sum + (implantCostById.get(i.id) ?? 0), 0)
 	);
 	const spent = $derived(skillsSpent + itemsSpent + implantsSpent);
 	const remaining = $derived(budget - spent);

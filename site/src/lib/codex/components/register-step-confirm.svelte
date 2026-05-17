@@ -3,36 +3,48 @@
 	import {
 		type Character,
 		type CharacterManager,
-		type CharacterVersion
+		type CharacterVersionFull
 	} from '../managers/character-manager.svelte';
+	import CharacterVersion from './character-version.svelte';
 
 	let {
 		REGISTER_MANAGER,
 		CHARACTER_MANAGER
 	}: { REGISTER_MANAGER: RegisterManager; CHARACTER_MANAGER: CharacterManager } = $props();
 
-	let event = REGISTER_MANAGER.selectedEvent;
-	let displayCharacterName = CHARACTER_MANAGER.character.name;
-	let displayVersionName = CHARACTER_MANAGER.version.name;
-	let displaySkills = CHARACTER_MANAGER.version.skills;
-	let displayItems = CHARACTER_MANAGER.version.items;
-	let displayImplants = CHARACTER_MANAGER.version.implants;
-	let loading = $state(true);
+	let event = $derived(REGISTER_MANAGER.selectedEvent);
 	let submitting = $state(false);
 	let error = $state<string | null>(null);
 	let success = $state(false);
+
+	type CharacterVersionBare = {
+		id: number | null;
+		characterId: number;
+		name: string;
+		skills: { id: number; value: number }[];
+		items: { id: number; count: number }[];
+		implants: number[];
+	};
+
+	type CharacterWithVersions = {
+		id: number | null;
+		name: string;
+		ownerId: number;
+		ownerName: string;
+		versions: CharacterVersionBare[];
+	};
 
 	async function confirm() {
 		if (submitting) return;
 		submitting = true;
 		error = null;
 		try {
-			const body = getCharacterWithVerions({
+			const body = toCharacterWithVersions({
 				character: $state.snapshot(CHARACTER_MANAGER.character),
 				version: $state.snapshot(CHARACTER_MANAGER.version)
 			});
 			const res = await fetch(`/api/my/events/${REGISTER_MANAGER.selectedEventId}/participants`, {
-				method: 'POST',
+				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(body)
 			});
@@ -45,13 +57,13 @@
 		}
 	}
 
-	function getCharacterWithVerions({
+	function toCharacterWithVersions({
 		character,
 		version
 	}: {
 		character: Character;
-		version: CharacterVersion;
-	}) {
+		version: CharacterVersionFull;
+	}): CharacterWithVersions {
 		return {
 			id: character.id,
 			name: character.name,
@@ -60,11 +72,11 @@
 			versions: [
 				{
 					id: version.id,
+					characterId: character.id ?? 0,
 					name: version.name,
-					characterId: character.id,
-					skills: version.skills,
-					items: version.items,
-					implants: version.implants
+					skills: version.skills.map(({ id, value }) => ({ id, value })),
+					items: version.items.map(({ id, count }) => ({ id, count })),
+					implants: version.implants.map(({ id }) => id)
 				}
 			]
 		};
@@ -72,14 +84,12 @@
 </script>
 
 <div class="confirm">
-	{#if loading}
-		<p class="status">loading…</p>
-	{:else if success}
+	{#if success}
 		<div class="success">
 			<p class="success-title">registration confirmed</p>
 			<p class="success-hint">
 				you are registered for <span class="highlight">{event?.name}</span> as
-				<span class="highlight">{displayCharacterName}</span>
+				<span class="highlight">{CHARACTER_MANAGER.character.name}</span>
 			</p>
 		</div>
 	{:else}
@@ -91,13 +101,13 @@
 			{/if}
 		</div>
 
-		{#if displayCharacterName}
+		{#if CHARACTER_MANAGER.character.name}
 			<CharacterVersion
-				characterName={displayCharacterName}
-				versionName={displayVersionName}
-				skills={displaySkills}
-				items={displayItems}
-				implants={displayImplants}
+				characterName={CHARACTER_MANAGER.character.name}
+				versionName={CHARACTER_MANAGER.version.name}
+				skills={CHARACTER_MANAGER.version.skills}
+				items={CHARACTER_MANAGER.version.items}
+				implants={CHARACTER_MANAGER.version.implants}
 			/>
 		{/if}
 
@@ -199,10 +209,5 @@
 	.highlight {
 		opacity: 1;
 		color: var(--color-main);
-	}
-
-	.status {
-		font-size: 0.75rem;
-		opacity: 0.4;
 	}
 </style>

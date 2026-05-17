@@ -8,26 +8,31 @@
 </script>
 
 <script lang="ts">
+	import type { VersionImplant } from '$lib/codex/managers/character-manager.svelte';
+
 	let {
 		catalog,
-		selected = $bindable<number[]>([]),
+		selected = $bindable<VersionImplant[]>([]),
 		remaining
 	}: {
 		catalog: ShopImplant[];
-		selected: number[];
+		selected: VersionImplant[];
 		remaining: number;
 	} = $props();
 
 	function has(id: number) {
-		return selected.includes(id);
+		return selected.some((i) => i.id === id);
 	}
 
 	function toggle(implant: ShopImplant) {
 		if (has(implant.id)) {
-			selected = selected.filter((id) => id !== implant.id);
+			selected = selected.filter((i) => i.id !== implant.id);
 		} else {
 			if (implant.cost > remaining) return;
-			selected = [...selected, implant.id];
+			selected = [
+				...selected,
+				{ id: implant.id, name: implant.name, description: implant.description }
+			];
 		}
 	}
 </script>

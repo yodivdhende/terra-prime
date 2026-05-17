@@ -35,14 +35,13 @@
 	}
 
 	function selectVersion(char: CharacterWithVersions, ver: CharacterVersionFull) {
-		CHARACTER_MANAGER.character = { id: char.id, name: char.name };
-		CHARACTER_MANAGER.version = {
-			id: ver.id,
-			name: ver.name,
-			skills: ver.skills.map(({ id, value }) => ({ id, value })),
-			items: ver.items.map(({ id, count }) => ({ id, count })),
-			implants: ver.implants.map(({ id }) => id)
+		CHARACTER_MANAGER.character = {
+			id: char.id,
+			name: char.name,
+			ownerId: char.ownerId,
+			ownerName: char.ownerName
 		};
+		CHARACTER_MANAGER.version = ver;
 	}
 
 	function createNewCharacter(): void {

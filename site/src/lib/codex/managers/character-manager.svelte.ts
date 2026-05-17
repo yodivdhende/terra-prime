@@ -1,14 +1,13 @@
 import { CREDENTIAL_MANAGER } from "$lib/local-utils/credential-manager.svelte";
+import type {
+  CharacterVersionFull,
+  VersionImplant,
+  VersionItem,
+  VersionSkill
+} from '../../../routes/api/my/characters/versions/+server';
 
-export type CharacterDraftSkill = { id: number; value: number };
-export type CharacterDraftItem = { id: number; count: number };
-export type CharacterVersion = {
-  id: number | null;
-  name: string;
-  skills: CharacterDraftSkill[];
-  items: CharacterDraftItem[];
-  implants: number[];
-};
+export type { CharacterVersionFull, VersionImplant, VersionItem, VersionSkill };
+
 export type Character = {
   id: number | null;
   name: string;
@@ -27,13 +26,13 @@ function emptyCharacter(): Character {
   };
 }
 
-function emptyCharacterVersion(): CharacterVersion {
-  return { id: null, name: '', skills: [], items: [], implants: [] };
+function emptyCharacterVersion(): CharacterVersionFull {
+  return { id: null, characterId: 0, name: '', skills: [], items: [], implants: [] };
 }
 
 export function createCharacterManager() {
   let character = $state<Character>(emptyCharacter());
-  let version = $state<CharacterVersion>(emptyCharacterVersion());
+  let version = $state<CharacterVersionFull>(emptyCharacterVersion());
 
   const ready = $derived.by(() => {
     if (character.name.trim().length <= 0) return false;
@@ -53,7 +52,7 @@ export function createCharacterManager() {
     get character() { return character; },
     set character(next: Character) { character = next },
     get version() { return version; },
-    set version(next: CharacterVersion) { version = next },
+    set version(next: CharacterVersionFull) { version = next },
     get ready() { return ready; },
     get isNewCharacter() { return isNewCharacter; },
     get isNewVersion() { return isNewVersion; },

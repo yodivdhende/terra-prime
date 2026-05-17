@@ -50,6 +50,7 @@ export const PUT: RequestHandler = async ({ cookies, params, request }) => {
   return handleRequest(async () => {
     await authGuard(getSessionToken(cookies), ['admin']);
     const eventId = isNumberOrError(params.eventId);
+    console.dir(request);
     const body = await request.json();
     if (!isCharacterWithVersions(body)) throw new BadRequest();
 

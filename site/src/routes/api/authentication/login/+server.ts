@@ -22,6 +22,6 @@ export const POST: RequestHandler = async ({ request, cookies}) => {
 			description: `api login ${email}`
 		});
 		setSessionToken(cookies, token)
-		return json({ token, roles, name });
+		return json({ token, roles, name, userId });
 	});
 };

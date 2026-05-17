@@ -23,8 +23,11 @@
 	function handleLogin() {
 		return async ({ result }: { result: ActionResult }) => {
 			if (result.type === 'success' && result.data?.success) {
-				CREDENTIAL_MANAGER.roles = result.data.success.roles;
-				CREDENTIAL_MANAGER.name = result.data.success.name ?? '';
+				CREDENTIAL_MANAGER.credentials = {
+					roles: result.data.success.roles,
+					name: result.data.success.name ?? '',
+					id: result.data.success.userId ?? null,
+				};
 				errorMessage = null;
 				WINDOW_MANAGER.closeWindow(window.id);
 			} else if (result.type === 'success' && result.data?.error) {

@@ -23,8 +23,12 @@
 	$effect(() => {
 		if (form?.error) console.error(form.error);
 		if (form?.success) {
-			const { roles } = form.success;
-			CREDENTIAL_MANAGER.roles = roles;
+			const { roles, name, userId } = form.success;
+			CREDENTIAL_MANAGER.credentials = {
+				roles,
+				name: name ?? '',
+				id: userId ?? null,
+			};
 		}
 	});
 </script>

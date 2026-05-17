@@ -1,135 +1,36 @@
 <script lang="ts">
 	import { type RegisterManager } from '../managers/register-manager.svelte';
-	import { type CharacterManager } from '../managers/character-manager.svelte';
-	import CharacterVersion, {
-		type CharacterVersionSkill,
-		type CharacterVersionItem,
-		type CharacterVersionImplant
-	} from './character-version.svelte';
-
-	type EventSummary = { id: number; name: string };
+	import {
+		type Character,
+		type CharacterManager,
+		type CharacterVersion
+	} from '../managers/character-manager.svelte';
 
 	let {
 		REGISTER_MANAGER,
 		CHARACTER_MANAGER
 	}: { REGISTER_MANAGER: RegisterManager; CHARACTER_MANAGER: CharacterManager } = $props();
 
-	let event = $state<EventSummary | null>(null);
-	let displayCharacterName = $state('');
-	let displayVersionName = $state<string | undefined>(undefined);
-	let displaySkills = $state<CharacterVersionSkill[]>([]);
-	let displayItems = $state<CharacterVersionItem[]>([]);
-	let displayImplants = $state<CharacterVersionImplant[]>([]);
+	let event = REGISTER_MANAGER.selectedEvent;
+	let displayCharacterName = CHARACTER_MANAGER.character.name;
+	let displayVersionName = CHARACTER_MANAGER.version.name;
+	let displaySkills = CHARACTER_MANAGER.version.skills;
+	let displayItems = CHARACTER_MANAGER.version.items;
+	let displayImplants = CHARACTER_MANAGER.version.implants;
 	let loading = $state(true);
 	let submitting = $state(false);
 	let error = $state<string | null>(null);
 	let success = $state(false);
-
-	$effect(() => {
-		loadSummary(
-			REGISTER_MANAGER.selectedEventId!,
-			REGISTER_MANAGER.selectedVersionId,
-			REGISTER_MANAGER.selectedCharacterId
-		);
-	});
-
-	async function loadSummary(eventId: number, versionId: number | null, charId: number | null) {
-		loading = true;
-		error = null;
-		try {
-			const [eventData, skillsData, itemsData, implantsData] = await Promise.all([
-				fetch(`/api/events/${eventId}`).then((r) => (r.ok ? r.json() : null)),
-				fetch('/api/skills').then((r) => (r.ok ? r.json() : [])),
-				fetch('/api/items').then((r) => (r.ok ? r.json() : [])),
-				fetch('/api/implants').then((r) => (r.ok ? r.json() : []))
-			]);
-
-			event = eventData ? { id: eventData.id, name: eventData.name } : null;
-
-			const skillMap = new Map<number, any>((skillsData as any[]).map((s) => [s.id, s]));
-			const itemMap = new Map<number, any>((itemsData as any[]).map((i) => [i.id, i]));
-			const implantMap = new Map<number, any>((implantsData as any[]).map((i) => [i.id, i]));
-
-			if (charId !== null && versionId !== null) {
-				const data: any = await fetch('/api/my/characters/versions').then((r) =>
-					r.ok ? r.json() : { characters: [] }
-				);
-				const versions: any[] = (data.characters ?? []).flatMap((c: any) => c.versions ?? []);
-				const version = versions.find((v) => v.versionId === versionId);
-				if (version) {
-					displayCharacterName = version.characterName;
-					displayVersionName = version.versionName;
-					displaySkills = (version.skills as any[]).flatMap((s) => {
-						const skill = skillMap.get(s.id);
-						return skill
-							? [
-									{
-										id: s.id,
-										name: skill.name,
-										group: s.group,
-										groupName: s.groupName,
-										value: s.value
-									}
-								]
-							: [];
-					});
-					displayItems = (version.items as number[]).flatMap((id) => {
-						const item = itemMap.get(id);
-						return item
-							? [{ id, name: item.name, description: item.description || undefined }]
-							: [];
-					});
-					displayImplants = (version.implants as number[]).flatMap((id) => {
-						const implant = implantMap.get(id);
-						return implant
-							? [{ id, name: implant.name, description: implant.description || undefined }]
-							: [];
-					});
-				}
-			} else {
-				const { draft } = CHARACTER_MANAGER;
-				displayCharacterName = draft.name || draft.version.name;
-				displayVersionName = undefined;
-				displaySkills = draft.version.skills.flatMap((ds) => {
-					const skill = skillMap.get(ds.id);
-					return skill
-						? [
-								{
-									id: ds.id,
-									name: skill.name,
-									group: skill.groupId,
-									groupName: skill.groupName,
-									value: ds.value
-								}
-							]
-						: [];
-				});
-				displayItems = draft.version.items.flatMap((di) => {
-					const item = itemMap.get(di.id);
-					return item
-						? [{ id: di.id, name: item.name, description: item.description || undefined }]
-						: [];
-				});
-				displayImplants = draft.version.implants.flatMap((id) => {
-					const implant = implantMap.get(id);
-					return implant
-						? [{ id, name: implant.name, description: implant.description || undefined }]
-						: [];
-				});
-			}
-		} catch (err) {
-			console.error(err);
-		} finally {
-			loading = false;
-		}
-	}
 
 	async function confirm() {
 		if (submitting) return;
 		submitting = true;
 		error = null;
 		try {
-			const body = { draft: CHARACTER_MANAGER.draft };
+			const body = getCharacterWithVerions({
+				character: $state.snapshot(CHARACTER_MANAGER.character),
+				version: $state.snapshot(CHARACTER_MANAGER.version)
+			});
 			const res = await fetch(`/api/my/events/${REGISTER_MANAGER.selectedEventId}/participants`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -142,6 +43,31 @@
 		} finally {
 			submitting = false;
 		}
+	}
+
+	function getCharacterWithVerions({
+		character,
+		version
+	}: {
+		character: Character;
+		version: CharacterVersion;
+	}) {
+		return {
+			id: character.id,
+			name: character.name,
+			ownerId: character.ownerId,
+			ownerName: character.ownerName,
+			versions: [
+				{
+					id: version.id,
+					name: version.name,
+					characterId: character.id,
+					skills: version.skills,
+					items: version.items,
+					implants: version.implants
+				}
+			]
+		};
 	}
 </script>
 

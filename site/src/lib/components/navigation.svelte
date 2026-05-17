@@ -3,7 +3,7 @@
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 	import { sectionManager } from '$lib/managers/section-manager.svelte';
 
-	const roles = $derived(CREDENTIAL_MANAGER.roles);
+	const roles = $derived(CREDENTIAL_MANAGER.credentials.roles);
 
 	afterNavigate((navigation) => {
 		if (navigation.to?.url.pathname === '/') {

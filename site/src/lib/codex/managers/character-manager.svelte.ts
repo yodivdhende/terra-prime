@@ -1,3 +1,5 @@
+import { CREDENTIAL_MANAGER } from "$lib/local-utils/credential-manager.svelte";
+
 export type CharacterDraftSkill = { id: number; value: number };
 export type CharacterDraftItem = { id: number; count: number };
 export type CharacterVersion = {
@@ -10,12 +12,18 @@ export type CharacterVersion = {
 export type Character = {
   id: number | null;
   name: string;
+  ownerName: string;
+  ownerId: number;
 };
 
 function emptyCharacter(): Character {
+  const { id: ownerId, name: ownerName } = CREDENTIAL_MANAGER.credentials;
+  if (ownerId == null) throw new Error('needs to be loged in');
   return {
     id: null,
     name: '',
+    ownerName,
+    ownerId,
   };
 }
 
@@ -26,14 +34,6 @@ function emptyCharacterVersion(): CharacterVersion {
 export function createCharacterManager() {
   let character = $state<Character>(emptyCharacter());
   let version = $state<CharacterVersion>(emptyCharacterVersion());
-
-  $effect(() => {
-    console.log('settingCharacter', $state.snapshot(character))
-  })
-
-  $effect(() => {
-    console.log('settingVersion', $state.snapshot(version));
-  })
 
   const ready = $derived.by(() => {
     if (character.name.trim().length <= 0) return false;

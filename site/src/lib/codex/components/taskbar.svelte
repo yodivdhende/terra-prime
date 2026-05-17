@@ -17,8 +17,8 @@
 	{#if FEATURE_MANAGER.loginEnabled}
 		<button class="login-btn" onclick={openLogin} aria-label="Login">
 			<UserRound size={32} />
-			{#if CREDENTIAL_MANAGER.name}
-				<span class="username">{CREDENTIAL_MANAGER.name}</span>
+			{#if CREDENTIAL_MANAGER.credentials.name}
+				<span class="username">{CREDENTIAL_MANAGER.credentials.name}</span>
 			{/if}
 		</button>
 	{/if}

@@ -12,7 +12,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		if (typeof name !== 'string' && typeof email !== 'string' && typeof password !== 'string')
 			throw new RequestError(400, 'request needs: name, email and password');
 		await authenticationRepo.register({ name, email, password });
-		const { userId, roles } = (await authenticationRepo.getCredentials({ email, password })) ?? {};
+		const { userId, roles, name: storedName } = (await authenticationRepo.getCredentials({ email, password })) ?? {};
 		if (roles == null || userId == null) throw new RequestError(400, 'credentials wrong');
 		const token = await sessionRepo.create({
 			userId: userId ?? null,
@@ -21,6 +21,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			description: 'api login'
 		});
 		setSessionToken(cookies, token);
-		return json({userId, roles});
+		return json({userId, roles, name: storedName});
 	});
 };

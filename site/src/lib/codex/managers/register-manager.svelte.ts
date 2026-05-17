@@ -1,3 +1,4 @@
+import type { StringLarpEvent } from '$lib/db/event.repo';
 import {
   type CharacterManager
 } from './character-manager.svelte';
@@ -11,7 +12,9 @@ const STEPS = [
 
 export function createRegisterManager(characterManager: CharacterManager) {
   let currentStep = $state(0);
+  let events: StringLarpEvent[] = $state([]);
   let selectedEventId = $state<number | null>(null);
+  const selectedEvent = $derived(events.find(e => e.id === selectedEventId));
   let selectedCharacterId = $state<number | null>(null);
   let selectedVersionId = $state<number | null>(null);
   let editMode = $state(false);
@@ -78,6 +81,9 @@ export function createRegisterManager(characterManager: CharacterManager) {
     get canAdvance() { return canAdvance; },
     get isNewCharacter() { return isNewCharacter; },
     get editMode() { return editMode; },
+    get events() { return events },
+    set events(value: StringLarpEvent[]) { events = value },
+    get selectedEvent() { return selectedEvent ?? null },
     next,
     back,
     selectEvent,

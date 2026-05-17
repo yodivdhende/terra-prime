@@ -78,13 +78,14 @@ class EventParticipatnsRepo {
     }
   }
 
-  public async getEventsForCharacters(characterIds: number[]): Promise<{ characterId: number; eventId: number; eventName: string }[]> {
+  public async getEventsForCharacters(characterIds: number[]): Promise<{ characterId: number; characterVersionId: number; eventId: number; eventName: string }[]> {
     if (characterIds.length === 0) return [];
     try {
       const connection = await mysqlconnFn();
       const [result] = await connection.query(
         `SELECT
 					cv.Character as characterId,
+					cv.Id as characterVersionId,
 					e.Id as eventId,
 					e.Name as eventName
 				FROM Event_Participants ep
@@ -94,10 +95,21 @@ class EventParticipatnsRepo {
         [characterIds]
       );
       if (!Array.isArray(result) || result.length === 0) return [];
-      const rows: { characterId: number; eventId: number; eventName: string }[] = [];
+      const rows: { characterId: number; characterVersionId: number; eventId: number; eventName: string }[] = [];
       for (const row of result as any[]) {
-        if (typeof row.characterId !== 'number' || typeof row.eventId !== 'number' || typeof row.eventName !== 'string') continue;
-        rows.push({ characterId: row.characterId, eventId: row.eventId, eventName: row.eventName });
+        if (
+          typeof row.characterId !== 'number' ||
+          typeof row.characterVersionId !== 'number' ||
+          typeof row.eventId !== 'number' ||
+          typeof row.eventName !== 'string'
+        )
+          continue;
+        rows.push({
+          characterId: row.characterId,
+          characterVersionId: row.characterVersionId,
+          eventId: row.eventId,
+          eventName: row.eventName
+        });
       }
       return rows;
     } catch (err) {

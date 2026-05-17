@@ -1,5 +1,6 @@
 import { characterRepo, type Character } from "$lib/db/character.repo";
 import { characterVersionRepo, type CharacterVersionBare } from "$lib/db/character_version.repo";
+import { eventParticipantsRepo } from "$lib/db/event_participants.repo";
 import { implantRepo, type Implant } from "$lib/db/implants.repo";
 import { itemRepo, type Item } from "$lib/db/items.repo";
 import { skillRepo, type Skill } from "$lib/db/skills.repo";
@@ -29,10 +30,16 @@ export type VersionImplant = {
 	description: string;
 };
 
+export type VersionEvent = {
+	id: number;
+	name: string;
+};
+
 export type CharacterVersionFull = Omit<CharacterVersionBare, 'skills' | 'items' | 'implants'> & {
 	skills: VersionSkill[];
 	items: VersionItem[];
 	implants: VersionImplant[];
+	events: VersionEvent[];
 };
 
 export type CharacterWithVersions = Character & { versions: CharacterVersionFull[] };
@@ -51,8 +58,9 @@ export const GET: RequestHandler = async ({ cookies }) => {
 			itemRepo.getAll(),
 			implantRepo.getAll()
 		]);
+		const events = await eventParticipantsRepo.getEventsForCharacters(characters.map((c) => c.id));
 		const response: MyCharacterVersionsResponse = {
-			characters: toCharactersWithVersions(characters, versions, skills, items, implants)
+			characters: toCharactersWithVersions(characters, versions, skills, items, implants, events)
 		};
 		return json(response);
 	});
@@ -63,18 +71,25 @@ function toCharactersWithVersions(
 	versions: CharacterVersionBare[],
 	skills: Skill[],
 	items: Item[],
-	implants: Implant[]
+	implants: Implant[],
+	events: { characterVersionId: number; eventId: number; eventName: string }[]
 ): CharacterWithVersions[] {
 	const skillById = new Map(skills.flatMap((s) => (s.id == null ? [] : [[s.id, s] as const])));
 	const itemById = new Map(items.flatMap((i) => (i.id == null ? [] : [[i.id, i] as const])));
 	const implantById = new Map(
 		implants.flatMap((i) => (i.id == null ? [] : [[i.id, i] as const]))
 	);
+	const eventsByVersionId = new Map<number, VersionEvent[]>();
+	for (const e of events) {
+		const list = eventsByVersionId.get(e.characterVersionId) ?? [];
+		list.push({ id: e.eventId, name: e.eventName });
+		eventsByVersionId.set(e.characterVersionId, list);
+	}
 	return characters.map((character) => ({
 		...character,
 		versions: versions
 			.filter((version) => version.characterId === character.id)
-			.map((version) => toFullVersion(version, skillById, itemById, implantById))
+			.map((version) => toFullVersion(version, skillById, itemById, implantById, eventsByVersionId))
 	}));
 }
 
@@ -82,7 +97,8 @@ function toFullVersion(
 	version: CharacterVersionBare,
 	skillById: Map<number, Skill>,
 	itemById: Map<number, Item>,
-	implantById: Map<number, Implant>
+	implantById: Map<number, Implant>,
+	eventsByVersionId: Map<number, VersionEvent[]>
 ): CharacterVersionFull {
 	return {
 		id: version.id,
@@ -110,6 +126,7 @@ function toFullVersion(
 			const implant = implantById.get(id);
 			if (!implant) return [];
 			return [{ id, name: implant.name, description: implant.description }];
-		})
+		}),
+		events: eventsByVersionId.get(version.id) ?? []
 	};
 }

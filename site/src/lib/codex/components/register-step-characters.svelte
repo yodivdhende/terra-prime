@@ -52,6 +52,10 @@
 	function itemCount(ver: CharacterVersionFull): number {
 		return ver.items.reduce((s, i) => s + i.count, 0);
 	}
+
+	function lastEvent(ver: CharacterVersionFull): { id: number; name: string } | undefined {
+		return ver.events[ver.events.length - 1];
+	}
 </script>
 
 <div class="characters">
@@ -79,6 +83,9 @@
 							>
 								<div class="version-header">
 									<span class="version-name">{ver.name}</span>
+									{#if lastEvent(ver)}
+										<span class="version-event">{lastEvent(ver)?.name}</span>
+									{/if}
 								</div>
 								<div class="version-stats">
 									<span class="stat">
@@ -197,6 +204,13 @@
 	.version-name {
 		font-size: 0.72rem;
 		opacity: 0.75;
+	}
+
+	.version-event {
+		font-size: 0.62rem;
+		opacity: 0.5;
+		margin-left: auto;
+		letter-spacing: 0.03em;
 	}
 
 	.version-stats {

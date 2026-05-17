@@ -5,14 +5,7 @@
 	import SocialeWetenschapIcon from '$lib/assets/images/SkillLogo-SocialeWetenschap.svg?raw';
 	import Icon from '$lib/codex/components/icon.svelte';
 
-	type Skill = {
-		id: number;
-		group: number;
-		groupName: string;
-		value: number;
-	};
-
-	let { skills }: { skills: Skill[] } = $props();
+	let { skills }: { skills: CharacterVerionSkill[] } = $props();
 
 	const GROUP_ICON: Record<number, string> = {
 		1: EngineeringIcon,

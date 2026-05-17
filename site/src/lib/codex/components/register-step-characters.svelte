@@ -1,40 +1,16 @@
 <script lang="ts">
-	import CharacterSkillGroups from '$lib/codex/components/character-skill-groups.svelte';
 	import Icon from '$lib/codex/components/icon.svelte';
 	import itemLogo from '$lib/assets/images/ItemLogo.svg?raw';
 	import implantLogo from '$lib/assets/images/ImplantLogo.svg?raw';
 
-	type VersionSummary = {
-		id: number;
-		name: string;
-		lastEvent: { id: number; name: string } | null;
-		skills: { id: number; group: number; groupName: string; value: number }[];
-		items: { id: number; count: number }[];
-		implants: number[];
-		itemCount: number;
-		implantCount: number;
-	};
-
-	type CharacterWithVersions = {
-		id: number;
-		name: string;
-		versions: VersionSummary[];
-	};
-
-	type FullCharacterVersion = {
-		characterId: number;
-		characterName: string;
-		versionId: number;
-		versionName: string;
-		lastEvent: { id: number; name: string } | null;
-		skills: { id: number; group: number; groupName: string; value: number }[];
-		items: { id: number; count: number }[];
-		implants: number[];
-	};
-
+	import type {
+		CharacterVersionFull,
+		CharacterWithVersions,
+		MyCharacterVersionsResponse
+	} from '../../../routes/api/my/characters/versions/+server';
 	import type { CharacterManager } from '../managers/character-manager.svelte';
 	import type { RegisterManager } from '../managers/register-manager.svelte';
-	import { SvelteMap } from 'svelte/reactivity';
+	import CharacterSkillGroups from './character-skill-groups.svelte';
 
 	let {
 		REGISTER_MANAGER,
@@ -45,65 +21,37 @@
 	let loading = $state(true);
 
 	$effect(() => {
-		load(REGISTER_MANAGER.selectedEventId!);
+		load();
 	});
 
-	async function load(eventId: number) {
+	async function load() {
 		loading = true;
-		const versionsRes = await fetch('/api/my/characters/versions');
-
-		if (versionsRes.ok) {
-			const versions: FullCharacterVersion[] = await versionsRes.json();
-			const map = new SvelteMap<number, CharacterWithVersions>();
-			for (const version of versions) {
-				if (!map.has(version.characterId)) {
-					map.set(version.characterId, {
-						id: version.characterId,
-						name: version.characterName,
-						versions: []
-					});
-				}
-				const char = map.get(version.characterId)!;
-
-				char.versions.push({
-					id: version.versionId,
-					name: version.versionName,
-					lastEvent: version.lastEvent,
-					skills: version.skills,
-					items: version.items,
-					implants: version.implants,
-					itemCount: version.items.reduce((s, i) => s + i.count, 0),
-					implantCount: version.implants.length
-				});
-
-				if (version.lastEvent?.id === eventId) {
-					CHARACTER_MANAGER.character = { id: version.characterId, name: version.characterName };
-					CHARACTER_MANAGER.version = {
-						id: version.versionId,
-						name: version.versionName,
-						skills: version.skills,
-						items: version.items,
-						implants: version.implants
-					};
-				}
-			}
-			characters = Array.from(map.values());
+		const res = await fetch('/api/my/characters/versions');
+		if (res.ok) {
+			const data = (await res.json()) as MyCharacterVersionsResponse;
+			characters = data.characters;
 		}
-
 		loading = false;
 	}
 
-	function selectVersion(char: CharacterWithVersions, ver: VersionSummary) {
-		CHARACTER_MANAGER.character = { ...char };
+	function selectVersion(char: CharacterWithVersions, ver: CharacterVersionFull) {
+		CHARACTER_MANAGER.character = { id: char.id, name: char.name };
 		CHARACTER_MANAGER.version = {
-			...ver,
-			skills: ver.skills.map((s) => ({ id: s.id, value: s.value }))
+			id: ver.id,
+			name: ver.name,
+			skills: ver.skills.map(({ id, value }) => ({ id, value })),
+			items: ver.items.map(({ id, count }) => ({ id, count })),
+			implants: ver.implants.map(({ id }) => id)
 		};
 	}
 
 	function createNewCharacter(): void {
 		CHARACTER_MANAGER.reset();
 		REGISTER_MANAGER.next();
+	}
+
+	function itemCount(ver: CharacterVersionFull): number {
+		return ver.items.reduce((s, i) => s + i.count, 0);
 	}
 </script>
 
@@ -132,21 +80,18 @@
 							>
 								<div class="version-header">
 									<span class="version-name">{ver.name}</span>
-									{#if ver.lastEvent}
-										<span class="badge">{ver.lastEvent.name}</span>
-									{:else}
-										<span class="no-event">new</span>
-									{/if}
 								</div>
 								<div class="version-stats">
-									<CharacterSkillGroups skills={ver.skills} />
+									<span class="stat">
+										<CharacterSkillGroups skills={ver.skills} />
+									</span>
 									<span class="stat">
 										<Icon src={itemLogo} color="white" tooltip="Items" />
-										{ver.itemCount}
+										{itemCount(ver)}
 									</span>
 									<span class="stat">
 										<Icon src={implantLogo} color="white" tooltip="Implants" />
-										{ver.implantCount}
+										{ver.implants.length}
 									</span>
 								</div>
 							</li>
@@ -253,19 +198,6 @@
 	.version-name {
 		font-size: 0.72rem;
 		opacity: 0.75;
-	}
-
-	.badge {
-		font-size: 0.62rem;
-		opacity: 0.55;
-		padding: 0.1rem 0.35rem;
-		border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
-	}
-
-	.no-event {
-		font-size: 0.62rem;
-		opacity: 0.25;
-		font-style: italic;
 	}
 
 	.version-stats {

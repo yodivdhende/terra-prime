@@ -51,9 +51,10 @@
 			const implantMap = new Map<number, any>((implantsData as any[]).map((i) => [i.id, i]));
 
 			if (charId !== null && versionId !== null) {
-				const versions: any[] = await fetch('/api/my/characters/versions').then((r) =>
-					r.ok ? r.json() : []
+				const data: any = await fetch('/api/my/characters/versions').then((r) =>
+					r.ok ? r.json() : { characters: [] }
 				);
+				const versions: any[] = (data.characters ?? []).flatMap((c: any) => c.versions ?? []);
 				const version = versions.find((v) => v.versionId === versionId);
 				if (version) {
 					displayCharacterName = version.characterName;

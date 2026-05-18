@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { GoogleForm, GoogleFormItem } from '$lib/services/google-form-service';
 	import FormGridQuestion from './form-grid-question.svelte';
+	import FormDatePicker from './form-date-picker.svelte';
+	import FormTimePicker from './form-time-picker.svelte';
 
 	let { formId }: { formId: string } = $props();
 
@@ -254,18 +256,16 @@
 									{#if scale.highLabel}<span class="scale-label">{scale.highLabel}</span>{/if}
 								</div>
 							{:else if question?.dateQuestion}
-								<input
-									type="date"
+								<FormDatePicker
 									required={question.required ?? false}
 									value={(answers[qid] as string) ?? ''}
-									oninput={(e) => setAnswer(qid, e.currentTarget.value)}
+									onchange={(v) => setAnswer(qid, v)}
 								/>
 							{:else if question?.timeQuestion}
-								<input
-									type="time"
+								<FormTimePicker
 									required={question.required ?? false}
 									value={(answers[qid] as string) ?? ''}
-									oninput={(e) => setAnswer(qid, e.currentTarget.value)}
+									onchange={(v) => setAnswer(qid, v)}
 								/>
 							{:else if (question as any)?.ratingQuestion}
 								{@const rating = (question as any).ratingQuestion}

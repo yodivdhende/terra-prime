@@ -13,7 +13,7 @@ export const GET: RequestHandler = async ({ cookies }) => {
 
 export const PUT: RequestHandler = async ({ cookies, request }) => {
 	return handleRequest(async () => {
-		await authGuard(getSessionToken(cookies), ['user']);
+		await authGuard(getSessionToken(cookies), ['admin', 'user']);
 		const body = await request.json();
 		if (isNewCharacter(body) == false) throw new BadRequest();
 		const id = await characterRepo.save(body);

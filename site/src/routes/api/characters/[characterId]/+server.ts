@@ -7,7 +7,7 @@ import { type RequestHandler, json } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ cookies, params }) => {
 	return handleRequest(async () => {
-		await authGuardForUser(getSessionToken(cookies), ['user']);
+		await authGuardForUser(getSessionToken(cookies), ['admin', 'user']);
 		const { id } = params;
 		const numberId = isNumberOrError(id);
 		const character = await characterRepo.getById(numberId);
@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 
 export const POST: RequestHandler = async ({ cookies, params, request }) => {
 	return handleRequest(async () => {
-		await authGuardForUser(getSessionToken(cookies), ['user']);
+		await authGuardForUser(getSessionToken(cookies), ['admin', 'user']);
 		const {id} = params;
 		isNumberOrError(id);
 		const  character = await request.json();

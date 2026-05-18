@@ -38,7 +38,7 @@
 </script>
 
 <div class="login">
-	<form method="POST" action="/main/login" use:enhance={handleLogin}>
+	<form method="POST" action="/manage/login" use:enhance={handleLogin}>
 		<label for="login-email">Email</label>
 		<!-- TODO remove value after testing -->
 		<input type="email" name="email" id="login-email" value="yodi.vandenhende+player2@gmail.com" />
@@ -61,7 +61,7 @@
 		{/if}
 		<button bind:this={submitButton}>Login</button>
 	</form>
-	<a href="/main/login/register">Register</a>
+	<a href="/manage/login/register">Register</a>
 </div>
 
 <style>

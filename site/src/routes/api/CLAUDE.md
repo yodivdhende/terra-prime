@@ -29,7 +29,7 @@ All responses are JSON unless explicitly noted (file streams, HTML, `204 No Cont
 |--------|------|------|---------|-------------|
 | GET | `/api/sessions` | admin | `Session[]` (JSON) | List all sessions |
 | POST | `/api/sessions` | admin | `string` (JSON-encoded token) | Create session; body: `NewSession` |
-| DELETE | `/api/sessions/[token]` | — | empty body (200) | Delete session by token |
+| DELETE | `/api/sessions/[token]` | admin | empty body (200) | Delete session by token |
 
 ---
 
@@ -38,8 +38,8 @@ All responses are JSON unless explicitly noted (file streams, HTML, `204 No Cont
 | Method | Path | Auth | Returns | Description |
 |--------|------|------|---------|-------------|
 | GET | `/api/users` | admin | `User[]` (JSON) | List all users |
-| GET | `/api/users/[id]` | Public | `User` (JSON) | Get user by ID |
-| POST | `/api/users/[id]` | Public | empty body (200) | Update user; body: `{ user: User }` |
+| GET | `/api/users/[id]` | admin | `User` (JSON) | Get user by ID |
+| POST | `/api/users/[id]` | admin | empty body (200) | Update user; body: `User` (raw, no wrapper) |
 
 ---
 
@@ -89,9 +89,9 @@ All responses are JSON unless explicitly noted (file streams, HTML, `204 No Cont
 | Method | Path | Auth | Returns | Description |
 |--------|------|------|---------|-------------|
 | GET | `/api/characters` | admin | `Character[]` (JSON) | List all characters |
-| PUT | `/api/characters` | user | `{ id: number \| undefined }` (JSON) | Create character; body: `NewCharacter` |
-| GET | `/api/characters/[characterId]` | user | `Character` (JSON) | Get character by ID |
-| POST | `/api/characters/[characterId]` | user | empty body (200) | Update character; body: `Character \| NewCharacter` |
+| PUT | `/api/characters` | admin/user | `{ id: number \| undefined }` (JSON) | Create character; body: `NewCharacter` |
+| GET | `/api/characters/[characterId]` | admin/user | `Character` (JSON) | Get character by ID |
+| POST | `/api/characters/[characterId]` | admin/user | empty body (200) | Update character; body: `Character \| NewCharacter` |
 | GET | `/api/characters/[characterId]/events/[eventId]` | user | `{ characterVersion: CharacterVersionBare \| undefined }` (JSON) | Get the character version used for a specific event |
 
 ### Character Versions

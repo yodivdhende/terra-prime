@@ -35,6 +35,7 @@ function createCredentialManager() {
 
   function logout() {
     _credentials = emptyCredentials();
+    window.localStorage.removeItem(storageKey);
   }
 
   return {

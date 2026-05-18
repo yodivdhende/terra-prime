@@ -1,19 +1,41 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import type { Character, CharacterVersionFull } from '../managers/character-manager.svelte';
+
 	let {
-		value = $bindable('')
+		character = $bindable(),
+		version = $bindable()
 	}: {
-		value: string;
+		character: Character;
+		version: CharacterVersionFull;
 	} = $props();
+
+	$inspect(character);
+	$inspect(version);
+
+	onMount(() => {
+		if (version.name == false) version.name = 'Version 1';
+	});
 </script>
 
 <label class="name-field">
-	<span class="label">name</span>
+	<span class="label">Character name</span>
 	<input
 		type="text"
-		bind:value
+		bind:value={character.name}
 		placeholder="character name"
 		required
-		aria-invalid={value.trim().length === 0}
+		aria-invalid={character.name.trim().length === 0}
+	/>
+</label>
+<label class="name-field">
+	<span class="label">Version</span>
+	<input
+		type="text"
+		bind:value={version.name}
+		placeholder="character name"
+		required
+		aria-invalid={version.name.trim().length === 0}
 	/>
 </label>
 

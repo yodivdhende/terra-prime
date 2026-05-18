@@ -60,7 +60,7 @@ class CharacterVersionRepo {
   public async create(characterVersion: CharacterVersionBare): Promise<number> {
     const connection = await mysqlconnFn();
     const [result] = await connection.execute(
-      `INSERT INTO Character_Versions (Character, Name) VALUES (?, ?)`,
+      `INSERT INTO Character_Versions (\`Character\`, Name) VALUES (?, ?)`,
       [characterVersion.characterId, characterVersion.name]
     );
     const versionId = (result as any).insertId as number;

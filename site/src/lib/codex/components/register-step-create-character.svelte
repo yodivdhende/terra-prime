@@ -1,11 +1,12 @@
 <script lang="ts">
-	import CharacterNameInput from './character-name-input.svelte';
+	import CharacterEditor from './character-editor.svelte';
 	import CharacterCreateNav, { type Step } from './character-create-nav.svelte';
 	import ShopSkills, { type ShopSkill } from './shop-skills.svelte';
 	import ShopItems, { type ShopItem } from './shop-items.svelte';
 	import ShopImplants, { type ShopImplant } from './shop-implants.svelte';
 	import type { RegisterManager } from '../managers/register-manager.svelte';
 	import type { CharacterManager } from '../managers/character-manager.svelte';
+	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 
 	type EventResponse = {
 		id: number;
@@ -106,7 +107,10 @@
 
 			<div class="shop scroll">
 				{#if activeStep === 'details'}
-					<CharacterNameInput bind:value={version.name} />
+					<CharacterEditor
+						bind:character={CHARACTER_MANAGER.character}
+						bind:version={CHARACTER_MANAGER.version}
+					/>
 				{:else if activeStep === 'skills'}
 					<ShopSkills catalog={skills} bind:selected={version.skills} {remaining} />
 				{:else if activeStep === 'items'}

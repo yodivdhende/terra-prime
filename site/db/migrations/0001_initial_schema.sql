@@ -227,6 +227,9 @@ ALTER TABLE `Characters`
 ALTER TABLE `Character_Versions`
   MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
+ALTER TABLE `Character_Version_Implants`
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT;
+
 ALTER TABLE `Character_Version_Items`
   MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 

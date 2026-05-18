@@ -34,20 +34,23 @@
 		4: '#d95c5c'
 	};
 
-	const SKILL_ICONS: Record<string, string> = {
-		chemistry: ChemistryIcon,
-		communicationsystems: CommunicationSystemsIcon,
-		ecologie: EcologieIcon,
-		electricalengineering: ElectricalEngineeringIcon,
-		engineering: EngineeringIcon,
-		historicalanalysis: HistoryicalAnalysisIcon,
-		informationtechnology: InformationTechnologyIcon,
-		lifesciences: LifeSciencesIcon,
-		mechanicalengineering: MechanicalEngineeringIcon,
-		medicalandtraumacare: MedicalAndTraumaCareIcon,
-		socialewetenschap: SocialeWetenschapIcon,
-		sociologyanddiplomacy: SocialogyAndDiplomacyIcon,
-		softwareandhacking: SoftwareAndHakcingIcon
+	const SKILL_ICONS: Record<number, string> = {
+		1: MechanicalEngineeringIcon,
+		2: ElectricalEngineeringIcon,
+		3: MedicalAndTraumaCareIcon,
+		4: ChemistryIcon,
+		5: EcologieIcon,
+		6: SoftwareAndHakcingIcon,
+		7: CommunicationSystemsIcon,
+		8: HistoryicalAnalysisIcon,
+		9: SocialogyAndDiplomacyIcon
+	};
+
+	const GROUP_ICONS: Record<number, string> = {
+		1: EngineeringIcon,
+		2: LifeSciencesIcon,
+		3: InformationTechnologyIcon,
+		4: SocialeWetenschapIcon
 	};
 
 	let {
@@ -80,7 +83,7 @@
 
 	const budgetFill = $derived(budget > 0 ? Math.min((budget - remaining) / budget, 1) * 100 : 0);
 
-	function getSkillIcon(name: string): string | undefined {
+	function getSkillIcon(id: number): string | undefined {
 		return SKILL_ICONS[name.toLowerCase().replace(/[^a-z0-9]/g, '')];
 	}
 
@@ -127,16 +130,19 @@
 {:else}
 	{#each skillGroups as group (group.id)}
 		<div class="group">
-			<h4 class="group-name" style="color: {group.color}">{group.name}</h4>
+			<h4 class="group-name" style="color: {group.color}">
+				{group.name}
+				<Icon src={GROUP_ICONS[group.id]} color={group.color} size="0.9rem" />
+			</h4>
 			<ul class="catalog">
 				{#each group.skills as skill (skill.id)}
-					{@const icon = getSkillIcon(skill.name)}
+					{@const skillIcon = SKILL_ICONS[skill.id ?? 0]}
 					{@const currentValue = getValue(skill.id)}
 					{@const skillCost = skill.cost ?? 0}
 					<li class="entry" class:owned={currentValue > 0}>
 						<div class="entry-header">
-							{#if icon}
-								<Icon src={icon} color={group.color} size="0.9rem" />
+							{#if skillIcon}
+								<Icon src={skillIcon} color={group.color} size="0.9rem" />
 							{/if}
 							<div class="entry-info">
 								<span class="entry-name">{skill.name}</span>
@@ -151,13 +157,13 @@
 							{/if}
 						</div>
 						<SegmentBar
-						value={currentValue}
-						color={group.color}
-						{remaining}
-						cost={skillCost}
-						name={skill.name}
-						onchange={(v) => setSkillValue(skill, v)}
-					/>
+							value={currentValue}
+							color={group.color}
+							{remaining}
+							cost={skillCost}
+							name={skill.name}
+							onchange={(v) => setSkillValue(skill, v)}
+						/>
 					</li>
 				{/each}
 			</ul>
@@ -180,14 +186,14 @@
 	}
 
 	.skillbar-label {
-		font-size: 0.65rem;
+		font-size: 0.95rem;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		opacity: 0.5;
 	}
 
 	.skillbar-remaining {
-		font-size: 0.75rem;
+		font-size: 1.05rem;
 		color: var(--color-accent);
 	}
 
@@ -218,7 +224,7 @@
 	}
 
 	.group-name {
-		font-size: 0.62rem;
+		font-size: 0.92rem;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		margin: 0 0 0.35rem;
@@ -266,12 +272,12 @@
 	}
 
 	.entry-name {
-		font-size: 0.75rem;
+		font-size: 1.05rem;
 		letter-spacing: 0.03em;
 	}
 
 	.entry-desc {
-		font-size: 0.65rem;
+		font-size: 0.95rem;
 		opacity: 0.5;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -282,7 +288,7 @@
 	}
 
 	.entry-cost {
-		font-size: 0.7rem;
+		font-size: 1.0rem;
 		color: var(--color-accent);
 		flex-shrink: 0;
 	}
@@ -292,7 +298,7 @@
 	}
 
 	.empty {
-		font-size: 0.7rem;
+		font-size: 1.0rem;
 		opacity: 0.4;
 		font-style: italic;
 	}

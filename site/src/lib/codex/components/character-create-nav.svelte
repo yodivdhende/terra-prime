@@ -7,6 +7,7 @@
 	import CharacterSkillGroups from './character-skill-groups.svelte';
 	import Icon from './icon.svelte';
 	import itemLogo from '$lib/assets/images/ItemLogo.svg?raw';
+	import implantLogo from '$lib/assets/images/ImplantLogo.svg?raw';
 
 	let {
 		activeStep = $bindable<Step>('details'),
@@ -93,10 +94,13 @@
 				</span>
 				<span class="step-overview">
 					{#if implants.count > 0}
-						<span class="overview-stat">{implants.count} selected</span>
-						<span class="overview-cost">{implants.spent}</span>
+						<span class="overview-stat">
+							<Icon src={implantLogo} color="white" tooltip="Implants" />
+							{implants.count}
+						</span>
 					{:else}
 						<span class="overview-empty">none selected</span>
+						<span class="overview-cost">{implants.spent}</span>
 					{/if}
 				</span>
 			</button>
@@ -156,7 +160,7 @@
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
-		font-size: 0.65rem;
+		font-size: 0.95rem;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-main);
@@ -169,7 +173,7 @@
 	}
 
 	.step-count {
-		font-size: 0.6rem;
+		font-size: 0.9rem;
 		padding: 0.05rem 0.35rem;
 		background: color-mix(in srgb, var(--color-accent) 20%, transparent);
 		color: var(--color-accent);
@@ -186,7 +190,7 @@
 	}
 
 	.overview-name {
-		font-size: 0.75rem;
+		font-size: 1.05rem;
 		color: var(--color-main);
 		white-space: nowrap;
 		overflow: hidden;
@@ -198,18 +202,18 @@
 	}
 
 	.overview-empty {
-		font-size: 0.65rem;
+		font-size: 0.95rem;
 		opacity: 0.3;
 		font-style: italic;
 	}
 
 	.overview-stat {
-		font-size: 0.7rem;
-		opacity: 0.65;
+		font-size: 1.0rem;
+		color: var(--color-main);
 	}
 
 	.overview-cost {
-		font-size: 0.7rem;
+		font-size: 1.0rem;
 		color: var(--color-accent);
 		opacity: 0.75;
 		margin-left: auto;
@@ -225,14 +229,14 @@
 	}
 
 	.budget-label {
-		font-size: 0.6rem;
+		font-size: 0.9rem;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		opacity: 0.45;
 	}
 
 	.budget-value {
-		font-size: 0.9rem;
+		font-size: 1.2rem;
 		color: var(--color-accent);
 		letter-spacing: 0.04em;
 	}

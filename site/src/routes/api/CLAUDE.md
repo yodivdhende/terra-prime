@@ -158,6 +158,17 @@ Event dates (`start`, `end`) are sent as ISO strings and converted to `Date` obj
 
 ---
 
+## Forms (Google Forms integration)
+
+All form endpoints are public (no auth).
+
+| Method | Path | Returns | Description |
+|--------|------|---------|-------------|
+| GET | `/api/forms/[formId]` | `GoogleForm` (JSON) | Fetch a Google Form's structure |
+| POST | `/api/forms/[formId]/submit` | `{ ok: boolean, status: number }` (JSON) | Submit answers to the form; body: `Record<string, string \| string[]>` keyed by `questionId` |
+
+---
+
 ## Drive (Google Drive integration)
 
 All drive endpoints are public (no auth). Responses are non-JSON where noted.

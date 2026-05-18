@@ -13,6 +13,8 @@
 	let loading = $state(true);
 	let failed = $state(false);
 	let submitted = $state(false);
+	let submitting = $state(false);
+	let submitError = $state<string | null>(null);
 	let answers = $state<Record<string, string | string[]>>({});
 	let currentSection = $state(0);
 	let formEl = $state<HTMLFormElement | null>(null);
@@ -39,6 +41,8 @@
 		loading = true;
 		failed = false;
 		submitted = false;
+		submitting = false;
+		submitError = null;
 		answers = {};
 		currentSection = 0;
 		fetch(`/api/forms/${formId}`)
@@ -87,7 +91,33 @@
 
 	function submit(event: SubmitEvent) {
 		event.preventDefault();
-		submitted = true;
+		if (submitting) return;
+		submitting = true;
+		submitError = null;
+		fetch(`/api/forms/${formId}/submit`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(answers)
+		})
+			.then((r) => {
+				if (!r.ok) throw new Error(`HTTP ${r.status}`);
+				return r.json();
+			})
+			.then((data: { ok: boolean; status: number; error?: string }) => {
+				if (data.ok) {
+					submitted = true;
+				} else if (data.status === 401) {
+					submitError = 'form requires Google authentication';
+				} else {
+					submitError = data.error ?? `submission rejected (${data.status})`;
+				}
+			})
+			.catch((err: Error) => {
+				submitError = err.message ?? 'submission failed';
+			})
+			.finally(() => {
+				submitting = false;
+			});
 	}
 
 	function buildResponderUrl(): string | null {
@@ -102,16 +132,7 @@
 		<span class="status error">failed to load form</span>
 	{:else if submitted}
 		<div class="submitted">
-			<p class="status">// transmission captured locally</p>
-			<p>
-				Direct submission to Google Forms is not supported from this terminal. To submit your
-				answers, open the form on the Google network:
-			</p>
-			{#if buildResponderUrl()}
-				<a href={buildResponderUrl()} target="_blank" rel="noopener noreferrer">
-					{buildResponderUrl()}
-				</a>
-			{/if}
+			<p class="status">// response transmitted</p>
 			<button type="button" onclick={() => (submitted = false)}>back</button>
 		</div>
 	{:else}
@@ -286,12 +307,26 @@
 				</section>
 			{/each}
 
+			{#if submitError}
+				<div class="submit-error">
+					<span class="status error">// {submitError}</span>
+					{#if buildResponderUrl()}
+						<p>submit directly on the Google network:</p>
+						<a href={buildResponderUrl()} target="_blank" rel="noopener noreferrer">
+							{buildResponderUrl()}
+						</a>
+					{/if}
+				</div>
+			{/if}
+
 			<nav class="section-nav">
 				<button type="button" onclick={goBack} disabled={currentSection === 0}> &lt; back </button>
 				{#if currentSection < sections.length - 1}
 					<button type="button" onclick={goNext}>next &gt;</button>
 				{:else}
-					<button type="submit">submit</button>
+					<button type="submit" disabled={submitting}>
+						{submitting ? 'transmitting...' : 'submit'}
+					</button>
 				{/if}
 			</nav>
 		</form>
@@ -549,5 +584,22 @@
 		color: var(--color-accent);
 		word-break: break-all;
 		font-size: 0.75rem;
+	}
+
+	.submit-error {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		font-size: 0.75rem;
+	}
+
+	.submit-error p {
+		margin: 0;
+		color: var(--color-main-dim);
+	}
+
+	.submit-error a {
+		color: var(--color-accent);
+		word-break: break-all;
 	}
 </style>

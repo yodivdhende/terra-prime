@@ -24,7 +24,7 @@ CREATE TABLE `Character_Versions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `Character_Version_Implants` (
-  `Id` int NOT NULL,
+  `Id` int NOT NULL AUTO_INCREMENT,
   `CharacterVersion` int DEFAULT NULL,
   `Implant` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -227,9 +227,6 @@ ALTER TABLE `Characters`
 ALTER TABLE `Character_Versions`
   MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
-ALTER TABLE `Character_Version_Implants`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT;
-
 ALTER TABLE `Character_Version_Items`
   MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
@@ -248,6 +245,9 @@ ALTER TABLE `Items`
 ALTER TABLE `Messages`
   MODIFY `Id` int NOT NULL AUTO_INCREMENT;
 
+ALTER TABLE `Party`
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT;
+
 ALTER TABLE `Skills`
   MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
@@ -257,22 +257,44 @@ ALTER TABLE `Skill_Groups`
 ALTER TABLE `Users`
   MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
+ALTER TABLE `Admins`
+  ADD CONSTRAINT `Admins_ibfk_1` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`);
+
+ALTER TABLE `Characters`
+  ADD CONSTRAINT `Characters_ibfk_1` FOREIGN KEY (`Owner`) REFERENCES `Users` (`Id`);
+
 ALTER TABLE `Character_Versions`
   ADD CONSTRAINT `Character_Versions_Characters` FOREIGN KEY (`Character`) REFERENCES `Characters` (`Id`);
 
 ALTER TABLE `Character_Version_Skills`
   ADD CONSTRAINT `Character_Version_Skills_ibfk_1` FOREIGN KEY (`CharacterVersion`) REFERENCES `Character_Versions` (`Id`);
 
+ALTER TABLE `Character_Version_Items`
+  ADD CONSTRAINT `Character_Version_Items_ibfk_1` FOREIGN KEY (`CharacterVersion`) REFERENCES `Character_Versions` (`Id`),
+  ADD CONSTRAINT `Character_Version_Items_ibfk_2` FOREIGN KEY (`Item`)             REFERENCES `Items` (`Id`);
+
+ALTER TABLE `Character_Version_Implants`
+  ADD CONSTRAINT `Character_Version_Implants_ibfk_1` FOREIGN KEY (`CharacterVersion`) REFERENCES `Character_Versions` (`Id`),
+  ADD CONSTRAINT `Character_Version_Implants_ibfk_2` FOREIGN KEY (`Implant`)          REFERENCES `Implants` (`Id`);
+
 ALTER TABLE `Event_Participants`
-  ADD CONSTRAINT `Event_Participants_ibfk_1` FOREIGN KEY (`Event`) REFERENCES `Events` (`Id`),
-  ADD CONSTRAINT `Event_Participants_ibfk_2` FOREIGN KEY (`User`) REFERENCES `Users` (`Id`);
+  ADD CONSTRAINT `Event_Participants_ibfk_1` FOREIGN KEY (`Event`)            REFERENCES `Events` (`Id`),
+  ADD CONSTRAINT `Event_Participants_ibfk_2` FOREIGN KEY (`User`)             REFERENCES `Users` (`Id`),
+  ADD CONSTRAINT `Event_Participants_ibfk_3` FOREIGN KEY (`CharacterVersion`) REFERENCES `Character_Versions` (`Id`);
 
 ALTER TABLE `Party_Members`
   ADD CONSTRAINT `Party_Members_ibfk_1` FOREIGN KEY (`Party`) REFERENCES `Party` (`Id`),
   ADD CONSTRAINT `Party_Members_ibfk_2` FOREIGN KEY (`Member`) REFERENCES `Characters` (`Id`);
 
+ALTER TABLE `Sessions`
+  ADD CONSTRAINT `Sessions_ibfk_1` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`);
+
 ALTER TABLE `Session_Roles`
   ADD CONSTRAINT `Session_Roles_ibfk_1` FOREIGN KEY (`Token`) REFERENCES `Sessions` (`Token`);
+
+ALTER TABLE `Messages`
+  ADD CONSTRAINT `Messages_ibfk_1` FOREIGN KEY (`Sender`)    REFERENCES `Users` (`Id`),
+  ADD CONSTRAINT `Messages_ibfk_2` FOREIGN KEY (`Recipient`) REFERENCES `Users` (`Id`);
 
 ALTER TABLE `Skills`
   ADD CONSTRAINT `Skills_ibfk_1` FOREIGN KEY (`Group`) REFERENCES `Skill_Groups` (`Id`);

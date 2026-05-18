@@ -26,7 +26,7 @@
 				result.push({
 					title: item.title ?? null,
 					description: item.description ?? null,
-					items: [],
+					items: []
 				});
 			} else {
 				result[result.length - 1].items.push(item);
@@ -95,7 +95,7 @@
 	}
 </script>
 
-<div class="form-window scroll">
+<div class="form-window">
 	{#if loading}
 		<span class="status">loading form...</span>
 	{:else if failed || !form}
@@ -243,6 +243,34 @@
 									value={(answers[qid] as string) ?? ''}
 									oninput={(e) => setAnswer(qid, e.currentTarget.value)}
 								/>
+							{:else if (question as any)?.ratingQuestion}
+								{@const rating = (question as any).ratingQuestion}
+								{@const level = rating.ratingScaleLevel ?? 5}
+								{@const iconType = rating.iconType ?? 'STAR'}
+								{@const selected = Number((answers[qid] as string) ?? 0) || 0}
+								<div class="rating">
+									{#each Array.from({ length: level }, (_, i) => i + 1) as n (n)}
+										<label class="rating-icon" class:active={n <= selected}>
+											<input
+												type="radio"
+												name={qid}
+												value={n}
+												required={question?.required ?? false}
+												checked={selected === n}
+												onchange={() => setAnswer(qid, String(n))}
+											/>
+											<span>
+												{#if iconType === 'HEART'}
+													{n <= selected ? '♥' : '♡'}
+												{:else if iconType === 'THUMB_UP'}
+													▲
+												{:else}
+													{n <= selected ? '★' : '☆'}
+												{/if}
+											</span>
+										</label>
+									{/each}
+								</div>
 							{:else}
 								<span class="status">// unsupported question type</span>
 							{/if}
@@ -259,13 +287,7 @@
 			{/each}
 
 			<nav class="section-nav">
-				<button
-					type="button"
-					onclick={goBack}
-					disabled={currentSection === 0}
-				>
-					&lt; back
-				</button>
+				<button type="button" onclick={goBack} disabled={currentSection === 0}> &lt; back </button>
 				{#if currentSection < sections.length - 1}
 					<button type="button" onclick={goNext}>next &gt;</button>
 				{:else}
@@ -280,7 +302,6 @@
 	.form-window {
 		padding: 1rem 1.25rem;
 		overflow-y: auto;
-		height: 100%;
 		color: var(--color-main);
 		font-family: var(--font-mono);
 		font-size: 0.85rem;
@@ -393,6 +414,40 @@
 	.scale-label {
 		font-size: 0.7rem;
 		color: var(--color-main-dim);
+	}
+
+	.rating {
+		display: flex;
+		gap: 0.4rem;
+		margin-top: 0.35rem;
+	}
+
+	.rating-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 1.25rem;
+		line-height: 1;
+		color: var(--color-main-dim);
+		cursor: pointer;
+		transition: color 0.15s;
+	}
+
+	.rating-icon:hover,
+	.rating-icon.active {
+		color: var(--color-accent);
+	}
+
+	.rating-icon input {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
 	}
 
 	.text-item {

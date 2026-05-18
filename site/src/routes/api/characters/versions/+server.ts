@@ -5,6 +5,14 @@ import { getSessionToken } from "$lib/utils/cookies";
 import { authGuardForUser, handleRequest } from "$lib/utils/request";
 import { json, type RequestHandler } from "@sveltejs/kit";
 
+export const GET: RequestHandler = async ({ cookies }) => {
+  return handleRequest(async () => {
+    await authGuardForUser(getSessionToken(cookies), [UserRole.admin]);
+    const versions = await characterVersionRepo.getAllWithCharacterName();
+    return json(versions);
+  });
+};
+
 export const PUT: RequestHandler = async ({cookies, request}) => {
   return handleRequest(async ()=>{
 		await authGuardForUser(getSessionToken(cookies), [UserRole.user]);

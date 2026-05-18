@@ -282,6 +282,19 @@ class CharacterVersionRepo {
     return (await this.getWithdIds([id]))[0];
   }
 
+  public async getAllWithCharacterName(): Promise<{ id: number; name: string; characterId: number; characterName: string }[]> {
+    const connection = await mysqlconnFn();
+    const [results] = await connection.execute(`
+      SELECT cv.Id as id, cv.Name as name, cv.Character as characterId, c.Name as characterName
+      FROM Character_Versions cv
+      JOIN Characters c ON c.Id = cv.Character
+    `);
+    if (!Array.isArray(results)) return [];
+    return (results as any[]).filter(
+      (r) => typeof r.id === 'number' && typeof r.name === 'string' && typeof r.characterId === 'number' && typeof r.characterName === 'string'
+    );
+  }
+
   public async getForCharacter(characterId: number): Promise<CharacterVersionBare[]> {
     const connection = await mysqlconnFn();
     const [results] = await connection.execute(

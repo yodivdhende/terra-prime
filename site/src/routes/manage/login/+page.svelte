@@ -65,7 +65,6 @@
 		display: grid;
 		width: 100%;
 		height: 100%;
-		background-color: rgba(0, 0, 0, 0.8);
 	}
 
 	.login-container {
@@ -77,7 +76,6 @@
 		width: min-content;
 		height: min-content;
 		padding: 2em;
-		color: white;
 		border: 1px solid white;
 		border-radius: 5px;
 	}

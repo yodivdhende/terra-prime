@@ -20,7 +20,9 @@
 	</header>
 	{#if sectionManager.showSection}
 		<section>
-			{@render children()}
+			<div class="section-container">
+				{@render children()}
+			</div>
 		</section>
 	{/if}
 	{#if sidePanelManager.component != null}
@@ -71,6 +73,11 @@
 		width: 100%;
 		height: 100%;
 		z-index: 1;
+	}
+
+	.section-container {
+		background-color: var(--color-bg);
+		color: var(--color-main);
 	}
 
 	.backdrop {
@@ -146,4 +153,3 @@
 		max-height: 60vh;
 	}
 </style>
-

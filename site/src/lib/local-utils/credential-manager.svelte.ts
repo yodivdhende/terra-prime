@@ -33,6 +33,10 @@ function createCredentialManager() {
     };
   }
 
+  function logout() {
+    _credentials = emptyCredentials();
+  }
+
   return {
     get credentials(): Credentials {
       return _credentials;
@@ -45,6 +49,7 @@ function createCredentialManager() {
       return _isLogedIn;
     },
     initFromStorage,
+    logout,
   };
 }
 

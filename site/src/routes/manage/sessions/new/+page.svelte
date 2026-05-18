@@ -30,7 +30,6 @@
 <style>
 	main {
 		padding: 16px;
-		background-color: white;
 	}
 	form {
 		display: flex;

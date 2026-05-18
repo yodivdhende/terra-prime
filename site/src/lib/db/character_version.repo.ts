@@ -282,6 +282,61 @@ class CharacterVersionRepo {
     return (await this.getWithdIds([id]))[0];
   }
 
+  public async getAllWithCharacterName(): Promise<{ id: number; name: string; characterId: number; characterName: string }[]> {
+    const connection = await mysqlconnFn();
+    const [results] = await connection.execute(`
+      SELECT cv.Id as id, cv.Name as name, cv.Character as characterId, c.Name as characterName
+      FROM Character_Versions cv
+      JOIN Characters c ON c.Id = cv.Character
+    `);
+    if (!Array.isArray(results)) return [];
+    return (results as any[]).filter(
+      (r) => typeof r.id === 'number' && typeof r.name === 'string' && typeof r.characterId === 'number' && typeof r.characterName === 'string'
+    );
+  }
+
+  public async getForCharacter(characterId: number): Promise<CharacterVersionBare[]> {
+    const connection = await mysqlconnFn();
+    const [results] = await connection.execute(
+      `SELECT cv.Id as id, cv.Character as characterId, cv.Name as name
+       FROM Character_Versions cv WHERE cv.Character = ?`,
+      [characterId]
+    );
+    if (!Array.isArray(results) || results.length === 0) return [];
+    const versionIds = (results as any[])
+      .map(({ id }) => id)
+      .filter((id): id is number => typeof id === 'number');
+    const [items, implants, skills] = await Promise.allSettled([
+      this.getItemsforCharacterVersions(versionIds),
+      this.getImplantsforCharacterVersions(versionIds),
+      this.getSkillsForCharacterVerions(versionIds)
+    ]);
+    const characterVersions: CharacterVersionBare[] = [];
+    for (const row of results as any[]) {
+      if (typeof row.id !== 'number') continue;
+      if (typeof row.characterId !== 'number') continue;
+      if (typeof row.name !== 'string') continue;
+      characterVersions.push({
+        id: row.id,
+        characterId: row.characterId,
+        name: row.name,
+        skills:
+          valueOrLogOfPromiseSetteld(skills)
+            ?.filter(({ characterVersionId }) => characterVersionId === row.id)
+            .map(({ skillId, value }) => ({ id: skillId, value })) ?? [],
+        items:
+          valueOrLogOfPromiseSetteld(items)
+            ?.filter(({ characterVersionId }) => characterVersionId === row.id)
+            .map(({ itemId, count }) => ({ id: itemId, count })) ?? [],
+        implants:
+          valueOrLogOfPromiseSetteld(implants)
+            ?.filter(({ characterVersionId }) => characterVersionId === row.id)
+            .map(({ implantId }) => implantId) ?? []
+      });
+    }
+    return characterVersions;
+  }
+
   private async deleteCharacterVerion(characterVersionId: number): Promise<void> {
     const connection = await mysqlconnFn();
     await connection.query(

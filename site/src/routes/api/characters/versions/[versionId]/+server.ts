@@ -8,10 +8,10 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ cookies, params }) => {
 	return handleRequest(async () => {
-		await authGuardForUser(getSessionToken(cookies), [UserRole.user]);
+		await authGuardForUser(getSessionToken(cookies), [UserRole.admin]);
 		const versionId = isNumberOrError(params.versionId);
 		const characterVersion = await characterVersionRepo.getWithId(versionId);
-		return json(characterVersion);
+		return json(characterVersion ?? null);
 	});
 };
 

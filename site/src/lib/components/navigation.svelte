@@ -5,10 +5,12 @@
 
 	const roles = $derived(CREDENTIAL_MANAGER.credentials.roles);
 	let manageOpen = $state(false);
+	let characterOpen = $state(false);
+	const isAdmin = $derived(roles.includes('admin'));
 
 	afterNavigate((navigation) => {
+		sectionManager.showSection = false;
 		if (navigation.to?.url.pathname === '/') {
-			sectionManager.showSection = false;
 		} else {
 			sectionManager.showSection = true;
 		}
@@ -16,14 +18,13 @@
 </script>
 
 <nav>
-	<a class="entry" href="/">Home</a>
-	{#if !roles.includes('user')}
+	<a class="entry" href="/manage">Home</a>
+	{#if !isAdmin}
 		<a class="entry" href="/manage/login">Login</a>
-	{/if}
-	{#if roles.includes('user')}
+	{:else}
+		<button class="entry" onclick={CREDENTIAL_MANAGER.logout}>Logout</button>
 		<a class="entry" href="/manage/users">Users</a>
-	{/if}
-	{#if roles.includes('admin')}
+		<a class="entry" href="/manage/events">Events</a>
 		<button class="entry folder" onclick={() => (manageOpen = !manageOpen)}>
 			<span class="arrow">{manageOpen ? 'v' : '>'}</span>
 			<span class="name">Manage</span>
@@ -32,13 +33,15 @@
 			<a class="entry child" href="/manage/skills">Skills</a>
 			<a class="entry child" href="/manage/items">Items</a>
 			<a class="entry child" href="/manage/implants">Implants</a>
-			<a class="entry child" href="/manage/events">Events</a>
 		{/if}
-	{/if}
-	{#if roles.includes('user')}
-		<a class="entry" href="/manage/characters">Characters</a>
-	{/if}
-	{#if roles.includes('admin')}
+		<button class="entry folder" onclick={() => (characterOpen = !characterOpen)}>
+			<span class="arrow">{characterOpen ? 'v' : '>'}</span>
+			<span class="name">Characters</span>
+		</button>
+		{#if characterOpen}
+			<a class="entry child" href="/manage/characters">Character</a>
+			<a class="entry child" href="/manage/characters/versions">Versions</a>
+		{/if}
 		<a class="entry" href="/manage/sessions">Sessions</a>
 	{/if}
 </nav>
@@ -70,7 +73,9 @@
 		letter-spacing: 0.04em;
 		white-space: nowrap;
 		opacity: 0.7;
-		transition: opacity 0.1s, background-color 0.1s;
+		transition:
+			opacity 0.1s,
+			background-color 0.1s;
 	}
 
 	.entry:hover {

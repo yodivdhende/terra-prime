@@ -6,16 +6,17 @@
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 	import { FEATURE_MANAGER } from '../managers/feature-manager.svelte';
 
-	function openLogin() {
-		WINDOW_MANAGER.openWindow({ id: 'login' });
-		WINDOW_MANAGER.focusWindow('login');
+	function openUserWindow() {
+		const id = CREDENTIAL_MANAGER.isLogedIn ? 'logout' : 'login';
+		WINDOW_MANAGER.openWindow({ id });
+		WINDOW_MANAGER.focusWindow(id);
 	}
 </script>
 
 <main>
 	<SearchBar />
 	{#if FEATURE_MANAGER.loginEnabled}
-		<button class="login-btn" onclick={openLogin} aria-label="Login">
+		<button class="login-btn" onclick={openUserWindow} aria-label="User">
 			<UserRound size={32} />
 			{#if CREDENTIAL_MANAGER.credentials.name}
 				<span class="username">{CREDENTIAL_MANAGER.credentials.name}</span>

@@ -2,6 +2,7 @@ import {
   createSettingsWindow,
   createPlaytestWindow,
   createLoginWindow,
+  createLogoutWindow,
   createRegisterWindow,
   createFolderWindow,
   createPdfWindow,
@@ -18,6 +19,13 @@ function createWindowManager() {
   function setLoginEnabled(enabled: boolean) {
     const created = createLoginWindow({ shouldCreate: enabled });
     const index = windows.findIndex(w => w.id === 'login');
+    if (created && index < 0) windows.push(created);
+    else if (!created && index >= 0) windows.splice(index, 1);
+  }
+
+  function setLogoutEnabled(enabled: boolean) {
+    const created = createLogoutWindow({ shouldCreate: enabled });
+    const index = windows.findIndex(w => w.id === 'logout');
     if (created && index < 0) windows.push(created);
     else if (!created && index >= 0) windows.splice(index, 1);
   }
@@ -96,6 +104,7 @@ function createWindowManager() {
     closeWindow,
     addWindows,
     setLoginEnabled,
+    setLogoutEnabled,
     setRegisterEnabled,
   }
 }

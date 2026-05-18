@@ -14,7 +14,8 @@
 	$effect(() => FEATURE_MANAGER.setFlags({ loginEnabled: data.loginEnabled }));
 	$effect(() => WINDOW_MANAGER.addWindows(data.files));
 	$effect(() => WINDOW_MANAGER.setRegisterEnabled(CREDENTIAL_MANAGER.isLogedIn));
-	$effect(() => WINDOW_MANAGER.setLoginEnabled(FEATURE_MANAGER.loginEnabled));
+	$effect(() => WINDOW_MANAGER.setLoginEnabled(FEATURE_MANAGER.loginEnabled && !CREDENTIAL_MANAGER.isLogedIn));
+	$effect(() => WINDOW_MANAGER.setLogoutEnabled(CREDENTIAL_MANAGER.isLogedIn));
 
 	onMount(() => {
 		const size = 256;

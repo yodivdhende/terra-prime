@@ -6,6 +6,7 @@
 
 	let { window }: { window: CodexWindow } = $props();
 
+	let mode = $state<'login' | 'register'>('login');
 	let showPassword = $state(false);
 	let passwordInputType = $derived(showPassword ? 'text' : 'password');
 	let submitButton: HTMLButtonElement;
@@ -15,12 +16,17 @@
 		showPassword = !showPassword;
 	}
 
+	function switchMode(next: 'login' | 'register') {
+		mode = next;
+		errorMessage = null;
+	}
+
 	function login(event: KeyboardEvent) {
 		if (event.key !== 'Enter') return;
 		submitButton?.click();
 	}
 
-	function handleLogin() {
+	function handleResult() {
 		return async ({ result }: { result: ActionResult }) => {
 			if (result.type === 'success' && result.data?.success) {
 				CREDENTIAL_MANAGER.credentials = {
@@ -38,30 +44,59 @@
 </script>
 
 <div class="login">
-	<form method="POST" action="/manage/login" use:enhance={handleLogin}>
-		<label for="login-email">Email</label>
-		<!-- TODO remove value after testing -->
-		<input type="email" name="email" id="login-email" value="yodi.vandenhende+player2@gmail.com" />
-		<label for="login-password">Password</label>
-		<div class="password">
+	{#if mode === 'login'}
+		<form method="POST" action="/manage/login" use:enhance={handleResult}>
+			<label for="login-email">Email</label>
 			<!-- TODO remove value after testing -->
-			<input
-				type={passwordInputType}
-				name="password"
-				id="login-password"
-				onkeydown={login}
-				value="Tester@123"
-			/>
-			<button type="button" onclick={toggleShowPassword}>
-				{showPassword ? '◎' : '◉'}
-			</button>
-		</div>
-		{#if errorMessage}
-			<span class="error">{errorMessage}</span>
-		{/if}
-		<button bind:this={submitButton}>Login</button>
-	</form>
-	<a href="/manage/login/register">Register</a>
+			<input type="email" name="email" id="login-email" value="yodi.vandenhende+player2@gmail.com" />
+			<label for="login-password">Password</label>
+			<div class="password">
+				<!-- TODO remove value after testing -->
+				<input
+					type={passwordInputType}
+					name="password"
+					id="login-password"
+					onkeydown={login}
+					value="Tester@123"
+				/>
+				<button type="button" onclick={toggleShowPassword}>
+					{showPassword ? '◎' : '◉'}
+				</button>
+			</div>
+			{#if errorMessage}
+				<span class="error">{errorMessage}</span>
+			{/if}
+			<button bind:this={submitButton}>Login</button>
+		</form>
+	{:else}
+		<form method="POST" action="/manage/login/register" use:enhance={handleResult}>
+			<label for="register-name">Name</label>
+			<input type="text" name="name" id="register-name" />
+			<label for="register-email">Email</label>
+			<input type="email" name="email" id="register-email" />
+			<label for="register-password">Password</label>
+			<div class="password">
+				<input type={passwordInputType} name="password" id="register-password" />
+				<button type="button" onclick={toggleShowPassword}>
+					{showPassword ? '◎' : '◉'}
+				</button>
+			</div>
+			<label for="register-password-confirm">Confirm Password</label>
+			<div class="password">
+				<input type={passwordInputType} name="passwordConfirm" id="register-password-confirm" />
+				<button type="button" onclick={toggleShowPassword}>
+					{showPassword ? '◎' : '◉'}
+				</button>
+			</div>
+			{#if errorMessage}
+				<span class="error">{errorMessage}</span>
+			{/if}
+			<button>Register</button>
+		</form>
+	{/if}
+	<button type="button" class="mode-toggle" onclick={() => switchMode(mode === 'login' ? 'register' : 'login')}>
+		{mode === 'login' ? 'Register' : 'Back to Login'}
+	</button>
 </div>
 
 <style>
@@ -138,15 +173,23 @@
 		opacity: 0.8;
 	}
 
-	a {
+	.mode-toggle {
 		font-size: 0.7rem;
 		color: var(--color-main-dim);
 		text-decoration: underline;
 		opacity: 0.6;
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		font-family: inherit;
+		letter-spacing: normal;
+		transition: opacity 0.15s, color 0.15s;
 	}
 
-	a:hover {
+	.mode-toggle:hover {
 		opacity: 1;
 		color: var(--color-accent);
+		border: none;
 	}
 </style>

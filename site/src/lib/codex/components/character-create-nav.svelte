@@ -103,14 +103,16 @@
 		</li>
 	</ul>
 
-	<div class="budget" class:over={remaining < 0}>
-		<span class="budget-label">total cost</span>
-		<span class="budget-value">
-			<span class="remaining">{remaining}</span>
-			<span class="sep">/</span>
-			<span class="total">{budget}</span>
-		</span>
-	</div>
+	{#if budget > 0}
+		<div class="budget" class:over={remaining < 0}>
+			<span class="budget-label">total cost</span>
+			<span class="budget-value">
+				<span class="remaining">{remaining}</span>
+				<span class="sep">/</span>
+				<span class="total">{budget}</span>
+			</span>
+		</div>
+	{/if}
 </nav>
 
 <style>

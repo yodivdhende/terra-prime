@@ -56,6 +56,12 @@
 			{icon.title}
 		</button>
 	{/if}
+	{#if icon.type === 'form'}
+		<button onclick={() => openWindow(icon)}>
+			<div class="icon"><ClipboardPen size={64} strokeWidth={1} /></div>
+			{icon.title}
+		</button>
+	{/if}
 {/snippet}
 
 <main>

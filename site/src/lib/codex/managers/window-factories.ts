@@ -1,6 +1,6 @@
 export type CodexWindow = {
   id: string;
-  type: 'pdf' | 'dir' | 'doc' | 'image' | 'settings' | 'playtest' | 'login' | 'register' | 'logout';
+  type: 'pdf' | 'dir' | 'doc' | 'image' | 'form' | 'settings' | 'playtest' | 'login' | 'register' | 'logout';
   state: 'open' | 'hidden' | 'closed';
   dimension: { w: number, h: number };
   position: { x: number, y: number, z: number };
@@ -10,7 +10,7 @@ export type CodexWindow = {
 }
 
 export type Icon = {
-  type: 'file' | 'dir' | 'image' | 'settings' | 'playtest' | 'login' | 'register' | 'logout';
+  type: 'file' | 'dir' | 'image' | 'form' | 'settings' | 'playtest' | 'login' | 'register' | 'logout';
   side: 'left' | 'right';
 }
 
@@ -76,6 +76,19 @@ export function createImageWindow({ name, index, id, side }: { name: string, ind
     contentData: id,
     title: formatName(name),
     icon: { type: 'image', side },
+  }
+}
+
+export function createFormWindow({ name, index, id, side }: { name: string, index: number, id: string, side: 'left' | 'right' }): CodexWindow {
+  return {
+    id,
+    type: 'form',
+    state: getState(name),
+    dimension: { w: Math.round(window.innerWidth * 0.45), h: Math.round(window.innerHeight * 0.7) },
+    position: { x: 400 + 20 * index, y: 20 * index, z: index },
+    contentData: id,
+    title: formatName(name),
+    icon: { type: 'form', side },
   }
 }
 

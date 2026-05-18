@@ -162,7 +162,7 @@
 								{@const scale = question.scaleQuestion}
 								<div class="scale">
 									{#if scale.lowLabel}<span class="scale-label">{scale.lowLabel}</span>{/if}
-									{#each Array.from( { length: (scale.high ?? 5) - (scale.low ?? 1) + 1 }, (_, i) => (scale.low ?? 1) + i ) as n (n)}
+									{#each Array.from({ length: (scale.high ?? 5) - (scale.low ?? 1) + 1 }, (_, i) => (scale.low ?? 1) + i) as n (n)}
 										<label class="option">
 											<input
 												type="radio"

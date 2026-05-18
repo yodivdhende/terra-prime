@@ -8,6 +8,7 @@
 	import LoginWindow from '$lib/codex/components/login-window.svelte';
 	import LogoutWindow from '$lib/codex/components/logout-window.svelte';
 	import RegisterWindow from '$lib/codex/components/register-window.svelte';
+	import FormWindow from '$lib/codex/components/form-window.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
 </script>
@@ -28,4 +29,6 @@
 	<LogoutWindow {window} />
 {:else if window.type === 'register'}
 	<RegisterWindow {window} />
+{:else if window.type === 'form'}
+	<FormWindow formId={window.contentData} />
 {/if}

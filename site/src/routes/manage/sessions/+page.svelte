@@ -98,7 +98,6 @@
 <style>
 	main {
 		padding: 16px;
-		background-color: white;
 	}
 	table {
 		max-width: 90vw;

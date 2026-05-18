@@ -42,7 +42,7 @@
 			});
 			if (result.ok) {
 				const { id } = await result.json();
-				await goto(`versions/${id}`);
+				await goto(`/manage/versions/${id}`);
 			}
 		} catch (err) {
 			//TODO make error component
@@ -80,7 +80,7 @@
 						<tr>
 							<td>{version.id}</td>
 							<td>{version.name}</td>
-							<td><a href="versions/{version.id}">edit</a></td>
+							<td><a href="/manage/versions/{version.id}">edit</a></td>
 						</tr>
 					{/each}
 				</tbody>
@@ -94,7 +94,6 @@
 		display: flex;
 		flex-direction: column;
 		padding: 8px;
-		background-color: white;
 	}
 
 	tr {

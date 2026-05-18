@@ -41,7 +41,6 @@
         gap:8px;
         min-width:300px;
         padding: 8px;
-        background-color: white;
     }
 
 </style>

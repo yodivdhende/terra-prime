@@ -70,6 +70,5 @@
 		display: flex;
 		flex-direction: column;
 		padding: 8px;
-		background-color: white;
 	}
 </style>

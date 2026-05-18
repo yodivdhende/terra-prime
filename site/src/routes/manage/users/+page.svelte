@@ -28,7 +28,6 @@
 <style>
 	main {
 		padding: 16px;
-		background-color: white;
 	}
 	tr {
 		border-bottom: 1px solid silver;

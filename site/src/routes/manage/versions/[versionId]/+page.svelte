@@ -8,10 +8,14 @@
 
 	let character = $state<Character | null>(null);
 	let version = $state<CharacterVersionFull | null>(null);
+
+	$inspect(data);
+
 	$effect(() => {
 		character = data.character ?? null;
 		version = data.version ?? null;
 	});
+
 	const skills = $derived(data.skills);
 	const items = $derived(data.items);
 	const implants = $derived(data.implants);
@@ -26,14 +30,11 @@
 		saveError = null;
 		saved = false;
 		try {
-			const result = await fetch(
-				`/api/characters/${character.id}/versions/${version.id}`,
-				{
-					method: 'post',
-					body: JSON.stringify($state.snapshot(version)),
-					headers: { 'content-type': 'application/json' }
-				}
-			);
+			const result = await fetch(`/api/characters/${character.id}/versions/${version.id}`, {
+				method: 'post',
+				body: JSON.stringify($state.snapshot(version)),
+				headers: { 'content-type': 'application/json' }
+			});
 			if (result.ok) {
 				saved = true;
 			} else {
@@ -48,19 +49,14 @@
 </script>
 
 <main>
-	<a href="../..">back</a>
-
 	{#if character == null || version == null}
+		<a href="/manage/characters">back</a>
 		<p class="status">not found</p>
 	{:else}
+		<a href="/manage/characters/{character.id}">back</a>
+
 		<div class="shop-wrapper">
-			<CharacterVersionShop
-				bind:character
-				bind:version
-				{skills}
-				{items}
-				{implants}
-			/>
+			<CharacterVersionShop bind:character bind:version {skills} {items} {implants} />
 		</div>
 
 		<div class="actions">
@@ -81,7 +77,6 @@
 		display: flex;
 		flex-direction: column;
 		padding: 8px;
-		background-color: white;
 		height: 100%;
 		box-sizing: border-box;
 	}

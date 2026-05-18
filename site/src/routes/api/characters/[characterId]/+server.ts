@@ -6,26 +6,27 @@ import { authGuardForUser, handleRequest } from '$lib/utils/request';
 import { type RequestHandler, json } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ cookies, params }) => {
-	return handleRequest(async () => {
-		await authGuardForUser(getSessionToken(cookies), ['admin', 'user']);
-		const { id } = params;
-		const numberId = isNumberOrError(id);
-		const character = await characterRepo.getById(numberId);
-		return json(character);
-	});
+  return handleRequest(async () => {
+    await authGuardForUser(getSessionToken(cookies), ['admin']);
+    const { characterId } = params;
+    console.log('get character', { characterId, params });
+    const numberId = isNumberOrError(characterId);
+    const character = await characterRepo.getById(numberId);
+    return json(character);
+  });
 };
 
 export const POST: RequestHandler = async ({ cookies, params, request }) => {
-	return handleRequest(async () => {
-		await authGuardForUser(getSessionToken(cookies), ['admin', 'user']);
-		const {id} = params;
-		isNumberOrError(id);
-		const  character = await request.json();
-		if (isCharacter(character) === false && isNewCharacter(character) === false){
-			throw new RequestError(400, 'body was not of type character');
-		}
-		await characterRepo.save(character);
-		return new Response();
-	});
+  return handleRequest(async () => {
+    await authGuardForUser(getSessionToken(cookies), ['admin']);
+    const { id } = params;
+    isNumberOrError(id);
+    const character = await request.json();
+    if (isCharacter(character) === false && isNewCharacter(character) === false) {
+      throw new RequestError(400, 'body was not of type character');
+    }
+    await characterRepo.save(character);
+    return new Response();
+  });
 };
 

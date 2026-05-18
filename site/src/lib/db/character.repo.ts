@@ -9,7 +9,7 @@ class CharacterRepo {
 		u.Name as ownerName
 	FROM Characters c 
 	JOIN Users u
-		on u.id = c.id
+		on u.id = c.Owner
 	`;
 
 	public async getById(id: number): Promise<Character> {

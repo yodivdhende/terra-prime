@@ -26,7 +26,7 @@
 					<td>{version.id}</td>
 					<td>{version.characterName}</td>
 					<td>{version.name}</td>
-					<td><a href="/manage/characters/{version.characterId}/versions/{version.id}">edit</a></td>
+					<td><a href="/manage/versions/{version.id}">edit</a></td>
 				</tr>
 			{/each}
 			{#if versions.length === 0}
@@ -43,7 +43,6 @@
 		display: flex;
 		flex-direction: column;
 		padding: 8px;
-		background-color: white;
 	}
 
 	table {

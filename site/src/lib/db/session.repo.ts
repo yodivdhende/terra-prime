@@ -9,9 +9,10 @@ class SessionRepo {
 		userId,
 		roles,
 		end,
-		description	
+		description
 	}: NewSession): Promise<string> {
 		await this.removeExpiredSessions();
+		if (userId != null) await this.deleteByUserId(userId);
 		const connection = await mysqlconnFn();
 		const token = await this.addSessions(connection, { userId, end: end ?? undefined, description: description ?? undefined });
 		await this.addSessionRoles(connection, { roles, token });
@@ -50,6 +51,15 @@ class SessionRepo {
             `,
 			values
 		);
+	}
+
+	private async deleteByUserId(userId: number) {
+		const connection = await mysqlconnFn();
+		await connection.execute(
+			`DELETE FROM \`Session_Roles\` WHERE Token IN (SELECT Token FROM \`Sessions\` WHERE UserId = ?)`,
+			[userId]
+		);
+		await connection.execute(`DELETE FROM \`Sessions\` WHERE UserId = ?`, [userId]);
 	}
 
 	public async delete(token: string) {

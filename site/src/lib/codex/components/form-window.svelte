@@ -3,17 +3,44 @@
 
 	let { formId }: { formId: string } = $props();
 
+	type Section = {
+		title: string | null;
+		description: string | null;
+		items: GoogleFormItem[];
+	};
+
 	let form = $state<GoogleForm | null>(null);
 	let loading = $state(true);
 	let failed = $state(false);
 	let submitted = $state(false);
 	let answers = $state<Record<string, string | string[]>>({});
+	let currentSection = $state(0);
+	let formEl = $state<HTMLFormElement | null>(null);
+
+	let sections = $derived<Section[]>(buildSections(form?.items ?? []));
+
+	function buildSections(items: GoogleFormItem[]): Section[] {
+		const result: Section[] = [{ title: null, description: null, items: [] }];
+		for (const item of items) {
+			if (item.pageBreakItem) {
+				result.push({
+					title: item.title ?? null,
+					description: item.description ?? null,
+					items: [],
+				});
+			} else {
+				result[result.length - 1].items.push(item);
+			}
+		}
+		return result;
+	}
 
 	$effect(() => {
 		loading = true;
 		failed = false;
 		submitted = false;
 		answers = {};
+		currentSection = 0;
 		fetch(`/api/forms/${formId}`)
 			.then((r) => {
 				if (!r.ok) throw new Error();
@@ -31,6 +58,18 @@
 
 	function getQuestionId(item: GoogleFormItem): string | null {
 		return item.questionItem?.question?.questionId ?? null;
+	}
+
+	function goNext() {
+		if (!formEl) return;
+		if (!formEl.reportValidity()) return;
+		if (currentSection < sections.length - 1) {
+			currentSection += 1;
+		}
+	}
+
+	function goBack() {
+		if (currentSection > 0) currentSection -= 1;
 	}
 
 	function setAnswer(questionId: string, value: string | string[]) {
@@ -81,10 +120,24 @@
 			{#if form.info?.description}
 				<p class="desc">{form.info.description}</p>
 			{/if}
+			{#if sections.length > 1}
+				<span class="section-counter">
+					section {currentSection + 1} / {sections.length}
+				</span>
+			{/if}
 		</header>
 
-		<form onsubmit={submit}>
-			{#each form.items ?? [] as item (item.itemId)}
+		<form bind:this={formEl} onsubmit={submit}>
+			{#if sections[currentSection]?.title}
+				<div class="section-header">
+					<h2>{sections[currentSection].title}</h2>
+					{#if sections[currentSection].description}
+						<p class="q-desc">{sections[currentSection].description}</p>
+					{/if}
+				</div>
+			{/if}
+
+			{#each sections[currentSection]?.items ?? [] as item (item.itemId)}
 				<section class="item">
 					{#if item.questionItem}
 						{@const question = item.questionItem.question}
@@ -199,16 +252,26 @@
 							<span class="q-title">{item.title ?? ''}</span>
 							{#if item.description}<p class="q-desc">{item.description}</p>{/if}
 						</div>
-					{:else if item.pageBreakItem}
-						<hr />
-						{#if item.title}<span class="q-title">{item.title}</span>{/if}
 					{:else if item.imageItem?.image?.contentUri}
 						<img src={item.imageItem.image.contentUri} alt={item.title ?? ''} />
 					{/if}
 				</section>
 			{/each}
 
-			<button type="submit">submit</button>
+			<nav class="section-nav">
+				<button
+					type="button"
+					onclick={goBack}
+					disabled={currentSection === 0}
+				>
+					&lt; back
+				</button>
+				{#if currentSection < sections.length - 1}
+					<button type="button" onclick={goNext}>next &gt;</button>
+				{:else}
+					<button type="submit">submit</button>
+				{/if}
+			</nav>
 		</form>
 	{/if}
 </div>
@@ -364,9 +427,49 @@
 			color 0.15s;
 	}
 
-	button:hover {
+	button:hover:not(:disabled) {
 		border-color: var(--color-accent);
 		color: var(--color-accent);
+	}
+
+	button:disabled {
+		opacity: 0.35;
+		cursor: not-allowed;
+	}
+
+	.section-counter {
+		display: block;
+		font-size: 0.7rem;
+		color: var(--color-main-dim);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		margin-bottom: 0.5rem;
+	}
+
+	.section-header {
+		border-left: 1px solid color-mix(in srgb, var(--color-accent) 50%, transparent);
+		padding-left: 0.75rem;
+	}
+
+	.section-header h2 {
+		color: var(--color-accent);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		font-size: 0.85rem;
+		margin: 0 0 0.25rem;
+	}
+
+	.section-nav {
+		display: flex;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin-top: 0.5rem;
+		padding-top: 0.75rem;
+		border-top: 1px dashed color-mix(in srgb, var(--color-accent) 25%, transparent);
+	}
+
+	.section-nav button {
+		align-self: auto;
 	}
 
 	.status {

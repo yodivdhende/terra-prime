@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { GoogleForm, GoogleFormItem } from '$lib/services/google-form-service';
+	import FormGridQuestion from './form-grid-question.svelte';
 
 	let { formId }: { formId: string } = $props();
 
@@ -160,7 +161,9 @@
 
 			{#each sections[currentSection]?.items ?? [] as item (item.itemId)}
 				<section class="item">
-					{#if item.questionItem}
+					{#if item.questionGroupItem?.grid}
+						<FormGridQuestion {item} {answers} {setAnswer} {toggleCheckbox} />
+					{:else if item.questionItem}
 						{@const question = item.questionItem.question}
 						{@const qid = getQuestionId(item) ?? item.itemId ?? ''}
 						<label>

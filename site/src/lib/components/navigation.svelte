@@ -4,6 +4,7 @@
 	import { sectionManager } from '$lib/managers/section-manager.svelte';
 
 	const roles = $derived(CREDENTIAL_MANAGER.credentials.roles);
+	let manageOpen = $state(false);
 
 	afterNavigate((navigation) => {
 		if (navigation.to?.url.pathname === '/') {
@@ -15,78 +16,88 @@
 </script>
 
 <nav>
-	<a class="navigation-button" href="/">Home</a>
-	{#if roles.includes('user') === false}
-		<a class="navigation-button" href="/main/login">login</a>
+	<a class="entry" href="/">Home</a>
+	{#if !roles.includes('user')}
+		<a class="entry" href="/manage/login">Login</a>
 	{/if}
 	{#if roles.includes('user')}
-		<a class="navigation-button" href="/main/dashboard/users">Users</a>
+		<a class="entry" href="/manage/users">Users</a>
 	{/if}
 	{#if roles.includes('admin')}
-		<div class="dropdown-header">
-			<button class="navigation-button">Manage</button>
-			<ul>
-				<li><a class="navigation-button" href="/main/dashboard/manage/skills">Skills</a></li>
-				<li><a class="navigation-button" href="/main/dashboard/manage/items">Items</a></li>
-				<li><a class="navigation-button" href="/main/dashboard/manage/implants">Implants</a></li>
-				<li><a class="navigation-button" href="/main/dashboard/manage/events">Events</a></li>
-			</ul>
-		</div>
+		<button class="entry folder" onclick={() => (manageOpen = !manageOpen)}>
+			<span class="arrow">{manageOpen ? 'v' : '>'}</span>
+			<span class="name">Manage</span>
+		</button>
+		{#if manageOpen}
+			<a class="entry child" href="/manage/skills">Skills</a>
+			<a class="entry child" href="/manage/items">Items</a>
+			<a class="entry child" href="/manage/implants">Implants</a>
+			<a class="entry child" href="/manage/events">Events</a>
+		{/if}
 	{/if}
 	{#if roles.includes('user')}
-		<a class="navigation-button" href="/main/dashboard/characters">Characters</a>
-	{/if}
-	{#if roles.includes('user')}
-		<a class="navigation-button" href="/main/dashboard/events">Events</a>
+		<a class="entry" href="/manage/characters">Characters</a>
 	{/if}
 	{#if roles.includes('admin')}
-		<a class="navigation-button" href="/main/dashboard/sessions">Sessions</a>
+		<a class="entry" href="/manage/sessions">Sessions</a>
 	{/if}
 </nav>
 
 <style>
 	nav {
 		display: flex;
+		flex-direction: column;
 		background-color: black;
-		border-bottom: 1px solid white;
-		font-size: 2rem;
+		border-right: 1px solid white;
+		height: 100%;
 	}
 
-	.navigation-button {
-		display: block;
-		background-color: black;
-		padding: 1em;
-		height: 100%;
+	.entry {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.6rem 0.75rem;
+		background: none;
+		border: none;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 		color: white;
 		text-decoration: none;
-		line-height: 1em;
-		border: 1px solid white;
-		border-top: none;
-		font-size: 1em;
-	}
-
-	.navigation-button:hover {
-		background-color: darkslategray;
-	}
-
-	.dropdown-header {
-		position: relative;
-		height: 100%;
+		font-family: inherit;
+		font-size: 1.1rem;
+		text-align: left;
 		cursor: pointer;
+		width: 100%;
+		letter-spacing: 0.04em;
+		white-space: nowrap;
+		opacity: 0.7;
+		transition: opacity 0.1s, background-color 0.1s;
 	}
 
-	.dropdown-header ul {
-		position: absolute;
-		opacity: 0;
-		display: none;
-	}
-
-	.dropdown-header:hover ul {
-		display: block;
-	}
-
-	.dropdown-header > .navigation-button:focus + ul {
+	.entry:hover {
 		opacity: 1;
-		flex-direction: column;
+		background-color: rgba(255, 255, 255, 0.06);
+	}
+
+	.entry.child {
+		padding-left: 1.75rem;
+		font-size: 0.95rem;
+		opacity: 0.5;
+		border-bottom-color: rgba(255, 255, 255, 0.06);
+	}
+
+	.entry.child:hover {
+		opacity: 1;
+	}
+
+	.arrow {
+		font-size: 0.6rem;
+		flex-shrink: 0;
+		opacity: 0.6;
+	}
+
+	.name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 </style>

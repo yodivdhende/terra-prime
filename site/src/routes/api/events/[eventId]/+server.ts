@@ -18,7 +18,7 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 export const DELETE: RequestHandler = async ({ cookies, params}) => {
 	return handleRequest(async () => {
 		await authGuard(getSessionToken(cookies), ['admin']);
-		const { id: eventId } = params;
+		const { eventId } = params;
 		const numberId = isNumberOrError(eventId);
         eventRepo.delete({id: numberId});
 		return new Response();
@@ -28,7 +28,7 @@ export const DELETE: RequestHandler = async ({ cookies, params}) => {
 export const POST: RequestHandler = async ({cookies, params, request}) => {
 	return handleRequest(async ()=> {
 		await authGuard(getSessionToken(cookies), ['admin']);
-		const {id: eventId} = params;
+		const {eventId} = params;
 		isNumberOrError(eventId);
 		const body = await request.json();
 		const event = {

@@ -35,7 +35,7 @@
 
 <main>
 	<div class="login-container">
-		<form method="POST" action="/main/login">
+		<form method="POST" action="/manage/login">
 			<h1>Login</h1>
 			<label for="email">Email</label>
 			<input type="email" name="email" id="email" value={email} />
@@ -56,7 +56,7 @@
 			</div>
 			<button bind:this={submitButton}> Login </button>
 		</form>
-		<a href="/main/login/register">Register</a>
+		<a href="/manage/login/register">Register</a>
 	</div>
 </main>
 

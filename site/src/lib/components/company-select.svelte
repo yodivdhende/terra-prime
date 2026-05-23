@@ -2,27 +2,32 @@
 	import type { Company } from '$lib/db/companies.repo';
 
 	let {
-		value = $bindable<number | null>(null),
-		name = $bindable<string | null>(null)
-	}: { value: number | null; name?: string | null } = $props();
+		company = $bindable<Company | null>(null)
+	}: { company?: Company | null } = $props();
 
 	let companies = $state<Company[]>([]);
+	let selectedId = $state<number | null>(company?.id ?? null);
 
 	$effect(() => {
 		fetch('/api/companies')
 			.then((r) => r.json())
-			.then((data) => (companies = data));
+			.then((data: Company[]) => {
+				companies = data;
+				selectedId = company?.id ?? null;
+			});
 	});
 
 	$effect(() => {
-		name = companies.find((c) => c.id === value)?.name ?? null;
+		if (companies.length > 0) {
+			company = companies.find((c) => c.id === selectedId) ?? null;
+		}
 	});
 </script>
 
-<select bind:value>
+<select bind:value={selectedId}>
 	<option value={null}>— select a company —</option>
-	{#each companies as company}
-		<option value={company.id}>{company.name}</option>
+	{#each companies as c}
+		<option value={c.id}>{c.name}</option>
 	{/each}
 </select>
 

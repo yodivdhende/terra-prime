@@ -41,7 +41,7 @@
 </label>
 <label class="name-field">
 	<span class="label">Company</span>
-	<CompanySelect bind:value={version.company} bind:name={version.companyName} />
+	<CompanySelect bind:company={version.company} />
 </label>
 
 <style>

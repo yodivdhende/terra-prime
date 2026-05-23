@@ -83,8 +83,8 @@
 							>
 								<div class="version-header">
 									<span class="version-name">{ver.name}</span>
-									{#if ver.companyName}
-										<span class="version-company">{ver.companyName}</span>
+									{#if ver.company?.name}
+										<span class="version-company">{ver.company.name}</span>
 									{/if}
 									{#if lastEvent(ver)}
 										<span class="version-event">{lastEvent(ver)?.name}</span>

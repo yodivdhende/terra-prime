@@ -36,12 +36,12 @@ export type VersionEvent = {
 	name: string;
 };
 
-export type CharacterVersionFull = Omit<CharacterVersionBare, 'skills' | 'items' | 'implants'> & {
+export type CharacterVersionFull = Omit<CharacterVersionBare, 'skills' | 'items' | 'implants' | 'company'> & {
 	skills: VersionSkill[];
 	items: VersionItem[];
 	implants: VersionImplant[];
 	events: VersionEvent[];
-	companyName: string | null;
+	company: Company | null;
 };
 
 export type CharacterWithVersions = Character & { versions: CharacterVersionFull[] };
@@ -110,8 +110,7 @@ function toFullVersion(
 		id: version.id,
 		characterId: version.characterId,
 		name: version.name,
-		company: version.company,
-		companyName: version.company != null ? (companyById.get(version.company)?.name ?? null) : null,
+		company: version.company != null ? (companyById.get(version.company) ?? null) : null,
 		skills: version.skills.flatMap((s) => {
 			const skill = skillById.get(s.id);
 			if (!skill) return [];
@@ -135,6 +134,6 @@ function toFullVersion(
 			if (!implant) return [];
 			return [{ id, name: implant.name, description: implant.description }];
 		}),
-		events: eventsByVersionId.get(version.id) ?? []
+		events: version.id != null ? (eventsByVersionId.get(version.id) ?? []) : []
 	};
 }

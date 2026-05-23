@@ -27,7 +27,7 @@ function emptyCharacter(): Character {
 }
 
 function emptyCharacterVersion(): CharacterVersionFull {
-  return { id: null, characterId: 0, name: '', skills: [], items: [], implants: [], events: [], company: null, companyName: null };
+  return { id: null, characterId: 0, name: '', skills: [], items: [], implants: [], events: [], company: null };
 }
 
 export function createCharacterManager() {

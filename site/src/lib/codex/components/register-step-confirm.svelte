@@ -78,7 +78,7 @@
 					skills: version.skills.map(({ id, value }) => ({ id, value })),
 					items: version.items.map(({ id, count }) => ({ id, count })),
 					implants: version.implants.map(({ id }) => id),
-					company: version.company ?? null
+					company: version.company?.id ?? null
 				}
 			]
 		};
@@ -107,7 +107,7 @@
 			<CharacterVersion
 				characterName={CHARACTER_MANAGER.character.name}
 				versionName={CHARACTER_MANAGER.version.name}
-				companyName={CHARACTER_MANAGER.version.companyName}
+				companyName={CHARACTER_MANAGER.version.company?.name ?? null}
 				skills={CHARACTER_MANAGER.version.skills}
 				items={CHARACTER_MANAGER.version.items}
 				implants={CHARACTER_MANAGER.version.implants}

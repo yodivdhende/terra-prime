@@ -15,3 +15,6 @@ ALTER TABLE `Character_Versions`
   ADD COLUMN `Company` int DEFAULT NULL,
   ADD KEY `cv_company_key` (`Company`),
   ADD CONSTRAINT `cv_company` FOREIGN KEY (`Company`) REFERENCES `Companies` (`Id`);
+
+ALTER TABLE `Events`
+  MODIFY `Status` ENUM('Draft','Open','Live','Canceled','Done') DEFAULT 'Draft';

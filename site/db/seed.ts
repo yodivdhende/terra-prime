@@ -23,17 +23,39 @@ async function seed() {
             .filter((f) => f.endsWith('.sql'))
             .sort();
 
+        // Drop all existing tables and reset migration tracking
+        const [rows] = await conn.query<mysql.RowDataPacket[]>('SHOW TABLES');
+        for (const row of rows) {
+            const tableName = Object.values(row)[0] as string;
+            await conn.query(`DROP TABLE IF EXISTS \`${tableName}\``);
+            console.log(`[drop] ${tableName}`);
+        }
+        await conn.query('DROP TABLE IF EXISTS `_migrations`');
+
+        // Re-run all migrations to recreate the schema
+        const migrationsDir = join(__dirname, 'migrations');
+        const migrationFiles = (await readdir(migrationsDir))
+            .filter((f) => f.endsWith('.sql'))
+            .sort();
+
+        await conn.query(`
+            CREATE TABLE \`_migrations\` (
+                \`id\` INT NOT NULL AUTO_INCREMENT,
+                \`filename\` VARCHAR(255) NOT NULL UNIQUE,
+                \`applied_at\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (\`id\`)
+            )
+        `);
+
+        for (const file of migrationFiles) {
+            console.log(`[migrate] ${file}`);
+            const sql = await readFile(join(migrationsDir, file), 'utf8');
+            await conn.query(sql);
+            await conn.execute('INSERT INTO `_migrations` (`filename`) VALUES (?)', [file]);
+        }
+
+        // Insert seed data
         for (const file of files) {
-            const tableName = file
-                .replace('.sql', '')
-                .split('_')
-                .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                .join('_');
-            try {
-                await conn.query(`TRUNCATE TABLE \`${tableName}\``);
-            } catch {
-                console.log(`[skip truncate] ${tableName} (table not found)`);
-            }
             console.log(`[seed] ${file}`);
             const sql = await readFile(join(seedsDir, file), 'utf8');
             await conn.query(sql);

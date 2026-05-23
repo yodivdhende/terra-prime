@@ -32,28 +32,36 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 
 export const PUT: RequestHandler = async ({ cookies, params, request }) => {
   return handleRequest(async () => {
-    await authGuard(getSessionToken(cookies), ['user']);
+    const { userId } = await authGuardForUser(getSessionToken(cookies), ['user']);
     const eventId = isNumberOrError(params.eventId);
-    console.dir(request)
     const body = await request.json();
     if (!isCharacterWithVersions(body)) throw new BadRequest();
 
-    const characterId = await characterRepo.save(
-      body.id == null
-        ? { name: body.name, ownerId: body.ownerId }
-        : {
-          id: body.id,
-          name: body.name,
-          ownerId: body.ownerId,
-          ownerName: body.ownerName,
-        }
-    );
+    const [characterId, existingParticipation] = await Promise.all([
+      characterRepo.save(
+        body.id == null
+          ? { name: body.name, ownerId: body.ownerId }
+          : {
+            id: body.id,
+            name: body.name,
+            ownerId: body.ownerId,
+            ownerName: body.ownerName,
+          }
+      ),
+      eventParticipantsRepo.getUserParticipation({ eventId, userId }),
+    ]);
     if (characterId == null) throw new BadRequest();
 
     const lastVersion = body.versions.at(-1);
     if (lastVersion == null) throw new BadRequest();
+
+    const versionToSave =
+      existingParticipation?.characterVersionId === lastVersion.id
+        ? lastVersion
+        : { ...lastVersion, id: null };
+
     const characterVersionId = await characterVersionRepo.save({
-      ...lastVersion,
+      ...versionToSave,
       characterId,
     });
 

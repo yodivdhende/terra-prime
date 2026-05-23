@@ -83,6 +83,9 @@
 							>
 								<div class="version-header">
 									<span class="version-name">{ver.name}</span>
+									{#if ver.companyName}
+										<span class="version-company">{ver.companyName}</span>
+									{/if}
 									{#if lastEvent(ver)}
 										<span class="version-event">{lastEvent(ver)?.name}</span>
 									{/if}
@@ -204,6 +207,13 @@
 	.version-name {
 		font-size: 0.72rem;
 		opacity: 0.75;
+	}
+
+	.version-company {
+		font-size: 0.62rem;
+		opacity: 0.6;
+		letter-spacing: 0.03em;
+		color: var(--color-accent);
 	}
 
 	.version-event {

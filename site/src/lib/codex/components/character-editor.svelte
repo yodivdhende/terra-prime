@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { Character, CharacterVersionFull } from '../managers/character-manager.svelte';
+	import CompanySelect from '$lib/components/company-select.svelte';
 
 	let {
 		character = $bindable(),
@@ -37,6 +38,10 @@
 		required
 		aria-invalid={version.name.trim().length === 0}
 	/>
+</label>
+<label class="name-field">
+	<span class="label">Company</span>
+	<CompanySelect bind:value={version.company} bind:name={version.companyName} />
 </label>
 
 <style>

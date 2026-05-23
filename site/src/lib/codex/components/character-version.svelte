@@ -63,12 +63,14 @@
 	let {
 		characterName,
 		versionName,
+		companyName,
 		skills = [],
 		items = [],
 		implants = []
 	}: {
 		characterName: string;
 		versionName?: string;
+		companyName?: string | null;
 		skills?: CharacterVersionSkill[];
 		items?: CharacterVersionItem[];
 		implants?: CharacterVersionImplant[];
@@ -103,6 +105,9 @@
 		<span class="character-name">{characterName}</span>
 		{#if versionName}
 			<span class="version-name">{versionName}</span>
+		{/if}
+		{#if companyName}
+			<span class="company-name">{companyName}</span>
 		{/if}
 	</div>
 
@@ -189,6 +194,13 @@
 		opacity: 0.45;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
+	}
+
+	.company-name {
+		font-size: 0.65rem;
+		color: var(--color-accent);
+		opacity: 0.7;
+		letter-spacing: 0.05em;
 	}
 
 	.section {

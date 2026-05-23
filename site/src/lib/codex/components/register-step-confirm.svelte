@@ -24,6 +24,7 @@
 		skills: { id: number; value: number }[];
 		items: { id: number; count: number }[];
 		implants: number[];
+		company: number | null;
 	};
 
 	type CharacterWithVersions = {
@@ -76,7 +77,8 @@
 					name: version.name,
 					skills: version.skills.map(({ id, value }) => ({ id, value })),
 					items: version.items.map(({ id, count }) => ({ id, count })),
-					implants: version.implants.map(({ id }) => id)
+					implants: version.implants.map(({ id }) => id),
+					company: version.company ?? null
 				}
 			]
 		};
@@ -105,6 +107,7 @@
 			<CharacterVersion
 				characterName={CHARACTER_MANAGER.character.name}
 				versionName={CHARACTER_MANAGER.version.name}
+				companyName={CHARACTER_MANAGER.version.companyName}
 				skills={CHARACTER_MANAGER.version.skills}
 				items={CHARACTER_MANAGER.version.items}
 				implants={CHARACTER_MANAGER.version.implants}

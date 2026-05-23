@@ -27,12 +27,16 @@ function emptyCharacter(): Character {
 }
 
 function emptyCharacterVersion(): CharacterVersionFull {
-  return { id: null, characterId: 0, name: '', skills: [], items: [], implants: [] };
+  return { id: null, characterId: 0, name: '', skills: [], items: [], implants: [], events: [], company: null, companyName: null };
 }
 
 export function createCharacterManager() {
   let character = $state<Character>(emptyCharacter());
   let version = $state<CharacterVersionFull>(emptyCharacterVersion());
+
+  $effect(() => {
+    console.log('version', version)
+  })
 
   const ready = $derived.by(() => {
     if (character.name.trim().length <= 0) return false;

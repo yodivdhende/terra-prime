@@ -1,5 +1,6 @@
 import { authenticationRepo } from '$lib/db/authentication.repo';
 import { sessionRepo } from '$lib/db/session.repo';
+import { sendVerificationEmail } from '$lib/server/verification.service';
 import { RequestError } from '$lib/types/errors';
 import { setSessionToken as setSessionToken } from '$lib/utils/cookies';
 import { handleRequest } from '$lib/utils/request';
@@ -21,6 +22,9 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			description: 'api login'
 		});
 		setSessionToken(cookies, token);
+		sendVerificationEmail(userId, email).catch((err) => {
+			console.error('[register] failed to send verification email:', err);
+		});
 		return json({userId, roles, name: storedName});
 	});
 };

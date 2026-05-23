@@ -20,6 +20,31 @@ All responses are JSON unless explicitly noted (file streams, HTML, `204 No Cont
 | POST | `/api/authentication/register` | Public | `{ userId: number, roles: string[] }` (JSON) | Register new user; sets session cookie |
 | POST | `/api/authentication/login` | Public | `{ token: string, roles: string[], name: string }` (JSON) | Login with `{ email, password }`; sets session cookie |
 | POST | `/api/authentication/login/token` | Public | `{ token: string }` (JSON) | Set session cookie from existing token `{ token }` |
+| POST | `/api/authentication/verify-email` | Public | `{ ok: true, userId: number }` (JSON) | Consume a verification token; body: `{ token: string }`. Returns 400 if invalid/expired |
+| POST | `/api/authentication/verify-email/resend` | user/admin | `{ ok: true }` (JSON) | Resend verification email to the current session user. Returns 400 if already verified |
+
+---
+
+## Email & Admin
+
+| Method | Path | Auth | Returns | Description |
+|--------|------|------|---------|-------------|
+| POST | `/api/admin/emails/send` | admin | `{ ok: true }` (JSON) | Send any template to any recipient; body: `{ to: string, templateKey: string, link?: string }`. Throws 400 for unknown template keys |
+| POST | `/api/admin/users/[id]/resend-verification` | admin | `{ ok: true }` (JSON) | Resend verification email to a specific user. Returns 400 if already verified |
+
+---
+
+## Email Templates
+
+Templates are `{ id, key, docUrl }` rows. `docUrl` is a Google Doc URL whose HTML is fetched via the Drive service at send-time. Subjects are hardcoded per `key` in `src/lib/server/email.service.ts`. Templates support a literal `[[LINK]]` marker that is replaced (HTML-escaped) when a `link` is provided to the sender.
+
+| Method | Path | Auth | Returns | Description |
+|--------|------|------|---------|-------------|
+| GET | `/api/email-templates` | admin | `EmailTemplate[]` (JSON) — `EmailTemplate = { id: number \| null, key: string, docUrl: string }` | List all templates |
+| PUT | `/api/email-templates` | admin | `{ id: number }` (JSON) | Upsert template; body: `EmailTemplate`. Insert when `id` is null, update otherwise |
+| GET | `/api/email-templates/[id]` | admin | `EmailTemplate` (JSON; 404 if not found) | Get template by ID |
+| POST | `/api/email-templates/[id]` | admin | empty body (200) | Update template; body: `EmailTemplate` |
+| DELETE | `/api/email-templates/[id]` | admin | empty body (200) | Delete template |
 
 ---
 

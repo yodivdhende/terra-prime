@@ -3,9 +3,9 @@ import { NoAccesRequest, RequestError, UnAutherizedRequestError } from "$lib/typ
 import type { UserRole } from "$lib/types/roles";
 import { error } from "@sveltejs/kit";
 
-export function handleRequest<T>(cb: () => Promise<T>): Promise<T> {
+export async function handleRequest<T>(cb: () => Promise<T>): Promise<T> {
   try {
-    return cb();
+    return await cb();
   } catch (err) {
     if (err instanceof RequestError) return err.getError();
     return error(500, `${err}`);

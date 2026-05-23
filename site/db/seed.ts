@@ -24,6 +24,16 @@ async function seed() {
             .sort();
 
         for (const file of files) {
+            const tableName = file
+                .replace('.sql', '')
+                .split('_')
+                .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                .join('_');
+            try {
+                await conn.query(`TRUNCATE TABLE \`${tableName}\``);
+            } catch {
+                console.log(`[skip truncate] ${tableName} (table not found)`);
+            }
             console.log(`[seed] ${file}`);
             const sql = await readFile(join(seedsDir, file), 'utf8');
             await conn.query(sql);

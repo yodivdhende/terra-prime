@@ -26,7 +26,8 @@ CREATE TABLE `Character_Versions` (
 CREATE TABLE `Character_Version_Implants` (
   `Id` int NOT NULL AUTO_INCREMENT,
   `CharacterVersion` int DEFAULT NULL,
-  `Implant` int DEFAULT NULL
+  `Implant` int DEFAULT NULL,
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `Character_Version_Items` (
@@ -168,7 +169,6 @@ ALTER TABLE `Character_Versions`
   ADD KEY `Character` (`Character`);
 
 ALTER TABLE `Character_Version_Implants`
-  ADD PRIMARY KEY (`Id`),
   ADD KEY `CharacterVersion` (`CharacterVersion`),
   ADD KEY `Implant` (`Implant`);
 

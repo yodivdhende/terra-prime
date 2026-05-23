@@ -5,10 +5,11 @@ class CharacterVersionRepo {
   public async getAll(): Promise<CharacterVersionBare[]> {
     const connection = await mysqlconnFn();
     const [results] = await connection.execute(`
-      SELECT 
-        cv.Id as id, 
+      SELECT
+        cv.Id as id,
         cv.Character as characterId,
         cv.Name as name,
+        cv.Company as company
       FROM Character_Versions cv
       `);
     if (Array.isArray(results) === false) return [];
@@ -29,6 +30,7 @@ class CharacterVersionRepo {
         id: characterItem.id,
         characterId: characterItem.charaacterId,
         name: characterItem.name,
+        company: typeof characterItem.company === 'number' ? characterItem.company : null,
         skills:
           skills.status === 'fulfilled'
             ? skills.value
@@ -60,8 +62,8 @@ class CharacterVersionRepo {
   public async create(characterVersion: CharacterVersionBare): Promise<number> {
     const connection = await mysqlconnFn();
     const [result] = await connection.execute(
-      `INSERT INTO Character_Versions (\`Character\`, Name) VALUES (?, ?)`,
-      [characterVersion.characterId, characterVersion.name]
+      `INSERT INTO Character_Versions (\`Character\`, Name, Company) VALUES (?, ?, ?)`,
+      [characterVersion.characterId, characterVersion.name, characterVersion.company ?? null]
     );
     const versionId = (result as any).insertId as number;
     await Promise.all([
@@ -77,8 +79,8 @@ class CharacterVersionRepo {
     const versionId = characterVersion.id;
     const connection = await mysqlconnFn();
     await connection.execute(
-      `UPDATE Character_Versions SET Name = ? WHERE Id = ?`,
-      [characterVersion.name, versionId]
+      `UPDATE Character_Versions SET Name = ?, Company = ? WHERE Id = ?`,
+      [characterVersion.name, characterVersion.company ?? null, versionId]
     );
     await Promise.all([
       this.deleteItems(versionId),
@@ -234,10 +236,11 @@ class CharacterVersionRepo {
     const connection = await mysqlconnFn();
     const [results] = await connection.query(
       `
-      SELECT 
-        cv.Id as id, 
+      SELECT
+        cv.Id as id,
         cv.Character as characterId,
-				cv.Name as name
+        cv.Name as name,
+        cv.Company as company
       FROM Character_Versions cv
       WHERE cv.id in (:ids)
       `,
@@ -261,6 +264,7 @@ class CharacterVersionRepo {
         id: characterItem.id,
         characterId: characterItem.characterId,
         name: characterItem.name,
+        company: typeof characterItem.company === 'number' ? characterItem.company : null,
         skills:
           valueOrLogOfPromiseSetteld(skills)
             ?.filter(({ characterVersionId }) => characterVersionId === characterItem.id)
@@ -298,7 +302,7 @@ class CharacterVersionRepo {
   public async getForCharacter(characterId: number): Promise<CharacterVersionBare[]> {
     const connection = await mysqlconnFn();
     const [results] = await connection.execute(
-      `SELECT cv.Id as id, cv.Character as characterId, cv.Name as name
+      `SELECT cv.Id as id, cv.Character as characterId, cv.Name as name, cv.Company as company
        FROM Character_Versions cv WHERE cv.Character = ?`,
       [characterId]
     );
@@ -320,6 +324,7 @@ class CharacterVersionRepo {
         id: row.id,
         characterId: row.characterId,
         name: row.name,
+        company: typeof row.company === 'number' ? row.company : null,
         skills:
           valueOrLogOfPromiseSetteld(skills)
             ?.filter(({ characterVersionId }) => characterVersionId === row.id)
@@ -380,7 +385,8 @@ class CharacterVersionRepo {
       SELECT
         cv.Id as id,
         cv.Character as characterId,
-        cv.Name as name
+        cv.Name as name,
+        cv.Company as company
       FROM Character_Versions cv
       JOIN Characters c ON c.Id = cv.Character
       WHERE c.Owner = ?
@@ -406,6 +412,7 @@ class CharacterVersionRepo {
         id: row.id,
         characterId: row.characterId,
         name: row.name,
+        company: typeof row.company === 'number' ? row.company : null,
         skills:
           valueOrLogOfPromiseSetteld(skills)
             ?.filter(({ characterVersionId }) => characterVersionId === row.id)
@@ -464,6 +471,7 @@ export type CharacterVersionBare = {
   skills: CharacterVerionSkill[];
   items: CharacterVersionItem[];
   implants: number[];
+  company: number | null;
 };
 
 export function isCharacterVersionBare(value: unknown): value is CharacterVersionBare {
@@ -484,7 +492,9 @@ export function isCharacterVersionBare(value: unknown): value is CharacterVersio
     value.items.every(isCharacterVersionItem) &&
     'implants' in value &&
     Array.isArray(value.implants) &&
-    value.implants.every((implant) => typeof implant === 'number')
+    value.implants.every((implant) => typeof implant === 'number') &&
+    'company' in value &&
+    (value.company === null || typeof value.company === 'number')
   );
 }
 

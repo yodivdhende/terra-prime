@@ -35,6 +35,21 @@ async function migrate() {
             .filter((f) => f.endsWith('.sql'))
             .sort();
 
+        // Bootstrap: if _migrations is empty but core tables already exist, the DB was
+        // set up before migration tracking was introduced. Mark all migrations whose
+        // tables already exist as applied so we don't try to re-run them.
+        if (applied.size === 0 && files.length > 0) {
+            const [existing] = await conn.execute<mysql.RowDataPacket[]>(
+                "SHOW TABLES LIKE 'Admins'"
+            );
+            if ((existing as mysql.RowDataPacket[]).length > 0) {
+                const firstFile = files[0];
+                await conn.execute('INSERT INTO `_migrations` (`filename`) VALUES (?)', [firstFile]);
+                applied.add(firstFile);
+                console.log(`[boot]  ${firstFile} (tables already exist, bootstrapped)`);
+            }
+        }
+
         for (const file of files) {
             if (applied.has(file)) {
                 console.log(`[skip] ${file}`);

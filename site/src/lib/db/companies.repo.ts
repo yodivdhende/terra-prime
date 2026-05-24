@@ -27,6 +27,74 @@ class CompanyRepo {
 			throw err;
 		}
 	}
+
+	public async getWithId(id: number): Promise<Company | null> {
+		try {
+			const connection = await mysqlconnFn();
+			const [result] = await connection.execute(
+				`
+        SELECT
+          c.Id as id,
+          c.Name as name,
+          c.Description as description,
+          c.Link as link
+        FROM Companies c
+        WHERE c.Id = ?
+        `,
+				[id]
+			);
+			if (Array.isArray(result) === false) return null;
+			if (result.length === 0) return null;
+			const [company] = result;
+			if (isCompany(company) === false) return null;
+			return company;
+		} catch (err) {
+			throw err;
+		}
+	}
+
+	public save(company: Company) {
+		if (company.id == null) return this.create(company);
+		return this.edit(company);
+	}
+
+	public async create({ name, description, link }: Omit<Company, 'id'>) {
+		try {
+			const connection = await mysqlconnFn();
+			const [result] = await connection.execute(
+				`INSERT INTO Companies (Name, Description, Link) VALUES (?, ?, ?)`,
+				[name, description, link ?? null]
+			);
+			if ('serverStatus' in result && result.serverStatus !== 2) return null;
+			if ('insertId' in result === false || result.insertId == null) return null;
+			return result.insertId;
+		} catch (err) {
+			throw err;
+		}
+	}
+
+	public async edit({ id, name, description, link }: Company) {
+		try {
+			const connection = await mysqlconnFn();
+			const [result] = await connection.execute(
+				`UPDATE Companies SET Name = ?, Description = ?, Link = ? WHERE Id = ?`,
+				[name, description, link ?? null, id]
+			);
+			if ('serverStatus' in result && result.serverStatus !== 2) return null;
+			return id;
+		} catch (err) {
+			throw err;
+		}
+	}
+
+	public async delete({ id }: { id: number }) {
+		try {
+			const connection = await mysqlconnFn();
+			await connection.execute(`DELETE FROM Companies WHERE Id = ?`, [id]);
+		} catch (err) {
+			throw err;
+		}
+	}
 }
 
 export const companyRepo = new CompanyRepo();

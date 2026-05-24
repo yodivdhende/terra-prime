@@ -67,6 +67,9 @@
 		<button onclick={save}>save</button>
 		<button onclick={remove}>delete</button>
 	</div>
+	{#if event?.id != null}
+		<a href="{event.id}/discounts">Manage Discounts →</a>
+	{/if}
 </main>
 
 <style>

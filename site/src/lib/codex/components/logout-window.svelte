@@ -26,7 +26,7 @@
 	}
 
 	.label {
-		font-size: 0.65rem;
+		font-size: 0.65em;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		opacity: 0.5;
@@ -35,13 +35,13 @@
 
 	.username {
 		font-family: 'Courier New', Courier, monospace;
-		font-size: 0.9rem;
+		font-size: 0.9em;
 		margin: 0;
 	}
 
 	button {
 		font-family: 'Courier New', Courier, monospace;
-		font-size: 0.75rem;
+		font-size: 0.75em;
 		letter-spacing: 0.08em;
 		padding: 0.3rem 0.75rem;
 		background: transparent;

@@ -16,6 +16,6 @@
 		height: 100%;
 		color: var(--color-main);
 		font-family: var(--font-mono);
-		font-size: 0.85rem;
+		font-size: 0.85em;
 	}
 </style>

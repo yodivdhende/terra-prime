@@ -162,7 +162,7 @@
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
-		font-size: 0.95rem;
+		font-size: 0.95em;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-main);
@@ -175,7 +175,7 @@
 	}
 
 	.step-count {
-		font-size: 0.9rem;
+		font-size: 0.9em;
 		padding: 0.05rem 0.35rem;
 		background: color-mix(in srgb, var(--color-accent) 20%, transparent);
 		color: var(--color-accent);
@@ -192,7 +192,7 @@
 	}
 
 	.overview-name {
-		font-size: 1.05rem;
+		font-size: 1.05em;
 		color: var(--color-main);
 		white-space: nowrap;
 		overflow: hidden;
@@ -204,18 +204,18 @@
 	}
 
 	.overview-empty {
-		font-size: 0.95rem;
+		font-size: 0.95em;
 		opacity: 0.3;
 		font-style: italic;
 	}
 
 	.overview-stat {
-		font-size: 1.0rem;
+		font-size: 1.0em;
 		color: var(--color-main);
 	}
 
 	.overview-cost {
-		font-size: 1.0rem;
+		font-size: 1.0em;
 		color: var(--color-accent);
 		opacity: 0.75;
 		margin-left: auto;
@@ -231,14 +231,14 @@
 	}
 
 	.budget-label {
-		font-size: 0.9rem;
+		font-size: 0.9em;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		opacity: 0.45;
 	}
 
 	.budget-value {
-		font-size: 1.2rem;
+		font-size: 1.2em;
 		color: var(--color-accent);
 		letter-spacing: 0.04em;
 	}

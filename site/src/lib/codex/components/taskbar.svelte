@@ -53,7 +53,7 @@
 	}
 
 	.username {
-		font-size: 0.75rem;
+		font-size: 0.75em;
 		letter-spacing: 0.05em;
 		white-space: nowrap;
 	}
@@ -67,7 +67,7 @@
 		box-shadow: var(---color-accent) 0 0 8px;
 		color: var(--color-main-dim);
 		font-family: var(--font-mono);
-		font-size: 0.75rem;
+		font-size: 0.75em;
 		letter-spacing: 0.05em;
 		display: flex;
 		align-items: center;

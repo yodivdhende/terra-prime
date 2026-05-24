@@ -120,7 +120,7 @@
 	}
 
 	label {
-		font-size: 0.7rem;
+		font-size: 0.7em;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		opacity: 0.7;
@@ -131,7 +131,7 @@
 		border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
 		color: var(--color-main);
 		font-family: 'Courier New', Courier, monospace;
-		font-size: 0.85rem;
+		font-size: 0.85em;
 		padding: 0.3rem 0.5rem;
 		width: 100%;
 		box-sizing: border-box;
@@ -156,7 +156,7 @@
 
 	button {
 		font-family: 'Courier New', Courier, monospace;
-		font-size: 0.75rem;
+		font-size: 0.75em;
 		letter-spacing: 0.08em;
 		padding: 0.3rem 0.75rem;
 		background: transparent;
@@ -174,13 +174,13 @@
 	}
 
 	.error {
-		font-size: 0.7rem;
+		font-size: 0.7em;
 		color: var(--color-error);
 		opacity: 0.8;
 	}
 
 	.mode-toggle {
-		font-size: 0.7rem;
+		font-size: 0.7em;
 		color: var(--color-main-dim);
 		text-decoration: underline;
 		opacity: 0.6;

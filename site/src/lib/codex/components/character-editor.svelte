@@ -53,7 +53,7 @@
 	}
 
 	.label {
-		font-size: 0.6rem;
+		font-size: 0.6em;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		opacity: 0.55;
@@ -61,7 +61,7 @@
 
 	.name-field input {
 		font-family: var(--font-mono);
-		font-size: 0.85rem;
+		font-size: 0.85em;
 		background: transparent;
 		color: var(--color-main);
 		border: none;

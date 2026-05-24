@@ -101,7 +101,7 @@
 		cursor: pointer;
 		padding: 0.5rem;
 		font-family: var(--font-mono);
-		font-size: 0.7rem;
+		font-size: 0.7em;
 		letter-spacing: 0.05em;
 		transition:
 			color 0.1s,

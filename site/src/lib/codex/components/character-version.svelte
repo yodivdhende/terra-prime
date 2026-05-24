@@ -185,19 +185,19 @@
 	}
 
 	.character-name {
-		font-size: 1rem;
+		font-size: 1em;
 		letter-spacing: 0.04em;
 	}
 
 	.version-name {
-		font-size: 0.65rem;
+		font-size: 0.65em;
 		opacity: 0.45;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 	}
 
 	.company-name {
-		font-size: 0.65rem;
+		font-size: 0.65em;
 		color: var(--color-accent);
 		opacity: 0.7;
 		letter-spacing: 0.05em;
@@ -210,7 +210,7 @@
 	}
 
 	.section-label {
-		font-size: 0.6rem;
+		font-size: 0.6em;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		opacity: 0.4;
@@ -233,7 +233,7 @@
 	}
 
 	.group-name {
-		font-size: 0.6rem;
+		font-size: 0.6em;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		opacity: 0.8;
@@ -256,7 +256,7 @@
 
 	.skill-name {
 		flex: 1;
-		font-size: 0.7rem;
+		font-size: 0.7em;
 		opacity: 0.8;
 		white-space: nowrap;
 		overflow: hidden;
@@ -288,12 +288,12 @@
 	}
 
 	.entry-name {
-		font-size: 0.75rem;
+		font-size: 0.75em;
 		letter-spacing: 0.03em;
 	}
 
 	.entry-desc {
-		font-size: 0.62rem;
+		font-size: 0.62em;
 		opacity: 0.45;
 		overflow: hidden;
 		text-overflow: ellipsis;

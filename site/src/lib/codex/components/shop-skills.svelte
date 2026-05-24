@@ -186,14 +186,14 @@
 	}
 
 	.skillbar-label {
-		font-size: 0.95rem;
+		font-size: 0.95em;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		opacity: 0.5;
 	}
 
 	.skillbar-remaining {
-		font-size: 1.05rem;
+		font-size: 1.05em;
 		color: var(--color-accent);
 	}
 
@@ -224,7 +224,7 @@
 	}
 
 	.group-name {
-		font-size: 0.92rem;
+		font-size: 0.92em;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		margin: 0 0 0.35rem;
@@ -272,12 +272,12 @@
 	}
 
 	.entry-name {
-		font-size: 1.05rem;
+		font-size: 1.05em;
 		letter-spacing: 0.03em;
 	}
 
 	.entry-desc {
-		font-size: 0.95rem;
+		font-size: 0.95em;
 		opacity: 0.5;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -288,7 +288,7 @@
 	}
 
 	.entry-cost {
-		font-size: 1.0rem;
+		font-size: 1.0em;
 		color: var(--color-accent);
 		flex-shrink: 0;
 	}
@@ -298,7 +298,7 @@
 	}
 
 	.empty {
-		font-size: 1.0rem;
+		font-size: 1.0em;
 		opacity: 0.4;
 		font-style: italic;
 	}

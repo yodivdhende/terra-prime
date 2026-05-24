@@ -175,7 +175,7 @@
 		border: none;
 		color: var(--color-main);
 		font-family: inherit;
-		font-size: 0.75rem;
+		font-size: 0.75em;
 		text-align: left;
 		cursor: pointer;
 		width: 100%;
@@ -194,7 +194,7 @@
 	}
 
 	.arrow {
-		font-size: 0.65rem;
+		font-size: 0.65em;
 		flex-shrink: 0;
 		opacity: 0.6;
 	}
@@ -209,7 +209,7 @@
 		display: block;
 		padding: 0.5rem 0.75rem;
 		opacity: 0.4;
-		font-size: 0.7rem;
+		font-size: 0.7em;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 	}

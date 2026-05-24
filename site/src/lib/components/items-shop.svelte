@@ -51,7 +51,7 @@
 
 <style>
 	h1 {
-		font-size: 1.5rem;
+		font-size: 1.5em;
 	}
 
 	.grid {

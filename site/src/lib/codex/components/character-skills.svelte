@@ -107,7 +107,7 @@
 	}
 
 	.group-name {
-		font-size: 0.65rem;
+		font-size: 0.65em;
 		font-weight: bold;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -132,7 +132,7 @@
 
 	.skill-name {
 		flex: 1;
-		font-size: 0.7rem;
+		font-size: 0.7em;
 		opacity: 0.8;
 		white-space: nowrap;
 		overflow: hidden;
@@ -152,7 +152,7 @@
 	}
 
 	.value-number {
-		font-size: 0.65rem;
+		font-size: 0.65em;
 		min-width: 1ch;
 		text-align: right;
 		opacity: 0.6;

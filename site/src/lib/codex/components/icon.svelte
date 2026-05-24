@@ -59,7 +59,7 @@
 		color: var(--color-main, #fff);
 		border: 1px solid currentColor;
 		font-family: var(--font-mono, monospace);
-		font-size: 0.65rem;
+		font-size: 0.65em;
 		letter-spacing: 0.05em;
 		padding: 0.2rem 0.45rem;
 		pointer-events: none;

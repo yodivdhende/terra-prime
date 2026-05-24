@@ -42,7 +42,8 @@ export class GoogleDriveService {
       { responseType: 'arraybuffer' },
     );
     const buffer = response.data as ArrayBuffer;
-    return Buffer.from(buffer).toString('utf-8');
+    const html = Buffer.from(buffer).toString('utf-8');
+    return html.replace(/_[^_]*_/g, '');
   }
 
   public async searchFiles(query: string) {

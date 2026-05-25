@@ -22,4 +22,4 @@ CREATE TABLE `Email_Verification_Tokens` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 INSERT INTO `Email_Templates` (`Key`, `DocUrl`) VALUES
-  ('verify_email', 'https://docs.google.com/document/d/REPLACE_ME/edit');
+  ('verify_email', 'https://docs.google.com/document/d/1OKVxCxIyNfzP-j5BrIx_59g4uXNuBjVpk9QN0pUkK2A/edit?usp=sharing');

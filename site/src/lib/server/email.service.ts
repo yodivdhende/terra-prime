@@ -36,7 +36,10 @@ export async function sendTemplated({
 		throw new RequestError(500, `could not extract Doc id from URL: ${template.docUrl}`);
 
 	let html = await getGoogleDriveService().getDocumentHtml(docId);
-	if (link != null) html = html.replaceAll('[[LINK]]', escapeHtml(link));
+	if (link != null) {
+		const safe = escapeHtml(link);
+		html = html.replaceAll('[[LINK]]', `<a href="${safe}">${safe}</a>`);
+	}
 
 	await getGoogleGmailService().sendMail({ to, subject, html });
 }

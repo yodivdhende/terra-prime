@@ -85,7 +85,7 @@ export function createLoginWindow({ shouldCreate }: { shouldCreate: boolean }): 
     id: 'login',
     type: 'login',
     state: 'closed',
-    dimension: { w: 320, h: 280 },
+    dimension: { w: 320, h: 400 },
     position: { x: 300, y: 100, z: 0 },
     contentData: 'login',
     title: 'login',

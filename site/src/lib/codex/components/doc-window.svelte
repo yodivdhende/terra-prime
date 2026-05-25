@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type CodexWindow } from '$lib/codex/services/window-service.svelte';
+	import { type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
 
@@ -46,7 +46,7 @@
 	.status {
 		display: block;
 		opacity: 0.5;
-		font-size: 0.75rem;
+		font-size: 0.75em;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 	}

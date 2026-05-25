@@ -8,7 +8,8 @@ class ImplantRepo {
         SELECT
           i.Id as id,
           i.Name as name,
-          i.Description as description
+          i.Description as description,
+          i.Cost as cost
         FROM Implants i
         `);
 			if (Array.isArray(result) === false) return [];
@@ -35,7 +36,8 @@ class ImplantRepo {
         SELECT
           i.Id as id,
           i.Name as name,
-          i.Description as description
+          i.Description as description,
+          i.Cost as cost
         FROM Implants i
 		WHERE i.Id = ?
         `,
@@ -59,7 +61,8 @@ class ImplantRepo {
         SELECT
           i.Id as id,
           i.Name as name,
-          i.Description as description
+          i.Description as description,
+          i.Cost as cost
         FROM Implants i
 				WHERE i.Id in (:ids)
         `,
@@ -139,6 +142,7 @@ export type Implant = {
 	id: number | null;
 	name: string;
 	description: string;
+	cost?: number;
 };
 
 export function isImplants(implant: unknown): implant is Implant {

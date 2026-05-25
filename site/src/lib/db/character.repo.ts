@@ -9,7 +9,7 @@ class CharacterRepo {
 		u.Name as ownerName
 	FROM Characters c 
 	JOIN Users u
-		on u.id = c.id
+		on u.id = c.Owner
 	`;
 
 	public async getById(id: number): Promise<Character> {
@@ -27,6 +27,19 @@ class CharacterRepo {
 		} else {
 			throw new Error(`character not found with id: ${id}`);
 		}
+	}
+
+	public async getByOwner(ownerId: number): Promise<Character[]> {
+		const connection = await mysqlconnFn();
+		const [result] = await connection.execute(
+			`SELECT c.Id as id, c.Name as name, c.Owner as ownerId, u.Name as ownerName
+			 FROM Characters c
+			 JOIN Users u ON u.Id = c.Owner
+			 WHERE c.Owner = ?`,
+			[ownerId]
+		);
+		if (!Array.isArray(result)) return [];
+		return (result as any[]).filter(isCharacter);
 	}
 
 	public async getForUser(userId: number) {
@@ -56,23 +69,18 @@ class CharacterRepo {
 			.filter((value) => value != null);
 	}
 
-	public async save(character: NewCharacter | Character) {
+	public async save(character: NewCharacter | Character): Promise<number | undefined> {
+		if (isCharacter(character)) { await this.edit(character); return character.id; }
 		if (isNewCharacter(character)) return this.create(character);
-		if (isCharacter(character)) return this.edit(character);
 	}
 
-	private async create(character: NewCharacter) {
-		try {
-			(await mysqlconnFn()).execute(
-				`
-				INSERT Characters (Name, Owner)
-				VALUE (?, ?)
-			`,
-				[character.name, character.ownerId]
-			);
-		} catch (error) {
-			throw error;
-		}
+	private async create(character: NewCharacter): Promise<number> {
+		const connection = await mysqlconnFn();
+		const [result] = await connection.execute(
+			`INSERT INTO Characters (Name, Owner) VALUES (?, ?)`,
+			[character.name, character.ownerId]
+		);
+		return (result as any).insertId as number;
 	}
 
 	private async edit(character: Character) {

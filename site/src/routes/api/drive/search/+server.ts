@@ -1,5 +1,5 @@
 import { json, error } from '@sveltejs/kit';
-import { getGoogleDriveManager } from '$lib/managers/google-drive-manager.svelte';
+import { getGoogleDriveService } from '$lib/services/google-drive-service';
 
 export async function GET({ url }) {
 	const query = url.searchParams.get('q')?.trim();
@@ -7,7 +7,7 @@ export async function GET({ url }) {
 	if (query.length < 2) return json([]);
 
 	try {
-		const files = await getGoogleDriveManager().searchFiles(query);
+		const files = await getGoogleDriveService().searchFiles(query);
 		return json(files);
 	} catch (_error) {
 		console.error(_error);

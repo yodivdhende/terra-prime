@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import code from '$lib/assets/data/code.json';
 
 	let {start = true, speed = 10}: {start?: boolean, speed?: number} = $props();
 
-	let leftCode = $state(start ? code.join('\n') : '');
+	let leftCode = $state(untrack(() => (start ? code.join('\n') : '')));
 	let codeIndex = 0;
 	let characterIndex = -1;
 	let textArea: HTMLTextAreaElement;
@@ -14,9 +15,12 @@
 		}
 	});
 
-	setInterval(() => {
-		leftCode = updateCode();
-	}, speed);
+	$effect(() => {
+		const interval = setInterval(() => {
+			leftCode = updateCode();
+		}, speed);
+		return () => clearInterval(interval);
+	});
 
 	function updateCode() {
 		if(start === false){

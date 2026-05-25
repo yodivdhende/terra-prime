@@ -1,0 +1,65 @@
+<script lang="ts">
+	import { BrainCircuit, Globe, Volume2 } from '@lucide/svelte';
+	import { onMount, onDestroy } from 'svelte';
+	import dhvtLogo from '$lib/assets/images/DEF_Logo_rgb_wit.png';
+
+	let time = $state('');
+
+	function tick() {
+		const now = new Date();
+		const h = String(now.getHours()).padStart(2, '0');
+		const m = String(now.getMinutes()).padStart(2, '0');
+		time = `${h}:${m}`;
+	}
+
+	let interval: ReturnType<typeof setInterval>;
+	onMount(() => {
+		tick();
+		interval = setInterval(tick, 1000);
+	});
+	onDestroy(() => clearInterval(interval));
+</script>
+
+<div class="tray">
+	<Globe size={32} />
+	<Volume2 size={32} />
+	<BrainCircuit size={32} />
+	<a href="https://dhvt.be" target="_blank" rel="noopener" class="dhvt-link">
+		<img src={dhvtLogo} alt="DHVT" class="dhvt-logo" />
+	</a>
+	<span class="clock">{time}</span>
+</div>
+
+<style>
+	.tray {
+		margin-left: auto;
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		padding: 0 0.75rem;
+		height: 100%;
+	}
+
+	.dhvt-link {
+		display: flex;
+		align-items: center;
+		opacity: 0.7;
+	}
+
+	.dhvt-link:hover {
+		opacity: 1;
+	}
+
+	.dhvt-logo {
+		height: 2.5rem;
+		width: auto;
+	}
+
+	.clock {
+		font-family: var(--font-mono);
+		font-size: 1.5em;
+		letter-spacing: 0.08em;
+		opacity: 0.85;
+		white-space: nowrap;
+	}
+</style>

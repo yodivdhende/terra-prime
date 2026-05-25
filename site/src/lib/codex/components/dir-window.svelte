@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type CodexWindow } from '$lib/codex/services/window-service.svelte';
+	import { type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
 	import WindowContent from '$lib/codex/components/window-content.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
@@ -120,10 +120,11 @@
 			{/if}
 			<span class="name">{entry.name}</span>
 		</button>
-		{#if expanded[entry.id] === 'loading'}
+		{@const children = expanded[entry.id]}
+		{#if children === 'loading'}
 			<span class="status" style:padding-left="{0.75 + (depth + 1) * 1}rem">loading...</span>
-		{:else if Array.isArray(expanded[entry.id])}
-			{#each expanded[entry.id] as child}
+		{:else if Array.isArray(children)}
+			{#each children as child}
 				{@render treeEntry(child, depth + 1)}
 			{/each}
 		{/if}
@@ -174,7 +175,7 @@
 		border: none;
 		color: var(--color-main);
 		font-family: inherit;
-		font-size: 0.75rem;
+		font-size: 0.75em;
 		text-align: left;
 		cursor: pointer;
 		width: 100%;
@@ -193,7 +194,7 @@
 	}
 
 	.arrow {
-		font-size: 0.65rem;
+		font-size: 0.65em;
 		flex-shrink: 0;
 		opacity: 0.6;
 	}
@@ -208,7 +209,7 @@
 		display: block;
 		padding: 0.5rem 0.75rem;
 		opacity: 0.4;
-		font-size: 0.7rem;
+		font-size: 0.7em;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 	}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Search } from '@lucide/svelte';
-	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
+	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
 
 	type DriveFile = { id: string; name: string; mimeType: string };
 
@@ -9,7 +9,7 @@
 	let results = $state<DriveFile[]>([]);
 	let searching = $state(false);
 	let debounceTimer: ReturnType<typeof setTimeout>;
-	let inputEl: HTMLInputElement;
+	let inputEl: HTMLInputElement | undefined = $state();
 
 	function toggle() {
 		expanded = !expanded;
@@ -45,9 +45,9 @@
 	}
 
 	function selectFile(file: DriveFile) {
-		WINDOW_SERVICE.addWindows([file]);
-		WINDOW_SERVICE.openWindow({ id: file.id });
-		WINDOW_SERVICE.focusWindow(file.id);
+		WINDOW_MANAGER.addWindows([file]);
+		WINDOW_MANAGER.openWindow({ id: file.id });
+		WINDOW_MANAGER.focusWindow(file.id);
 		expanded = false;
 		reset();
 	}

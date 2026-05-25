@@ -25,7 +25,19 @@ Command: npx @threlte/gltf@3.0.1 site-animation.glb
 	import FloorTexture from '$lib/assets/images/Grid.png';
 	import { Spring, Tween } from 'svelte/motion';
 
-	let { fallback, error, children, ref = $bindable(), ...props } = $props();
+	let {
+		fallback = undefined,
+		error = undefined,
+		children = undefined,
+		ref = $bindable(),
+		...props
+	}: {
+		fallback?: any;
+		error?: any;
+		children?: any;
+		ref?: any;
+		[key: string]: any;
+	} = $props();
 
 	ref = new Group();
 

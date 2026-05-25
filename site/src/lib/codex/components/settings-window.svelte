@@ -1,24 +1,24 @@
 <script lang="ts">
-	import { type CodexWindow } from '$lib/codex/services/window-service.svelte';
-	import { EFFECTS_SERVICE } from '$lib/codex/services/effects-service.svelte';
+	import { type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
+	import { EFFECTS_MANAGER } from '$lib/codex/managers/effects-manager.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
 
 	const effects = [
 		{
 			label: 'CRT',
-			get: () => EFFECTS_SERVICE.crt,
-			set: (v: boolean) => (EFFECTS_SERVICE.crt = v)
+			get: () => EFFECTS_MANAGER.crt,
+			set: (v: boolean) => (EFFECTS_MANAGER.crt = v)
 		},
 		{
 			label: 'scanlines',
-			get: () => EFFECTS_SERVICE.scanlines,
-			set: (v: boolean) => (EFFECTS_SERVICE.scanlines = v)
+			get: () => EFFECTS_MANAGER.scanlines,
+			set: (v: boolean) => (EFFECTS_MANAGER.scanlines = v)
 		},
 		{
 			label: 'vignette',
-			get: () => EFFECTS_SERVICE.vignette,
-			set: (v: boolean) => (EFFECTS_SERVICE.vignette = v)
+			get: () => EFFECTS_MANAGER.vignette,
+			set: (v: boolean) => (EFFECTS_MANAGER.vignette = v)
 		}
 	];
 </script>
@@ -57,7 +57,7 @@
 		color: var(--color-accent);
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		font-size: 0.7rem;
+		font-size: 0.7em;
 		margin: 0 0 0.4rem;
 	}
 
@@ -73,12 +73,12 @@
 		opacity: 0.7;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		font-size: 0.7rem;
+		font-size: 0.7em;
 	}
 
 	.toggle {
 		font-family: 'Courier New', Courier, monospace;
-		font-size: 0.7rem;
+		font-size: 0.7em;
 		letter-spacing: 0.08em;
 		padding: 0.15rem 0.5rem;
 		background: transparent;

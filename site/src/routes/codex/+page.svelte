@@ -3,13 +3,19 @@
 	import Desktop from '$lib/codex/components/desktop.svelte';
 	import Taskbar from '$lib/codex/components/taskbar.svelte';
 	import { type PageProps } from './$types';
-	import { WINDOW_SERVICE } from '../../lib/codex/services/window-service.svelte';
-	import { EFFECTS_SERVICE } from '$lib/codex/services/effects-service.svelte';
+	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
+	import { EFFECTS_MANAGER } from '$lib/codex/managers/effects-manager.svelte';
+	import { FEATURE_MANAGER } from '$lib/codex/managers/feature-manager.svelte';
+	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 
 	let { data }: PageProps = $props();
 	let feImageEl: SVGFEImageElement;
 
-	$effect(() => WINDOW_SERVICE.addWindows(data.files));
+	$effect(() => FEATURE_MANAGER.setFlags({ loginEnabled: data.loginEnabled, registerEnabled: data.registerEnabled }));
+	$effect(() => WINDOW_MANAGER.addWindows(data.files));
+	$effect(() => WINDOW_MANAGER.setRegisterEnabled(CREDENTIAL_MANAGER.isLogedIn));
+	$effect(() => WINDOW_MANAGER.setLoginEnabled(FEATURE_MANAGER.loginEnabled && !CREDENTIAL_MANAGER.isLogedIn));
+	$effect(() => WINDOW_MANAGER.setLogoutEnabled(CREDENTIAL_MANAGER.isLogedIn));
 
 	onMount(() => {
 		const size = 256;
@@ -64,17 +70,15 @@
 </svg>
 
 <div class="backdrop">
-	<main class:crt={EFFECTS_SERVICE.crt}>
+	<main class:crt={EFFECTS_MANAGER.crt}>
 		<Desktop></Desktop>
 		<Taskbar></Taskbar>
 	</main>
-	{#if EFFECTS_SERVICE.vignette}<div class="vignette"></div>{/if}
-	{#if EFFECTS_SERVICE.scanlines}<div class="scanlines"></div>{/if}
+	{#if EFFECTS_MANAGER.vignette}<div class="vignette"></div>{/if}
+	{#if EFFECTS_MANAGER.scanlines}<div class="scanlines"></div>{/if}
 </div>
 
 <style>
-	@import '$lib/styles/theme.css';
-
 	main {
 		display: flex;
 		flex-direction: column;

@@ -1,9 +1,10 @@
 import { error, type RequestHandler } from '@sveltejs/kit';
-import { getGoogleDriveManager } from '$lib/managers/google-drive-manager.svelte';
+import { getGoogleDriveService } from '$lib/services/google-drive-service';
 
 export const GET: RequestHandler = async ({ params }) => {
 	const { fileId } = params;
-	const stream = await getGoogleDriveManager().getFileStream(fileId);
+	if (!fileId) throw error(400, 'missing fileId');
+	const stream = await getGoogleDriveService().getFileStream(fileId);
 	return new Response(stream, {
 		headers: {
 			'Content-Type': 'application/pdf',

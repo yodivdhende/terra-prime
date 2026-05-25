@@ -1,4 +1,4 @@
-import { getGoogleSheetManager } from "$lib/managers/google-sheet-manager.svelte";
+import { getGoogleSheetService } from "$lib/services/google-sheet-service";
 import { type Actions } from "@sveltejs/kit";
 
 export const actions: Actions = {
@@ -9,7 +9,7 @@ export const actions: Actions = {
             const email = formData.get("playtest-email");
             if(typeof name !== "string") return {error: "input type invalid"}; 
             if(typeof email !== "string") return {error: "input type invalid"}; 
-            await getGoogleSheetManager().appendPlayTestSheetValues(name, email);
+            await getGoogleSheetService().appendPlayTestSheetValues(name, email);
             return {success: true};
         } catch (error){
             console.log(error);

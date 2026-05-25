@@ -6,7 +6,6 @@
 	const logoAnimationDuration = 3;
 	const contentAnimationDuration = 2;
 	let startCode = $state(false);
-	let formData = $state();
 
 	setTimeout(() => (startCode = true), (logoAnimationDuration + contentAnimationDuration) * 1000);
 </script>
@@ -88,7 +87,7 @@
 				</p>
 				<h2>Jouw plaats wacht in de Federatie!</h2>
 
-				<PlaytestForm formResult={formData as any} />
+				<PlaytestForm />
 			</div>
 		</section>
 	</div>

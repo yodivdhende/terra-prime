@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { X } from '@lucide/svelte';
 	import { type Snippet } from 'svelte';
-	import { type CodexWindow } from '$lib/codex/services/window-service.svelte';
-	import { WINDOW_SERVICE } from '$lib/codex/services/window-service.svelte';
+	import { type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
+	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
 
 	let { context = $bindable(), content }: { context: CodexWindow; content: Snippet } = $props();
 
@@ -17,7 +17,7 @@
 	});
 
 	function closeWindow() {
-		WINDOW_SERVICE.closeWindow(context.id);
+		WINDOW_MANAGER.closeWindow(context.id);
 	}
 
 	function draggable(node: HTMLElement) {
@@ -165,7 +165,7 @@
 			<div class="title">{context.title}</div>
 			<button onclick={closeWindow}> <X /> </button>
 		</div>
-		<div class="content">
+		<div class="content scroll">
 			{@render content?.()}
 		</div>
 	{/if}
@@ -193,7 +193,7 @@
 		border-bottom: var(--border-width) solid var(--color-main);
 		color: var(--color-accent);
 		cursor: grab;
-		font-size: 0.7rem;
+		font-size: 0.7em;
 		font-weight: bold;
 		letter-spacing: 0.06em;
 		flex-shrink: 0;
@@ -237,7 +237,7 @@
 		overflow: auto;
 		background-color: var(--color-bg);
 		color: var(--color-main-result);
-		font-size: 0.85rem;
+		font-size: 0.85em;
 		line-height: 1.6;
 		text-shadow: var(--phosphor-glow-shadow);
 	}

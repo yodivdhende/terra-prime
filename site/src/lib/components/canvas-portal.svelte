@@ -3,11 +3,12 @@
 		addCanvasPortalSnippet,
 		removeCanvasPortalSnippet
 	} from '$lib/components/canvas-portal-target.svelte';
-	import { onDestroy, type Snippet } from 'svelte';
+	import { type Snippet } from 'svelte';
 
 	let { children }: { children: Snippet } = $props();
 
-	addCanvasPortalSnippet(children);
-
-	onDestroy(() => removeCanvasPortalSnippet(children));
+	$effect(() => {
+		addCanvasPortalSnippet(children);
+		return () => removeCanvasPortalSnippet(children);
+	});
 </script>

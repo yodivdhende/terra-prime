@@ -12,7 +12,8 @@ class EventRepo {
                     Name as name,
                     StartTime as start,
                     EndTime as end,
-										Status as status
+                    Status as status,
+                    Budget as budget
                 FROM Events
             `);
 			if (Array.isArray(result) === false) return [];
@@ -41,7 +42,8 @@ class EventRepo {
                     Name as name,
                     StartTime as start,
                     EndTime as end,
-					Status as status
+                    Status as status,
+                    Budget as budget
                 FROM Events
 				WHERE id = ?
             `,
@@ -67,7 +69,8 @@ class EventRepo {
                     Name as name,
                     StartTime as start,
                     EndTime as end,
-										Status as status
+                    Status as status,
+                    Budget as budget
                 FROM Events
 								WHERE Status = ?
             `, [status]);
@@ -192,6 +195,7 @@ export type LarpEvent = {
 	start: Date;
 	end: Date;
 	status: EventStatus;
+	budget?: number;
 };
 export function isLarpEvent(event: unknown): event is LarpEvent {
 	if (typeof event !== 'object' || event == null) return false;

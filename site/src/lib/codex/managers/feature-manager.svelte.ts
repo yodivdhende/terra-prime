@@ -1,12 +1,15 @@
 function createFeatureManager() {
   let loginEnabled = $state(false);
+  let registerEnabled = $state(false);
 
-  function setFlags(flags: { loginEnabled: boolean }) {
+  function setFlags(flags: { loginEnabled: boolean; registerEnabled: boolean }) {
     loginEnabled = flags.loginEnabled;
+    registerEnabled = flags.registerEnabled;
   }
 
   return {
     get loginEnabled() { return loginEnabled; },
+    get registerEnabled() { return registerEnabled; },
     setFlags,
   };
 }

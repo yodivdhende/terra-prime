@@ -2,11 +2,15 @@
 	import { enhance } from '$app/forms';
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 	import { WINDOW_MANAGER, type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
+	import { FEATURE_MANAGER } from '$lib/codex/managers/feature-manager.svelte';
 	import type { ActionResult } from '@sveltejs/kit';
 
 	let { window }: { window: CodexWindow } = $props();
 
 	let mode = $state<'login' | 'register'>('login');
+	$effect(() => {
+		if (!FEATURE_MANAGER.registerEnabled && mode === 'register') mode = 'login';
+	});
 	let showPassword = $state(false);
 	let passwordInputType = $derived(showPassword ? 'text' : 'password');
 	let submitButton: HTMLButtonElement;
@@ -94,9 +98,11 @@
 			<button>Register</button>
 		</form>
 	{/if}
-	<button type="button" class="mode-toggle" onclick={() => switchMode(mode === 'login' ? 'register' : 'login')}>
-		{mode === 'login' ? 'Register' : 'Back to Login'}
-	</button>
+	{#if FEATURE_MANAGER.registerEnabled}
+		<button type="button" class="mode-toggle" onclick={() => switchMode(mode === 'login' ? 'register' : 'login')}>
+			{mode === 'login' ? 'Register' : 'Back to Login'}
+		</button>
+	{/if}
 </div>
 
 <style>

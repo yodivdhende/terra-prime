@@ -6,8 +6,9 @@ import { getSessionToken } from '$lib/utils/cookies';
 import { authGuardForUser, handleRequest } from '$lib/utils/request';
 import { json, type RequestHandler } from '@sveltejs/kit';
 
-export const POST: RequestHandler = async ({ cookies }) => {
+export const POST: RequestHandler = async ({ cookies, locals }) => {
 	return handleRequest(async () => {
+		if (!locals.featureFlags['Register']) throw new RequestError(403, 'registration is disabled');
 		const { userId } = await authGuardForUser(getSessionToken(cookies), [UserRole.user, UserRole.admin]);
 		const user = await userRepo.getById({ id: userId });
 		if (user.verified) throw new RequestError(400, 'email is already verified');

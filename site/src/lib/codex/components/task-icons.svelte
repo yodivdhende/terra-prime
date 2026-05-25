@@ -57,7 +57,7 @@
 
 	.clock {
 		font-family: var(--font-mono);
-		font-size: 1.5rem;
+		font-size: 1.5em;
 		letter-spacing: 0.08em;
 		opacity: 0.85;
 		white-space: nowrap;

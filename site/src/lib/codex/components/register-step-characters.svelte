@@ -163,7 +163,7 @@
 	}
 
 	.char-name {
-		font-size: 0.8rem;
+		font-size: 0.8em;
 		letter-spacing: 0.04em;
 	}
 
@@ -205,19 +205,19 @@
 	}
 
 	.version-name {
-		font-size: 0.72rem;
+		font-size: 0.72em;
 		opacity: 0.75;
 	}
 
 	.version-company {
-		font-size: 0.62rem;
+		font-size: 0.62em;
 		opacity: 0.6;
 		letter-spacing: 0.03em;
 		color: var(--color-accent);
 	}
 
 	.version-event {
-		font-size: 0.62rem;
+		font-size: 0.62em;
 		opacity: 0.5;
 		margin-left: auto;
 		letter-spacing: 0.03em;
@@ -233,7 +233,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.2rem;
-		font-size: 0.62rem;
+		font-size: 0.62em;
 	}
 
 	.create-new {
@@ -254,7 +254,7 @@
 	}
 
 	.status {
-		font-size: 0.75rem;
+		font-size: 0.75em;
 		opacity: 0.4;
 	}
 

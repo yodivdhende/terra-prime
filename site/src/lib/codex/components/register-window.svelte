@@ -58,7 +58,7 @@
 		flex-direction: column;
 		height: 100%;
 		font-family: var(--font-mono);
-		font-size: 0.85rem;
+		font-size: 1.2em;
 		color: var(--color-main);
 	}
 
@@ -68,7 +68,7 @@
 		gap: 0.4rem;
 		padding: 0.6rem 1rem;
 		border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
-		font-size: 0.7rem;
+		font-size: 0.7em;
 		flex-wrap: wrap;
 	}
 
@@ -109,7 +109,7 @@
 
 	button {
 		font-family: var(--font-mono);
-		font-size: 0.75rem;
+		font-size: 0.75em;
 		letter-spacing: 0.08em;
 		padding: 0.3rem 0.75rem;
 		background: transparent;

@@ -83,7 +83,7 @@
 	}
 
 	.mode-label {
-		font-size: 0.65rem;
+		font-size: 0.65em;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		opacity: 0.35;
@@ -93,7 +93,7 @@
 	/* ── Status ── */
 
 	.status {
-		font-size: 0.75rem;
+		font-size: 0.75em;
 		opacity: 0.4;
 	}
 

@@ -60,18 +60,18 @@
 	}
 
 	.name {
-		font-size: 0.8rem;
+		font-size: 0.8em;
 		letter-spacing: 0.04em;
 	}
 
 	.dates {
-		font-size: 0.7rem;
+		font-size: 0.7em;
 		opacity: 0.5;
 		white-space: nowrap;
 	}
 
 	.status {
-		font-size: 0.75rem;
+		font-size: 0.75em;
 		opacity: 0.4;
 	}
 

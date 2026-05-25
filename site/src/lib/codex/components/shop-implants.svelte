@@ -99,12 +99,12 @@
 	}
 
 	.entry-name {
-		font-size: 1.05rem;
+		font-size: 1.05em;
 		letter-spacing: 0.03em;
 	}
 
 	.entry-desc {
-		font-size: 0.95rem;
+		font-size: 0.95em;
 		opacity: 0.5;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -115,7 +115,7 @@
 	}
 
 	.entry-cost {
-		font-size: 1.05rem;
+		font-size: 1.05em;
 		color: var(--color-accent);
 		opacity: 0.7;
 		min-width: 2ch;
@@ -124,7 +124,7 @@
 
 	.toggle {
 		font-family: var(--font-mono);
-		font-size: 0.95rem;
+		font-size: 0.95em;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		padding: 0.25rem 0.6rem;
@@ -151,7 +151,7 @@
 	}
 
 	.empty {
-		font-size: 1.0rem;
+		font-size: 1.0em;
 		opacity: 0.4;
 		font-style: italic;
 	}

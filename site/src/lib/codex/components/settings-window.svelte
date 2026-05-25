@@ -57,7 +57,7 @@
 		color: var(--color-accent);
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		font-size: 0.7rem;
+		font-size: 0.7em;
 		margin: 0 0 0.4rem;
 	}
 
@@ -73,12 +73,12 @@
 		opacity: 0.7;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		font-size: 0.7rem;
+		font-size: 0.7em;
 	}
 
 	.toggle {
 		font-family: 'Courier New', Courier, monospace;
-		font-size: 0.7rem;
+		font-size: 0.7em;
 		letter-spacing: 0.08em;
 		padding: 0.15rem 0.5rem;
 		background: transparent;

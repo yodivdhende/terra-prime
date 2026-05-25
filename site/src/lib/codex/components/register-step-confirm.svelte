@@ -141,7 +141,7 @@
 	}
 
 	.event-label {
-		font-size: 0.62rem;
+		font-size: 0.62em;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		opacity: 0.4;
@@ -149,12 +149,12 @@
 	}
 
 	.event-name {
-		font-size: 0.82rem;
+		font-size: 0.82em;
 		flex: 1;
 	}
 
 	.badge {
-		font-size: 0.62rem;
+		font-size: 0.62em;
 		opacity: 0.5;
 		padding: 0.1rem 0.35rem;
 		border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
@@ -162,7 +162,7 @@
 
 	.confirm-btn {
 		font-family: var(--font-mono);
-		font-size: 0.75rem;
+		font-size: 0.75em;
 		letter-spacing: 0.08em;
 		padding: 0.45rem 1rem;
 		background: transparent;
@@ -185,7 +185,7 @@
 	}
 
 	.error {
-		font-size: 0.75rem;
+		font-size: 0.75em;
 		color: #d95c5c;
 		opacity: 0.85;
 	}
@@ -199,13 +199,13 @@
 	}
 
 	.success-title {
-		font-size: 0.8rem;
+		font-size: 0.8em;
 		color: var(--color-accent);
 		letter-spacing: 0.06em;
 	}
 
 	.success-hint {
-		font-size: 0.72rem;
+		font-size: 0.72em;
 		opacity: 0.55;
 	}
 

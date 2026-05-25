@@ -46,7 +46,7 @@
 	.status {
 		display: block;
 		opacity: 0.5;
-		font-size: 0.75rem;
+		font-size: 0.75em;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 	}

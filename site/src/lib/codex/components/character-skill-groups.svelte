@@ -64,7 +64,7 @@
 	}
 
 	.total {
-		font-size: 0.65rem;
+		font-size: 0.65em;
 		opacity: 0.85;
 	}
 </style>

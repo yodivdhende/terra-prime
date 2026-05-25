@@ -33,7 +33,6 @@
 			<a class="entry child" href="/manage/skills">Skills</a>
 			<a class="entry child" href="/manage/items">Items</a>
 			<a class="entry child" href="/manage/implants">Implants</a>
-			<a class="entry child" href="/manage/emails">Emails</a>
 		{/if}
 		<button class="entry folder" onclick={() => (characterOpen = !characterOpen)}>
 			<span class="arrow">{characterOpen ? 'v' : '>'}</span>
@@ -43,6 +42,7 @@
 			<a class="entry child" href="/manage/characters">Character</a>
 			<a class="entry child" href="/manage/characters/versions">Versions</a>
 		{/if}
+		<a class="entry" href="/manage/emails">Emails Templates</a>
 		<a class="entry" href="/manage/sessions">Sessions</a>
 	{/if}
 </nav>

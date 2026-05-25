@@ -14,6 +14,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     return {
       files,
       loginEnabled: locals.featureFlags['Login'] ?? false,
+      registerEnabled: locals.featureFlags['Register'] ?? false,
     }
   } catch (_error) {
     console.error(_error);

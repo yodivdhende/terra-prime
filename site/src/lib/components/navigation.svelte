@@ -42,6 +42,7 @@
 			<a class="entry child" href="/manage/characters">Character</a>
 			<a class="entry child" href="/manage/characters/versions">Versions</a>
 		{/if}
+		<a class="entry" href="/manage/emails">Emails Templates</a>
 		<a class="entry" href="/manage/sessions">Sessions</a>
 	{/if}
 </nav>

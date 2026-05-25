@@ -19,7 +19,7 @@
 		submitButton.click();
 	}
 
-	let { form }: PageProps = $props();
+	let { form, data }: PageProps = $props();
 	$effect(() => {
 		if (form?.error) console.error(form.error);
 		if (form?.success) {
@@ -56,7 +56,9 @@
 			</div>
 			<button bind:this={submitButton}> Login </button>
 		</form>
-		<a href="/manage/login/register">Register</a>
+		{#if data.registerEnabled}
+			<a href="/manage/login/register">Register</a>
+		{/if}
 	</div>
 </main>
 

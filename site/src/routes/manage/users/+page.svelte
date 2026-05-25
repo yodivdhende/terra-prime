@@ -11,6 +11,7 @@
 				<th>Id</th>
 				<th>Name</th>
 				<th>Email</th>
+				<th>Verified</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -19,6 +20,7 @@
 					<td><a href="./users/{user.id}">{user.id}</a></td>
 					<td>{user.name}</td>
 					<td>{user.email}</td>
+					<td class="verified" class:no={!user.verified}>{user.verified ? 'yes' : 'no'}</td>
 				</tr>
 			{/each}
 		</tbody>
@@ -34,5 +36,12 @@
 	}
 	td {
 		padding: 16px 8px;
+	}
+	td.verified {
+		color: green;
+		font-weight: bold;
+	}
+	td.verified.no {
+		color: tomato;
 	}
 </style>

@@ -1,13 +1,15 @@
 import { authenticationRepo } from '$lib/db/authentication.repo';
 import { sessionRepo } from '$lib/db/session.repo';
+import { sendVerificationEmail } from '$lib/server/verification.service';
 import { RequestError } from '$lib/types/errors';
 import { setSessionToken as setSessionToken } from '$lib/utils/cookies';
 import { handleRequest } from '$lib/utils/request';
 import { getTommorow } from '$lib/utils/time';
 import { json, type RequestHandler } from '@sveltejs/kit';
 
-export const POST: RequestHandler = async ({ request, cookies }) => {
+export const POST: RequestHandler = async ({ request, cookies, locals }) => {
 	return handleRequest(async () => {
+		if (!locals.featureFlags['Register']) throw new RequestError(403, 'registration is disabled');
 		const { email, password, name } = await request.json();
 		if (typeof name !== 'string' && typeof email !== 'string' && typeof password !== 'string')
 			throw new RequestError(400, 'request needs: name, email and password');
@@ -21,6 +23,9 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			description: 'api login'
 		});
 		setSessionToken(cookies, token);
+		sendVerificationEmail(userId, email).catch((err) => {
+			console.error('[register] failed to send verification email:', err);
+		});
 		return json({userId, roles, name: storedName});
 	});
 };

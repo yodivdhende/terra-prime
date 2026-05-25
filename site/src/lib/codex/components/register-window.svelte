@@ -58,7 +58,7 @@
 		flex-direction: column;
 		height: 100%;
 		font-family: var(--font-mono);
-		font-size: 0.85em;
+		font-size: 1.2em;
 		color: var(--color-main);
 	}
 

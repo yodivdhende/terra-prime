@@ -3,7 +3,7 @@ import { mysqlconnFn } from './mysql';
 class ImplantRepo {
 	public async getAll(): Promise<Implant[]> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(`
         SELECT
           i.Id as id,
@@ -30,7 +30,7 @@ class ImplantRepo {
 
 	public async getWithId(id: number) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
         SELECT
@@ -55,7 +55,7 @@ class ImplantRepo {
 
 	public async getWithIds(ids: number) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
         SELECT
@@ -85,7 +85,7 @@ class ImplantRepo {
 
 	public async create({ name, description }: Omit<Implant, 'id'>) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				INSERT INTO Implants (Name, Description)
@@ -103,7 +103,7 @@ class ImplantRepo {
 
 	public async edit({ id, name, description }: Implant) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				UPDATE Implants 
@@ -122,7 +122,7 @@ class ImplantRepo {
 
 	public async delete({ id }: { id: number }) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			await connection.execute(
 				`
                 DELETE 

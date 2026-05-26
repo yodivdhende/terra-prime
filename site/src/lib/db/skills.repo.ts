@@ -3,7 +3,7 @@ import { mysqlconnFn } from './mysql';
 class SkillRepo {
 	public async getAll(): Promise<Skill[]> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(`
 			 SELECT
 					s.Id as id,
@@ -34,7 +34,7 @@ class SkillRepo {
 
 	public async getWithId(id: number) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 			 SELECT
@@ -63,7 +63,7 @@ class SkillRepo {
 
 	public async getWithIds(ids: number[]): Promise<Skill[]> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				SELECT
@@ -106,7 +106,7 @@ class SkillRepo {
 		groupId
 	}: Pick<Skill, 'name' | 'description' | 'groupId'>) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				 INSERT INTO Skills (Name, Description, \`Group\`)
@@ -131,7 +131,7 @@ class SkillRepo {
 		groupId
 	}: Pick<Skill, 'id' | 'name' | 'description' | 'groupId'>) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				UPDATE Skills 
@@ -154,7 +154,7 @@ class SkillRepo {
 
 	public async delete({ id }: { id: number }) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			await connection.execute(
 				`
                 DELETE 
@@ -171,7 +171,7 @@ class SkillRepo {
 
 	public async getAllGroups() {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(`
 			 SELECT
 					sg.Id as id,
@@ -197,7 +197,7 @@ class SkillRepo {
 
 	public async getGroupWithId(id: number) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 			 SELECT
@@ -225,7 +225,7 @@ class SkillRepo {
 
 	private async createSkillGroup({ name, description }: Pick<SkillGroup, 'name' | 'description'>) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				INSERT INTO Skill_Groups (Name, Description)
@@ -247,7 +247,7 @@ class SkillRepo {
 		description
 	}: Pick<SkillGroup, 'id' | 'name' | 'description'>) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				UPDATE Skill_Groups
@@ -271,7 +271,7 @@ class SkillRepo {
 
 	private async deleteAllSkillsWithGroup(groupId: number) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				DELETE
@@ -289,7 +289,7 @@ class SkillRepo {
 
 	private async deleteSkillGroupWithId(groupId: number) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				DELETE

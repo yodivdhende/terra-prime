@@ -3,7 +3,7 @@ import { mysqlconnFn } from './mysql';
 
 class CharacterVersionRepo {
   public async getAll(): Promise<CharacterVersionBare[]> {
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     const [results] = await connection.execute(`
       SELECT
         cv.Id as id,
@@ -60,7 +60,7 @@ class CharacterVersionRepo {
   }
 
   public async create(characterVersion: CharacterVersionBare): Promise<number> {
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     const [result] = await connection.execute(
       `INSERT INTO Character_Versions (\`Character\`, Name, Company) VALUES (?, ?, ?)`,
       [characterVersion.characterId, characterVersion.name, characterVersion.company ?? null]
@@ -77,7 +77,7 @@ class CharacterVersionRepo {
   public async update(characterVersion: CharacterVersionBare): Promise<number> {
     if (characterVersion.id == null) throw new Error('update requires an id');
     const versionId = characterVersion.id;
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     await connection.execute(
       `UPDATE Character_Versions SET Name = ?, Company = ? WHERE Id = ?`,
       [characterVersion.name, characterVersion.company ?? null, versionId]
@@ -107,7 +107,7 @@ class CharacterVersionRepo {
   public async getItemsforCharacterVersions(
     ids: number[]
   ): Promise<{ characterVersionId: number; itemId: number, count: number }[]> {
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     const [result] = await connection.query(
       `
       SELECT 
@@ -135,7 +135,7 @@ class CharacterVersionRepo {
   public async getImplantsforCharacterVersions(
     ids: number[]
   ): Promise<{ characterVersionId: number; implantId: number }[]> {
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     const [result] = await connection.query(
       `
       SELECT 
@@ -161,7 +161,7 @@ class CharacterVersionRepo {
   public async getSkillsForCharacterVerions(
     ids: number[]
   ): Promise<{ characterVersionId: number; skillId: number; value: number }[]> {
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     const [result] = await connection.query(
       `
       SELECT
@@ -198,7 +198,7 @@ class CharacterVersionRepo {
     skills: CharacterVerionSkill[];
   }) {
     this.deleteSkills(versionId);
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     const [result] = await connection.query(
       `
 				INSERT INTO Character_Version_Skills (CharacterVersion, Skill, Value)
@@ -209,7 +209,7 @@ class CharacterVersionRepo {
   }
 
   public async saveItems({ versionId, items }: { versionId: number; items: CharacterVersionItem[] }) {
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     await connection.query(
       `INSERT INTO Character_Version_Items (CharacterVersion, Item, Count) VALUES ?`,
       [items.map((item) => [versionId, item.id, item.count])]
@@ -217,7 +217,7 @@ class CharacterVersionRepo {
   }
 
   public async saveImplants({ versionId, implants }: { versionId: number; implants: number[] }) {
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     await connection.query(
       `INSERT INTO Character_Version_Implants (CharacterVersion, Implant) VALUES ?`,
       [implants.map((id) => [versionId, id])]
@@ -225,7 +225,7 @@ class CharacterVersionRepo {
   }
 
   private async deleteSkills(versionId: number): Promise<void> {
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     await connection.query(
       `DELETE FROM Character_Version_Skills cvs WHERE cvs.CharacterVersion = ?`,
       [versionId]
@@ -233,7 +233,7 @@ class CharacterVersionRepo {
   }
 
   public async getWithdIds(ids: number[]): Promise<CharacterVersionBare[]> {
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     const [results] = await connection.query(
       `
       SELECT
@@ -287,7 +287,7 @@ class CharacterVersionRepo {
   }
 
   public async getAllWithCharacterName(): Promise<{ id: number; name: string; characterId: number; characterName: string }[]> {
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     const [results] = await connection.execute(`
       SELECT cv.Id as id, cv.Name as name, cv.Character as characterId, c.Name as characterName
       FROM Character_Versions cv
@@ -300,7 +300,7 @@ class CharacterVersionRepo {
   }
 
   public async getForCharacter(characterId: number): Promise<CharacterVersionBare[]> {
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     const [results] = await connection.execute(
       `SELECT cv.Id as id, cv.Character as characterId, cv.Name as name, cv.Company as company
        FROM Character_Versions cv WHERE cv.Character = ?`,
@@ -343,7 +343,7 @@ class CharacterVersionRepo {
   }
 
   private async deleteCharacterVerion(characterVersionId: number): Promise<void> {
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     await connection.query(
       `
 			DELETE
@@ -355,7 +355,7 @@ class CharacterVersionRepo {
   }
 
   public async deleteItems(characterVersionId: number): Promise<void> {
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     await connection.query(
       `
 			DELETE
@@ -367,7 +367,7 @@ class CharacterVersionRepo {
   }
 
   public async deleteImplants(characterVerionId: number): Promise<void> {
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     await connection.query(
       `
 			DELETE
@@ -379,7 +379,7 @@ class CharacterVersionRepo {
   }
 
   public async getForUser(userId: number): Promise<CharacterVersionBare[]> {
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     const [results] = await connection.execute(
       `
       SELECT

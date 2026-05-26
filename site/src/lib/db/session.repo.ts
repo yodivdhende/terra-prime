@@ -13,7 +13,7 @@ class SessionRepo {
 	}: NewSession): Promise<string> {
 		await this.removeExpiredSessions();
 		if (userId != null) await this.deleteByUserId(userId);
-		const connection = await mysqlconnFn();
+		const connection = mysqlconnFn();
 		const token = await this.addSessions(connection, { userId, end: end ?? undefined, description: description ?? undefined });
 		await this.addSessionRoles(connection, { roles, token });
 		return token;
@@ -54,7 +54,7 @@ class SessionRepo {
 	}
 
 	private async deleteByUserId(userId: number) {
-		const connection = await mysqlconnFn();
+		const connection = mysqlconnFn();
 		await connection.execute(
 			`DELETE FROM \`Session_Roles\` WHERE Token IN (SELECT Token FROM \`Sessions\` WHERE UserId = ?)`,
 			[userId]
@@ -64,7 +64,7 @@ class SessionRepo {
 
 	public async delete(token: string) {
 		await this.removeExpiredSessions();
-		const connection = await mysqlconnFn();
+		const connection = mysqlconnFn();
 		await this.deleteSessionRoles(connection, token);
 		await this.deleteSessions(connection, token);
 	}
@@ -91,7 +91,7 @@ class SessionRepo {
 
 	public async getCredentials(token: string): Promise<{ userId: number | null; roles: UserRole[] } | null> {
 			await this.removeExpiredSessions();
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [dbResult] = await connection.execute(`
                 SELECT
 					s.UserId as userId,
@@ -112,7 +112,7 @@ class SessionRepo {
 	}
 
 	private async removeExpiredSessions() {
-		const connection = await mysqlconnFn();
+		const connection = mysqlconnFn();
 		await connection.execute(`
                 DELETE FROM \`Session_Roles\` 
                 WHERE Token in (
@@ -130,7 +130,7 @@ class SessionRepo {
 	}
 
 	public async getAll() {
-		const connection = await mysqlconnFn();
+		const connection = mysqlconnFn();
 		const [sessionRoles] = await connection.execute(`
 				SELECT
 					s.Token as token,

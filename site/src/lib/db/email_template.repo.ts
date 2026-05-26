@@ -3,7 +3,7 @@ import { mysqlconnFn } from './mysql';
 class EmailTemplateRepo {
 	public async getAll(): Promise<EmailTemplate[]> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(`
 				SELECT
 					t.Id as id,
@@ -28,7 +28,7 @@ class EmailTemplateRepo {
 
 	public async getById(id: number): Promise<EmailTemplate | null> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				SELECT
@@ -52,7 +52,7 @@ class EmailTemplateRepo {
 
 	public async getByKey(key: string): Promise<EmailTemplate | null> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				SELECT
@@ -81,7 +81,7 @@ class EmailTemplateRepo {
 
 	public async create({ key, docUrl }: Omit<EmailTemplate, 'id'>) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				INSERT INTO Email_Templates (\`Key\`, DocUrl)
@@ -99,7 +99,7 @@ class EmailTemplateRepo {
 
 	public async edit({ id, key, docUrl }: EmailTemplate) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				UPDATE Email_Templates
@@ -118,7 +118,7 @@ class EmailTemplateRepo {
 
 	public async delete({ id }: { id: number }) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			await connection.execute(
 				`
 				DELETE FROM Email_Templates

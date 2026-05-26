@@ -11,7 +11,7 @@ class EventParticipatnsRepo {
     userId: number;
     characterVersionId: number;
   }) {
-    const connection = await mysqlconnFn();
+    const connection = mysqlconnFn();
     await connection.execute(
       `INSERT INTO Event_Participants (Event, User, CharacterVersion) VALUES (?, ?, ?)
 			 ON DUPLICATE KEY UPDATE CharacterVersion = VALUES(CharacterVersion)`,
@@ -27,7 +27,7 @@ class EventParticipatnsRepo {
     characterVersionId: number;
   }) {
     try {
-      const connection = await mysqlconnFn();
+      const connection = mysqlconnFn();
       await connection.execute(
         `
                 DELETE Event_Participants 
@@ -43,7 +43,7 @@ class EventParticipatnsRepo {
 
   public async getPerticipants({ eventId }: { eventId: number }): Promise<Character[]> {
     try {
-      const connection = await mysqlconnFn();
+      const connection = mysqlconnFn();
       const [result] = await connection.execute(
         `
 					SELECT
@@ -81,7 +81,7 @@ class EventParticipatnsRepo {
   public async getEventsForCharacters(characterIds: number[]): Promise<{ characterId: number; characterVersionId: number; eventId: number; eventName: string }[]> {
     if (characterIds.length === 0) return [];
     try {
-      const connection = await mysqlconnFn();
+      const connection = mysqlconnFn();
       const [result] = await connection.query(
         `SELECT
 					cv.Character as characterId,
@@ -119,7 +119,7 @@ class EventParticipatnsRepo {
 
   public async getUserParticipation({ eventId, userId }: { eventId: number; userId: number }): Promise<{ characterId: number; characterVersionId: number } | undefined> {
     try {
-      const connection = await mysqlconnFn();
+      const connection = mysqlconnFn();
       const [result] = await connection.execute(
         `SELECT
 					cv.Character as characterId,
@@ -146,7 +146,7 @@ class EventParticipatnsRepo {
     characterId: number;
   }): Promise<EventParticapant | undefined> {
     try {
-      const connection = await mysqlconnFn();
+      const connection = mysqlconnFn();
       const [result] = await connection.execute(
         `
 	        SELECT

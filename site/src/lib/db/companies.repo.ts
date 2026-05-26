@@ -3,7 +3,7 @@ import { mysqlconnFn } from './mysql';
 class CompanyRepo {
 	public async getAll(): Promise<Company[]> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(`
         SELECT
           c.Id as id,

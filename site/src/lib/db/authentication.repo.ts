@@ -5,7 +5,7 @@ import bcrypt from 'bcrypt';
 class AuthenticationRepo {
 	public async register(newUser: NewUser) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const passwordHash = await bcrypt.hash(newUser.password, 13);
 			const [result] = await connection.execute(
 				`
@@ -24,7 +24,7 @@ class AuthenticationRepo {
 
 	public async getCredentials(authUser: AuthUser) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 			SELECT

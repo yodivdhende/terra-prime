@@ -5,7 +5,7 @@ import { mysqlconnFn } from './mysql';
 class EmailVerificationRepo {
 	public async createToken(userId: number): Promise<string> {
 		await this.removeExpired();
-		const connection = await mysqlconnFn();
+		const connection = mysqlconnFn();
 		await connection.execute(`DELETE FROM Email_Verification_Tokens WHERE UserId = ?`, [userId]);
 		const token = uuidv4();
 		await connection.execute(
@@ -19,7 +19,7 @@ class EmailVerificationRepo {
 	}
 
 	public async consumeToken(token: string): Promise<number> {
-		const connection = await mysqlconnFn();
+		const connection = mysqlconnFn();
 		const [rows] = await connection.execute(
 			`
 			SELECT UserId as userId, ExpiresAt as expiresAt
@@ -40,7 +40,7 @@ class EmailVerificationRepo {
 	}
 
 	private async removeExpired(): Promise<void> {
-		const connection = await mysqlconnFn();
+		const connection = mysqlconnFn();
 		await connection.execute(`DELETE FROM Email_Verification_Tokens WHERE ExpiresAt < NOW()`);
 	}
 }

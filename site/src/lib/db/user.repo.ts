@@ -6,7 +6,7 @@ class UserRepo {
 
 	public async getByEmail({ email }: { email: string }): Promise<User> {
 		const [results] = await (
-			await mysqlconnFn()
+			mysqlconnFn()
 		).execute(`${this.userSelector} WHERE email = ?  `, [email]);
 		const [firstUser] = results as any;
 		if (isUserRow(firstUser)) {
@@ -22,7 +22,7 @@ class UserRepo {
 	}
 
 	public async getById({ id }: { id: number }): Promise<User> {
-		const connection = await mysqlconnFn();
+		const connection = mysqlconnFn();
 		const [results] = await connection.execute(`${this.userSelector} WHERE id = ?  `, [id]);
 		const [firstUser] = results as any;
 		if (isUserRow(firstUser)) {
@@ -38,7 +38,7 @@ class UserRepo {
 	}
 
 	public async getAll(): Promise<User[]> {
-		const [results] = await (await mysqlconnFn()).execute(this.userSelector);
+		const [results] = await (mysqlconnFn()).execute(this.userSelector);
 		return (results as any[])
 			.filter(isUserRow)
 			.map((row) => ({
@@ -50,7 +50,7 @@ class UserRepo {
 	}
 
 	public async update(user: User) {
-		(await mysqlconnFn()).execute(
+		(mysqlconnFn()).execute(
 			`
 					UPDATE Users
 					SET Name = ?,

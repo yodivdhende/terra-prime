@@ -14,7 +14,7 @@ class CharacterRepo {
 
 	public async getById(id: number): Promise<Character> {
 		const [result] = await (
-			await mysqlconnFn()
+			mysqlconnFn()
 		).execute(`${this.characterSelector} WHERE c.id = ?`, [id]);
 		const [firstCharacter] = result as any;
 		if (isCharacter(firstCharacter)) {
@@ -30,7 +30,7 @@ class CharacterRepo {
 	}
 
 	public async getByOwner(ownerId: number): Promise<Character[]> {
-		const connection = await mysqlconnFn();
+		const connection = mysqlconnFn();
 		const [result] = await connection.execute(
 			`SELECT c.Id as id, c.Name as name, c.Owner as ownerId, u.Name as ownerName
 			 FROM Characters c
@@ -43,14 +43,14 @@ class CharacterRepo {
 	}
 
 	public async getForUser(userId: number) {
-		const connection = await mysqlconnFn();
+		const connection = mysqlconnFn();
 		const [result] = await connection.execute(`${this.characterSelector} WHERE u.id = ?`, [userId]);
 		if(isCharacter(result) === false) return null;
 		return result;
 	}
 
 	public async getAll(): Promise<Character[]> {
-		const [result] = await (await mysqlconnFn()).execute(this.characterSelector);
+		const [result] = await (mysqlconnFn()).execute(this.characterSelector);
 		const characters = result as any[];
 		return characters
 			.map((character) => {
@@ -75,7 +75,7 @@ class CharacterRepo {
 	}
 
 	private async create(character: NewCharacter): Promise<number> {
-		const connection = await mysqlconnFn();
+		const connection = mysqlconnFn();
 		const [result] = await connection.execute(
 			`INSERT INTO Characters (Name, Owner) VALUES (?, ?)`,
 			[character.name, character.ownerId]
@@ -85,7 +85,7 @@ class CharacterRepo {
 
 	private async edit(character: Character) {
 		try {
-			(await mysqlconnFn()).execute(
+			(mysqlconnFn()).execute(
 				`
 				UPDATE Characters
 				SET Name = ?,

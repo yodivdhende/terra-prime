@@ -4,7 +4,7 @@ class PartyRepo {
 
 	public async getAll(): Promise<Party[]> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(`
                 SELECT
                     p.Id as id,
@@ -46,7 +46,7 @@ class PartyRepo {
 
 	public async create({ name, members }: Omit<Party, 'id'>) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const partyId = await connection.execute(
 				`
                 INSERT INTO Party (Name)
@@ -67,7 +67,7 @@ class PartyRepo {
 
 	public async edit({ id, name, members }: Party) {
 		// try {
-		// 	const connection = await mysqlconnFn();
+		// 	const connection = mysqlconnFn();
 		// 	await connection.execute(
 		// 		`
         //         UPDATE Events
@@ -85,7 +85,7 @@ class PartyRepo {
 
 	public async delete({id}: {id: number})  {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			await connection.execute(`
                 DELETE 
                 FROM Party_Members  
@@ -103,7 +103,7 @@ class PartyRepo {
     
 	public async getForCharacter({characterId}: {characterId: number}): Promise<Party | undefined> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(`
                 SELECT
                     p.Id as id,

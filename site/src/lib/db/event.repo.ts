@@ -5,7 +5,7 @@ import { mysqlconnFn } from './mysql';
 class EventRepo {
 	public async getAll(): Promise<LarpEvent[]> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(`
                 SELECT
                     Id as id,
@@ -34,7 +34,7 @@ class EventRepo {
 
 	public async getWithId(id: number): Promise<LarpEvent | undefined> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
                 SELECT
@@ -62,7 +62,7 @@ class EventRepo {
 
 	public async getWithStatus(status: EventStatus): Promise<LarpEvent[]> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(`
                 SELECT
                     Id as id,
@@ -97,7 +97,7 @@ class EventRepo {
 
 	public async create({ name, start, end, status }: Omit<LarpEvent, 'id'>) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
                 INSERT Events (Name, StartTime, EndTime, Status)
@@ -115,7 +115,7 @@ class EventRepo {
 
 	public async edit({ id, name, start, end, status }: LarpEvent) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
                 UPDATE Events
@@ -136,7 +136,7 @@ class EventRepo {
 
 	public async delete({ id }: { id: number }) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			await connection.execute(
 				`
                 DELETE 
@@ -152,7 +152,7 @@ class EventRepo {
 
 	public async getForCharacter({ characterId }: { characterId: number }): Promise<LarpEvent[]> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
                 SELECT

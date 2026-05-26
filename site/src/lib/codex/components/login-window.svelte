@@ -36,7 +36,7 @@
 				CREDENTIAL_MANAGER.credentials = {
 					roles: result.data.success.roles,
 					name: result.data.success.name ?? '',
-					id: result.data.success.userId ?? null,
+					id: result.data.success.userId ?? null
 				};
 				errorMessage = null;
 				WINDOW_MANAGER.closeWindow(window.id);
@@ -51,18 +51,10 @@
 	{#if mode === 'login'}
 		<form method="POST" action="/manage/login" use:enhance={handleResult}>
 			<label for="login-email">Email</label>
-			<!-- TODO remove value after testing -->
-			<input type="email" name="email" id="login-email" value="yodi.vandenhende+player2@gmail.com" />
+			<input type="email" name="email" id="login-email" />
 			<label for="login-password">Password</label>
 			<div class="password">
-				<!-- TODO remove value after testing -->
-				<input
-					type={passwordInputType}
-					name="password"
-					id="login-password"
-					onkeydown={login}
-					value="Tester@123"
-				/>
+				<input type={passwordInputType} name="password" id="login-password" onkeydown={login} />
 				<button type="button" onclick={toggleShowPassword}>
 					{showPassword ? '◎' : '◉'}
 				</button>
@@ -99,7 +91,11 @@
 		</form>
 	{/if}
 	{#if FEATURE_MANAGER.registerEnabled}
-		<button type="button" class="mode-toggle" onclick={() => switchMode(mode === 'login' ? 'register' : 'login')}>
+		<button
+			type="button"
+			class="mode-toggle"
+			onclick={() => switchMode(mode === 'login' ? 'register' : 'login')}
+		>
 			{mode === 'login' ? 'Register' : 'Back to Login'}
 		</button>
 	{/if}
@@ -190,7 +186,9 @@
 		cursor: pointer;
 		font-family: inherit;
 		letter-spacing: normal;
-		transition: opacity 0.15s, color 0.15s;
+		transition:
+			opacity 0.15s,
+			color 0.15s;
 	}
 
 	.mode-toggle:hover {

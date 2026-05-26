@@ -2,7 +2,6 @@ import { isPublicUserRole, type UserRole } from '$lib/types/roles';
 import { v4 as uuidv4 } from 'uuid';
 import { mysqlconnFn } from './mysql';
 import { type Connection as MySqlConnection } from 'mysql2/promise';
-import { rollupVersion } from 'vite';
 
 class SessionRepo {
 	public async create({

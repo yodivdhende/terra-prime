@@ -33,6 +33,8 @@
 			<option value={status}>{status}</option>
 		{/each}
 	</select>
+	<label for="budget">budget</label>
+	<input id="budget" type="number" min="0" step="0.01" bind:value={event.budget} />
 </main>
 
 <style>

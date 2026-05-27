@@ -90,20 +90,20 @@ class EventRepo {
 		}
 	}
 
-	public save({ id, name, start, end, status }: LarpEvent) {
-		if (id == null) return this.create({ name, start, end, status });
-		return this.edit({ id, name, start, end, status });
+	public save({ id, name, start, end, status, budget }: LarpEvent) {
+		if (id == null) return this.create({ name, start, end, status, budget });
+		return this.edit({ id, name, start, end, status, budget });
 	}
 
-	public async create({ name, start, end, status }: Omit<LarpEvent, 'id'>) {
+	public async create({ name, start, end, status, budget }: Omit<LarpEvent, 'id'>) {
 		try {
 			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
-                INSERT Events (Name, StartTime, EndTime, Status)
-                VALUES (?,?,?, ?)
+                INSERT Events (Name, StartTime, EndTime, Status, Budget)
+                VALUES (?,?,?,?,?)
             `,
-				[name, dateToSqlstring(start), dateToSqlstring(end), status]
+				[name, dateToSqlstring(start), dateToSqlstring(end), status, budget ?? null]
 			);
 			if ('serverStatus' in result && result.serverStatus !== 2) return null;
 			if ('insertId' in result === false || result.insertId == null) return null;
@@ -113,7 +113,7 @@ class EventRepo {
 		}
 	}
 
-	public async edit({ id, name, start, end, status }: LarpEvent) {
+	public async edit({ id, name, start, end, status, budget }: LarpEvent) {
 		try {
 			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
@@ -122,10 +122,11 @@ class EventRepo {
                 SET name = ?,
                 StartTime = ?,
                 EndTime = ?,
-				Status = ?
+				Status = ?,
+				Budget = ?
                 WHERE id = ?
             `,
-				[name, dateToSqlstring(start), dateToSqlstring(end), status, id]
+				[name, dateToSqlstring(start), dateToSqlstring(end), status, budget ?? null, id]
 			);
 			if ('serverStatus' in result && result.serverStatus !== 2) return null;
 			return id;

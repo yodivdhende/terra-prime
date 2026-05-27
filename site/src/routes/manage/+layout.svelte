@@ -53,6 +53,10 @@
 		overflow: hidden;
 	}
 
+	main :global(a) {
+		color: var(--color-accent);
+	}
+
 	.background {
 		grid-area: section;
 		background-color: black;
@@ -76,8 +80,9 @@
 	}
 
 	.section-container {
-		background-color: var(--color-bg);
 		color: var(--color-main);
+		border: 1px solid var(--color-main);
+		background-color: var(--color-bg);
 	}
 
 	.backdrop {

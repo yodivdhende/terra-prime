@@ -4,6 +4,7 @@
 	import { WINDOW_MANAGER, type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
 	import { FEATURE_MANAGER } from '$lib/codex/managers/feature-manager.svelte';
 	import type { ActionResult } from '@sveltejs/kit';
+	import ForgotPasswordForm from './forgot-password-form.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
 
@@ -16,10 +17,6 @@
 	let submitButton: HTMLButtonElement;
 	let errorMessage = $state<string | null>(null);
 
-	let forgotEmail = $state('');
-	let forgotStatus = $state<'idle' | 'sending' | 'sent' | 'error'>('idle');
-	let forgotMessage = $state('');
-
 	function toggleShowPassword() {
 		showPassword = !showPassword;
 	}
@@ -27,8 +24,6 @@
 	function switchMode(next: 'login' | 'register' | 'forgot') {
 		mode = next;
 		errorMessage = null;
-		forgotStatus = 'idle';
-		forgotMessage = '';
 	}
 
 	function login(event: KeyboardEvent) {
@@ -52,29 +47,7 @@
 		};
 	}
 
-	async function submitForgot(event: Event) {
-		event.preventDefault();
-		if (forgotStatus === 'sending') return;
-		forgotStatus = 'sending';
-		forgotMessage = '';
-		try {
-			const res = await fetch('/api/authentication/forgot-password', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ email: forgotEmail })
-			});
-			if (res.ok) {
-				forgotStatus = 'sent';
-				return;
-			}
-			const body = await res.json().catch(() => ({}));
-			forgotStatus = 'error';
-			forgotMessage = body?.message ?? `request failed (${res.status})`;
-		} catch (err) {
-			forgotStatus = 'error';
-			forgotMessage = `${err}`;
-		}
-	}
+
 </script>
 
 <div class="login">
@@ -123,20 +96,7 @@
 			<button>Register</button>
 		</form>
 	{:else}
-		<form onsubmit={submitForgot}>
-			<p class="hint">enter your email and we will send a password reset link</p>
-			<label for="forgot-email">Email</label>
-			<input type="email" id="forgot-email" bind:value={forgotEmail} required />
-			{#if forgotStatus === 'sent'}
-				<span class="sent">if that email is registered, a reset link has been sent</span>
-			{/if}
-			{#if forgotStatus === 'error'}
-				<span class="error">{forgotMessage}</span>
-			{/if}
-			<button type="submit" disabled={forgotStatus === 'sending'}>
-				{forgotStatus === 'sending' ? 'sending…' : 'Send reset link'}
-			</button>
-		</form>
+		<ForgotPasswordForm />
 	{/if}
 
 	{#if mode === 'forgot'}
@@ -231,18 +191,6 @@
 		font-size: 0.7em;
 		color: var(--color-error);
 		opacity: 0.8;
-	}
-
-	.sent {
-		font-size: 0.7em;
-		color: var(--color-accent);
-		opacity: 0.9;
-	}
-
-	.hint {
-		font-size: 0.7em;
-		opacity: 0.7;
-		margin: 0;
 	}
 
 	.mode-toggle {

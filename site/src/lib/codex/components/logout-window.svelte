@@ -1,45 +1,13 @@
 <script lang="ts">
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 	import { WINDOW_MANAGER, type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
+	import ForgotPasswordForm from './forgot-password-form.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
-
-	let resetStatus = $state<'idle' | 'sending' | 'sent' | 'error'>('idle');
-	let resetMessage = $state('');
 
 	function logout() {
 		CREDENTIAL_MANAGER.logout();
 		WINDOW_MANAGER.closeWindow(window.id);
-	}
-
-	async function sendResetEmail() {
-		if (resetStatus === 'sending') return;
-		resetStatus = 'sending';
-		resetMessage = '';
-		try {
-			const meRes = await fetch('/api/my/user');
-			if (!meRes.ok) {
-				resetStatus = 'error';
-				resetMessage = `could not load current user (${meRes.status})`;
-				return;
-			}
-			const me = await meRes.json();
-			const res = await fetch('/api/authentication/forgot-password', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ email: me.email })
-			});
-			if (res.ok) {
-				resetStatus = 'sent';
-				return;
-			}
-			const body = await res.json().catch(() => ({}));
-			resetStatus = 'error';
-			resetMessage = body?.message ?? `request failed (${res.status})`;
-		} catch (err) {
-			resetStatus = 'error';
-			resetMessage = `${err}`;
-		}
 	}
 </script>
 
@@ -47,14 +15,7 @@
 	<p class="label">logged in as</p>
 	<p class="username">{CREDENTIAL_MANAGER.credentials.name}</p>
 	<button onclick={logout}>Logout</button>
-	<button onclick={sendResetEmail} disabled={resetStatus === 'sending'}>
-		{resetStatus === 'sending' ? 'sending…' : 'Reset password'}
-	</button>
-	{#if resetStatus === 'sent'}
-		<span class="feedback ok">password reset email sent</span>
-	{:else if resetStatus === 'error'}
-		<span class="feedback err">{resetMessage}</span>
-	{/if}
+	<ForgotPasswordForm mode="button" />
 </div>
 
 <style>
@@ -104,14 +65,4 @@
 		cursor: not-allowed;
 	}
 
-	.feedback {
-		font-size: 0.7em;
-	}
-	.feedback.ok {
-		color: var(--color-accent);
-	}
-	.feedback.err {
-		color: var(--color-error);
-		opacity: 0.85;
-	}
 </style>

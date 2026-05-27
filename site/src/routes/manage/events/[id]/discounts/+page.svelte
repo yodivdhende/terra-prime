@@ -4,6 +4,7 @@
 	import type { Item } from '$lib/db/items.repo';
 	import type { Implant } from '$lib/db/implants.repo';
 	import type { Skill } from '$lib/db/skills.repo';
+	import CharacterPickerPanel from '$lib/components/side-panels/character-picker-panel.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -16,11 +17,9 @@
 	let skills: Skill[] = $state([]);
 
 	let panelOpen = $state(false);
-	let searchQuery = $state('');
 
 	$effect(() => {
 		eventId = data.eventId;
-		characters = data.characters ?? [];
 		items = data.items ?? [];
 		implants = data.implants ?? [];
 		skills = data.skills ?? [];
@@ -32,7 +31,9 @@
 		discountMap = map;
 	});
 
-	const charactersById = $derived(new Map(characters.filter((c) => c.id != null).map((c) => [c.id as number, c])));
+	const charactersById = $derived(
+		new Map(characters.filter((c) => c.id != null).map((c) => [c.id as number, c]))
+	);
 
 	const displayedCharacters = $derived.by(() => {
 		const result: Character[] = [];
@@ -43,25 +44,13 @@
 		return result;
 	});
 
-	const searchResults = $derived.by(() => {
-		const q = searchQuery.trim().toLowerCase();
-		return characters.filter((c) => {
-			if (c.id == null) return false;
-			if (discountMap.has(c.id)) return false;
-			if (q.length === 0) return true;
-			return (
-				c.name.toLowerCase().includes(q) ||
-				(c.ownerName ?? '').toLowerCase().includes(q)
-			);
-		});
-	});
+	const excludeIds = $derived(Array.from(discountMap.keys()));
 
-	function addCharacter(characterId: number) {
-		if (discountMap.has(characterId)) return;
+	function addCharacter(character: Character) {
+		const characterId = character.id;
+		if (characterId == null || discountMap.has(characterId)) return;
 		discountMap.set(characterId, { characterId, items: [], implants: [], skills: [] });
 		discountMap = new Map(discountMap);
-		panelOpen = false;
-		searchQuery = '';
 	}
 
 	function getDiscounts(characterId: number): CharacterDiscounts {
@@ -208,34 +197,12 @@
 	{/if}
 </main>
 
-{#if panelOpen}
-	<aside class="panel">
-		<div class="panel-header">
-			<h3>Add character</h3>
-			<button onclick={() => (panelOpen = false)}>close</button>
-		</div>
-		<input
-			type="text"
-			placeholder="search by name or owner"
-			bind:value={searchQuery}
-		/>
-		<ul class="results">
-			{#each searchResults as c}
-				{#if c.id != null}
-					{@const cid = c.id}
-					<li>
-						<button onclick={() => addCharacter(cid)}>
-							{c.name} <span class="owner">({c.ownerName})</span>
-						</button>
-					</li>
-				{/if}
-			{/each}
-			{#if searchResults.length === 0}
-				<li class="empty">no matches</li>
-			{/if}
-		</ul>
-	</aside>
-{/if}
+<CharacterPickerPanel
+	bind:open={panelOpen}
+	bind:characters
+	{excludeIds}
+	onSelect={addCharacter}
+/>
 
 <style>
 	main {
@@ -280,56 +247,5 @@
 	}
 	input[type='number'] {
 		width: 80px;
-	}
-	.panel {
-		position: fixed;
-		top: 0;
-		right: 0;
-		bottom: 0;
-		width: 360px;
-		color: var(--color-main);
-		background: var(--color-bg);
-		border-left: 1px solid var(--color-main);
-		box-shadow: -2px 0 8px rgba(0, 0, 0, 0.5);
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		padding: 16px;
-		z-index: 100;
-	}
-	.panel-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-	.panel input[type='text'] {
-		padding: 6px 8px;
-		color: var(--color-main);
-		background: var(--color-bg);
-		border: 1px solid var(--color-main);
-	}
-	.results {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-		overflow-y: auto;
-		flex: 1;
-	}
-	.results li button {
-		display: block;
-		width: 100%;
-		text-align: left;
-		padding: 6px 8px;
-		color: var(--color-main);
-		background: transparent;
-		border: none;
-		cursor: pointer;
-	}
-	.results li button:hover {
-		background: rgba(255, 255, 255, 0.1);
-	}
-	.results li.empty {
-		padding: 6px 8px;
-		color: var(--color-main-dim);
 	}
 </style>

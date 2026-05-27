@@ -9,32 +9,60 @@
 	let { data }: PageProps = $props();
 
 	let eventId: string = $state('');
-	let participants: Character[] = $state([]);
+	let characters: Character[] = $state([]);
 	let discountMap = $state<Map<number, CharacterDiscounts>>(new Map());
 	let items: Item[] = $state([]);
 	let implants: Implant[] = $state([]);
 	let skills: Skill[] = $state([]);
 
+	let panelOpen = $state(false);
+	let searchQuery = $state('');
+
 	$effect(() => {
 		eventId = data.eventId;
-		participants = data.participants ?? [];
+		characters = data.characters ?? [];
 		items = data.items ?? [];
 		implants = data.implants ?? [];
 		skills = data.skills ?? [];
 
 		const map = new Map<number, CharacterDiscounts>();
-		for (const p of participants) {
-			if (p.id == null) continue;
-			const existing = (data.discounts as CharacterDiscounts[]).find(
-				(d) => d.characterId === p.id
-			);
-			map.set(p.id, existing
-				? structuredClone(existing)
-				: { characterId: p.id, items: [], implants: [], skills: [] }
-			);
+		for (const d of (data.discounts as CharacterDiscounts[]) ?? []) {
+			map.set(d.characterId, structuredClone(d));
 		}
 		discountMap = map;
 	});
+
+	const charactersById = $derived(new Map(characters.filter((c) => c.id != null).map((c) => [c.id as number, c])));
+
+	const displayedCharacters = $derived.by(() => {
+		const result: Character[] = [];
+		for (const id of discountMap.keys()) {
+			const c = charactersById.get(id);
+			if (c != null) result.push(c);
+		}
+		return result;
+	});
+
+	const searchResults = $derived.by(() => {
+		const q = searchQuery.trim().toLowerCase();
+		return characters.filter((c) => {
+			if (c.id == null) return false;
+			if (discountMap.has(c.id)) return false;
+			if (q.length === 0) return true;
+			return (
+				c.name.toLowerCase().includes(q) ||
+				(c.ownerName ?? '').toLowerCase().includes(q)
+			);
+		});
+	});
+
+	function addCharacter(characterId: number) {
+		if (discountMap.has(characterId)) return;
+		discountMap.set(characterId, { characterId, items: [], implants: [], skills: [] });
+		discountMap = new Map(discountMap);
+		panelOpen = false;
+		searchQuery = '';
+	}
 
 	function getDiscounts(characterId: number): CharacterDiscounts {
 		return discountMap.get(characterId) ?? { characterId, items: [], implants: [], skills: [] };
@@ -91,14 +119,17 @@
 
 <main>
 	<a href="..">back</a>
-	<h2>Event Discounts</h2>
+	<div class="header">
+		<h2>Event Discounts</h2>
+		<button onclick={() => (panelOpen = true)}>+ add character</button>
+	</div>
 
-	{#each participants as participant}
-		{#if participant.id != null}
-			{@const d = getDiscounts(participant.id)}
-			{@const cid = participant.id}
+	{#each displayedCharacters as character}
+		{#if character.id != null}
+			{@const d = getDiscounts(character.id)}
+			{@const cid = character.id}
 			<details>
-				<summary>{participant.name} <span class="owner">({participant.ownerName})</span></summary>
+				<summary>{character.name} <span class="owner">({character.ownerName})</span></summary>
 
 				<div class="character-discounts">
 					<h4>Items</h4>
@@ -172,10 +203,39 @@
 		{/if}
 	{/each}
 
-	{#if participants.length === 0}
-		<p>No participants registered for this event.</p>
+	{#if displayedCharacters.length === 0}
+		<p>No characters with discounts yet. Click "+ add character" to add one.</p>
 	{/if}
 </main>
+
+{#if panelOpen}
+	<aside class="panel">
+		<div class="panel-header">
+			<h3>Add character</h3>
+			<button onclick={() => (panelOpen = false)}>close</button>
+		</div>
+		<input
+			type="text"
+			placeholder="search by name or owner"
+			bind:value={searchQuery}
+		/>
+		<ul class="results">
+			{#each searchResults as c}
+				{#if c.id != null}
+					{@const cid = c.id}
+					<li>
+						<button onclick={() => addCharacter(cid)}>
+							{c.name} <span class="owner">({c.ownerName})</span>
+						</button>
+					</li>
+				{/if}
+			{/each}
+			{#if searchResults.length === 0}
+				<li class="empty">no matches</li>
+			{/if}
+		</ul>
+	</aside>
+{/if}
 
 <style>
 	main {
@@ -183,6 +243,11 @@
 		flex-direction: column;
 		padding: 16px;
 		gap: 12px;
+	}
+	.header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 	}
 	details {
 		border: 1px solid silver;
@@ -215,5 +280,56 @@
 	}
 	input[type='number'] {
 		width: 80px;
+	}
+	.panel {
+		position: fixed;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		width: 360px;
+		color: var(--color-main);
+		background: var(--color-bg);
+		border-left: 1px solid var(--color-main);
+		box-shadow: -2px 0 8px rgba(0, 0, 0, 0.5);
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		padding: 16px;
+		z-index: 100;
+	}
+	.panel-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+	.panel input[type='text'] {
+		padding: 6px 8px;
+		color: var(--color-main);
+		background: var(--color-bg);
+		border: 1px solid var(--color-main);
+	}
+	.results {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		overflow-y: auto;
+		flex: 1;
+	}
+	.results li button {
+		display: block;
+		width: 100%;
+		text-align: left;
+		padding: 6px 8px;
+		color: var(--color-main);
+		background: transparent;
+		border: none;
+		cursor: pointer;
+	}
+	.results li button:hover {
+		background: rgba(255, 255, 255, 0.1);
+	}
+	.results li.empty {
+		padding: 6px 8px;
+		color: var(--color-main-dim);
 	}
 </style>

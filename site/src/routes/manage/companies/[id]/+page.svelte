@@ -18,10 +18,14 @@
 
 	$effect(() => {
 		company = { ...data.company };
-		discounts = structuredClone(data.discounts);
-		items = data.items;
-		implants = data.implants;
-		skills = data.skills;
+		discounts = {
+			items: data.discounts?.items ?? [],
+			implants: data.discounts?.implants ?? [],
+			skills: data.discounts?.skills ?? []
+		};
+		items = data.items ?? [];
+		implants = data.implants ?? [];
+		skills = data.skills ?? [];
 	});
 
 	async function saveCompany() {
@@ -77,17 +81,18 @@
 <main>
 	<a href=".">back</a>
 
-	<section>
-		<h2>Company</h2>
-		<CompanyForm bind:company />
-		<div class="actions">
-			<button onclick={saveCompany}>save</button>
-			<button onclick={removeCompany}>delete</button>
-		</div>
-	</section>
+	<div class="columns">
+		<section class="info">
+			<h2>Company</h2>
+			<CompanyForm bind:company />
+			<div class="actions">
+				<button onclick={saveCompany}>save</button>
+				<button onclick={removeCompany}>delete</button>
+			</div>
+		</section>
 
-	<section>
-		<h2>Discounts</h2>
+		<section class="discounts">
+			<h2>Discounts</h2>
 
 		<h3>Items</h3>
 		<table>
@@ -162,6 +167,7 @@
 			<button onclick={saveDiscounts}>save discounts</button>
 		</div>
 	</section>
+	</div>
 </main>
 
 <style>
@@ -171,10 +177,23 @@
 		padding: 8px;
 		gap: 16px;
 	}
+	.columns {
+		display: flex;
+		flex-direction: row;
+		gap: 24px;
+		align-items: flex-start;
+		flex-wrap: wrap;
+	}
 	section {
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
+	}
+	.info {
+		flex: 0 0 320px;
+	}
+	.discounts {
+		flex: 1 1 480px;
 	}
 	table {
 		border-collapse: collapse;

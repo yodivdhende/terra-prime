@@ -78,7 +78,6 @@
 		font-size: 1.1rem;
 		text-align: left;
 		cursor: pointer;
-		width: 100%;
 		letter-spacing: 0.04em;
 		white-space: nowrap;
 		opacity: 0.7;

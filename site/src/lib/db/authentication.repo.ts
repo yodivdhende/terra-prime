@@ -22,6 +22,12 @@ class AuthenticationRepo {
 		}
 	}
 
+	public async updatePassword(userId: number, newPassword: string) {
+		const connection = mysqlconnFn();
+		const passwordHash = await bcrypt.hash(newPassword, 13);
+		await connection.execute(`UPDATE Users SET Password = ? WHERE Id = ?`, [passwordHash, userId]);
+	}
+
 	public async getCredentials(authUser: AuthUser) {
 		try {
 			const connection = mysqlconnFn();

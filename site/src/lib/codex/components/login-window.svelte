@@ -4,10 +4,11 @@
 	import { WINDOW_MANAGER, type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
 	import { FEATURE_MANAGER } from '$lib/codex/managers/feature-manager.svelte';
 	import type { ActionResult } from '@sveltejs/kit';
+	import ForgotPasswordForm from './forgot-password-form.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
 
-	let mode = $state<'login' | 'register'>('login');
+	let mode = $state<'login' | 'register' | 'forgot'>('login');
 	$effect(() => {
 		if (!FEATURE_MANAGER.registerEnabled && mode === 'register') mode = 'login';
 	});
@@ -20,7 +21,7 @@
 		showPassword = !showPassword;
 	}
 
-	function switchMode(next: 'login' | 'register') {
+	function switchMode(next: 'login' | 'register' | 'forgot') {
 		mode = next;
 		errorMessage = null;
 	}
@@ -45,6 +46,8 @@
 			}
 		};
 	}
+
+
 </script>
 
 <div class="login">
@@ -64,7 +67,10 @@
 			{/if}
 			<button bind:this={submitButton}>Login</button>
 		</form>
-	{:else}
+		<button type="button" class="mode-toggle" onclick={() => switchMode('forgot')}>
+			Forgot password?
+		</button>
+	{:else if mode === 'register'}
 		<form method="POST" action="/manage/login/register" use:enhance={handleResult}>
 			<label for="register-name">Name</label>
 			<input type="text" name="name" id="register-name" />
@@ -89,8 +95,15 @@
 			{/if}
 			<button>Register</button>
 		</form>
+	{:else}
+		<ForgotPasswordForm />
 	{/if}
-	{#if FEATURE_MANAGER.registerEnabled}
+
+	{#if mode === 'forgot'}
+		<button type="button" class="mode-toggle" onclick={() => switchMode('login')}>
+			Back to Login
+		</button>
+	{:else if FEATURE_MANAGER.registerEnabled}
 		<button
 			type="button"
 			class="mode-toggle"
@@ -167,6 +180,11 @@
 	button:hover {
 		border-color: var(--color-accent);
 		color: var(--color-accent);
+	}
+
+	button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	.error {

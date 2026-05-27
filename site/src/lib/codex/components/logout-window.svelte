@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 	import { WINDOW_MANAGER, type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
+	import ForgotPasswordForm from './forgot-password-form.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
 
@@ -14,6 +15,7 @@
 	<p class="label">logged in as</p>
 	<p class="username">{CREDENTIAL_MANAGER.credentials.name}</p>
 	<button onclick={logout}>Logout</button>
+	<ForgotPasswordForm mode="button" />
 </div>
 
 <style>
@@ -57,4 +59,10 @@
 		border-color: var(--color-accent);
 		color: var(--color-accent);
 	}
+
+	button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
 </style>

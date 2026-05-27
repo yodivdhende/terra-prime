@@ -112,7 +112,7 @@ export function createLogoutWindow({ shouldCreate }: { shouldCreate: boolean }):
     id: 'logout',
     type: 'logout',
     state: 'closed',
-    dimension: { w: 280, h: 160 },
+    dimension: { w: 280, h: 200 },
     position: { x: 300, y: 100, z: 0 },
     contentData: 'logout',
     title: 'account',

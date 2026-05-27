@@ -8,7 +8,8 @@
 	}: { template: EmailTemplate; isExisting?: boolean } = $props();
 
 	const KNOWN_SUBJECTS: Record<string, string> = {
-		verify_email: 'Verify your Terra Prime email'
+		verify_email: 'Verify your Terra Prime email',
+		password_reset: 'Reset your Terra Prime password'
 	};
 
 	const resolvedSubject = $derived(KNOWN_SUBJECTS[template.key]);

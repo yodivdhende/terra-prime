@@ -7,6 +7,8 @@
     let user = $state(untrack(() => data.user));
     let resendStatus: 'idle' | 'sending' | 'sent' | 'error' = $state('idle');
     let resendError = $state('');
+    let resetStatus: 'idle' | 'sending' | 'sent' | 'error' = $state('idle');
+    let resetError = $state('');
 
     async function save() {
         if(user == null)return;
@@ -46,6 +48,28 @@
             resendError = `${err}`;
         }
     }
+
+    async function sendPasswordReset() {
+        if (user == null) return;
+        resetStatus = 'sending';
+        resetError = '';
+        try {
+            const res = await fetch(`/api/admin/users/${user.id}/send-password-reset`, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' }
+            });
+            if (res.ok) {
+                resetStatus = 'sent';
+                return;
+            }
+            const body = await res.json().catch(() => ({}));
+            resetStatus = 'error';
+            resetError = body?.message ?? `failed (${res.status})`;
+        } catch (err) {
+            resetStatus = 'error';
+            resetError = `${err}`;
+        }
+    }
 </script>
 <main>
     <a href=".">back</a>
@@ -70,6 +94,17 @@
             <span class="feedback err">{resendError}</span>
         {/if}
     </div>
+
+    <div class="reset">
+        <button onclick={sendPasswordReset} disabled={resetStatus === 'sending'}>
+            {resetStatus === 'sending' ? 'sending…' : 'Send password reset email'}
+        </button>
+        {#if resetStatus === 'sent'}
+            <span class="feedback ok">password reset email sent</span>
+        {:else if resetStatus === 'error'}
+            <span class="feedback err">{resetError}</span>
+        {/if}
+    </div>
     {/if}
     <button onclick={save}>Save</button>
 </main>
@@ -89,6 +124,13 @@
         border-top: 1px solid rgba(255, 255, 255, 0.15);
         border-bottom: 1px solid rgba(255, 255, 255, 0.15);
         margin-top: 8px;
+    }
+    .reset {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     }
     .status.ok {
         color: limegreen;

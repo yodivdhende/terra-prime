@@ -22,6 +22,8 @@ All responses are JSON unless explicitly noted (file streams, HTML, `204 No Cont
 | POST | `/api/authentication/login/token` | Public | `{ token: string }` (JSON) | Set session cookie from existing token `{ token }` |
 | POST | `/api/authentication/verify-email` | Public | `{ ok: true, userId: number }` (JSON) | Consume a verification token; body: `{ token: string }`. Returns 400 if invalid/expired |
 | POST | `/api/authentication/verify-email/resend` | user/admin | `{ ok: true }` (JSON) | Resend verification email to the current session user. Returns 400 if already verified |
+| POST | `/api/authentication/forgot-password` | Public | `{ ok: true }` (JSON) | Request a password reset email; body: `{ email: string }`. Always returns 200 even when the email is unknown (no enumeration) |
+| POST | `/api/authentication/reset-password` | Public | `{ ok: true, userId: number }` (JSON) | Consume a password reset token and update the user's password; body: `{ token: string, password: string }`. Returns 400 for invalid/expired token or password shorter than 8 characters |
 
 ---
 
@@ -31,6 +33,7 @@ All responses are JSON unless explicitly noted (file streams, HTML, `204 No Cont
 |--------|------|------|---------|-------------|
 | POST | `/api/admin/emails/send` | admin | `{ ok: true }` (JSON) | Send any template to any recipient; body: `{ to: string, templateKey: string, link?: string }`. Throws 400 for unknown template keys |
 | POST | `/api/admin/users/[id]/resend-verification` | admin | `{ ok: true }` (JSON) | Resend verification email to a specific user. Returns 400 if already verified |
+| POST | `/api/admin/users/[id]/send-password-reset` | admin | `{ ok: true }` (JSON) | Send a password reset email to a specific user |
 
 ---
 

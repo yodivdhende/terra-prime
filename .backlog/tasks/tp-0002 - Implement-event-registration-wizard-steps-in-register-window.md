@@ -1,9 +1,10 @@
 ---
 id: TP-0002
 title: Implement event registration wizard steps in register-window
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-12 15:35'
+updated_date: '2026-05-27 20:29'
 labels:
   - codex
   - registration
@@ -27,3 +28,9 @@ The register-window.svelte is scaffolded with a 4-step wizard (events → charac
 - [ ] #2 Navigating back and forward between steps preserves user selections
 - [ ] #3 The wizard cannot advance past a step until a required selection is made
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Completed
+<!-- SECTION:FINAL_SUMMARY:END -->

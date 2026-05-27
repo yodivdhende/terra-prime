@@ -1,9 +1,10 @@
 ---
 id: TP-0007
 title: Adjust feature flag system to support per-environment configuration
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-14 14:48'
+updated_date: '2026-05-27 20:29'
 labels:
   - feature-flags
   - config
@@ -25,3 +26,9 @@ The current feature flag system uses a single flat configuration. It needs to be
 - [ ] #3 Existing flag behaviour is preserved — no regressions when no per-env override is set
 - [ ] #4 Documentation or inline comments explain how to add a new per-env flag
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Completed
+<!-- SECTION:FINAL_SUMMARY:END -->

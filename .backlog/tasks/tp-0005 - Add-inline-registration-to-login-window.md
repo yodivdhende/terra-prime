@@ -1,16 +1,20 @@
 ---
 id: tp-0005
 title: Add inline registration to login-window
-status: To Do
-priority: medium
-assignee: ""
+status: Done
+assignee: []
+created_date: ''
+updated_date: '2026-05-27 20:29'
 labels: []
-created: 2026-05-13
+dependencies: []
+priority: medium
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 The `login-window.svelte` currently links out to `/main/login/register` for new user registration, breaking the Codex desktop metaphor by navigating away. Registration should be handled inline within the window, toggling between a login view and a registration view.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 
@@ -22,6 +26,12 @@ The `login-window.svelte` currently links out to `/main/login/register` for new 
 - [ ] A "Back to login" link/button returns to the login view
 - [ ] The external `<a href="/main/login/register">` link is removed
 - [ ] Window height accommodates the taller registration form (update `createLoginWindow()` dimensions if needed)
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Completed
+<!-- SECTION:FINAL_SUMMARY:END -->
 
 ## Notes
 

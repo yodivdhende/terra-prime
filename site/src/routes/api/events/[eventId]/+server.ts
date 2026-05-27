@@ -20,7 +20,7 @@ export const DELETE: RequestHandler = async ({ cookies, params}) => {
 		await authGuard(getSessionToken(cookies), ['admin']);
 		const { eventId } = params;
 		const numberId = isNumberOrError(eventId);
-        eventRepo.delete({id: numberId});
+        await eventRepo.delete({id: numberId});
 		return new Response();
 	});
 };
@@ -29,15 +29,16 @@ export const POST: RequestHandler = async ({cookies, params, request}) => {
 	return handleRequest(async ()=> {
 		await authGuard(getSessionToken(cookies), ['admin']);
 		const {eventId} = params;
-		isNumberOrError(eventId);
+		const numberId = isNumberOrError(eventId);
 		const body = await request.json();
 		const event = {
 			...body,
+			id: numberId,
 			start: body.start ? new Date(body.start) : null,
 			end: body.end ? new Date(body.end) : null,
 		}
 		if(isLarpEvent(event) === false) throw new BadRequest();
-		eventRepo.save(event);
+		await eventRepo.save(event);
 		return new Response();
 	})
 }

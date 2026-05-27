@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { afterNavigate } from '$app/navigation';
+	import { page } from '$app/state';
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 	import { sectionManager } from '$lib/managers/section-manager.svelte';
 
@@ -8,42 +8,43 @@
 	let characterOpen = $state(false);
 	const isAdmin = $derived(roles.includes('admin'));
 
-	afterNavigate((navigation) => {
-		sectionManager.showSection = false;
-		if (navigation.to?.url.pathname === '/') {
-		} else {
-			sectionManager.showSection = true;
-		}
+	$effect(() => {
+		const pathname = page.url.pathname;
+		sectionManager.showSection = pathname !== '/' && pathname !== '/manage';
 	});
 </script>
 
 <nav>
-	<a class="entry" href="/manage">Home</a>
-	{#if !isAdmin}
-		<a class="entry" href="/manage/login">Login</a>
-	{:else}
+	<div class="nav-top">
+		<a class="entry" href="/manage">Home</a>
+		{#if !isAdmin}
+			<a class="entry" href="/manage/login">Login</a>
+		{:else}
+			<a class="entry" href="/manage/users">Users</a>
+			<a class="entry" href="/manage/events">Events</a>
+			<button class="entry folder" onclick={() => (manageOpen = !manageOpen)}>
+				<span class="arrow">{manageOpen ? 'v' : '>'}</span>
+				<span class="name">Manage</span>
+			</button>
+			{#if manageOpen}
+				<a class="entry child" href="/manage/skills">Skills</a>
+				<a class="entry child" href="/manage/items">Items</a>
+				<a class="entry child" href="/manage/implants">Implants</a>
+			{/if}
+			<button class="entry folder" onclick={() => (characterOpen = !characterOpen)}>
+				<span class="arrow">{characterOpen ? 'v' : '>'}</span>
+				<span class="name">Characters</span>
+			</button>
+			{#if characterOpen}
+				<a class="entry child" href="/manage/characters">Character</a>
+				<a class="entry child" href="/manage/characters/versions">Versions</a>
+			{/if}
+			<a class="entry" href="/manage/emails">Emails Templates</a>
+			<a class="entry" href="/manage/sessions">Sessions</a>
+		{/if}
+	</div>
+	{#if isAdmin}
 		<button class="entry" onclick={CREDENTIAL_MANAGER.logout}>Logout</button>
-		<a class="entry" href="/manage/users">Users</a>
-		<a class="entry" href="/manage/events">Events</a>
-		<button class="entry folder" onclick={() => (manageOpen = !manageOpen)}>
-			<span class="arrow">{manageOpen ? 'v' : '>'}</span>
-			<span class="name">Manage</span>
-		</button>
-		{#if manageOpen}
-			<a class="entry child" href="/manage/skills">Skills</a>
-			<a class="entry child" href="/manage/items">Items</a>
-			<a class="entry child" href="/manage/implants">Implants</a>
-		{/if}
-		<button class="entry folder" onclick={() => (characterOpen = !characterOpen)}>
-			<span class="arrow">{characterOpen ? 'v' : '>'}</span>
-			<span class="name">Characters</span>
-		</button>
-		{#if characterOpen}
-			<a class="entry child" href="/manage/characters">Character</a>
-			<a class="entry child" href="/manage/characters/versions">Versions</a>
-		{/if}
-		<a class="entry" href="/manage/emails">Emails Templates</a>
-		<a class="entry" href="/manage/sessions">Sessions</a>
 	{/if}
 </nav>
 
@@ -54,6 +55,12 @@
 		background-color: black;
 		border-right: 1px solid white;
 		height: 100%;
+	}
+
+	.nav-top {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
 	}
 
 	.entry {

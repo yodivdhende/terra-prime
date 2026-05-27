@@ -8,9 +8,7 @@ export const load: LayoutServerLoad = async ({ cookies, url }) => {
     }
 
     const token = cookies.get('session-token');
-    if (!token) redirect(302, '/manage/login');
-
-    const credentials = await sessionRepo.getCredentials(token);
+    const credentials = token ? await sessionRepo.getCredentials(token) : null;
     if (credentials == null || !credentials.roles.includes('admin')) {
         redirect(302, '/manage/login');
     }

@@ -17,8 +17,8 @@ function createCredentialManager() {
   let _credentials: Credentials = $state(emptyCredentials());
   const _isLogedIn: boolean = $derived(_credentials.id != null);
 
-  function persist() {
-    window.localStorage.setItem(storageKey, JSON.stringify(_credentials));
+  function persist(value: Credentials) {
+    window.localStorage.setItem(storageKey, JSON.stringify(value));
   }
 
   function initFromStorage() {
@@ -44,7 +44,7 @@ function createCredentialManager() {
     },
     set credentials(value: Credentials) {
       _credentials = value;
-      if (browser) persist();
+      if (browser) persist(value);
     },
     get isLogedIn(): boolean {
       return _isLogedIn;

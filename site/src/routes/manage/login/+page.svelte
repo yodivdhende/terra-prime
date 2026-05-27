@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 	import type { PageProps } from './$types';
 
@@ -30,6 +31,9 @@
 				id: userId ?? null,
 			};
 		}
+	});
+	$effect(() => {
+		if (CREDENTIAL_MANAGER.isLogedIn) goto('/manage');
 	});
 </script>
 

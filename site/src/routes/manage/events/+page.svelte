@@ -26,6 +26,7 @@
 				<th>start</th>
 				<th>end</th>
 				<th>status</th>
+				<th>budget</th>
 			</tr>
 		</thead>
         <tbody>
@@ -36,6 +37,7 @@
                     <td>{dateToHTMLDateTime(event.start)}</td>
                     <td>{dateToHTMLDateTime(event.end)}</td>
                     <td>{event.status}</td>
+                    <td>{event.budget ?? '—'}</td>
                 </tr>
             {/each}
         </tbody>

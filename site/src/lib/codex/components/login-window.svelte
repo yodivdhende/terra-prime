@@ -7,7 +7,7 @@
 
 	let { window }: { window: CodexWindow } = $props();
 
-	let mode = $state<'login' | 'register'>('login');
+	let mode = $state<'login' | 'register' | 'forgot'>('login');
 	$effect(() => {
 		if (!FEATURE_MANAGER.registerEnabled && mode === 'register') mode = 'login';
 	});
@@ -16,13 +16,19 @@
 	let submitButton: HTMLButtonElement;
 	let errorMessage = $state<string | null>(null);
 
+	let forgotEmail = $state('');
+	let forgotStatus = $state<'idle' | 'sending' | 'sent' | 'error'>('idle');
+	let forgotMessage = $state('');
+
 	function toggleShowPassword() {
 		showPassword = !showPassword;
 	}
 
-	function switchMode(next: 'login' | 'register') {
+	function switchMode(next: 'login' | 'register' | 'forgot') {
 		mode = next;
 		errorMessage = null;
+		forgotStatus = 'idle';
+		forgotMessage = '';
 	}
 
 	function login(event: KeyboardEvent) {
@@ -45,6 +51,30 @@
 			}
 		};
 	}
+
+	async function submitForgot(event: Event) {
+		event.preventDefault();
+		if (forgotStatus === 'sending') return;
+		forgotStatus = 'sending';
+		forgotMessage = '';
+		try {
+			const res = await fetch('/api/authentication/forgot-password', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ email: forgotEmail })
+			});
+			if (res.ok) {
+				forgotStatus = 'sent';
+				return;
+			}
+			const body = await res.json().catch(() => ({}));
+			forgotStatus = 'error';
+			forgotMessage = body?.message ?? `request failed (${res.status})`;
+		} catch (err) {
+			forgotStatus = 'error';
+			forgotMessage = `${err}`;
+		}
+	}
 </script>
 
 <div class="login">
@@ -64,7 +94,10 @@
 			{/if}
 			<button bind:this={submitButton}>Login</button>
 		</form>
-	{:else}
+		<button type="button" class="mode-toggle" onclick={() => switchMode('forgot')}>
+			Forgot password?
+		</button>
+	{:else if mode === 'register'}
 		<form method="POST" action="/manage/login/register" use:enhance={handleResult}>
 			<label for="register-name">Name</label>
 			<input type="text" name="name" id="register-name" />
@@ -89,8 +122,28 @@
 			{/if}
 			<button>Register</button>
 		</form>
+	{:else}
+		<form onsubmit={submitForgot}>
+			<p class="hint">enter your email and we will send a password reset link</p>
+			<label for="forgot-email">Email</label>
+			<input type="email" id="forgot-email" bind:value={forgotEmail} required />
+			{#if forgotStatus === 'sent'}
+				<span class="sent">if that email is registered, a reset link has been sent</span>
+			{/if}
+			{#if forgotStatus === 'error'}
+				<span class="error">{forgotMessage}</span>
+			{/if}
+			<button type="submit" disabled={forgotStatus === 'sending'}>
+				{forgotStatus === 'sending' ? 'sending…' : 'Send reset link'}
+			</button>
+		</form>
 	{/if}
-	{#if FEATURE_MANAGER.registerEnabled}
+
+	{#if mode === 'forgot'}
+		<button type="button" class="mode-toggle" onclick={() => switchMode('login')}>
+			Back to Login
+		</button>
+	{:else if FEATURE_MANAGER.registerEnabled}
 		<button
 			type="button"
 			class="mode-toggle"
@@ -169,10 +222,27 @@
 		color: var(--color-accent);
 	}
 
+	button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
 	.error {
 		font-size: 0.7em;
 		color: var(--color-error);
 		opacity: 0.8;
+	}
+
+	.sent {
+		font-size: 0.7em;
+		color: var(--color-accent);
+		opacity: 0.9;
+	}
+
+	.hint {
+		font-size: 0.7em;
+		opacity: 0.7;
+		margin: 0;
 	}
 
 	.mode-toggle {

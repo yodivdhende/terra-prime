@@ -1,4 +1,4 @@
-import { eventDiscountsRepo, isCharacterDiscountsBody } from '$lib/db/event_discounts.repo';
+import { eventBudgetRepo } from '$lib/db/event_budget.repo';
 import { isNumberOrError } from '$lib/request.utils';
 import { BadRequest } from '$lib/types/errors';
 import { getSessionToken } from '$lib/utils/cookies';
@@ -10,7 +10,8 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 		await authGuard(getSessionToken(cookies), ['admin']);
 		const eventId = isNumberOrError(params.eventId);
 		const characterId = isNumberOrError(params.characterId);
-		return json(await eventDiscountsRepo.getByEventAndCharacter(eventId, characterId));
+		const budget = await eventBudgetRepo.getBudgetForCharacter(eventId, characterId);
+		return json({ budget });
 	});
 };
 
@@ -19,9 +20,9 @@ export const POST: RequestHandler = async ({ cookies, params, request }) => {
 		await authGuard(getSessionToken(cookies), ['admin']);
 		const eventId = isNumberOrError(params.eventId);
 		const characterId = isNumberOrError(params.characterId);
-		const discounts = await request.json();
-		if (isCharacterDiscountsBody(discounts) === false) throw new BadRequest();
-		await eventDiscountsRepo.setDiscounts(eventId, characterId, discounts);
+		const body = await request.json();
+		if (typeof body?.budget !== 'number') throw new BadRequest();
+		await eventBudgetRepo.setBudget(eventId, characterId, body.budget);
 		return new Response();
 	});
 };

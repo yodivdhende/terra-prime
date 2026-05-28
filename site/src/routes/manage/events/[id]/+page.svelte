@@ -68,7 +68,7 @@
 		<button onclick={remove}>delete</button>
 	</div>
 	{#if event?.id != null}
-		<a href="{event.id}/discounts">Manage Discounts →</a>
+		<a href="{event.id}/budget">Manage Budget →</a>
 	{/if}
 </main>
 

@@ -105,11 +105,26 @@
 		{#if activeStep === 'details'}
 			<CharacterEditor bind:character bind:version />
 		{:else if activeStep === 'skills'}
-			<ShopSkills catalog={skills} bind:selected={version.skills} remaining={shopRemaining} />
+			<ShopSkills
+				catalog={skills}
+				bind:selected={version.skills}
+				remaining={shopRemaining}
+				discounts={skillDiscountById}
+			/>
 		{:else if activeStep === 'items'}
-			<ShopItems catalog={items} bind:selected={version.items} remaining={shopRemaining} />
+			<ShopItems
+				catalog={items}
+				bind:selected={version.items}
+				remaining={shopRemaining}
+				discounts={itemDiscountById}
+			/>
 		{:else if activeStep === 'implants'}
-			<ShopImplants catalog={implants} bind:selected={version.implants} remaining={shopRemaining} />
+			<ShopImplants
+				catalog={implants}
+				bind:selected={version.implants}
+				remaining={shopRemaining}
+				discounts={implantDiscountById}
+			/>
 		{/if}
 	</div>
 </div>

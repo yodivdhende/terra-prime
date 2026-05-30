@@ -60,13 +60,11 @@
 	</div>
 
 	<section class="versions">
-		<div class="versions-header">
-			<h3>Versions</h3>
-			<button class="add-version" onclick={addVersion}><CirclePlus size={14} /> new version</button>
-		</div>
+		<h3>Versions</h3>
 		{#if versions.length === 0}
 			<p class="empty">no versions yet</p>
 		{:else}
+			<button class="add-version" onclick={addVersion}><CirclePlus size={14} /></button>
 			<table>
 				<thead>
 					<tr>
@@ -108,30 +106,24 @@
 		margin-top: 24px;
 	}
 
-	.versions-header {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-	}
-
 	h3 {
-		margin: 0;
+		margin: 0 0 8px;
 		font-size: 1rem;
 	}
 
 	.add-version {
 		display: flex;
 		align-items: center;
-		gap: 4px;
-		font-size: 0.75rem;
-		padding: 4px 8px;
 		background: transparent;
-		border: 1px solid silver;
+		border: none;
 		cursor: pointer;
+		padding: 0;
+		margin-bottom: 4px;
+		color: var(--color-accent);
 	}
 
 	.add-version:hover {
-		border-color: #333;
+		opacity: 0.6;
 	}
 
 	.empty {

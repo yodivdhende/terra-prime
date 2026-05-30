@@ -57,12 +57,14 @@
 		catalog,
 		selected = $bindable<VersionSkill[]>([]),
 		remaining,
-		budget = 0
+		budget = 0,
+		discounts = new Map()
 	}: {
 		catalog: ShopSkill[];
 		selected: VersionSkill[];
 		remaining: number;
 		budget?: number;
+		discounts?: Map<number, number>;
 	} = $props();
 
 	const skillGroups = $derived.by(() => {
@@ -139,28 +141,50 @@
 					{@const skillIcon = SKILL_ICONS[skill.id ?? 0]}
 					{@const currentValue = getValue(skill.id)}
 					{@const skillCost = skill.cost ?? 0}
-					<li class="entry" class:owned={currentValue > 0}>
+					{@const skillDiscount = skill.id != null ? discounts.get(skill.id) ?? 0 : 0}
+					{@const effectiveCost = Math.max(0, skillCost - skillDiscount)}
+					{@const discounted = skillDiscount > 0 && skillCost > 0}
+					<li class="entry" class:owned={currentValue > 0} class:discounted>
 						<div class="entry-header">
 							{#if skillIcon}
 								<Icon src={skillIcon} color={group.color} size="0.9rem" />
 							{/if}
 							<div class="entry-info">
-								<span class="entry-name">{skill.name}</span>
+								<span class="entry-name">
+									{skill.name}
+									{#if discounted}
+										<span class="discount-badge" title="company discount: -{skillDiscount}/pt">deal</span>
+									{/if}
+								</span>
 								{#if skill.description}
 									<span class="entry-desc">{skill.description}</span>
 								{/if}
 							</div>
 							{#if skillCost > 0 && currentValue > 0}
-								<span class="entry-cost">{skillCost * currentValue}</span>
+								<span class="entry-cost">
+									{#if discounted}
+										<span class="cost-old">{skillCost * currentValue}</span>
+									{/if}
+									<span class="cost-new" class:free={discounted && effectiveCost === 0}
+										>{effectiveCost * currentValue}</span
+									>
+								</span>
 							{:else if skillCost > 0}
-								<span class="entry-cost muted">{skillCost}/pt</span>
+								<span class="entry-cost muted">
+									{#if discounted}
+										<span class="cost-old">{skillCost}</span>
+										<span class="cost-new free-pt">{effectiveCost}</span>/pt
+									{:else}
+										{skillCost}/pt
+									{/if}
+								</span>
 							{/if}
 						</div>
 						<SegmentBar
 							value={currentValue}
 							color={group.color}
 							{remaining}
-							cost={skillCost}
+							cost={effectiveCost}
 							name={skill.name}
 							onchange={(v) => setSkillValue(skill, v)}
 						/>
@@ -255,6 +279,40 @@
 	.entry.owned {
 		border-color: var(--color-accent);
 		background: color-mix(in srgb, var(--color-accent) 5%, transparent);
+	}
+
+	.entry.discounted {
+		border-color: color-mix(in srgb, #4caf82 45%, transparent);
+	}
+
+	.entry.discounted.owned {
+		border-color: #4caf82;
+		background: color-mix(in srgb, #4caf82 5%, transparent);
+	}
+
+	.discount-badge {
+		display: inline-block;
+		margin-left: 0.4rem;
+		padding: 0.05rem 0.35rem;
+		font-size: 0.7em;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: #4caf82;
+		border: 1px solid color-mix(in srgb, #4caf82 60%, transparent);
+		vertical-align: middle;
+	}
+
+	.cost-old {
+		text-decoration: line-through;
+		opacity: 0.4;
+		margin-right: 0.35rem;
+		font-size: 0.9em;
+	}
+
+	.cost-new.free,
+	.cost-new.free-pt {
+		color: #4caf82;
+		font-weight: bold;
 	}
 
 	.entry-header {

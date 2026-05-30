@@ -33,7 +33,7 @@ class CompanyDiscountsRepo {
 	}
 
 	public async setDiscounts(companyId: number, discounts: CompanyDiscounts): Promise<void> {
-		const connection = await mysqlconnFn();
+		const connection = await mysqlconnFn().getConnection();
 		await connection.beginTransaction();
 		try {
 			await connection.execute(`DELETE FROM Company_Discounts_Items WHERE Company = ?`, [companyId]);
@@ -63,6 +63,8 @@ class CompanyDiscountsRepo {
 		} catch (err) {
 			await connection.rollback();
 			throw err;
+		} finally {
+			connection.release();
 		}
 	}
 }

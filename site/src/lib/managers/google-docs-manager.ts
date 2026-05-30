@@ -27,7 +27,14 @@ export class GoogleDocsManager {
 
 		const docId = doc.data.documentId!;
 
-		// TODO: move created doc into the designated backstory Drive folder
+		const existingParents = await drive.files.get({ fileId: docId, fields: 'parents' });
+		await drive.files.update({
+			fileId: docId,
+			addParents: '1IET6eLvhyEwpYiTOaWf7Xq-DvaoTTJCh',
+			removeParents: existingParents.data.parents?.join(','),
+			requestBody: {}
+		});
+
 		await drive.permissions.create({
 			fileId: docId,
 			requestBody: { type: 'anyone', role: 'writer' }

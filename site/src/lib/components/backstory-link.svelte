@@ -43,8 +43,32 @@
 		align-items: center;
 		gap: 8px;
 	}
+
+	a,
+	button {
+		font-family: var(--font-mono);
+		font-size: 0.85em;
+		color: var(--color-accent);
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		text-decoration: none;
+	}
+
+	a:hover,
+	button:hover:not(:disabled) {
+		text-decoration: underline;
+	}
+
+	button:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+
 	.error {
-		color: red;
-		font-size: 0.875rem;
+		font-family: var(--font-mono);
+		font-size: 0.75em;
+		color: #d95c5c;
 	}
 </style>

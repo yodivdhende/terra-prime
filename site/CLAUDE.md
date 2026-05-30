@@ -17,6 +17,10 @@ No state management. Logic lives in **service files** (`*.service.ts`), e.g. `us
 
 > The naming makes the boundary explicit: **managers = frontend reactive state**, **services = backend business logic**.
 
+### UI patterns
+
+**"Add new" button above tables**: use a `CirclePlus` icon from `@lucide/svelte` as the trigger, placed above the `<table>` inside `<main>`. Render it as an `<a>` when it links to a creation page (`src/routes/manage/events/+page.svelte`), or as a `<button>` when it adds an inline draft row to the same page (`src/routes/manage/events/[id]/budget/+page.svelte`). For inline drafts, keep a `drafts: Draft[]` `$state` array, append draft rows at the top of `<tbody>`, and on save call the upsert endpoint then `invalidateAll()`.
+
 Terra Prime is a LARP / tabletop event management system. Players have characters that evolve across events; organizers manage events, skills, items, and implants.
 
 ## Database

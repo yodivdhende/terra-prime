@@ -29,9 +29,7 @@
 			if (c.id == null) return false;
 			if (excludeSet.has(c.id)) return false;
 			if (q.length === 0) return true;
-			return (
-				c.name.toLowerCase().includes(q) || (c.ownerName ?? '').toLowerCase().includes(q)
-			);
+			return c.name.toLowerCase().includes(q) || (c.ownerName ?? '').toLowerCase().includes(q);
 		});
 	});
 

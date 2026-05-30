@@ -80,8 +80,8 @@ class CharacterRepo {
 	private async create(character: NewCharacter): Promise<number> {
 		const connection = mysqlconnFn();
 		const [result] = await connection.execute(
-			`INSERT INTO Characters (Name, Owner) VALUES (?, ?)`,
-			[character.name, character.ownerId]
+			`INSERT INTO Characters (Name, Owner, BackstoryUrl) VALUES (?, ?, ?)`,
+			[character.name, character.ownerId, character.backstoryUrl ?? null]
 		);
 		return (result as any).insertId as number;
 	}
@@ -92,10 +92,11 @@ class CharacterRepo {
 				`
 				UPDATE Characters
 				SET Name = ?,
-					Owner = ?
+					Owner = ?,
+					BackstoryUrl = COALESCE(?, BackstoryUrl)
 				WHERE id = ?
 			`,
-				[character.name, character.ownerId,  character.id]
+				[character.name, character.ownerId, character.backstoryUrl ?? null, character.id]
 			);
 		} catch (error) {
 			throw error;
@@ -129,6 +130,7 @@ export function isCharacter(character: any): character is Character {
 export type NewCharacter = {
 	name: string;
 	ownerId: number;
+	backstoryUrl?: string | null;
 };
 
 export function isNewCharacter(character: any): character is NewCharacter {

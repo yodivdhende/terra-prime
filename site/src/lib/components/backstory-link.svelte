@@ -1,15 +1,33 @@
 <script lang="ts">
-	let { characterId, backstoryUrl: initialUrl }: { characterId: number; backstoryUrl?: string | null } = $props();
+	let {
+		characterId,
+		characterName,
+		backstoryUrl = $bindable()
+	}: {
+		characterId: number | null;
+		characterName?: string;
+		backstoryUrl?: string | null;
+	} = $props();
 
-	let backstoryUrl = $state(initialUrl ?? null);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
+
+	const canCreate = $derived(
+		characterId != null || (characterName != null && characterName.trim().length > 0)
+	);
 
 	async function createDoc() {
 		loading = true;
 		error = null;
 		try {
-			const res = await fetch(`/api/characters/${characterId}/backstory`, { method: 'POST' });
+			const res =
+				characterId != null
+					? await fetch(`/api/characters/${characterId}/backstory`, { method: 'POST' })
+					: await fetch(`/api/my/characters/backstory`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ characterName: characterName ?? '' })
+						});
 			if (!res.ok) {
 				error = 'Failed to create backstory document';
 				return;
@@ -28,7 +46,7 @@
 	{#if backstoryUrl}
 		<a href={backstoryUrl} target="_blank" rel="noopener noreferrer">Open Backstory</a>
 	{:else}
-		<button onclick={createDoc} disabled={loading}>
+		<button onclick={createDoc} disabled={loading || !canCreate}>
 			{loading ? 'Creating...' : 'Create Backstory Document'}
 		</button>
 		{#if error}

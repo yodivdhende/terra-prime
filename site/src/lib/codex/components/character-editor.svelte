@@ -44,12 +44,14 @@
 	<span class="label">Company</span>
 	<CompanySelect bind:company={version.company} />
 </label>
-{#if character.id != null}
-	<div class="name-field">
-		<span class="label">Backstory</span>
-		<BackstoryLink characterId={character.id} backstoryUrl={character.backstoryUrl} />
-	</div>
-{/if}
+<div class="name-field">
+	<span class="label">Backstory</span>
+	<BackstoryLink
+		characterId={character.id}
+		characterName={character.name}
+		bind:backstoryUrl={character.backstoryUrl}
+	/>
+</div>
 
 <style>
 	.name-field {

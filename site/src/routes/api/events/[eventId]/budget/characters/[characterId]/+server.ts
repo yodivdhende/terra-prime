@@ -7,7 +7,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ cookies, params }) => {
 	return handleRequest(async () => {
-		await authGuard(getSessionToken(cookies), ['admin']);
+		await authGuard(getSessionToken(cookies), ['admin', 'user']);
 		const eventId = isNumberOrError(params.eventId);
 		const characterId = isNumberOrError(params.characterId);
 		const budget = await eventBudgetRepo.getBudgetForCharacter(eventId, characterId);

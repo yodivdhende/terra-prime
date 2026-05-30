@@ -7,7 +7,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ cookies, params }) => {
 	return handleRequest(async () => {
-		await authGuard(getSessionToken(cookies), ['admin']);
+		await authGuard(getSessionToken(cookies), ['admin', 'user']);
 		const id = isNumberOrError(params.id);
 		return json(await companyDiscountsRepo.getByCompany(id));
 	});

@@ -5,16 +5,12 @@
 
 	let { data }: PageProps = $props();
 
-	let eventId: string = $state('');
-	let participants: Character[] = $state([]);
+	const participants = $derived<Character[]>(data.participants ?? []);
 	let budgetMap = $state<Map<number, number>>(new Map());
 
 	$effect(() => {
-		eventId = data.eventId;
-		participants = data.participants ?? [];
-
 		const map = new Map<number, number>();
-		for (const p of participants) {
+		for (const p of data.participants ?? []) {
 			if (p.id == null) continue;
 			const existing = (data.budgets as EventCharacterBudget[]).find(
 				(b) => b.characterId === p.id
@@ -26,7 +22,7 @@
 
 	async function saveBudget(characterId: number) {
 		const budget = budgetMap.get(characterId) ?? 0;
-		await fetch(`/api/events/${eventId}/budget/characters/${characterId}`, {
+		await fetch(`/api/events/${data.eventId}/budget/characters/${characterId}`, {
 			method: 'post',
 			body: JSON.stringify({ budget }),
 			headers: { 'content-type': 'application/json' }

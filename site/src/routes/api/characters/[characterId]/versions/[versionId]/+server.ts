@@ -1,4 +1,5 @@
 import { characterVersionRepo } from '$lib/db/character_version.repo';
+import { companyRepo } from '$lib/db/companies.repo';
 import { implantRepo } from '$lib/db/implants.repo';
 import { itemRepo } from '$lib/db/items.repo';
 import { skillRepo } from '$lib/db/skills.repo';
@@ -19,11 +20,12 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 	return handleRequest(async () => {
 		await authGuardForUser(getSessionToken(cookies), [UserRole.admin]);
 		const versionId = isNumberOrError(params.versionId);
-		const [bare, skills, items, implants] = await Promise.all([
+		const [bare, skills, items, implants, companies] = await Promise.all([
 			characterVersionRepo.getWithId(versionId),
 			skillRepo.getAll(),
 			itemRepo.getAll(),
-			implantRepo.getAll()
+			implantRepo.getAll(),
+			companyRepo.getAll()
 		]);
 		if (!bare) throw new NotFoundRequest();
 
@@ -32,11 +34,15 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 		const implantById = new Map(
 			implants.flatMap((i) => (i.id == null ? [] : [[i.id, i] as const]))
 		);
+		const companyById = new Map(
+			companies.flatMap((c) => (c.id == null ? [] : [[c.id, c] as const]))
+		);
 
 		const full: CharacterVersionFull = {
 			id: bare.id,
 			characterId: bare.characterId,
 			name: bare.name,
+			company: bare.company != null ? (companyById.get(bare.company) ?? null) : null,
 			skills: bare.skills.flatMap((s): VersionSkill[] => {
 				const skill = skillById.get(s.id);
 				if (!skill) return [];
@@ -67,6 +73,7 @@ export const POST: RequestHandler = async ({ cookies, params, request }) => {
 			id: versionId,
 			characterId: body.characterId,
 			name: body.name,
+			company: body.company?.id ?? null,
 			skills: body.skills.map((s: VersionSkill) => ({ id: s.id, value: s.value })),
 			items: body.items.map((i: VersionItem) => ({ id: i.id, count: i.count })),
 			implants: body.implants.map((i: VersionImplant) => i.id)

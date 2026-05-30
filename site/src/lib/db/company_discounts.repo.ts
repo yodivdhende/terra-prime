@@ -1,0 +1,85 @@
+import { mysqlconnFn } from './mysql';
+
+export type CompanyDiscounts = {
+	items: { itemId: number; discount: number }[];
+	implants: { implantId: number; discount: number }[];
+	skills: { skillId: number; discount: number }[];
+};
+
+class CompanyDiscountsRepo {
+	public async getByCompany(companyId: number): Promise<CompanyDiscounts> {
+		const connection = await mysqlconnFn();
+
+		const [items] = await connection.execute(
+			`SELECT Item as itemId, Discount as discount FROM Company_Discounts_Items WHERE Company = ?`,
+			[companyId]
+		);
+		const [implants] = await connection.execute(
+			`SELECT Implant as implantId, Discount as discount FROM Company_Discounts_Implants WHERE Company = ?`,
+			[companyId]
+		);
+		const [skills] = await connection.execute(
+			`SELECT Skill as skillId, Discount as discount FROM Company_Discounts_Skills WHERE Company = ?`,
+			[companyId]
+		);
+
+		return {
+			items: Array.isArray(items) ? (items as { itemId: number; discount: number }[]) : [],
+			implants: Array.isArray(implants)
+				? (implants as { implantId: number; discount: number }[])
+				: [],
+			skills: Array.isArray(skills) ? (skills as { skillId: number; discount: number }[]) : []
+		};
+	}
+
+	public async setDiscounts(companyId: number, discounts: CompanyDiscounts): Promise<void> {
+		const connection = await mysqlconnFn().getConnection();
+		await connection.beginTransaction();
+		try {
+			await connection.execute(`DELETE FROM Company_Discounts_Items WHERE Company = ?`, [companyId]);
+			await connection.execute(`DELETE FROM Company_Discounts_Implants WHERE Company = ?`, [companyId]);
+			await connection.execute(`DELETE FROM Company_Discounts_Skills WHERE Company = ?`, [companyId]);
+
+			for (const { itemId, discount } of discounts.items) {
+				await connection.execute(
+					`INSERT INTO Company_Discounts_Items (Company, Item, Discount) VALUES (?, ?, ?)`,
+					[companyId, itemId, discount]
+				);
+			}
+			for (const { implantId, discount } of discounts.implants) {
+				await connection.execute(
+					`INSERT INTO Company_Discounts_Implants (Company, Implant, Discount) VALUES (?, ?, ?)`,
+					[companyId, implantId, discount]
+				);
+			}
+			for (const { skillId, discount } of discounts.skills) {
+				await connection.execute(
+					`INSERT INTO Company_Discounts_Skills (Company, Skill, Discount) VALUES (?, ?, ?)`,
+					[companyId, skillId, discount]
+				);
+			}
+
+			await connection.commit();
+		} catch (err) {
+			await connection.rollback();
+			throw err;
+		} finally {
+			connection.release();
+		}
+	}
+}
+
+export const companyDiscountsRepo = new CompanyDiscountsRepo();
+
+export function isCompanyDiscounts(obj: unknown): obj is CompanyDiscounts {
+	return (
+		typeof obj === 'object' &&
+		obj !== null &&
+		'items' in obj &&
+		Array.isArray(obj.items) &&
+		'implants' in obj &&
+		Array.isArray(obj.implants) &&
+		'skills' in obj &&
+		Array.isArray(obj.skills)
+	);
+}

@@ -50,17 +50,17 @@ class EventParticipatnsRepo {
 						c.Id as id,
 						c.Name as name,
 						u.Id as ownerId,
-						u.Name as ownerName,
-					FROM Event_Participants ep 
+						u.Name as ownerName
+					FROM Event_Participants ep
 					JOIN Character_Versions cv
 						on cv.Id = ep.CharacterVersion
 					JOIN Characters c
 						on c.id = cv.Character
 					JOIN Users u
 						on u.Id = ep.User
-					WHERE ep.EventId = :eventId
+					WHERE ep.Event = ?
         `,
-        { eventId }
+        [eventId]
       );
       if (Array.isArray(result) === false) return [];
       if (result.length === 0) return [];

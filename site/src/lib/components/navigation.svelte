@@ -30,6 +30,7 @@
 				<a class="entry child" href="/manage/skills">Skills</a>
 				<a class="entry child" href="/manage/items">Items</a>
 				<a class="entry child" href="/manage/implants">Implants</a>
+				<a class="entry child" href="/manage/companies">Companies</a>
 			{/if}
 			<button class="entry folder" onclick={() => (characterOpen = !characterOpen)}>
 				<span class="arrow">{characterOpen ? 'v' : '>'}</span>
@@ -77,7 +78,6 @@
 		font-size: 1.1rem;
 		text-align: left;
 		cursor: pointer;
-		width: 100%;
 		letter-spacing: 0.04em;
 		white-space: nowrap;
 		opacity: 0.7;

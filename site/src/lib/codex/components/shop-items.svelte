@@ -13,11 +13,13 @@
 	let {
 		catalog,
 		selected = $bindable<VersionItem[]>([]),
-		remaining
+		remaining,
+		discounts = new Map()
 	}: {
 		catalog: ShopItem[];
 		selected: VersionItem[];
 		remaining: number;
+		discounts?: Map<number, number>;
 	} = $props();
 
 	let search = $state('');
@@ -32,8 +34,12 @@
 		return selected.find((i) => i.id === id)?.count ?? 0;
 	}
 
+	function effectiveCost(item: ShopItem) {
+		return Math.max(0, item.cost - (discounts.get(item.id) ?? 0));
+	}
+
 	function add(item: ShopItem) {
-		if (item.cost > remaining) return;
+		if (effectiveCost(item) > remaining) return;
 		const existing = selected.find((i) => i.id === item.id);
 		if (existing) {
 			selected = selected.map((i) => (i.id === item.id ? { ...i, count: i.count + 1 } : i));
@@ -68,15 +74,28 @@
 			{#each filtered as item (item.id)}
 				{@const count = countOf(item.id)}
 				{@const owned = count > 0}
-				{@const blocked = item.cost > remaining}
-				<li class="entry" class:owned>
+				{@const discount = discounts.get(item.id) ?? 0}
+				{@const effective = Math.max(0, item.cost - discount)}
+				{@const discounted = discount > 0 && item.cost > 0}
+				{@const blocked = effective > remaining}
+				<li class="entry" class:owned class:discounted>
 					<div class="entry-info">
-						<span class="entry-name">{item.name}</span>
+						<span class="entry-name">
+							{item.name}
+							{#if discounted}
+								<span class="discount-badge" title="company discount: -{discount}">deal</span>
+							{/if}
+						</span>
 						{#if item.description}
 							<span class="entry-desc">{item.description}</span>
 						{/if}
 					</div>
-					<span class="entry-cost">{item.cost}</span>
+					<span class="entry-cost">
+						{#if discounted}
+							<span class="cost-old">{item.cost}</span>
+						{/if}
+						<span class="cost-new" class:free={discounted && effective === 0}>{effective}</span>
+					</span>
 					<div class="entry-controls">
 						{#if owned}
 							<button type="button" class="ctrl dec" onclick={() => remove(item)}>−</button>
@@ -148,6 +167,39 @@
 	.entry.owned {
 		border-color: var(--color-accent);
 		background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+	}
+
+	.entry.discounted {
+		border-color: color-mix(in srgb, #4caf82 45%, transparent);
+	}
+
+	.entry.discounted.owned {
+		border-color: #4caf82;
+		background: color-mix(in srgb, #4caf82 8%, transparent);
+	}
+
+	.discount-badge {
+		display: inline-block;
+		margin-left: 0.4rem;
+		padding: 0.05rem 0.35rem;
+		font-size: 0.7em;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: #4caf82;
+		border: 1px solid color-mix(in srgb, #4caf82 60%, transparent);
+		vertical-align: middle;
+	}
+
+	.cost-old {
+		text-decoration: line-through;
+		opacity: 0.4;
+		margin-right: 0.35rem;
+		font-size: 0.9em;
+	}
+
+	.cost-new.free {
+		color: #4caf82;
+		font-weight: bold;
 	}
 
 	.entry-info {

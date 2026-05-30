@@ -40,7 +40,7 @@ function isCharacterWithVersions(value: unknown): value is CharacterWithVersions
 export const GET: RequestHandler = async ({ cookies, params }) => {
   return handleRequest(async () => {
     await authGuardForUser(getSessionToken(cookies), ['admin']);
-    const { id: eventId } = params;
+    const { eventId } = params;
     const numberId = isNumberOrError(eventId);
     return json(await eventParticipantsRepo.getPerticipants({ eventId: numberId }));
   });

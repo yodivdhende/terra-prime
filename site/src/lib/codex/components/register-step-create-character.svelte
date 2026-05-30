@@ -32,6 +32,7 @@
 		loading = true;
 		error = null;
 		try {
+			const characterId = CHARACTER_MANAGER.character.id;
 			const [skillsRes, itemsRes, implantsRes, eventRes] = await Promise.all([
 				fetch('/api/skills'),
 				fetch('/api/items'),
@@ -44,7 +45,18 @@
 			if (implantsRes.ok) implants = await implantsRes.json();
 			if (eventRes.ok) {
 				const event: EventResponse = await eventRes.json();
-				budget = event.budget ?? 0;
+				const base = event.budget ?? 0;
+				if (characterId != null) {
+					const extraRes = await fetch(
+						`/api/events/${eventId}/budget/characters/${characterId}`
+					);
+					const extra = extraRes.ok
+						? ((await extraRes.json()) as { budget: number }).budget
+						: 0;
+					budget = base + extra;
+				} else {
+					budget = base;
+				}
 			}
 		} catch (err) {
 			error = `${err}`;

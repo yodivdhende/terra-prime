@@ -13,22 +13,28 @@
 	let {
 		catalog,
 		selected = $bindable<VersionImplant[]>([]),
-		remaining
+		remaining,
+		discounts = new Map()
 	}: {
 		catalog: ShopImplant[];
 		selected: VersionImplant[];
 		remaining: number;
+		discounts?: Map<number, number>;
 	} = $props();
 
 	function has(id: number) {
 		return selected.some((i) => i.id === id);
 	}
 
+	function effectiveCost(implant: ShopImplant) {
+		return Math.max(0, implant.cost - (discounts.get(implant.id) ?? 0));
+	}
+
 	function toggle(implant: ShopImplant) {
 		if (has(implant.id)) {
 			selected = selected.filter((i) => i.id !== implant.id);
 		} else {
-			if (implant.cost > remaining) return;
+			if (effectiveCost(implant) > remaining) return;
 			selected = [
 				...selected,
 				{ id: implant.id, name: implant.name, description: implant.description }
@@ -43,15 +49,28 @@
 	<ul class="catalog">
 		{#each catalog as implant (implant.id)}
 			{@const owned = has(implant.id)}
-			{@const blocked = !owned && implant.cost > remaining}
-			<li class="entry" class:owned>
+			{@const discount = discounts.get(implant.id) ?? 0}
+			{@const effective = Math.max(0, implant.cost - discount)}
+			{@const discounted = discount > 0 && implant.cost > 0}
+			{@const blocked = !owned && effective > remaining}
+			<li class="entry" class:owned class:discounted>
 				<div class="entry-info">
-					<span class="entry-name">{implant.name}</span>
+					<span class="entry-name">
+						{implant.name}
+						{#if discounted}
+							<span class="discount-badge" title="company discount: -{discount}">deal</span>
+						{/if}
+					</span>
 					{#if implant.description}
 						<span class="entry-desc">{implant.description}</span>
 					{/if}
 				</div>
-				<span class="entry-cost">{implant.cost}</span>
+				<span class="entry-cost">
+					{#if discounted}
+						<span class="cost-old">{implant.cost}</span>
+					{/if}
+					<span class="cost-new" class:free={discounted && effective === 0}>{effective}</span>
+				</span>
 				<button
 					type="button"
 					class="toggle"
@@ -89,6 +108,39 @@
 	.entry.owned {
 		border-color: var(--color-accent);
 		background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+	}
+
+	.entry.discounted {
+		border-color: color-mix(in srgb, #4caf82 45%, transparent);
+	}
+
+	.entry.discounted.owned {
+		border-color: #4caf82;
+		background: color-mix(in srgb, #4caf82 8%, transparent);
+	}
+
+	.discount-badge {
+		display: inline-block;
+		margin-left: 0.4rem;
+		padding: 0.05rem 0.35rem;
+		font-size: 0.7em;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: #4caf82;
+		border: 1px solid color-mix(in srgb, #4caf82 60%, transparent);
+		vertical-align: middle;
+	}
+
+	.cost-old {
+		text-decoration: line-through;
+		opacity: 0.4;
+		margin-right: 0.35rem;
+		font-size: 0.9em;
+	}
+
+	.cost-new.free {
+		color: #4caf82;
+		font-weight: bold;
 	}
 
 	.entry-info {

@@ -22,21 +22,59 @@
 		budget?: number;
 	} = $props();
 
+	type DiscountEntry = { id: number; discount: number };
+	type Discounts = { skills: DiscountEntry[]; items: DiscountEntry[]; implants: DiscountEntry[] };
+
 	let activeStep = $state<Step>('details');
+	let discounts = $state<Discounts | null>(null);
+
+	$effect(() => {
+		const companyId = version.company?.id;
+		if (companyId == null) {
+			discounts = null;
+			return;
+		}
+		fetch(`/api/companies/${companyId}/discounts`)
+			.then((r) => (r.ok ? r.json() : null))
+			.then((d: { skills: { skillId: number; discount: number }[]; items: { itemId: number; discount: number }[]; implants: { implantId: number; discount: number }[] } | null) => {
+				if (d == null) return;
+				discounts = {
+					skills: d.skills.map(({ skillId, discount }) => ({ id: skillId, discount })),
+					items: d.items.map(({ itemId, discount }) => ({ id: itemId, discount })),
+					implants: d.implants.map(({ implantId, discount }) => ({ id: implantId, discount }))
+				};
+			});
+	});
 
 	const skillCostById = $derived(new Map(skills.map((s) => [s.id, s.cost ?? 0])));
 	const itemCostById = $derived(new Map(items.map((i) => [i.id, i.cost ?? 0])));
 	const implantCostById = $derived(new Map(implants.map((i) => [i.id, i.cost ?? 0])));
 
+	const skillDiscountById = $derived(new Map((discounts?.skills ?? []).map((d) => [d.id, d.discount])));
+	const itemDiscountById = $derived(new Map((discounts?.items ?? []).map((d) => [d.id, d.discount])));
+	const implantDiscountById = $derived(new Map((discounts?.implants ?? []).map((d) => [d.id, d.discount])));
+
 	const skillsSpent = $derived(
-		version.skills.reduce((sum, s) => sum + (skillCostById.get(s.id) ?? 0) * s.value, 0)
+		version.skills.reduce((sum, s) => {
+			const cost = skillCostById.get(s.id) ?? 0;
+			const discount = skillDiscountById.get(s.id) ?? 0;
+			return sum + Math.max(0, cost - discount) * s.value;
+		}, 0)
 	);
 	const itemsSpent = $derived(
-		version.items.reduce((sum, i) => sum + (itemCostById.get(i.id) ?? 0) * i.count, 0)
+		version.items.reduce((sum, i) => {
+			const cost = itemCostById.get(i.id) ?? 0;
+			const discount = itemDiscountById.get(i.id) ?? 0;
+			return sum + Math.max(0, cost - discount) * i.count;
+		}, 0)
 	);
 	const itemsTotal = $derived(version.items.reduce((sum, i) => sum + i.count, 0));
 	const implantsSpent = $derived(
-		version.implants.reduce((sum, i) => sum + (implantCostById.get(i.id) ?? 0), 0)
+		version.implants.reduce((sum, i) => {
+			const cost = implantCostById.get(i.id) ?? 0;
+			const discount = implantDiscountById.get(i.id) ?? 0;
+			return sum + Math.max(0, cost - discount);
+		}, 0)
 	);
 	const spent = $derived(skillsSpent + itemsSpent + implantsSpent);
 
@@ -67,11 +105,26 @@
 		{#if activeStep === 'details'}
 			<CharacterEditor bind:character bind:version />
 		{:else if activeStep === 'skills'}
-			<ShopSkills catalog={skills} bind:selected={version.skills} remaining={shopRemaining} />
+			<ShopSkills
+				catalog={skills}
+				bind:selected={version.skills}
+				remaining={shopRemaining}
+				discounts={skillDiscountById}
+			/>
 		{:else if activeStep === 'items'}
-			<ShopItems catalog={items} bind:selected={version.items} remaining={shopRemaining} />
+			<ShopItems
+				catalog={items}
+				bind:selected={version.items}
+				remaining={shopRemaining}
+				discounts={itemDiscountById}
+			/>
 		{:else if activeStep === 'implants'}
-			<ShopImplants catalog={implants} bind:selected={version.implants} remaining={shopRemaining} />
+			<ShopImplants
+				catalog={implants}
+				bind:selected={version.implants}
+				remaining={shopRemaining}
+				discounts={implantDiscountById}
+			/>
 		{/if}
 	</div>
 </div>

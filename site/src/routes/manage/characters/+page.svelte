@@ -13,6 +13,7 @@
 				<th>Id</th>
 				<th>Name</th>
 				<th>Player</th>
+				<th>Backstory</th>
 			</tr>
 		</thead>
         <tbody>
@@ -21,6 +22,11 @@
                     <td><a href="characters/{character.id}">{character.id}</a></td>
                     <td>{character.name}</td>
                     <td>{character.ownerName}</td>
+                    <td>
+                        {#if character.backstoryUrl}
+                            <a href={character.backstoryUrl} target="_blank" rel="noopener noreferrer">Open</a>
+                        {/if}
+                    </td>
                 </tr>
             {/each}
         </tbody>

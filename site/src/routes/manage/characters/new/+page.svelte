@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto, invalidate } from '$app/navigation';
+	import BackstoryLink from '$lib/components/backstory-link.svelte';
 	import CharacterForm from '$lib/components/character-form.svelte';
 	import type { PageProps } from './$types';
 
@@ -32,7 +33,8 @@
 <main>
 	<a href=".">back</a>
 	{#if character != null}
-		<CharacterForm bind:character {users} />
+		<CharacterForm bind:character={character} {users} />
+		<BackstoryLink characterId={character.id} backstoryUrl={character.backstoryUrl} />
 	{/if}
 	<div>
 		<button onclick={save}>save</button>

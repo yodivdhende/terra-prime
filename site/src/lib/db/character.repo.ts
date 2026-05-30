@@ -6,8 +6,9 @@ class CharacterRepo {
 		c.Id as id,
 		c.Name as name,
 		c.Owner as ownerId,
-		u.Name as ownerName
-	FROM Characters c 
+		u.Name as ownerName,
+		c.BackstoryUrl as backstoryUrl
+	FROM Characters c
 	JOIN Users u
 		on u.id = c.Owner
 	`;
@@ -23,6 +24,7 @@ class CharacterRepo {
 				name: firstCharacter.name,
 				ownerId: firstCharacter.ownerId,
 				ownerName: firstCharacter.ownerName,
+				backstoryUrl: firstCharacter.backstoryUrl ?? null,
 			};
 		} else {
 			throw new Error(`character not found with id: ${id}`);
@@ -60,6 +62,7 @@ class CharacterRepo {
 						name: character.name,
 						ownerId: character.ownerId,
 						ownerName: character.ownerName,
+						backstoryUrl: character.backstoryUrl ?? null,
 					};
 				} else {
 					console.error(`can't convert to character: `, { character });
@@ -98,6 +101,13 @@ class CharacterRepo {
 			throw error;
 		}
 	}
+
+	public async saveBackstoryUrl(id: number, url: string) {
+		(await mysqlconnFn()).execute(
+			'UPDATE Characters SET BackstoryUrl = ? WHERE Id = ?',
+			[url, id]
+		);
+	}
 }
 
 export const characterRepo = new CharacterRepo();
@@ -105,6 +115,7 @@ export const characterRepo = new CharacterRepo();
 export type Character = NewCharacter & {
 	id: number;
 	ownerName: string;
+	backstoryUrl?: string | null;
 };
 
 export function isCharacter(character: any): character is Character {

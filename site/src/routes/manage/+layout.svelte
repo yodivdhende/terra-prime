@@ -2,6 +2,7 @@
 	import '../../app.css';
 	import Logo from '$lib/assets/images/Logo.gif';
 	import Navigation from '$lib/components/navigation.svelte';
+	import Toast from '$lib/components/toast.svelte';
 	import { sectionManager } from '$lib/managers/section-manager.svelte';
 	import { sidePanelManager } from '$lib/managers/side-panel-manager.svelte';
 	import { CircleX } from '@lucide/svelte';
@@ -40,6 +41,7 @@
 			<sidePanelManager.component />
 		</aside>
 	{/if}
+	<Toast />
 </main>
 
 <style>

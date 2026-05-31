@@ -168,3 +168,17 @@ Singleton `EFFECTS_MANAGER` with three boolean `$state` toggles:
 - `vignette` — radial-gradient overlay
 
 Toggled from `settings-window.svelte`.
+
+---
+
+## Toast Notifications
+
+Import path: `$lib/managers/toast-manager.svelte`
+
+| Scenario | Call | Color |
+|---|---|---|
+| Successful save | `TOAST_MANAGER.success(msg)` | `--color-accent` |
+| Validation warning | `TOAST_MANAGER.warning(msg)` | `--color-warning` |
+| Server / unexpected error | `TOAST_MANAGER.error(msg)` | `--color-warning` |
+
+`<Toast />` is mounted once in `desktop.svelte`. Do not mount it again in child components.

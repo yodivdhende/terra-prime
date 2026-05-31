@@ -1,10 +1,10 @@
 ---
 id: TP-0014
 title: Implement global toast notification component
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-30'
-updated_date: '2026-05-30'
+updated_date: '2026-05-31 11:54'
 labels: []
 dependencies: []
 priority: medium
@@ -68,3 +68,9 @@ The toast section should document:
 - [ ] #6 `<Toast />` is mounted exactly once in each layout root (desktop.svelte for Codex, +layout.svelte for Manage)
 - [ ] #7 The manager file follows the `<domain>-manager.svelte.ts` naming convention and lives in `src/lib/managers/`
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created toast-manager.svelte.ts singleton (function factory pattern) in src/lib/managers/ with success/error/warning methods and 3s auto-dismiss. Created toast.svelte component with fly transition, bottom-right fixed positioning, color-coded by type. Mounted <Toast /> in desktop.svelte (Codex) and +layout.svelte (Manage). Added Toast Notifications section to src/lib/codex/CLAUDE.md and created src/routes/manage/CLAUDE.md documenting the layout and all shared managers.
+<!-- SECTION:FINAL_SUMMARY:END -->

@@ -2,6 +2,7 @@
 	import Logo from '$lib/assets/images/Logo.gif';
 	import DesktopIcons from '$lib/codex/components/desktop-icons.svelte';
 	import DesktopWindows from '$lib/codex/components/desktop-windows.svelte';
+	import Toast from '$lib/components/toast.svelte';
 </script>
 
 <main>
@@ -11,6 +12,7 @@
 	</div>
 	<DesktopIcons />
 	<DesktopWindows />
+	<Toast />
 </main>
 
 <style>

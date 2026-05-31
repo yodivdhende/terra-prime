@@ -6,8 +6,9 @@ class CharacterRepo {
 		c.Id as id,
 		c.Name as name,
 		c.Owner as ownerId,
-		u.Name as ownerName
-	FROM Characters c 
+		u.Name as ownerName,
+		c.BackstoryUrl as backstoryUrl
+	FROM Characters c
 	JOIN Users u
 		on u.id = c.Owner
 	`;
@@ -23,6 +24,7 @@ class CharacterRepo {
 				name: firstCharacter.name,
 				ownerId: firstCharacter.ownerId,
 				ownerName: firstCharacter.ownerName,
+				backstoryUrl: firstCharacter.backstoryUrl ?? null,
 			};
 		} else {
 			throw new Error(`character not found with id: ${id}`);
@@ -60,6 +62,7 @@ class CharacterRepo {
 						name: character.name,
 						ownerId: character.ownerId,
 						ownerName: character.ownerName,
+						backstoryUrl: character.backstoryUrl ?? null,
 					};
 				} else {
 					console.error(`can't convert to character: `, { character });
@@ -77,8 +80,8 @@ class CharacterRepo {
 	private async create(character: NewCharacter): Promise<number> {
 		const connection = mysqlconnFn();
 		const [result] = await connection.execute(
-			`INSERT INTO Characters (Name, Owner) VALUES (?, ?)`,
-			[character.name, character.ownerId]
+			`INSERT INTO Characters (Name, Owner, BackstoryUrl) VALUES (?, ?, ?)`,
+			[character.name, character.ownerId, character.backstoryUrl ?? null]
 		);
 		return (result as any).insertId as number;
 	}
@@ -89,14 +92,22 @@ class CharacterRepo {
 				`
 				UPDATE Characters
 				SET Name = ?,
-					Owner = ?
+					Owner = ?,
+					BackstoryUrl = COALESCE(?, BackstoryUrl)
 				WHERE id = ?
 			`,
-				[character.name, character.ownerId,  character.id]
+				[character.name, character.ownerId, character.backstoryUrl ?? null, character.id]
 			);
 		} catch (error) {
 			throw error;
 		}
+	}
+
+	public async saveBackstoryUrl(id: number, url: string) {
+		(await mysqlconnFn()).execute(
+			'UPDATE Characters SET BackstoryUrl = ? WHERE Id = ?',
+			[url, id]
+		);
 	}
 }
 
@@ -105,6 +116,7 @@ export const characterRepo = new CharacterRepo();
 export type Character = NewCharacter & {
 	id: number;
 	ownerName: string;
+	backstoryUrl?: string | null;
 };
 
 export function isCharacter(character: any): character is Character {
@@ -118,6 +130,7 @@ export function isCharacter(character: any): character is Character {
 export type NewCharacter = {
 	name: string;
 	ownerId: number;
+	backstoryUrl?: string | null;
 };
 
 export function isNewCharacter(character: any): character is NewCharacter {

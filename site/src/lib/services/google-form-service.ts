@@ -35,7 +35,7 @@ export class GoogleFormService {
   }
 
   public async submitForm(formId: string, answers: AnswerMap): Promise<{ ok: boolean; status: number }> {
-    const [form, accessToken] = await Promise.all([this.getForm(formId), this.getAccessToken()]);
+    const form = await this.getForm(formId);
     const responderUri = form.responderUri;
     if (!responderUri) throw new Error('form has no responderUri');
 
@@ -52,7 +52,10 @@ export class GoogleFormService {
 
     // Fetch the form page to get session cookies and the fbzx CSRF token.
     const viewRes = await fetch(viewformUrl, { headers: browserHeaders });
-    const cookies = viewRes.headers.get('set-cookie') ?? '';
+    const rawCookies: string[] = typeof (viewRes.headers as any).getSetCookie === 'function'
+      ? (viewRes.headers as any).getSetCookie()
+      : (viewRes.headers.get('set-cookie') ?? '').split(/,(?=\s*\w+=)/).filter(Boolean);
+    const cookies = rawCookies.map(c => c.split(';')[0].trim()).join('; ');
     const html = await viewRes.text();
     const fbzxMatch = html.match(/["']fbzx["']\s*[,:\s]+["'](-?\d+)["']/) ?? html.match(/name="fbzx"\s+value="(-?\d+)"/);
     const fbzx = fbzxMatch ? fbzxMatch[1] : String(-Math.floor(Math.random() * 1e15));
@@ -81,13 +84,15 @@ export class GoogleFormService {
         'Referer': viewformUrl,
         'Origin': 'https://docs.google.com',
         ...(cookies ? { Cookie: cookies } : {}),
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
       body: params.toString(),
     });
 
     const authRedirected = !res.url.startsWith('https://docs.google.com');
-    if (authRedirected) return { ok: false, status: 401 };
+    if (authRedirected) {
+      console.error('[form submit] redirected to:', res.url);
+      return { ok: false, status: 401 };
+    }
     return { ok: res.ok, status: res.status };
   }
 }

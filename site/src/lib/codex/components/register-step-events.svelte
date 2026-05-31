@@ -11,7 +11,10 @@
 		const res = await fetch('/api/events/open');
 		if (res.ok) {
 			const events: StringLarpEvent[] = await res.json();
-			event = events[0] ?? null;
+			const sorted = [...events].sort(
+				(a, b) => new Date(b.start).getTime() - new Date(a.start).getTime()
+			);
+			event = sorted[0] ?? null;
 			REGISTER_MANAGER.events = events;
 			if (event && event.id != null) REGISTER_MANAGER.selectEvent(event.id);
 		}

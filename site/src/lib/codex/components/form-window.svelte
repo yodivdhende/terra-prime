@@ -88,33 +88,13 @@
 
 	function submit(event: SubmitEvent) {
 		event.preventDefault();
-		if (submitting) return;
-		submitting = true;
-		submitError = null;
-		fetch(`/api/forms/${formId}/submit`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(answers)
-		})
-			.then((r) => {
-				if (!r.ok) throw new Error(`HTTP ${r.status}`);
-				return r.json();
-			})
-			.then((data: { ok: boolean; status: number; error?: string }) => {
-				if (data.ok) {
-					submitted = true;
-				} else if (data.status === 401) {
-					submitError = 'form requires Google authentication';
-				} else {
-					submitError = data.error ?? `submission rejected (${data.status})`;
-				}
-			})
-			.catch((err: Error) => {
-				submitError = err.message ?? 'submission failed';
-			})
-			.finally(() => {
-				submitting = false;
-			});
+		const responderUri = form?.responderUri;
+		if (!responderUri) {
+			submitError = 'form has no responder URL';
+			return;
+		}
+		window.open(responderUri, '_blank', 'noopener,noreferrer');
+		submitted = true;
 	}
 
 	function buildResponderUrl(): string | null {

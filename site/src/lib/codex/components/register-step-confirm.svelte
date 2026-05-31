@@ -46,14 +46,16 @@
 		try {
 			const formId = REGISTER_MANAGER.selectedFormId;
 			if (formId) {
-				const formRes = await fetch(`/api/forms/${formId}/submit`, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(REGISTER_MANAGER.formAnswers)
-				});
-				const formData: { ok: boolean; status: number; error?: string } = formRes.ok
-					? await formRes.json()
-					: { ok: false, status: formRes.status };
+				const formRes = await fetch(
+					`/api/my/events/${REGISTER_MANAGER.selectedEventId}/form-submit`,
+					{
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(REGISTER_MANAGER.formAnswers)
+					}
+				);
+				const formData: { ok: boolean; status: number; error?: string } =
+					await formRes.json().catch(() => ({ ok: false, status: formRes.status }));
 				if (!formData.ok) {
 					formSubmitError = {
 						message: formData.error ?? `form submission failed (${formData.status})`,

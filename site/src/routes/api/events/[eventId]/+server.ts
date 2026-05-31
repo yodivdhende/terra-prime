@@ -1,5 +1,6 @@
 import { eventRepo, isLarpEvent, type LarpEvent } from '$lib/db/event.repo';
 import { isNumberOrError } from '$lib/request.utils';
+import { ensureSpreadsheetForEvent } from '$lib/server/event-sheet.service';
 import { BadRequest, NotFoundRequest } from '$lib/types/errors';
 import { getSessionToken } from '$lib/utils/cookies';
 import { authGuard, authGuardForUser, handleRequest } from '$lib/utils/request';
@@ -31,14 +32,24 @@ export const POST: RequestHandler = async ({cookies, params, request}) => {
 		const {eventId} = params;
 		const numberId = isNumberOrError(eventId);
 		const body = await request.json();
+		const existing = await eventRepo.getWithId(numberId);
 		const event = {
 			...body,
 			id: numberId,
 			start: body.start ? new Date(body.start) : null,
 			end: body.end ? new Date(body.end) : null,
+			sheetId: body.sheetId ?? existing?.sheetId ?? null,
 		}
 		if(isLarpEvent(event) === false) throw new BadRequest();
 		await eventRepo.save(event);
+		if (event.formId && !event.sheetId) {
+			try {
+				const sheetId = await ensureSpreadsheetForEvent(event);
+				await eventRepo.setSheetId(numberId, sheetId);
+			} catch (err) {
+				console.error('[event-sheet] failed to create spreadsheet on save', { eventId: numberId, err });
+			}
+		}
 		return new Response();
 	})
 }

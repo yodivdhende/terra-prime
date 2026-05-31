@@ -36,11 +36,35 @@
 		versions: CharacterVersionBare[];
 	};
 
+	let formSubmitError = $state<{ message: string; responderUri: string | null } | null>(null);
+
 	async function confirm() {
 		if (submitting) return;
 		submitting = true;
 		error = null;
+		formSubmitError = null;
 		try {
+			const formId = REGISTER_MANAGER.selectedFormId;
+			if (formId) {
+				const formRes = await fetch(
+					`/api/my/events/${REGISTER_MANAGER.selectedEventId}/form-submit`,
+					{
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(REGISTER_MANAGER.formAnswers)
+					}
+				);
+				const formData: { ok: boolean; status: number; error?: string } =
+					await formRes.json().catch(() => ({ ok: false, status: formRes.status }));
+				if (!formData.ok) {
+					formSubmitError = {
+						message: formData.error ?? `form submission failed (${formData.status})`,
+						responderUri: REGISTER_MANAGER.form?.responderUri ?? null
+					};
+					return;
+				}
+			}
+
 			const body = toCharacterWithVersions({
 				character: $state.snapshot(CHARACTER_MANAGER.character),
 				version: $state.snapshot(CHARACTER_MANAGER.version)
@@ -114,6 +138,18 @@
 				items={CHARACTER_MANAGER.version.items}
 				implants={CHARACTER_MANAGER.version.implants}
 			/>
+		{/if}
+
+		{#if formSubmitError}
+			<div class="form-error">
+				<p class="error">// {formSubmitError.message}</p>
+				{#if formSubmitError.responderUri}
+					<p class="form-error-hint">submit directly on the Google network:</p>
+					<a class="form-error-link" href={formSubmitError.responderUri} target="_blank" rel="noopener noreferrer">
+						{formSubmitError.responderUri}
+					</a>
+				{/if}
+			</div>
 		{/if}
 
 		{#if error}
@@ -190,6 +226,24 @@
 		font-size: 0.75em;
 		color: #d95c5c;
 		opacity: 0.85;
+	}
+
+	.form-error {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		font-size: 0.75em;
+	}
+
+	.form-error-hint {
+		margin: 0;
+		color: var(--color-main-dim);
+		opacity: 0.7;
+	}
+
+	.form-error-link {
+		color: var(--color-accent);
+		word-break: break-all;
 	}
 
 	.success {

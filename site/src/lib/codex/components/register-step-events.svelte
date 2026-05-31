@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { StringLarpEvent } from '$lib/db/event.repo';
 	import { type RegisterManager } from '../managers/register-manager.svelte';
+	import FormFields from './form-fields.svelte';
 
 	let { REGISTER_MANAGER }: { REGISTER_MANAGER: RegisterManager } = $props();
 	let event = $state<StringLarpEvent | null>(null);
@@ -10,9 +11,12 @@
 		const res = await fetch('/api/events/open');
 		if (res.ok) {
 			const events: StringLarpEvent[] = await res.json();
-			event = events[0] ?? null;
-			if (event && event.id != null) REGISTER_MANAGER.selectEvent(event.id);
+			const sorted = [...events].sort(
+				(a, b) => new Date(b.start).getTime() - new Date(a.start).getTime()
+			);
+			event = sorted[0] ?? null;
 			REGISTER_MANAGER.events = events;
+			if (event && event.id != null) REGISTER_MANAGER.selectEvent(event.id);
 		}
 		loading = false;
 	}
@@ -28,6 +32,18 @@
 			year: 'numeric'
 		});
 	}
+
+	function formatText(text: string): string {
+		const escaped = text
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;');
+		const linked = escaped.replace(
+			/(https?:\/\/[^\s<]+)/g,
+			'<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+		);
+		return linked.replace(/\n/g, '<br>');
+	}
 </script>
 
 <div class="events">
@@ -40,6 +56,31 @@
 			<span class="name">{event.name}</span>
 			<span class="dates">{formatDate(event.start)} – {formatDate(event.end)}</span>
 		</div>
+
+		{#if REGISTER_MANAGER.selectedFormId}
+			{#if REGISTER_MANAGER.formLoading}
+				<p class="status">loading form…</p>
+			{:else if REGISTER_MANAGER.formError || !REGISTER_MANAGER.form}
+				<p class="status error">failed to load form</p>
+			{:else}
+				<div class="form-fields">
+					{#if REGISTER_MANAGER.form.info?.title}
+						<div class="form-header">
+							<span class="form-title">{REGISTER_MANAGER.form.info.title}</span>
+							{#if REGISTER_MANAGER.form.info?.description}
+								<p class="form-desc">{@html formatText(REGISTER_MANAGER.form.info.description)}</p>
+							{/if}
+						</div>
+					{/if}
+					<FormFields
+						form={REGISTER_MANAGER.form}
+						answers={REGISTER_MANAGER.formAnswers}
+						setAnswer={REGISTER_MANAGER.setAnswer}
+						toggleCheckbox={REGISTER_MANAGER.toggleCheckbox}
+					/>
+				</div>
+			{/if}
+		{/if}
 	{/if}
 </div>
 
@@ -47,7 +88,33 @@
 	.events {
 		display: flex;
 		flex-direction: column;
+		gap: 1rem;
 		height: 100%;
+	}
+
+	.form-fields {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.form-header {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.form-title {
+		font-size: 0.8rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--color-accent);
+	}
+
+	.form-desc {
+		font-size: 0.72rem;
+		color: var(--color-main-dim);
+		margin: 0;
 	}
 
 	.event {
@@ -77,5 +144,10 @@
 
 	.status.empty {
 		font-style: italic;
+	}
+
+	.status.error {
+		color: var(--color-warning);
+		opacity: 1;
 	}
 </style>

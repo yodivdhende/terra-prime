@@ -26,11 +26,12 @@ class CharacterVersionRepo {
       if ('characterId' in characterItem === false || typeof characterItem.characterId != 'number')
         continue;
       if ('name' in characterItem === false || typeof characterItem.name != 'string') continue;
+      if (typeof characterItem.company !== 'number') continue;
       characterVersions.push({
         id: characterItem.id,
         characterId: characterItem.charaacterId,
         name: characterItem.name,
-        company: typeof characterItem.company === 'number' ? characterItem.company : null,
+        company: characterItem.company,
         skills:
           skills.status === 'fulfilled'
             ? skills.value
@@ -63,7 +64,7 @@ class CharacterVersionRepo {
     const connection = mysqlconnFn();
     const [result] = await connection.execute(
       `INSERT INTO Character_Versions (\`Character\`, Name, Company) VALUES (?, ?, ?)`,
-      [characterVersion.characterId, characterVersion.name, characterVersion.company ?? null]
+      [characterVersion.characterId, characterVersion.name, characterVersion.company]
     );
     const versionId = (result as any).insertId as number;
     await Promise.all([
@@ -80,7 +81,7 @@ class CharacterVersionRepo {
     const connection = mysqlconnFn();
     await connection.execute(
       `UPDATE Character_Versions SET Name = ?, Company = ? WHERE Id = ?`,
-      [characterVersion.name, characterVersion.company ?? null, versionId]
+      [characterVersion.name, characterVersion.company, versionId]
     );
     await Promise.all([
       this.deleteItems(versionId),
@@ -260,11 +261,12 @@ class CharacterVersionRepo {
       if ('characterId' in characterItem === false || typeof characterItem.characterId != 'number')
         continue;
       if ('name' in characterItem === false || typeof characterItem.name != 'string') continue;
+      if (typeof characterItem.company !== 'number') continue;
       characterVersions.push({
         id: characterItem.id,
         characterId: characterItem.characterId,
         name: characterItem.name,
-        company: typeof characterItem.company === 'number' ? characterItem.company : null,
+        company: characterItem.company,
         skills:
           valueOrLogOfPromiseSetteld(skills)
             ?.filter(({ characterVersionId }) => characterVersionId === characterItem.id)
@@ -320,11 +322,12 @@ class CharacterVersionRepo {
       if (typeof row.id !== 'number') continue;
       if (typeof row.characterId !== 'number') continue;
       if (typeof row.name !== 'string') continue;
+      if (typeof row.company !== 'number') continue;
       characterVersions.push({
         id: row.id,
         characterId: row.characterId,
         name: row.name,
-        company: typeof row.company === 'number' ? row.company : null,
+        company: row.company,
         skills:
           valueOrLogOfPromiseSetteld(skills)
             ?.filter(({ characterVersionId }) => characterVersionId === row.id)
@@ -408,11 +411,12 @@ class CharacterVersionRepo {
       if ('id' in row === false || typeof row.id != 'number') continue;
       if ('characterId' in row === false || typeof row.characterId != 'number') continue;
       if ('name' in row === false || typeof row.name != 'string') continue;
+      if (typeof row.company !== 'number') continue;
       characterVersions.push({
         id: row.id,
         characterId: row.characterId,
         name: row.name,
-        company: typeof row.company === 'number' ? row.company : null,
+        company: row.company,
         skills:
           valueOrLogOfPromiseSetteld(skills)
             ?.filter(({ characterVersionId }) => characterVersionId === row.id)
@@ -471,7 +475,7 @@ export type CharacterVersionBare = {
   skills: CharacterVerionSkill[];
   items: CharacterVersionItem[];
   implants: number[];
-  company: number | null;
+  company: number;
 };
 
 export function isCharacterVersionBare(value: unknown): value is CharacterVersionBare {
@@ -494,7 +498,7 @@ export function isCharacterVersionBare(value: unknown): value is CharacterVersio
     Array.isArray(value.implants) &&
     value.implants.every((implant) => typeof implant === 'number') &&
     'company' in value &&
-    (value.company === null || typeof value.company === 'number')
+    typeof value.company === 'number'
   );
 }
 

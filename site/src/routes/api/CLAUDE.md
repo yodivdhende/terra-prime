@@ -136,7 +136,7 @@ Templates are `{ id, key, docUrl }` rows. `docUrl` is a Google Doc URL whose HTM
 
 ## Events
 
-Event dates (`start`, `end`) are sent as ISO strings and converted to `Date` objects before validation.
+Event dates (`start`, `end`) are sent as ISO strings and converted to `Date` objects before validation. `LarpEvent` also carries `formId?: string | null` — the bare Google Form ID (no URL) attached to this event — and `sheetId?: string | null` — the linked Google Spreadsheet ID for responses (server-assigned, not set by the admin UI). Saving an event with `formId` set and `sheetId` null eagerly creates the response spreadsheet in Drive folder `1fxhnT9gEr6CWyfBgGQ1ZWYoGkpLH4c-J` and persists its ID.
 
 | Method | Path | Auth | Returns | Description |
 |--------|------|------|---------|-------------|
@@ -155,6 +155,16 @@ Event dates (`start`, `end`) are sent as ISO strings and converted to `Date` obj
 | PUT | `/api/events/[eventId]/participants` | admin | empty body (200) | Register a participant; body: `CharacterWithVersions` (`{ id: number \| null, name, ownerId, ownerName, versions: CharacterVersionBare[] }`). Creates the character when `id` is null, otherwise updates it; then creates/updates the **last** entry in `versions` (create when its `id` is null) and registers that version for the event under `ownerId` |
 | DELETE | `/api/events/[eventId]/participants` | admin | empty body (200) | Remove participant; body: `EventParticipant` (`{ eventId, userId, characterVersion }`) |
 | GET | `/api/events/[eventId]/participants/characters/[characterId]` | user | `EventParticipant \| null` (JSON; null when not found) | Get participation record for a specific character |
+
+---
+
+## Forms (Google Forms integration)
+
+| Method | Path | Auth | Returns | Description |
+|--------|------|------|---------|-------------|
+| GET | `/api/forms/[formId]` | Public | `GoogleForm` (JSON) | Fetch a Google Form's structure |
+
+Form submission is no longer a public Forms-API call. It writes a row to the event's linked Google Sheet via `POST /api/my/events/[eventId]/form-submit` (see the "My" section). The sheet is created in workspace Drive folder `1fxhnT9gEr6CWyfBgGQ1ZWYoGkpLH4c-J` and its ID is stored on `Events.SheetId`.
 
 ---
 
@@ -183,3 +193,4 @@ All endpoints under `/api/my/...` operate on the authenticated user. Auth: `user
 | GET | `/api/my/characters/versions` | `MyCharacterVersionsResponse` (JSON) — `{ characters: (Character & { versions: CharacterVersionFull[] })[] }` where each version's `skills`/`items`/`implants` are joined with the catalog and `events` is the list of events the version is registered for: `skills: { id, name, group, groupName, value }[]`, `items: { id, name, description, count }[]`, `implants: { id, name, description }[]`, `events: { id, name }[]` | List the current user's characters with their versions, each version's skill/item/implant IDs resolved to full catalog entries plus the events the version is registered for |
 | GET | `/api/my/events/[eventId]/participants` | `{ characterId: number, characterVersionId: number }` (JSON, 200) or empty body (204 when not registered) | Get the current user's participation for an event |
 | POST | `/api/my/events/[eventId]/participants` | empty body (201) | Register the current user for an event; body: `{ draft: CharacterDraft }` where `CharacterDraft = { id: number \| null; name: string; version: { id: number \| null; name; skills; items; implants } }`. Handles three flows in one call based on which ids are null: new character (`id: null`, `version.id: null`), new version on existing character (`id: number`, `version.id: null`), update existing version (`id: number`, `version.id: number`). Renames the character if `name` differs from the stored value. Ownership-checked |
+| POST | `/api/my/events/[eventId]/form-submit` | `{ ok: true, status: 200 }` (JSON) | Append the current user's Google Form answers as a row in the event's linked spreadsheet. Body: `AnswerMap` (`Record<string, string \| string[]>` keyed by `questionId`). Returns 404 if the event has no `formId`. Row layout: `[ISO timestamp, userId, name, email, ...answers in form order]`. If the form's question titles no longer match the latest tab's header, a new `Responses <ISO>` tab is added to the same spreadsheet for the new schema |

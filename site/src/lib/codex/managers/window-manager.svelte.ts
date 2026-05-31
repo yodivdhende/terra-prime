@@ -8,6 +8,7 @@ import {
   createPdfWindow,
   createDocWindow,
   createImageWindow,
+  createFormWindow,
   type CodexWindow,
 } from './window-factories';
 
@@ -64,6 +65,12 @@ function createWindowManager() {
         if (item.mimeType.includes('image')) {
           windows.push(
             createImageWindow({ name: item.name, index: windows.length, id: item.id, side: 'right' })
+          )
+          return;
+        }
+        if (item.mimeType.includes('form')) {
+          windows.push(
+            createFormWindow({ name: item.name, index: windows.length, id: item.id, side: 'right' })
           )
           return;
         }

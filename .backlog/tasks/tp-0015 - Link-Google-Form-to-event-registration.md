@@ -1,9 +1,10 @@
 ---
 id: TP-0015
 title: Link Google Form to event registration
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-30 23:17'
+updated_date: '2026-05-31 13:24'
 labels:
   - codex
   - registration
@@ -35,3 +36,9 @@ The branch already ships the form rendering infrastructure (`google-form-service
 - [ ] #5 If form submit fails, participant is not created and the user sees an error with a link to the form's responder URL
 - [ ] #6 Navigating back and forward in the wizard preserves typed form answers
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+All 4 subtasks complete: DB migration + repo + admin UI (01), form-fields refactor (02), register-manager form state + register-step-events rendering (03), confirm-step form submission gating (04).
+<!-- SECTION:FINAL_SUMMARY:END -->

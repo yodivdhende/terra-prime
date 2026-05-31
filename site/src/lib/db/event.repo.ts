@@ -13,7 +13,8 @@ class EventRepo {
                     StartTime as start,
                     EndTime as end,
                     Status as status,
-                    Budget as budget
+                    Budget as budget,
+                    FormId as formId
                 FROM Events
             `);
 			if (Array.isArray(result) === false) return [];
@@ -43,7 +44,8 @@ class EventRepo {
                     StartTime as start,
                     EndTime as end,
                     Status as status,
-                    Budget as budget
+                    Budget as budget,
+                    FormId as formId
                 FROM Events
 				WHERE id = ?
             `,
@@ -70,7 +72,8 @@ class EventRepo {
                     StartTime as start,
                     EndTime as end,
                     Status as status,
-                    Budget as budget
+                    Budget as budget,
+                    FormId as formId
                 FROM Events
 								WHERE Status = ?
             `, [status]);
@@ -90,20 +93,20 @@ class EventRepo {
 		}
 	}
 
-	public save({ id, name, start, end, status, budget }: LarpEvent) {
-		if (id == null) return this.create({ name, start, end, status, budget });
-		return this.edit({ id, name, start, end, status, budget });
+	public save({ id, name, start, end, status, budget, formId }: LarpEvent) {
+		if (id == null) return this.create({ name, start, end, status, budget, formId });
+		return this.edit({ id, name, start, end, status, budget, formId });
 	}
 
-	public async create({ name, start, end, status, budget }: Omit<LarpEvent, 'id'>) {
+	public async create({ name, start, end, status, budget, formId }: Omit<LarpEvent, 'id'>) {
 		try {
 			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
-                INSERT Events (Name, StartTime, EndTime, Status, Budget)
-                VALUES (?,?,?,?,?)
+                INSERT Events (Name, StartTime, EndTime, Status, Budget, FormId)
+                VALUES (?,?,?,?,?,?)
             `,
-				[name, dateToSqlstring(start), dateToSqlstring(end), status, budget ?? null]
+				[name, dateToSqlstring(start), dateToSqlstring(end), status, budget ?? null, formId ?? null]
 			);
 			if ('serverStatus' in result && result.serverStatus !== 2) return null;
 			if ('insertId' in result === false || result.insertId == null) return null;
@@ -113,7 +116,7 @@ class EventRepo {
 		}
 	}
 
-	public async edit({ id, name, start, end, status, budget }: LarpEvent) {
+	public async edit({ id, name, start, end, status, budget, formId }: LarpEvent) {
 		try {
 			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
@@ -123,10 +126,11 @@ class EventRepo {
                 StartTime = ?,
                 EndTime = ?,
 				Status = ?,
-				Budget = ?
+				Budget = ?,
+				FormId = ?
                 WHERE id = ?
             `,
-				[name, dateToSqlstring(start), dateToSqlstring(end), status, budget ?? null, id]
+				[name, dateToSqlstring(start), dateToSqlstring(end), status, budget ?? null, formId ?? null, id]
 			);
 			if ('serverStatus' in result && result.serverStatus !== 2) return null;
 			return id;
@@ -197,6 +201,7 @@ export type LarpEvent = {
 	end: Date;
 	status: EventStatus;
 	budget?: number;
+	formId?: string | null;
 };
 export function isLarpEvent(event: unknown): event is LarpEvent {
 	if (typeof event !== 'object' || event == null) return false;

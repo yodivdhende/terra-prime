@@ -136,7 +136,7 @@ Templates are `{ id, key, docUrl }` rows. `docUrl` is a Google Doc URL whose HTM
 
 ## Events
 
-Event dates (`start`, `end`) are sent as ISO strings and converted to `Date` objects before validation.
+Event dates (`start`, `end`) are sent as ISO strings and converted to `Date` objects before validation. `LarpEvent` also carries `formId?: string | null` — the bare Google Form ID (no URL) attached to this event, or `null`/`undefined` when none is set.
 
 | Method | Path | Auth | Returns | Description |
 |--------|------|------|---------|-------------|

@@ -1,8 +1,6 @@
 <script lang="ts">
 	import type { GoogleForm, GoogleFormItem } from '$lib/services/google-form-service';
-	import FormGridQuestion from './form-grid-question.svelte';
-	import FormDatePicker from './form-date-picker.svelte';
-	import FormTimePicker from './form-time-picker.svelte';
+	import FormFields from './form-fields.svelte';
 
 	let { formId }: { formId: string } = $props();
 
@@ -62,10 +60,6 @@
 				loading = false;
 			});
 	});
-
-	function getQuestionId(item: GoogleFormItem): string | null {
-		return item.questionItem?.question?.questionId ?? null;
-	}
 
 	function goNext() {
 		if (!formEl) return;
@@ -161,154 +155,13 @@
 				</div>
 			{/if}
 
-			{#each sections[currentSection]?.items ?? [] as item (item.itemId)}
-				<section class="item">
-					{#if item.questionGroupItem?.grid}
-						<FormGridQuestion {item} {answers} {setAnswer} {toggleCheckbox} />
-					{:else if item.questionItem}
-						{@const question = item.questionItem.question}
-						{@const qid = getQuestionId(item) ?? item.itemId ?? ''}
-						<label>
-							<span class="q-title">
-								{item.title ?? ''}
-								{#if question?.required}<span class="required">*</span>{/if}
-							</span>
-							{#if item.description}
-								<span class="q-desc">{item.description}</span>
-							{/if}
-
-							{#if question?.textQuestion}
-								{#if question.textQuestion.paragraph}
-									<textarea
-										rows="4"
-										required={question.required ?? false}
-										value={(answers[qid] as string) ?? ''}
-										oninput={(e) => setAnswer(qid, e.currentTarget.value)}
-									></textarea>
-								{:else}
-									<input
-										type="text"
-										required={question.required ?? false}
-										value={(answers[qid] as string) ?? ''}
-										oninput={(e) => setAnswer(qid, e.currentTarget.value)}
-									/>
-								{/if}
-							{:else if question?.choiceQuestion}
-								{@const choice = question.choiceQuestion}
-								{#if choice.type === 'RADIO'}
-									<div class="options">
-										{#each choice.options ?? [] as opt, i (i)}
-											<label class="option">
-												<input
-													type="radio"
-													name={qid}
-													value={opt.value ?? ''}
-													required={question.required ?? false}
-													checked={(answers[qid] as string) === opt.value}
-													onchange={() => setAnswer(qid, opt.value ?? '')}
-												/>
-												<span>{opt.value ?? ''}</span>
-											</label>
-										{/each}
-									</div>
-								{:else if choice.type === 'CHECKBOX'}
-									<div class="options">
-										{#each choice.options ?? [] as opt, i (i)}
-											<label class="option">
-												<input
-													type="checkbox"
-													value={opt.value ?? ''}
-													checked={((answers[qid] as string[]) ?? []).includes(opt.value ?? '')}
-													onchange={() => toggleCheckbox(qid, opt.value ?? '')}
-												/>
-												<span>{opt.value ?? ''}</span>
-											</label>
-										{/each}
-									</div>
-								{:else if choice.type === 'DROP_DOWN'}
-									<select
-										required={question.required ?? false}
-										value={(answers[qid] as string) ?? ''}
-										onchange={(e) => setAnswer(qid, e.currentTarget.value)}
-									>
-										<option value="">-- select --</option>
-										{#each choice.options ?? [] as opt, i (i)}
-											<option value={opt.value ?? ''}>{opt.value ?? ''}</option>
-										{/each}
-									</select>
-								{/if}
-							{:else if question?.scaleQuestion}
-								{@const scale = question.scaleQuestion}
-								<div class="scale">
-									{#if scale.lowLabel}<span class="scale-label">{scale.lowLabel}</span>{/if}
-									{#each Array.from({ length: (scale.high ?? 5) - (scale.low ?? 1) + 1 }, (_, i) => (scale.low ?? 1) + i) as n (n)}
-										<label class="option">
-											<input
-												type="radio"
-												name={qid}
-												value={n}
-												checked={(answers[qid] as string) === String(n)}
-												onchange={() => setAnswer(qid, String(n))}
-											/>
-											<span>{n}</span>
-										</label>
-									{/each}
-									{#if scale.highLabel}<span class="scale-label">{scale.highLabel}</span>{/if}
-								</div>
-							{:else if question?.dateQuestion}
-								<FormDatePicker
-									required={question.required ?? false}
-									value={(answers[qid] as string) ?? ''}
-									onchange={(v) => setAnswer(qid, v)}
-								/>
-							{:else if question?.timeQuestion}
-								<FormTimePicker
-									required={question.required ?? false}
-									value={(answers[qid] as string) ?? ''}
-									onchange={(v) => setAnswer(qid, v)}
-								/>
-							{:else if (question as any)?.ratingQuestion}
-								{@const rating = (question as any).ratingQuestion}
-								{@const level = rating.ratingScaleLevel ?? 5}
-								{@const iconType = rating.iconType ?? 'STAR'}
-								{@const selected = Number((answers[qid] as string) ?? 0) || 0}
-								<div class="rating">
-									{#each Array.from({ length: level }, (_, i) => i + 1) as n (n)}
-										<label class="rating-icon" class:active={n <= selected}>
-											<input
-												type="radio"
-												name={qid}
-												value={n}
-												required={question?.required ?? false}
-												checked={selected === n}
-												onchange={() => setAnswer(qid, String(n))}
-											/>
-											<span>
-												{#if iconType === 'HEART'}
-													{n <= selected ? '♥' : '♡'}
-												{:else if iconType === 'THUMB_UP'}
-													▲
-												{:else}
-													{n <= selected ? '★' : '☆'}
-												{/if}
-											</span>
-										</label>
-									{/each}
-								</div>
-							{:else}
-								<span class="status">// unsupported question type</span>
-							{/if}
-						</label>
-					{:else if item.textItem}
-						<div class="text-item">
-							<span class="q-title">{item.title ?? ''}</span>
-							{#if item.description}<p class="q-desc">{item.description}</p>{/if}
-						</div>
-					{:else if item.imageItem?.image?.contentUri}
-						<img src={item.imageItem.image.contentUri} alt={item.title ?? ''} />
-					{/if}
-				</section>
-			{/each}
+			<FormFields
+					form={form}
+					{answers}
+					{setAnswer}
+					{toggleCheckbox}
+					{currentSection}
+				/>
 
 			{#if submitError}
 				<div class="submit-error">

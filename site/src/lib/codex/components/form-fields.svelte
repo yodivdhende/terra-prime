@@ -50,6 +50,18 @@
 	function getQuestionId(item: GoogleFormItem): string | null {
 		return item.questionItem?.question?.questionId ?? null;
 	}
+
+	function formatText(text: string): string {
+		const escaped = text
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;');
+		const linked = escaped.replace(
+			/(https?:\/\/[^\s<]+)/g,
+			'<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+		);
+		return linked.replace(/\n/g, '<br>');
+	}
 </script>
 
 {#each visibleItems as item (item.itemId)}
@@ -65,7 +77,7 @@
 					{#if question?.required}<span class="required">*</span>{/if}
 				</span>
 				{#if item.description}
-					<span class="q-desc">{item.description}</span>
+					<span class="q-desc">{@html formatText(item.description)}</span>
 				{/if}
 
 				{#if question?.textQuestion}
@@ -193,7 +205,7 @@
 		{:else if item.textItem}
 			<div class="text-item">
 				<span class="q-title">{item.title ?? ''}</span>
-				{#if item.description}<p class="q-desc">{item.description}</p>{/if}
+				{#if item.description}<p class="q-desc">{@html formatText(item.description)}</p>{/if}
 			</div>
 		{:else if item.imageItem?.image?.contentUri}
 			<img src={item.imageItem.image.contentUri} alt={item.title ?? ''} />

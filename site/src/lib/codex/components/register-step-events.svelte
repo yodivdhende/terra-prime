@@ -29,6 +29,18 @@
 			year: 'numeric'
 		});
 	}
+
+	function formatText(text: string): string {
+		const escaped = text
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;');
+		const linked = escaped.replace(
+			/(https?:\/\/[^\s<]+)/g,
+			'<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+		);
+		return linked.replace(/\n/g, '<br>');
+	}
 </script>
 
 <div class="events">
@@ -53,7 +65,7 @@
 						<div class="form-header">
 							<span class="form-title">{REGISTER_MANAGER.form.info.title}</span>
 							{#if REGISTER_MANAGER.form.info?.description}
-								<p class="form-desc">{REGISTER_MANAGER.form.info.description}</p>
+								<p class="form-desc">{@html formatText(REGISTER_MANAGER.form.info.description)}</p>
 							{/if}
 						</div>
 					{/if}

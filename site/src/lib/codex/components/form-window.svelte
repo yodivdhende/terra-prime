@@ -120,6 +120,18 @@
 	function buildResponderUrl(): string | null {
 		return form?.responderUri ?? null;
 	}
+
+	function formatText(text: string): string {
+		const escaped = text
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;');
+		const linked = escaped.replace(
+			/(https?:\/\/[^\s<]+)/g,
+			'<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+		);
+		return linked.replace(/\n/g, '<br>');
+	}
 </script>
 
 <div class="form-window">
@@ -136,7 +148,7 @@
 		<header>
 			<h1>{form.info?.title ?? 'untitled form'}</h1>
 			{#if form.info?.description}
-				<p class="desc">{form.info.description}</p>
+				<p class="desc">{@html formatText(form.info.description)}</p>
 			{/if}
 			{#if sections.length > 1}
 				<span class="section-counter">
@@ -150,7 +162,7 @@
 				<div class="section-header">
 					<h2>{sections[currentSection].title}</h2>
 					{#if sections[currentSection].description}
-						<p class="q-desc">{sections[currentSection].description}</p>
+						<p class="q-desc">{@html formatText(sections[currentSection].description!)}</p>
 					{/if}
 				</div>
 			{/if}

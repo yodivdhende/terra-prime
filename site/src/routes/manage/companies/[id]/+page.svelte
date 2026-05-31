@@ -7,6 +7,7 @@
 	import type { Implant } from '$lib/db/implants.repo';
 	import type { Skill } from '$lib/db/skills.repo';
 	import type { PageProps } from './$types';
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -31,29 +32,48 @@
 	async function saveCompany() {
 		const snap = $state.snapshot(company);
 		if (snap.id == null) return;
-		const result = await fetch(`/api/companies/${snap.id}`, {
-			method: 'post',
-			body: JSON.stringify(snap),
-			headers: { 'content-type': 'application/json' }
-		});
-		if (result.ok) await goto('.');
+		try {
+			const result = await fetch(`/api/companies/${snap.id}`, {
+				method: 'post',
+				body: JSON.stringify(snap),
+				headers: { 'content-type': 'application/json' }
+			});
+			if (result.ok) {
+				TOAST_MANAGER.success('Company saved');
+				await goto('.');
+			}
+		} catch (err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		}
 	}
 
 	async function removeCompany() {
 		const snap = $state.snapshot(company);
 		if (snap.id == null) return;
-		const result = await fetch(`/api/companies/${snap.id}`, { method: 'delete' });
-		if (result.ok) await goto('.');
+		try {
+			const result = await fetch(`/api/companies/${snap.id}`, { method: 'delete' });
+			if (result.ok) {
+				TOAST_MANAGER.success('Company deleted');
+				await goto('.');
+			}
+		} catch (err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		}
 	}
 
 	async function saveDiscounts() {
 		const snap = $state.snapshot(company);
 		if (snap.id == null) return;
-		await fetch(`/api/companies/${snap.id}/discounts`, {
-			method: 'post',
-			body: JSON.stringify($state.snapshot(discounts)),
-			headers: { 'content-type': 'application/json' }
-		});
+		try {
+			await fetch(`/api/companies/${snap.id}/discounts`, {
+				method: 'post',
+				body: JSON.stringify($state.snapshot(discounts)),
+				headers: { 'content-type': 'application/json' }
+			});
+			TOAST_MANAGER.success('Discounts saved');
+		} catch (err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		}
 	}
 
 	function addItemDiscount() {

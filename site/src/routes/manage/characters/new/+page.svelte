@@ -3,6 +3,7 @@
 	import BackstoryLink from '$lib/components/backstory-link.svelte';
 	import CharacterForm from '$lib/components/character-form.svelte';
 	import type { PageProps } from './$types';
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
 	let character = $state({
@@ -21,11 +22,12 @@
 				}
 			});
 			if (result.ok) {
-        await invalidate('/api/my/characters');
+				TOAST_MANAGER.success('Character created');
+				await invalidate('/api/my/characters');
 				await goto('.');
 			}
-		} catch (err) {
-			//TODO make error component;
+		} catch (err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
 	}
 </script>

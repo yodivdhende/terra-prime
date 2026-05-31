@@ -2,6 +2,7 @@
 	import { goto, invalidate } from '$app/navigation';
 	import SkillGroupForm from '$lib/components/skill-group-form.svelte';
 	import type { SkillGroup } from '$lib/db/skills.repo';
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let group: SkillGroup = $state({
 		id: null,
@@ -10,13 +11,20 @@
 	});
 
 	async function save() {
-		const response = await fetch('/api/skills/groups', {
-			method: 'put',
-			body: JSON.stringify($state.snapshot(group))
-		});
-		if (response.ok) {
-			await invalidate('/api/skills/groups');
-			await goto('.');
+		try {
+			const response = await fetch('/api/skills/groups', {
+				method: 'put',
+				body: JSON.stringify($state.snapshot(group))
+			});
+			if (response.ok) {
+				TOAST_MANAGER.success('Skill group saved');
+				await invalidate('/api/skills/groups');
+				await goto('.');
+			} else {
+				TOAST_MANAGER.error('Failed to save skill group');
+			}
+		} catch (err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
 	}
 </script>

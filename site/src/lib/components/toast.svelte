@@ -23,7 +23,7 @@
 <style>
 	.toast-container {
 		position: fixed;
-		bottom: 1.5rem;
+		top: 1.5rem;
 		right: 1.5rem;
 		display: flex;
 		flex-direction: column;

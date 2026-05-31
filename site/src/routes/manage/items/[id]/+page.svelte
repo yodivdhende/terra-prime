@@ -3,6 +3,7 @@
 	import ItemForm from '$lib/components/item-form.svelte';
 	import type { Item } from '$lib/db/items.repo';
 	import type { PageProps } from './$types';
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
 	let item: Item | null = $state(null);
@@ -25,11 +26,14 @@
 				}
 			})
 			if(result.ok) {
+				TOAST_MANAGER.success('Item saved');
 				await invalidate('/api/my/characters');
 				await goto('.');
+			} else {
+				TOAST_MANAGER.error('Failed to save item');
 			}
-		} catch( err) {
-			//TODO make error component;
+		} catch(err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
     }
 
@@ -46,10 +50,13 @@
 				}
 			})
 			if(result.ok) {
+				TOAST_MANAGER.success('Item deleted');
 				await goto('.');
+			} else {
+				TOAST_MANAGER.error('Failed to delete item');
 			}
-		} catch( err) {
-			//TODO make error component;
+		} catch(err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
 	 }
 </script>

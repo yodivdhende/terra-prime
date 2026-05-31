@@ -4,6 +4,7 @@
 	import { type Character } from '$lib/db/character.repo';
 	import { CirclePlus } from '@lucide/svelte';
 	import { type PageProps } from './$types';
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
 	let character: Character | null = $state(null);
@@ -25,11 +26,12 @@
 				headers: { 'content-type': 'application/json' }
 			});
 			if (result.ok) {
+				TOAST_MANAGER.success('Character saved');
 				await invalidate('/api/my/characters');
 				await goto('.');
 			}
-		} catch (err) {
-			//TODO make error component
+		} catch (err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
 	}
 
@@ -44,8 +46,8 @@
 				const { id } = await result.json();
 				await goto(`/manage/versions/${id}`);
 			}
-		} catch (err) {
-			//TODO make error component
+		} catch (err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
 	}
 </script>

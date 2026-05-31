@@ -4,7 +4,7 @@ import { implantRepo } from '$lib/db/implants.repo';
 import { itemRepo } from '$lib/db/items.repo';
 import { skillRepo } from '$lib/db/skills.repo';
 import { isNumberOrError } from '$lib/request.utils';
-import { NotFoundRequest } from '$lib/types/errors';
+import { BadRequest, NotFoundRequest } from '$lib/types/errors';
 import { UserRole } from '$lib/types/roles';
 import { getSessionToken } from '$lib/utils/cookies';
 import { authGuardForUser, handleRequest } from '$lib/utils/request';
@@ -69,11 +69,12 @@ export const POST: RequestHandler = async ({ cookies, params, request }) => {
 		await authGuardForUser(getSessionToken(cookies), [UserRole.admin]);
 		const versionId = isNumberOrError(params.versionId);
 		const body: CharacterVersionFull = await request.json();
+		if (body.company?.id == null) throw new BadRequest();
 		await characterVersionRepo.update({
 			id: versionId,
 			characterId: body.characterId,
 			name: body.name,
-			company: body.company?.id ?? null,
+			company: body.company.id,
 			skills: body.skills.map((s: VersionSkill) => ({ id: s.id, value: s.value })),
 			items: body.items.map((i: VersionItem) => ({ id: i.id, count: i.count })),
 			implants: body.implants.map((i: VersionImplant) => i.id)

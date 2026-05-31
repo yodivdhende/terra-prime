@@ -42,6 +42,7 @@ export function createCharacterManager() {
   const ready = $derived.by(() => {
     if (character.name.trim().length <= 0) return false;
     if (version.name.trim().length <= 0) return false;
+    if (version.company == null) return false;
     return true;
   });
 

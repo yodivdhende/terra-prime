@@ -14,6 +14,9 @@
 			.then((data: Company[]) => {
 				companies = data;
 				selectedId = company?.id ?? null;
+				if (selectedId === null && data.length > 0) {
+					selectedId = data[0].id;
+				}
 			});
 	});
 
@@ -24,8 +27,7 @@
 	});
 </script>
 
-<select bind:value={selectedId}>
-	<option value={null}>— select a company —</option>
+<select bind:value={selectedId} required>
 	{#each companies as c}
 		<option value={c.id}>{c.name}</option>
 	{/each}

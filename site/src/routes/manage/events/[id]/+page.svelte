@@ -3,6 +3,7 @@
 	import EventForm from '$lib/components/event-form.svelte';
 	import type { PageProps } from './$types';
 	import type { LarpEvent } from '$lib/db/event.repo';
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
 	let event: LarpEvent | null = $state(null);
@@ -30,10 +31,11 @@
 				}
 			})
 			if(result.ok) {
+				TOAST_MANAGER.success('Event saved');
 				await goto('.');
 			}
-		} catch( err) {
-			//TODO make error component;
+		} catch( err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
     }
 
@@ -50,10 +52,11 @@
 				}
 			})
 			if(result.ok) {
+				TOAST_MANAGER.success('Event deleted');
 				await goto('.');
 			}
-		} catch( err) {
-			//TODO make error component;
+		} catch( err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
 	 }
 </script>

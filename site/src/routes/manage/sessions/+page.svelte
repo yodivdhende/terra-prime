@@ -10,6 +10,7 @@
 	} from '../../../../../websocket-server/connection-socket';
 	import SessionRow from '$lib/components/session-row.svelte';
 	import { type PageProps } from './$types';
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
 	let sessionToken: string | undefined = $derived(data.sessionToken);
@@ -42,10 +43,19 @@
 	}
 
 	async function deleteConnection(token: string) {
-		const response = await fetch(`/api/sessions/${token}`, {
-			method: 'DELETE'
-		});
-		invalidate('/api/sessions');
+		try {
+			const response = await fetch(`/api/sessions/${token}`, {
+				method: 'DELETE'
+			});
+			if (response.ok) {
+				TOAST_MANAGER.success('Session removed');
+			} else {
+				TOAST_MANAGER.error(`Delete failed (${response.status})`);
+			}
+			invalidate('/api/sessions');
+		} catch (err: any) {
+			TOAST_MANAGER.error(err?.message ?? 'Something went wrong');
+		}
 	}
 
 

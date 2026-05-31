@@ -2,6 +2,7 @@
     import { goto, invalidate } from "$app/navigation";
     import { untrack } from "svelte";
     import type { PageProps } from "./$types";
+    import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
     let {data}: PageProps = $props();
     let user = $state(untrack(() => data.user));
@@ -19,10 +20,13 @@
                 headers: { 'content-type': 'application/json' }
             })
             if(result.ok) {
+                TOAST_MANAGER.success('User saved');
                 goto('.');
+            } else {
+                TOAST_MANAGER.error(`Save failed (${result.status})`);
             }
-        } catch (err) {
-            //TODO make error component;
+        } catch (err: any) {
+            TOAST_MANAGER.error(err?.message ?? 'Something went wrong');
         }
     }
 

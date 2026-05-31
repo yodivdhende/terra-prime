@@ -5,6 +5,7 @@
 	import type { EventCharacterBudget } from '$lib/db/event_budget.repo';
 	import { CirclePlus } from '@lucide/svelte';
 	import type { PageProps } from './$types';
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -70,22 +71,32 @@
 
 	async function saveBudget(characterId: number) {
 		const budget = budgetMap.get(characterId) ?? 0;
-		await fetch(`/api/events/${data.eventId}/budget/characters/${characterId}`, {
-			method: 'post',
-			body: JSON.stringify({ budget }),
-			headers: { 'content-type': 'application/json' }
-		});
+		try {
+			await fetch(`/api/events/${data.eventId}/budget/characters/${characterId}`, {
+				method: 'post',
+				body: JSON.stringify({ budget }),
+				headers: { 'content-type': 'application/json' }
+			});
+			TOAST_MANAGER.success('Budget saved');
+		} catch (err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		}
 	}
 
 	async function saveDraft(draft: Draft) {
 		if (draft.characterId == null) return;
-		await fetch(`/api/events/${data.eventId}/budget/characters/${draft.characterId}`, {
-			method: 'post',
-			body: JSON.stringify({ budget: draft.budget }),
-			headers: { 'content-type': 'application/json' }
-		});
-		removeDraft(draft.key);
-		await invalidateAll();
+		try {
+			await fetch(`/api/events/${data.eventId}/budget/characters/${draft.characterId}`, {
+				method: 'post',
+				body: JSON.stringify({ budget: draft.budget }),
+				headers: { 'content-type': 'application/json' }
+			});
+			TOAST_MANAGER.success('Budget saved');
+			removeDraft(draft.key);
+			await invalidateAll();
+		} catch (err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		}
 	}
 </script>
 

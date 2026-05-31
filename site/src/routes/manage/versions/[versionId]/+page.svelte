@@ -3,6 +3,7 @@
 	import type { Character } from '$lib/db/character.repo';
 	import type { CharacterVersionFull } from '$lib/codex/managers/character-manager.svelte';
 	import { type PageProps } from './$types';
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -37,11 +38,14 @@
 			});
 			if (result.ok) {
 				saved = true;
+				TOAST_MANAGER.success('Version saved');
 			} else {
 				saveError = `save failed (${result.status})`;
+				TOAST_MANAGER.error(`Save failed (${result.status})`);
 			}
-		} catch (err) {
+		} catch (err: any) {
 			saveError = `${err}`;
+			TOAST_MANAGER.error(err?.message ?? 'Something went wrong');
 		} finally {
 			saving = false;
 		}

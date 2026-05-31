@@ -3,6 +3,7 @@
 	import SkillForm from '$lib/components/skill-form.svelte';
 	import type { Skill } from '$lib/db/skills.repo';
 	import type { PageProps } from './$types';
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	const {data}: PageProps = $props();
 	let skill: Skill = $state({
@@ -14,13 +15,20 @@
 	});
 
 	async function save() {
-		const response = await fetch('/api/skills', {
-			method: 'put',
-			body: JSON.stringify($state.snapshot(skill))
-		});
-		if (response.ok) {
-			await invalidate('/api/skills');
-			await goto('.');
+		try {
+			const response = await fetch('/api/skills', {
+				method: 'put',
+				body: JSON.stringify($state.snapshot(skill))
+			});
+			if (response.ok) {
+				TOAST_MANAGER.success('Skill saved');
+				await invalidate('/api/skills');
+				await goto('.');
+			} else {
+				TOAST_MANAGER.error('Failed to save skill');
+			}
+		} catch (err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
 	}
 </script>

@@ -3,6 +3,7 @@
 	import SkillForm from '$lib/components/skill-form.svelte';
 	import type { Skill } from '$lib/db/skills.repo';
 	import type { PageProps } from './$types';
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
 	let skill: Skill | null = $state(null);
@@ -25,11 +26,14 @@
 				}
 			});
 			if (result.ok) {
+				TOAST_MANAGER.success('Skill saved');
 				await invalidate('/api/skills');
 				await goto('.');
+			} else {
+				TOAST_MANAGER.error('Failed to save skill');
 			}
-		} catch (err) {
-			//TODO make error component;
+		} catch (err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
 	}
 
@@ -46,10 +50,13 @@
 				}
 			});
 			if (result.ok) {
+				TOAST_MANAGER.success('Skill deleted');
 				await goto('.');
+			} else {
+				TOAST_MANAGER.error('Failed to delete skill');
 			}
-		} catch (err) {
-			//TODO make error component;
+		} catch (err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
 	}
 </script>

@@ -2,6 +2,7 @@
 	import { goto, invalidate } from "$app/navigation";
 	import EventForm from "$lib/components/event-form.svelte";
 	import type { LarpEvent } from "$lib/db/event.repo";
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
     let event: LarpEvent = $state({
         id: null,
@@ -12,13 +13,18 @@
     });
 
    async function save(){
-        const response = await fetch('/api/events', {
-            method: 'put',
-            body: JSON.stringify(event),
-        })
-        if(response.ok){
-            await invalidate('/api/events');
-			await goto('.');
+        try {
+            const response = await fetch('/api/events', {
+                method: 'put',
+                body: JSON.stringify(event),
+            })
+            if(response.ok){
+                TOAST_MANAGER.success('Event created');
+                await invalidate('/api/events');
+                await goto('.');
+            }
+        } catch (err: any) {
+            TOAST_MANAGER.error(err.message ?? 'Something went wrong');
         }
     }
 

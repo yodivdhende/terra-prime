@@ -3,6 +3,7 @@
 	import ImplantForm from '$lib/components/implant-form.svelte';
 	import type { Implant } from '$lib/db/implants.repo';
 	import type { PageProps } from './$types';
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
 	let implant: Implant | null = $state(null);
@@ -25,10 +26,13 @@
 				}
 			})
 			if(result.ok) {
+				TOAST_MANAGER.success('Implant saved');
 				await goto('.');
+			} else {
+				TOAST_MANAGER.error('Failed to save implant');
 			}
-		} catch( err) {
-			//TODO make error component;
+		} catch(err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
     }
 
@@ -45,10 +49,13 @@
 				}
 			})
 			if(result.ok) {
+				TOAST_MANAGER.success('Implant deleted');
 				await goto('.');
+			} else {
+				TOAST_MANAGER.error('Failed to delete implant');
 			}
-		} catch( err) {
-			//TODO make error component;
+		} catch(err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
 	 }
 </script>

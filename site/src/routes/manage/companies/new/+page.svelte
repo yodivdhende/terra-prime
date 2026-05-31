@@ -2,6 +2,7 @@
 	import { goto, invalidate } from '$app/navigation';
 	import CompanyForm from '$lib/components/company-form.svelte';
 	import type { Company } from '$lib/db/companies.repo';
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let company: Company = $state({
 		id: null,
@@ -11,14 +12,19 @@
 	});
 
 	async function save() {
-		const response = await fetch('/api/companies', {
-			method: 'put',
-			body: JSON.stringify($state.snapshot(company)),
-			headers: { 'content-type': 'application/json' }
-		});
-		if (response.ok) {
-			await invalidate('/api/companies');
-			await goto('.');
+		try {
+			const response = await fetch('/api/companies', {
+				method: 'put',
+				body: JSON.stringify($state.snapshot(company)),
+				headers: { 'content-type': 'application/json' }
+			});
+			if (response.ok) {
+				TOAST_MANAGER.success('Company created');
+				await invalidate('/api/companies');
+				await goto('.');
+			}
+		} catch (err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
 	}
 </script>

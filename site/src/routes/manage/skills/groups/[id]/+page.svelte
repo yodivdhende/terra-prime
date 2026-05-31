@@ -3,6 +3,7 @@
 	import SkillGroupForm from '$lib/components/skill-group-form.svelte';
 	import type { SkillGroup } from '$lib/db/skills.repo';
 	import type { PageProps } from './$types';
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
 	let group: SkillGroup | null = $state(null);
@@ -25,11 +26,14 @@
 				}
 			});
 			if (result.ok) {
+				TOAST_MANAGER.success('Skill group saved');
 				await invalidate('/api/skills/groups');
 				await goto('.');
+			} else {
+				TOAST_MANAGER.error('Failed to save skill group');
 			}
-		} catch (err) {
-			//TODO make error component;
+		} catch (err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
 	}
 
@@ -46,11 +50,14 @@
 				}
 			});
 			if (result.ok) {
+				TOAST_MANAGER.success('Skill group deleted');
 				await invalidate('/api/skills/groups');
 				await goto('.');
+			} else {
+				TOAST_MANAGER.error('Failed to delete skill group');
 			}
-		} catch (err) {
-			//TODO make error component;
+		} catch (err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
 	}
 </script>

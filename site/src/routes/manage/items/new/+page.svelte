@@ -2,6 +2,7 @@
 	import { goto, invalidate } from "$app/navigation";
 	import ItemForm from "$lib/components/item-form.svelte";
 	import type { Item } from "$lib/db/items.repo";
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
     let item: Item = $state({
         id: null,
@@ -10,14 +11,21 @@
     });
 
    async function save(){
-        const response = await fetch('/api/items', {
-            method: 'put',
-            body: JSON.stringify(item),
-        })
-        if(response.ok){
-            await invalidate('/api/items');
-			await goto('.');
-        }
+		try {
+			const response = await fetch('/api/items', {
+				method: 'put',
+				body: JSON.stringify(item),
+			});
+			if(response.ok){
+				TOAST_MANAGER.success('Item saved');
+				await invalidate('/api/items');
+				await goto('.');
+			} else {
+				TOAST_MANAGER.error('Failed to save item');
+			}
+		} catch(err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		}
     }
 
 </script>

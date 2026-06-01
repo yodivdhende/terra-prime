@@ -68,12 +68,6 @@ function createWindowManager() {
           )
           return;
         }
-        if (item.mimeType.includes('form')) {
-          windows.push(
-            createFormWindow({ name: item.name, index: windows.length, id: item.id, side: 'right' })
-          )
-          return;
-        }
       })
   }
 

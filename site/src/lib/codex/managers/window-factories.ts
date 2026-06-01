@@ -79,19 +79,6 @@ export function createImageWindow({ name, index, id, side }: { name: string, ind
   }
 }
 
-export function createFormWindow({ name, index, id, side }: { name: string, index: number, id: string, side: 'left' | 'right' }): CodexWindow {
-  return {
-    id,
-    type: 'form',
-    state: getState(name),
-    dimension: { w: Math.round(window.innerWidth * 0.45), h: Math.round(window.innerHeight * 0.7) },
-    position: { x: 400 + 20 * index, y: 20 * index, z: index },
-    contentData: id,
-    title: formatName(name),
-    icon: { type: 'form', side },
-  }
-}
-
 export function createLoginWindow({ shouldCreate }: { shouldCreate: boolean }): CodexWindow | null {
   if (shouldCreate === false) return null
   return {

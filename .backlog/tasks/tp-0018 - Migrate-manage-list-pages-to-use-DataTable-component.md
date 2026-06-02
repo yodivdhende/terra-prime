@@ -1,7 +1,7 @@
 ---
 id: TP-0018
 title: Migrate manage list pages to use DataTable component
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-06-02'
 labels:

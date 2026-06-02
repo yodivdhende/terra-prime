@@ -1,46 +1,38 @@
 <script lang="ts">
 	import { CirclePlus } from '@lucide/svelte';
 	import { type PageProps } from './$types';
+	import DataTable from '$lib/components/data-table.svelte';
 
 	let { data }: PageProps = $props();
+
+	const columns = [
+		{ label: 'Id', key: 'id' },
+		{ label: 'Name', key: 'name' },
+		{ label: 'Description', key: 'description' }
+	];
 </script>
 
 <main>
-    <a href="items/new"><CirclePlus /></a>
-	<table>
-		<thead>
+	<a href="items/new"><CirclePlus /></a>
+	<DataTable items={data.items} {columns}>
+		{#snippet row(item)}
+			{@const it = item as typeof data.items[0]}
 			<tr>
-				<th>Id</th>
-				<th>Name</th>
-				<th>start</th>
-				<th>end</th>
+				<td><a href="items/{it.id}">{it.id}</a></td>
+				<td>{it.name}</td>
+				<td>{it.description}</td>
 			</tr>
-		</thead>
-        <tbody>
-            {#each data.items as item}
-                <tr>
-                    <td><a href="items/{item.id}">{item.id}</a></td>
-                    <td>{item.name}</td>
-                    <td>{item.description}</td>
-                </tr>
-            {/each}
-        </tbody>
-	</table>
+		{/snippet}
+	</DataTable>
 </main>
 
 <style>
-    main {
-        display: flex;
-        flex-direction: column;
-        justify-content: end;
-        align-items: end;
-        gap: 8px;
-        padding: 16px;
-    }
-    tr {
-        border-bottom: 1px solid silver;
-    }
-    td{
-        padding: 16px 8px;
-    }
+	main {
+		display: flex;
+		flex-direction: column;
+		justify-content: end;
+		align-items: end;
+		gap: 8px;
+		padding: 16px;
+	}
 </style>

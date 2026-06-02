@@ -1,30 +1,29 @@
 <script lang="ts">
 	import { CirclePlus } from '@lucide/svelte';
 	import type { PageProps } from './$types';
+	import DataTable from '$lib/components/data-table.svelte';
 
 	let { data }: PageProps = $props();
+
+	const columns = [
+		{ label: 'Id', key: 'id' },
+		{ label: 'Name', key: 'name' },
+		{ label: 'Description', key: 'description' }
+	];
 </script>
 
 <main>
 	<a href="companies/new"><CirclePlus /></a>
-	<table>
-		<thead>
+	<DataTable items={data.companies} {columns}>
+		{#snippet row(item)}
+			{@const company = item as typeof data.companies[0]}
 			<tr>
-				<th>Id</th>
-				<th>Name</th>
-				<th>Description</th>
+				<td><a href="companies/{company.id}">{company.id}</a></td>
+				<td>{company.name}</td>
+				<td>{company.description}</td>
 			</tr>
-		</thead>
-		<tbody>
-			{#each data.companies as company}
-				<tr>
-					<td><a href="companies/{company.id}">{company.id}</a></td>
-					<td>{company.name}</td>
-					<td>{company.description}</td>
-				</tr>
-			{/each}
-		</tbody>
-	</table>
+		{/snippet}
+	</DataTable>
 </main>
 
 <style>
@@ -35,11 +34,5 @@
 		align-items: end;
 		gap: 8px;
 		padding: 16px;
-	}
-	tr {
-		border-bottom: 1px solid silver;
-	}
-	td {
-		padding: 16px 8px;
 	}
 </style>

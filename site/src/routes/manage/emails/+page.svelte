@@ -1,32 +1,31 @@
 <script lang="ts">
 	import { CirclePlus } from '@lucide/svelte';
 	import { type PageProps } from './$types';
+	import DataTable from '$lib/components/data-table.svelte';
 
 	let { data }: PageProps = $props();
+
+	const columns = [
+		{ label: 'Id', key: 'id' },
+		{ label: 'Key', key: 'key' },
+		{ label: 'Doc URL', key: 'docUrl' }
+	];
 </script>
 
 <main>
 	<a href="emails/new"><CirclePlus /></a>
-	<table>
-		<thead>
+	<DataTable items={data.templates} {columns}>
+		{#snippet row(item)}
+			{@const template = item as typeof data.templates[0]}
 			<tr>
-				<th>Id</th>
-				<th>Key</th>
-				<th>Doc URL</th>
+				<td><a href="emails/{template.id}">{template.id}</a></td>
+				<td>{template.key}</td>
+				<td class="url">
+					<a href={template.docUrl} target="_blank" rel="noopener noreferrer">{template.docUrl}</a>
+				</td>
 			</tr>
-		</thead>
-		<tbody>
-			{#each data.templates as template}
-				<tr>
-					<td><a href="emails/{template.id}">{template.id}</a></td>
-					<td>{template.key}</td>
-					<td class="url">
-						<a href={template.docUrl} target="_blank" rel="noopener noreferrer">{template.docUrl}</a>
-					</td>
-				</tr>
-			{/each}
-		</tbody>
-	</table>
+		{/snippet}
+	</DataTable>
 </main>
 
 <style>
@@ -37,12 +36,6 @@
 		align-items: end;
 		gap: 8px;
 		padding: 16px;
-	}
-	tr {
-		border-bottom: 1px solid silver;
-	}
-	td {
-		padding: 16px 8px;
 	}
 	td.url {
 		max-width: 480px;

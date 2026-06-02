@@ -1,51 +1,44 @@
 <script lang="ts">
 	import { CirclePlus } from '@lucide/svelte';
 	import { type PageProps } from './$types';
+	import DataTable from '$lib/components/data-table.svelte';
 
 	let { data }: PageProps = $props();
+
+	const columns = [
+		{ label: 'Id', key: 'id' },
+		{ label: 'Name', key: 'name' },
+		{ label: 'Player', key: 'ownerName' },
+		{ label: 'Backstory', key: 'backstoryUrl' }
+	];
 </script>
 
 <main>
-    <a href='characters/new'><CirclePlus /></a>
-	<table>
-		<thead>
+	<a href="characters/new"><CirclePlus /></a>
+	<DataTable items={data.characters} {columns}>
+		{#snippet row(item)}
+			{@const character = item as typeof data.characters[0]}
 			<tr>
-				<th>Id</th>
-				<th>Name</th>
-				<th>Player</th>
-				<th>Backstory</th>
+				<td><a href="characters/{character.id}">{character.id}</a></td>
+				<td>{character.name}</td>
+				<td>{character.ownerName}</td>
+				<td>
+					{#if character.backstoryUrl}
+						<a href={character.backstoryUrl} target="_blank" rel="noopener noreferrer">Open</a>
+					{/if}
+				</td>
 			</tr>
-		</thead>
-        <tbody>
-            {#each data.characters as character}
-                <tr>
-                    <td><a href="characters/{character.id}">{character.id}</a></td>
-                    <td>{character.name}</td>
-                    <td>{character.ownerName}</td>
-                    <td>
-                        {#if character.backstoryUrl}
-                            <a href={character.backstoryUrl} target="_blank" rel="noopener noreferrer">Open</a>
-                        {/if}
-                    </td>
-                </tr>
-            {/each}
-        </tbody>
-	</table>
+		{/snippet}
+	</DataTable>
 </main>
 
 <style>
-    main {
-        display: flex;
-        flex-direction: column;
-        justify-content: end;
-        align-items: end;
-        gap: 8px;
-        padding: 16px;
-    }
-    tr {
-        border-bottom: 1px solid silver;
-    }
-    td{
-        padding: 16px 8px;
-    }
+	main {
+		display: flex;
+		flex-direction: column;
+		justify-content: end;
+		align-items: end;
+		gap: 8px;
+		padding: 16px;
+	}
 </style>

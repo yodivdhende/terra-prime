@@ -8,7 +8,6 @@ import {
   createPdfWindow,
   createDocWindow,
   createImageWindow,
-  createFormWindow,
   type CodexWindow,
 } from './window-factories';
 

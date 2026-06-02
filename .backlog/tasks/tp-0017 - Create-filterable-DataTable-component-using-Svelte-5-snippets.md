@@ -1,9 +1,10 @@
 ---
 id: TP-0017
 title: Create filterable DataTable component using Svelte 5 snippets
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-06-02'
+updated_date: '2026-06-02 20:47'
 labels:
   - ui
   - component

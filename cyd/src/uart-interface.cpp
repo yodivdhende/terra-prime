@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <log.h>
 #include <globals.h>
-#include <web-socket.h>
+#include <mqtt-client.h>
 
 unsigned long lastMessageTimeStamp = 0;
 String lastMessage = "";

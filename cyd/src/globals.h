@@ -11,7 +11,7 @@ extern TFT_eSPI tft;
 extern String wifi_ssid;
 extern String wifi_password;
 extern String domain;
-extern int webSocketPort;
+extern int mqttPort;
 extern String api_url;
 extern int character_id;
 extern String sessionToken;

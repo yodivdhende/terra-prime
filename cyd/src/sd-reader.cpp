@@ -73,14 +73,14 @@ bool readConfig(fs::FS &fs) {
   String baseUrl = configObject["domain"];
   String apiUrl= configObject["apiUrl"];
   int id = configObject["characterId"];
-  int port = configObject["webSocketPort"];
+  int port = configObject["mqttPort"];
   wifi_ssid = ssid;
   wifi_password = password;
   api_url = apiUrl;
   domain = baseUrl;
   character_id = id;
   sessionToken = sessionTokenString;
-  webSocketPort = port;
+  mqttPort = port;
 
   return true;
 }

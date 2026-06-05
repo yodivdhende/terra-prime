@@ -10,7 +10,7 @@ LARP event management system built with SvelteKit, MySQL, and Docker.
 | 3D/Graphics | Three.js, Threlte                   |
 | Runtime     | Node.js 24                          |
 | Database    | MySQL 8.0+                          |
-| Real-time   | WebSocket (ws)                      |
+| Real-time   | MQTT (Mosquitto broker, MQTT.js)    |
 | Containers  | Docker + Docker Compose             |
 | Package mgr | pnpm                                |
 
@@ -64,6 +64,21 @@ MYSQLDATABASE=testaliceDB
 > When running via Docker Compose, these values are already set in `compose.yml`. The `.env`
 > file is only needed for running the app outside of Docker (e.g. `pnpm dev` on the host).
 
+#### Real-time (MQTT)
+
+Realtime communication between the web admin and the CYD devices runs over an MQTT broker
+(Mosquitto), not WebSockets. The browser connects over MQTT-over-WebSocket; override the URL
+with a public env var if the broker isn't on localhost:
+
+```env
+PUBLIC_MQTT_WS_URL=ws://localhost:9001
+```
+
+A tiny link-only coordinator (`site/mqtt-server/`) connects to the broker for the link
+rendezvous logic; start it with `pnpm start:mqtt` (its broker URL is set via `MQTT_URL`,
+default `mqtt://localhost:1883`). Status presence and screen commands are peer-to-peer through
+the broker.
+
 ---
 
 ## Running with Docker Compose (recommended)
@@ -81,6 +96,7 @@ Services started:
 | :---------- | :--------------------------- | :---------------------------------- |
 | sveltekit   | http://localhost:5173        | SvelteKit dev server                |
 | db          | localhost:3307               | MySQL 8 database                    |
+| mqtt        | localhost:1883 / 9001        | Mosquitto broker (TCP / WebSocket)  |
 | phpMyAdmin  | http://localhost:8081        | Database admin UI                   |
 | migrate     | —                            | One-off migration runner (exits)    |
 

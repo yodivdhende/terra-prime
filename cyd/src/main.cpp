@@ -8,7 +8,7 @@
 #include <character.h>
 #include <ui-implementation.h>
 #include <uart-interface.h>
-#include <web-socket.h>
+#include <mqtt-client.h>
 
 void setup () {
   Serial.begin(115200);
@@ -23,15 +23,15 @@ void setup () {
   // if(fetchCharacter() == false){
   //   return;
   // };
-  // webSocketSetup();
+  // mqttSetup();
   clearScreen();
   uiSetup(); 
 }
 
 
 void loop (){
-  uiLoop(); 
-  webSocketLoop();
+  uiLoop();
+  mqttLoop();
   uartSerialLoop();
 }
 

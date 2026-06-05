@@ -1,44 +1,66 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { invalidate } from '$app/navigation';
+	import { env } from '$env/dynamic/public';
+	import { onDestroy } from 'svelte';
+	import { SvelteMap } from 'svelte/reactivity';
+	import mqtt from 'mqtt';
 	import Dropdown from '$lib/components/dropdown.svelte';
 	import { Settings2 } from '@lucide/svelte';
 	import type {
-		ConnectionCommand,
 		StatusCommandInfo,
 		WebStatusCommandInfo
-	} from '../../../../../websocket-server/connection-socket';
+	} from '../../../../mqtt-server/connection-coordinator';
 	import SessionRow from '$lib/components/session-row.svelte';
 	import { type PageProps } from './$types';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
+	const STATUS_PREFIX = 'terra/status/';
+
 	let { data }: PageProps = $props();
 	let sessionToken: string | undefined = $derived(data.sessionToken);
-	let connections: StatusCommandInfo[] = $state([]);
-	let webSocket: WebSocket | undefined;
+	// Connection list aggregated client-side from retained `terra/status/+` messages.
+	let connections = new SvelteMap<string, StatusCommandInfo>();
+	let client: mqtt.MqttClient | undefined;
 
-	if (browser) {
-		webSocket = new WebSocket('ws://localhost:5173/connections');
-		webSocket.onopen = () => {
-			if (sessionToken != null) {
-				webSocket?.send(
-					JSON.stringify({status: { sessionToken: sessionToken, connectionType: 'Web' } as WebStatusCommandInfo})
-				);
+	if (browser && sessionToken != null) {
+		const token = sessionToken;
+		const url = env.PUBLIC_MQTT_WS_URL ?? 'ws://localhost:9001';
+		client = mqtt.connect(url, {
+			// Clear our retained status if we drop ungracefully.
+			will: { topic: `${STATUS_PREFIX}${token}`, payload: '', retain: true }
+		});
+		client.on('connect', () => {
+			client?.publish(
+				`${STATUS_PREFIX}${token}`,
+				JSON.stringify({ sessionToken: token, connectionType: 'Web' } satisfies WebStatusCommandInfo),
+				{ retain: true }
+			);
+			client?.subscribe(`${STATUS_PREFIX}+`);
+		});
+		client.on('message', (topic, payload) => {
+			const statusToken = topic.slice(STATUS_PREFIX.length);
+			const text = payload.toString();
+			if (text === '') {
+				connections.delete(statusToken);
+			} else {
+				connections.set(statusToken, JSON.parse(text));
 			}
-			webSocket!.onmessage = (event) => {
-				console.log('socket message:', event.data);
-				connections = JSON.parse(event.data);
-			};
-		};
+		});
+		client.on('error', (err) => console.error('mqtt error:', err));
 	}
 
-	function sendCommand(command: "virus", token: string) {
-		if (command === "virus") {
-			webSocket?.send(
-				JSON.stringify({
-					goTo: { targetToken: token, screen: 'virus'}, 
-				} as ConnectionCommand 
-			));
+	onDestroy(() => {
+		if (!client) return;
+		if (sessionToken != null) {
+			client.publish(`${STATUS_PREFIX}${sessionToken}`, '', { retain: true });
+		}
+		client.end();
+	});
+
+	function sendCommand(command: 'virus', token: string) {
+		if (command === 'virus') {
+			client?.publish(`terra/goto/${token}`, JSON.stringify({ screen: 'virus' }));
 		}
 	}
 
@@ -79,12 +101,7 @@
 			{#if data.sessions}
 				{#each data.sessions as session}
 					<tr>
-						<SessionRow
-							{session}
-							connection={connections.find(
-								(connection) => connection.sessionToken === session.token
-							)}
-						/>
+						<SessionRow {session} connection={connections.get(session.token)} />
 						<td>
 							<Dropdown {button} {content} />
 							{#snippet button()}

@@ -18,6 +18,17 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+      mqtt:
+        condition: service_started
+
+  mqtt:
+    container_name: terra-prime-mqtt
+    image: eclipse-mosquitto:2
+    ports:
+      - 1883:1883   # MQTT/TCP (CYD devices)
+      - 9001:9001   # MQTT/WebSocket (browser)
+    volumes:
+      - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
 
   db:
     container_name: terra-prime-db

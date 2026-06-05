@@ -4,7 +4,7 @@
 
 ESP32 firmware for the **CYD (Cheap Yellow Display)** tabletop RPG gaming dashboard.
 Runs on an ESP32 dev board with a 320×240 TFT touchscreen (XPT2046 touch controller).
-Displays a character stat screen, navigates between game screens via WebSocket commands from the terra-prime web server (`../site/`), and links UART tokens to player sessions.
+Displays a character stat screen, navigates between game screens via MQTT commands from the terra-prime web server (`../site/`), and links UART tokens to player sessions.
 
 Part of the terra-prime monorepo. The web server lives at `../site/` (SvelteKit + Express).
 
@@ -19,7 +19,7 @@ Part of the terra-prime monorepo. The web server lives at `../site/` (SvelteKit 
 
 External libs fetched automatically by PlatformIO on first build:
 - `XPT2046_Touchscreen` (GitHub)
-- `arduinoWebSockets` (GitHub)
+- `PubSubClient` (MQTT client, library registry)
 
 Bundled in `lib/`:
 - `TFT_eSPI`
@@ -47,24 +47,26 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
 2. `setupSD()` — read `/config.json` from SD into globals *(commented out)*
 3. `connectToWifi()` *(commented out)*
 4. `fetchCharacter()` — GET `{apiUrl}/characters/{character_id}` *(commented out)*
-5. `webSocketSetup()` — connect to `{domain}:{webSocketPort}/connections` *(commented out)*
+5. `mqttSetup()` — connect to MQTT broker `{domain}:{mqttPort}`, publish retained status, subscribe `terra/goto/{sessionToken}` *(commented out)*
 6. `uiSetup()` — init LVGL, register callbacks, call `ui_init()`
 
 **Main loop** runs three handlers:
 - `uiLoop()` — `lv_timer_handler()` every 5 ms
-- `webSocketLoop()` — processes WebSocket frames
+- `mqttLoop()` — keeps the MQTT connection alive (reconnects) and processes incoming messages
 - `uartSerialLoop()` — reads newline-delimited serial tokens, calls `sendLink()`
 
-**Communication channels:**
+**Communication channels (all realtime traffic is MQTT):**
 
-| Channel | Direction | Purpose |
+| Channel | Direction | Topic / Purpose |
 |---|---|---|
 | HTTP REST | Device → Server | Fetch character data on boot |
-| WebSocket | Server → Device | Navigate to screen (`loading`, `loot`, `virus`) |
+| MQTT `terra/status/{token}` | Device → Broker | Retained presence (+ empty-payload LWT on disconnect) |
+| MQTT `terra/goto/{token}` | Broker → Device | Navigate to screen (`loading`, `loot`, `virus`) |
+| MQTT `terra/link` | Device → Broker | Relay UART link/unlink events via `sendLink()` |
 | UART Serial | External → Device | Receive tokens, relay via `sendLink()` |
 | SD card | SD → Device | Load config at boot |
 
-WebSocket routing (`src/web-socket.cpp`): incoming `{ "goTo": { "screen": "loading|loot|virus" } }` calls the corresponding `Ui*Setup()`.
+MQTT routing (`src/mqtt-client.cpp`): an incoming `terra/goto/{token}` payload `{ "screen": "loading|loot|virus" }` calls the corresponding `Ui*Setup()`. Status, `goTo`, and `link` are decoupled pub/sub messages; only the time-windowed link rendezvous runs server-side (the tiny coordinator in `../site/mqtt-server/`).
 
 **Current dev state:** Network init is **commented out** in `main.cpp`. The device boots directly into LVGL for UI development without SD or WiFi.
 
@@ -74,11 +76,11 @@ WebSocket routing (`src/web-socket.cpp`): incoming `{ "goTo": { "screen": "loadi
 
 | File | Purpose |
 |---|---|
-| `platformio.ini` | Build config — board, framework, baud rate, lib deps |
+| `platformio.ini` | Build config — board, framework, baud rate, lib deps, `MQTT_MAX_PACKET_SIZE` |
 | `src/main.cpp` | Entry point — `setup()` / `loop()` wiring |
-| `src/globals.h/cpp` | Global state: screen dims, WiFi creds, API URL, touch SPI pins, `screenSetup()` |
+| `src/globals.h/cpp` | Global state: screen dims, WiFi creds, API URL, broker port (`mqttPort`), touch SPI pins, `screenSetup()` |
 | `src/ui-implementation.h/cpp` | LVGL init, display flush, touch read callbacks, `uiSetup()` / `uiLoop()` |
-| `src/web-socket.h/cpp` | WebSocket client — setup, event handler, `sendLink()`, screen routing |
+| `src/mqtt-client.h/cpp` | MQTT client — `mqttSetup()`/`mqttLoop()`, message callback, `sendStatus()`, `sendLink()`, screen routing |
 | `src/character.h/cpp` | `Character` struct, `fetchCharacter()` |
 | `src/sd-reader.h/cpp` | `setupSD()` + `readConfig()` — parses `/config.json` into globals |
 | `src/uart-interface.h/cpp` | `uartSerialLoop()` — reads serial tokens |
@@ -117,19 +119,21 @@ Device reads `/config.json` from SD card root at boot (`src/sd-reader.cpp`):
   "wifi": { "ssid": "...", "password": "..." },
   "apiUrl": "http://host/api/",
   "domain": "host",
-  "webSocketPort": 80,
+  "mqttPort": 1883,
   "characterId": 1,
   "sessionToken": "..."
 }
 ```
 
 `apiUrl` must include a trailing slash — `fetchCharacter()` appends `characters/{id}` directly.
+`domain` is the MQTT broker host; `mqttPort` is its MQTT/TCP port (1883 by default).
 
 ---
 
 ## Gotchas
 
-- **Network init is commented out.** Uncomment the four blocks in `setup()` (`src/main.cpp`) to enable full runtime. The device will hang on boot if SD is missing or WiFi is unreachable.
+- **Network init is commented out.** Uncomment the blocks in `setup()` (`src/main.cpp`), including `mqttSetup()`, to enable full runtime. The device will hang on boot if SD is missing or WiFi is unreachable.
+- **MQTT payloads can exceed PubSubClient's 256-byte default.** `platformio.ini` sets `-DMQTT_MAX_PACKET_SIZE=512` and `mqttSetup()` calls `setBufferSize(512)`; raise both together if payloads grow.
 - **`src/ui/` is generated code.** Manual edits are overwritten on the next SquareLine Studio export.
 - **SquareLine Studio export path** may be set to an absolute Windows path. Update it in SquareLine preferences when exporting from a different machine.
 - **TFT rotation:** `screenSetup()` sets rotation 0 (portrait); `uiSetup()` overrides to rotation 1 (landscape) for LVGL. Don't change the `uiSetup()` rotation without also updating LVGL display dimensions.

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { EthernetPort, Wifi } from '@lucide/svelte';
-	import { type StatusCommandInfo } from '../../../websocket-server/connection-socket';
+	import { type StatusCommandInfo } from '../../../mqtt-server/connection-coordinator';
 
 	let { session, connection }: { session: SessionView; connection?: StatusCommandInfo } = $props();
 

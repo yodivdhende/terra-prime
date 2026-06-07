@@ -15,6 +15,8 @@ services:
     environment:
       - MYSQLHOST=db
       - MYSQLPORT=3306
+      # Browser connects to the broker's WebSocket listener (mapped to the host).
+      - PUBLIC_MQTT_WS_URL=ws://localhost:9001
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -29,6 +31,22 @@ services:
       - 9001:9001   # MQTT/WebSocket (browser)
     volumes:
       - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  coordinator:
+    container_name: terra-prime-coordinator
+    build:
+      context: ./site
+      dockerfile: dockerfile
+      target: dev
+    command: pnpm start:mqtt
+    volumes:
+      - ./site:/app
+      - /app/node_modules
+    environment:
+      - MQTT_URL=mqtt://mqtt:1883
+    depends_on:
+      mqtt:
+        condition: service_started
 
   db:
     container_name: terra-prime-db

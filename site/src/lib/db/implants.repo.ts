@@ -9,7 +9,8 @@ class ImplantRepo {
           i.Id as id,
           i.Name as name,
           i.Description as description,
-          i.Cost as cost
+          i.Cost as cost,
+          i.Prerequisite as prerequisite
         FROM Implants i
         `);
 			if (Array.isArray(result) === false) return [];
@@ -37,7 +38,8 @@ class ImplantRepo {
           i.Id as id,
           i.Name as name,
           i.Description as description,
-          i.Cost as cost
+          i.Cost as cost,
+          i.Prerequisite as prerequisite
         FROM Implants i
 		WHERE i.Id = ?
         `,
@@ -83,15 +85,15 @@ class ImplantRepo {
 		return this.edit(implant);
 	}
 
-	public async create({ name, description }: Omit<Implant, 'id'>) {
+	public async create({ name, description, prerequisite }: Omit<Implant, 'id'>) {
 		try {
 			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
-				INSERT INTO Implants (Name, Description)
-				Values (?,?)
+				INSERT INTO Implants (Name, Description, Prerequisite)
+				Values (?,?,?)
         `,
-				[name, description]
+				[name, description, prerequisite ?? null]
 			);
 			if ('serverStatus' in result && result.serverStatus !== 2) return null;
 			if ('insertId' in result === false || result.insertId == null) return null;
@@ -101,17 +103,18 @@ class ImplantRepo {
 		}
 	}
 
-	public async edit({ id, name, description }: Implant) {
+	public async edit({ id, name, description, prerequisite }: Implant) {
 		try {
 			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
-				UPDATE Implants 
+				UPDATE Implants
 				SET Name = ?,
-				Description = ?
+				Description = ?,
+				Prerequisite = ?
 				WHERE Id = ?
         `,
-				[name, description, id]
+				[name, description, prerequisite ?? null, id]
 			);
 			if ('serverStatus' in result && result.serverStatus !== 2) return null;
 			return id;
@@ -143,6 +146,7 @@ export type Implant = {
 	name: string;
 	description: string;
 	cost?: number;
+	prerequisite?: number | null;
 };
 
 export function isImplants(implant: unknown): implant is Implant {
@@ -154,6 +158,9 @@ export function isImplants(implant: unknown): implant is Implant {
 		'description' in implant &&
 		typeof implant.description === 'string' &&
 		'id' in implant &&
-		(typeof implant.id === 'number' || implant.id === null)
+		(typeof implant.id === 'number' || implant.id === null) &&
+		(!('prerequisite' in implant) ||
+			(implant as any).prerequisite === null ||
+			typeof (implant as any).prerequisite === 'number')
 	);
 }

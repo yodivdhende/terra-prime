@@ -1,7 +1,7 @@
 ---
 id: TP-0017
 title: Add implant prerequisite system
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-06-02'
 updated_date: '2026-06-02'

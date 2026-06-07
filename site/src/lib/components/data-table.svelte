@@ -18,7 +18,7 @@
 	let openIndex: number | null = $state(null);
 
 	let filteredItems = $derived(
-		items.filter((item) =>
+		(Array.isArray(items) ? items : []).filter((item) =>
 			columns.every((col, i) => {
 				const f = filters[i] ?? '';
 				if (!f) return true;

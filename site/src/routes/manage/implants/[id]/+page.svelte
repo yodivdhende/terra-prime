@@ -63,7 +63,7 @@
 <main>
 	<a href=".">back</a>
 	{#if implant != null}
-		<ImplantForm bind:implant={ implant } />
+		<ImplantForm bind:implant={implant} allImplants={data.allImplants ?? []} />
 	{/if}
 	<div>
 		<button onclick={save}>save</button>

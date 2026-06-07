@@ -1,11 +1,6 @@
-import express from 'express';
-import { handler } from '../build/handler.js';
 import { connectionCoordinator } from './connection-coordinator.js';
 
-const port = 3000;
-const app = express();
-
-app.use(handler);
-app.listen(port);
-
+// Standalone realtime sidecar: the link-only MQTT coordinator.
+// The SvelteKit app is served separately (adapter-node, `pnpm start`); the browser
+// talks to the broker directly, so this process only needs the MQTT client.
 connectionCoordinator.connect();

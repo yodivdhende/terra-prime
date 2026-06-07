@@ -38,5 +38,7 @@ FROM base
 COPY --from=prod-deps /app/node_modules node_modules/
 COPY --from=build /app/build build/
 EXPOSE 4174
-CMD ["sh", "-c", "pnpm migrate && pnpm start"]
+# Run DB migrations, start the link-only MQTT coordinator as a background sidecar,
+# then start the SvelteKit app in the foreground.
+CMD ["sh", "-c", "pnpm migrate && (pnpm start:mqtt &) && pnpm start"]
 

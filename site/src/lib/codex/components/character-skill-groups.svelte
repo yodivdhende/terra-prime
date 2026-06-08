@@ -5,7 +5,9 @@
 	import SocialeWetenschapIcon from '$lib/assets/images/SkillLogo-SocialeWetenschap.svg?raw';
 	import Icon from '$lib/codex/components/icon.svelte';
 
-	let { skills }: { skills: CharacterVerionSkill[] } = $props();
+	let { skills, size = '1em' }: { skills: CharacterVerionSkill[]; size?: string } = $props();
+
+	$effect(() => console.log('size', size));
 
 	const GROUP_ICON: Record<number, string> = {
 		1: EngineeringIcon,
@@ -43,7 +45,7 @@
 		{@const icon = GROUP_ICON[group.id]}
 		<div class="group">
 			{#if icon}
-				<Icon src={icon} color={group.color} tooltip={group.name} />
+				<Icon src={icon} color={group.color} tooltip={group.name} {size} />
 			{/if}
 			<span class="total" style="color: {group.color}">{group.total}</span>
 		</div>
@@ -64,7 +66,6 @@
 	}
 
 	.total {
-		font-size: 0.65em;
 		opacity: 0.85;
 	}
 </style>

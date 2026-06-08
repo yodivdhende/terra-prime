@@ -113,6 +113,8 @@
 			];
 		}
 	}
+
+	const iconSize = '2.5em';
 </script>
 
 {#if budget > 0}
@@ -134,26 +136,28 @@
 		<div class="group">
 			<h4 class="group-name" style="color: {group.color}">
 				{group.name}
-				<Icon src={GROUP_ICONS[group.id]} color={group.color} size="0.9rem" />
+				<Icon src={GROUP_ICONS[group.id]} color={group.color} size={iconSize} />
 			</h4>
 			<ul class="catalog">
 				{#each group.skills as skill (skill.id)}
 					{@const skillIcon = SKILL_ICONS[skill.id ?? 0]}
 					{@const currentValue = getValue(skill.id)}
 					{@const skillCost = skill.cost ?? 0}
-					{@const skillDiscount = skill.id != null ? discounts.get(skill.id) ?? 0 : 0}
+					{@const skillDiscount = skill.id != null ? (discounts.get(skill.id) ?? 0) : 0}
 					{@const effectiveCost = Math.max(0, skillCost - skillDiscount)}
 					{@const discounted = skillDiscount > 0 && skillCost > 0}
 					<li class="entry" class:owned={currentValue > 0} class:discounted>
 						<div class="entry-header">
 							{#if skillIcon}
-								<Icon src={skillIcon} color={group.color} size="0.9rem" />
+								<Icon src={skillIcon} color={group.color} size={iconSize} />
 							{/if}
 							<div class="entry-info">
 								<span class="entry-name">
 									{skill.name}
 									{#if discounted}
-										<span class="discount-badge" title="company discount: -{skillDiscount}/pt">deal</span>
+										<span class="discount-badge" title="company discount: -{skillDiscount}/pt"
+											>deal</span
+										>
 									{/if}
 								</span>
 								{#if skill.description}
@@ -346,7 +350,7 @@
 	}
 
 	.entry-cost {
-		font-size: 1.0em;
+		font-size: 1em;
 		color: var(--color-accent);
 		flex-shrink: 0;
 	}
@@ -356,7 +360,7 @@
 	}
 
 	.empty {
-		font-size: 1.0em;
+		font-size: 1em;
 		opacity: 0.4;
 		font-style: italic;
 	}

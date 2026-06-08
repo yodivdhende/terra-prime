@@ -19,6 +19,7 @@
 
 	let characters = $state<CharacterWithVersions[]>([]);
 	let loading = $state(true);
+	const iconSize = '2.5em';
 
 	$effect(() => {
 		load();
@@ -92,14 +93,14 @@
 								</div>
 								<div class="version-stats">
 									<span class="stat">
-										<CharacterSkillGroups skills={ver.skills} />
+										<CharacterSkillGroups skills={ver.skills} size={iconSize} />
 									</span>
 									<span class="stat">
-										<Icon src={itemLogo} color="white" tooltip="Items" />
+										<Icon src={itemLogo} color="white" tooltip="Items" size={iconSize} />
 										{itemCount(ver)}
 									</span>
 									<span class="stat">
-										<Icon src={implantLogo} color="white" tooltip="Implants" />
+										<Icon src={implantLogo} color="white" tooltip="Implants" size={iconSize} />
 										{ver.implants.length}
 									</span>
 								</div>

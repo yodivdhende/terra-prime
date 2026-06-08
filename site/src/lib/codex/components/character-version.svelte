@@ -45,19 +45,19 @@
 	};
 
 	const SKILL_ICONS: Record<string, string> = {
-		chemistry: ChemistryIcon,
-		communicationsystems: CommunicationSystemsIcon,
-		ecologie: EcologieIcon,
-		electricalengineering: ElectricalEngineeringIcon,
 		engineering: EngineeringIcon,
-		historicalanalysis: HistoricalAnalysisIcon,
-		informationtechnology: InformationTechnologyIcon,
-		lifesciences: LifeSciencesIcon,
 		mechanicalengineering: MechanicalEngineeringIcon,
+		electricalengineering: ElectricalEngineeringIcon,
+		lifesciences: LifeSciencesIcon,
+		chemistry: ChemistryIcon,
+		ecologie: EcologieIcon,
 		medicalandtraumacare: MedicalAndTraumaCareIcon,
+		informationtechnology: InformationTechnologyIcon,
+		softwarehacking: SoftwareAndHackingIcon,
+		communicationsystems: CommunicationSystemsIcon,
 		socialewetenschap: SocialeWetenschapIcon,
-		sociologyanddiplomacy: SocialogyAndDiplomacyIcon,
-		softwareandhacking: SoftwareAndHackingIcon
+		historicalanalysis: HistoricalAnalysisIcon,
+		sociologydiplomacy: SocialogyAndDiplomacyIcon
 	};
 
 	let {
@@ -96,7 +96,9 @@
 	});
 
 	function getSkillIcon(name: string): string | undefined {
-		return SKILL_ICONS[name.toLowerCase().replace(/[^a-z0-9]/g, '')];
+		const key = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+		const result = SKILL_ICONS[key];
+		return result;
 	}
 </script>
 
@@ -123,7 +125,7 @@
 								{@const icon = getSkillIcon(skill.name)}
 								<li class="skill">
 									{#if icon}
-										<Icon src={icon} color={group.color} size="0.9rem" />
+										<Icon src={icon} color={group.color} size="2rem" />
 									{/if}
 									<span class="skill-name">{skill.name}</span>
 									<div class="skill-bar">

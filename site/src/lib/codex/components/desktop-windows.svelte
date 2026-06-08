@@ -32,5 +32,6 @@
 		height: 100%;
 		z-index: 10;
 		pointer-events: none;
+		font-size: 1rem;
 	}
 </style>

@@ -26,6 +26,8 @@
 		budget: number;
 		remaining: number;
 	} = $props();
+
+	const iconSize = '2em';
 </script>
 
 <nav class="nav scroll">
@@ -51,7 +53,7 @@
 				</span>
 				<span class="step-overview">
 					{#if skills.groups.length > 0}
-						<CharacterSkillGroups skills={skills.groups} />
+						<CharacterSkillGroups skills={skills.groups} size={iconSize} />
 					{:else}
 						<span class="overview-empty">none selected</span>
 					{/if}
@@ -73,7 +75,7 @@
 				<span class="step-overview">
 					{#if items.total > 0}
 						<span class="overview-stat">
-							<Icon src={itemLogo} color="white" tooltip="Items" />
+							<Icon src={itemLogo} color="white" tooltip="Items" size={iconSize} />
 							{items.total}
 						</span>
 						<span class="overview-cost">{items.spent}</span>
@@ -95,7 +97,7 @@
 				<span class="step-overview">
 					{#if implants.count > 0}
 						<span class="overview-stat">
-							<Icon src={implantLogo} color="white" tooltip="Implants" />
+							<Icon src={implantLogo} color="white" tooltip="Implants" size={iconSize} />
 							{implants.count}
 						</span>
 					{:else}
@@ -210,12 +212,12 @@
 	}
 
 	.overview-stat {
-		font-size: 1.0em;
+		font-size: 1em;
 		color: var(--color-main);
 	}
 
 	.overview-cost {
-		font-size: 1.0em;
+		font-size: 1em;
 		color: var(--color-accent);
 		opacity: 0.75;
 		margin-left: auto;

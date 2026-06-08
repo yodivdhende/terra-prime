@@ -1,6 +1,5 @@
 import {
   createSettingsWindow,
-  createPlaytestWindow,
   createLoginWindow,
   createLogoutWindow,
   createRegisterWindow,
@@ -14,7 +13,7 @@ import {
 export type { CodexWindow, Icon } from './window-factories';
 
 function createWindowManager() {
-  const windows = $state([createSettingsWindow(), createPlaytestWindow()] as CodexWindow[]);
+  const windows = $state([createSettingsWindow()] as CodexWindow[]);
 
   function setLoginEnabled(enabled: boolean) {
     const created = createLoginWindow({ shouldCreate: enabled });

@@ -1,6 +1,6 @@
 export type CodexWindow = {
   id: string;
-  type: 'pdf' | 'dir' | 'doc' | 'image' | 'form' | 'settings' | 'playtest' | 'login' | 'register' | 'logout';
+  type: 'pdf' | 'dir' | 'doc' | 'image' | 'form' | 'settings' | 'login' | 'register' | 'logout';
   state: 'open' | 'hidden' | 'closed';
   dimension: { w: number, h: number };
   position: { x: number, y: number, z: number };
@@ -10,7 +10,7 @@ export type CodexWindow = {
 }
 
 export type Icon = {
-  type: 'file' | 'dir' | 'image' | 'form' | 'settings' | 'playtest' | 'login' | 'register' | 'logout';
+  type: 'file' | 'dir' | 'image' | 'form' | 'settings' | 'login' | 'register' | 'logout';
   side: 'left' | 'right';
 }
 
@@ -90,19 +90,6 @@ export function createLoginWindow({ shouldCreate }: { shouldCreate: boolean }): 
     contentData: 'login',
     title: 'login',
     icon: { type: 'login', side: 'left' },
-  };
-}
-
-export function createPlaytestWindow(): CodexWindow {
-  return {
-    id: 'playtest',
-    type: 'playtest',
-    state: 'closed',
-    dimension: { w: 480, h: 520 },
-    position: { x: 200, y: 80, z: 0 },
-    contentData: 'playtest',
-    title: 'playtest registratie',
-    icon: { type: 'playtest', side: 'left' },
   };
 }
 

@@ -26,7 +26,6 @@ codex/
     ├── doc-window.svelte          # HTML document viewer
     ├── image-window.svelte        # Image viewer
     ├── login-window.svelte        # Auth form
-    ├── playtest-window.svelte     # Playtest registration form
     ├── settings-window.svelte     # Effects toggles
     ├── taskbar.svelte             # Bottom bar: search, login button, status icons
     ├── task-icons.svelte          # Status tray: clock, DHVT logo
@@ -41,18 +40,19 @@ codex/
 
 ```typescript
 type CodexWindow = {
-  id: string;
-  type: 'pdf' | 'dir' | 'doc' | 'image' | 'settings' | 'playtest' | 'login';
-  state: 'open' | 'hidden' | 'closed';
-  dimension: { w: number; h: number };         // pixels
-  position: { x: number; y: number; z: number }; // x/y coords + z-index
-  contentData: string;                          // Drive file ID or content key
-  title: string;
-  icon?: Icon;                                  // null = no desktop icon
-}
+	id: string;
+	type: 'pdf' | 'dir' | 'doc' | 'image' | 'settings' | 'login';
+	state: 'open' | 'hidden' | 'closed';
+	dimension: { w: number; h: number }; // pixels
+	position: { x: number; y: number; z: number }; // x/y coords + z-index
+	contentData: string; // Drive file ID or content key
+	title: string;
+	icon?: Icon; // null = no desktop icon
+};
 ```
 
 **States:**
+
 - `open` — rendered and visible
 - `closed` — not rendered at all
 - `hidden` — parsed but invisible (currently unused in rendering)
@@ -63,21 +63,21 @@ type CodexWindow = {
 
 Each factory in `window-factories.ts` creates a pre-configured `CodexWindow` with sensible defaults:
 
-| Factory | Dimensions | Notes |
-|---|---|---|
-| `createSettingsWindow()` | 400×300 | Fixed size |
-| `createPlaytestWindow()` | 480×520 | Fixed size |
-| `createLoginWindow()` | 320×280 | Conditionally added |
-| `createFolderWindow()` | 55%×60% viewport | Drive folders |
-| `createPdfWindow()` | 40%×75% viewport | PDF files |
-| `createDocWindow()` | 45%×65% viewport | HTML docs |
-| `createImageWindow()` | 35%×55% viewport | Images |
+| Factory                  | Dimensions       | Notes               |
+| ------------------------ | ---------------- | ------------------- |
+| `createSettingsWindow()` | 400×300          | Fixed size          |
+| `createLoginWindow()`    | 320×280          | Conditionally added |
+| `createFolderWindow()`   | 55%×60% viewport | Drive folders       |
+| `createPdfWindow()`      | 40%×75% viewport | PDF files           |
+| `createDocWindow()`      | 45%×65% viewport | HTML docs           |
+| `createImageWindow()`    | 35%×55% viewport | Images              |
 
 ### Window Manager (`window-manager.svelte.ts`)
 
 Singleton `WINDOW_MANAGER` with `$state` array of `CodexWindow[]`.
 
 Key methods:
+
 - `addWindows(files)` — creates windows from Drive file metadata, maps MIME type → window type
 - `openWindow(id)` / `closeWindow(id)` — mutate `state`
 - `focusWindow(id)` — moves window to top of z-stack, reassigns `position.z` for all windows
@@ -104,20 +104,20 @@ Dispatches `window.type` to the matching component. Each component fetches its o
 ```typescript
 // In window-factories.ts (attached to CodexWindow)
 type Icon = {
-  type: 'file' | 'dir' | 'image' | 'settings' | 'playtest' | 'login';
-  side: 'left' | 'right';
-}
+	type: 'file' | 'dir' | 'image' | 'settings' | 'login';
+	side: 'left' | 'right';
+};
 
 // In icon-manager.svelte.ts (display model)
 type Icon = {
-  windowId: string;
-  title: string;
-  type: 'file' | 'dir' | 'image' | 'settings' | 'playtest' | 'login';
-  side: 'left' | 'right';
-}
+	windowId: string;
+	title: string;
+	type: 'file' | 'dir' | 'image' | 'settings' | 'login';
+	side: 'left' | 'right';
+};
 ```
 
-- `side: 'left'` — local/system icons (settings, playtest, login)
+- `side: 'left'` — local/system icons (settings, login)
 - `side: 'right'` — Google Drive file icons
 - Windows with `icon == null` have no desktop icon
 
@@ -131,14 +131,13 @@ Two sections: `.local` (left column) and `.drive` (right column), 3-column grid 
 
 Lucide icons by type:
 
-| Type | Icon |
-|---|---|
-| `file` / `doc` / `pdf` | `File` |
-| `dir` | `Folder` |
-| `image` | `Image` |
-| `settings` | `Settings` |
-| `playtest` | `ClipboardPen` |
-| `login` | `UserRound` |
+| Type                   | Icon        |
+| ---------------------- | ----------- |
+| `file` / `doc` / `pdf` | `File`      |
+| `dir`                  | `Folder`    |
+| `image`                | `Image`     |
+| `settings`             | `Settings`  |
+| `login`                | `UserRound` |
 
 Click → `openWindow(windowId)` + `focusWindow(windowId)`
 
@@ -163,6 +162,7 @@ Drive files (from route)
 ## Effects Manager (`effects-manager.svelte.ts`)
 
 Singleton `EFFECTS_MANAGER` with three boolean `$state` toggles:
+
 - `crt` — barrel distortion SVG filter
 - `scanlines` — repeating-linear-gradient overlay
 - `vignette` — radial-gradient overlay
@@ -175,10 +175,10 @@ Toggled from `settings-window.svelte`.
 
 Import path: `$lib/managers/toast-manager.svelte`
 
-| Scenario | Call | Color |
-|---|---|---|
-| Successful save | `TOAST_MANAGER.success(msg)` | `--color-accent` |
-| Validation warning | `TOAST_MANAGER.warning(msg)` | `--color-warning` |
-| Server / unexpected error | `TOAST_MANAGER.error(msg)` | `--color-warning` |
+| Scenario                  | Call                         | Color             |
+| ------------------------- | ---------------------------- | ----------------- |
+| Successful save           | `TOAST_MANAGER.success(msg)` | `--color-accent`  |
+| Validation warning        | `TOAST_MANAGER.warning(msg)` | `--color-warning` |
+| Server / unexpected error | `TOAST_MANAGER.error(msg)`   | `--color-warning` |
 
 `<Toast />` is mounted once in `desktop.svelte`. Do not mount it again in child components.

@@ -1,4 +1,7 @@
 INSERT INTO `Items` (`Id`, `Name`, `Description`, `Cost`) VALUES
-(1, 'Blood Pack', 'The bloodpack is an IV bag of blood.', 5),
-(2, 'Robot Repair Kit', 'It is used to repair downed robot followers, similar to using a Stimpak on downed human or canine followers.', 10),
-(3, 'Stimpak', 'This item consists of a syringe for containing and delivering the medication and a gauge for measuring the status of the stimpaks contents. When injected, it provides fast healing of injuries including crippled limbs.', 15);
+(1, 'Pillamp', 'je krijgt een zaklamp', 5),
+(2, 'Close combat wapen', 'je krijgt een close combat wapen naar keuze', 10),
+(3, 'Kevlar', 'Je mag de eerst volgende hit negeren. Na het effect is dit item vernietigd', 10),
+(4, 'Kogel houder', 'Je mag 1 extra kogel magazine bij houden', 5),
+(5, 'Hand wapen', 'Je krijgt 1 handwapen. (max 2)', 10),
+(6, 'Auto hand wapen', 'Je krijgt 1 automatiche handwapen', 20);

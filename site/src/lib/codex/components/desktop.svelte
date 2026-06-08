@@ -3,6 +3,7 @@
 	import DesktopIcons from '$lib/codex/components/desktop-icons.svelte';
 	import DesktopWindows from '$lib/codex/components/desktop-windows.svelte';
 	import Toast from '$lib/components/toast.svelte';
+	import Schrodinger from '$lib/codex/components/schrodinger.svelte';
 </script>
 
 <main>
@@ -12,6 +13,7 @@
 	</div>
 	<DesktopIcons />
 	<DesktopWindows />
+	<Schrodinger />
 	<Toast />
 </main>
 

@@ -7,6 +7,7 @@
 	import { EFFECTS_MANAGER } from '$lib/codex/managers/effects-manager.svelte';
 	import { FEATURE_MANAGER } from '$lib/codex/managers/feature-manager.svelte';
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
+	import { SCHRODINGER_MANAGER } from '$lib/codex/managers/schrodinger-manager.svelte';
 
 	let { data }: PageProps = $props();
 	let feImageEl: SVGFEImageElement;
@@ -18,6 +19,15 @@
 	$effect(() => WINDOW_MANAGER.setLogoutEnabled(CREDENTIAL_MANAGER.isLogedIn));
 
 	onMount(() => {
+		setTimeout(() => {
+			if (!SCHRODINGER_MANAGER.visible) {
+				SCHRODINGER_MANAGER.show(
+					'Welcome to the Codex! Check out the latest events or register your character.',
+					'notification'
+				);
+			}
+		}, 1500);
+
 		const size = 256;
 		const canvas = document.createElement('canvas');
 		canvas.width = canvas.height = size;

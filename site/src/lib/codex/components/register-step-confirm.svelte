@@ -6,6 +6,7 @@
 		type CharacterVersionFull
 	} from '../managers/character-manager.svelte';
 	import CharacterVersion from './character-version.svelte';
+	import { SCHRODINGER_MANAGER } from '../managers/schrodinger-manager.svelte';
 
 	let {
 		REGISTER_MANAGER,
@@ -76,6 +77,8 @@
 			});
 			if (!res.ok) throw new Error(`registration failed (${res.status})`);
 			success = true;
+			SCHRODINGER_MANAGER.show("You're registered! See you at the event.", 'idle');
+			setTimeout(() => SCHRODINGER_MANAGER.dismiss(), 4000);
 		} catch (err) {
 			error = `${err instanceof Error ? err.message : err}`;
 		} finally {

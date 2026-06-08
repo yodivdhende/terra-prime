@@ -1,9 +1,10 @@
 ---
 id: TP-0003
 title: Add Schrödinger the Cat as a Clippy-style guide on the Codex page
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-12 15:45'
+updated_date: '2026-06-08 14:23'
 labels:
   - codex
   - ui
@@ -33,3 +34,9 @@ The character should feel playful and thematic — Schrödinger the cat fits the
 - [ ] #6 Character and speech bubble are styled consistently with the existing Codex page design
 - [ ] #7 Character renders correctly on both desktop and mobile layouts
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implemented all 4 subtasks: singleton manager, Svelte component with ASCII cat + bubble, desktop wiring with 1.5s greeting, and register flow step guidance + completion message.
+<!-- SECTION:FINAL_SUMMARY:END -->

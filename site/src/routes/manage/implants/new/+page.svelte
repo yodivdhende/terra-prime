@@ -3,11 +3,15 @@
 	import ImplantForm from "$lib/components/implant-form.svelte";
 	import type { Implant } from "$lib/db/implants.repo";
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
 
     let implant: Implant = $state({
         id: null,
         name: '',
 		description: '',
+		prerequisite: null,
     });
 
    async function save(){
@@ -34,7 +38,7 @@
 	<a href=".">back</a>
 	<h1>new implant</h1>
 	{#if implant != null}
-		<ImplantForm bind:implant={implant}  />
+		<ImplantForm bind:implant={implant} allImplants={data.allImplants ?? []} />
 	{/if}
 	<div>
 		<button onclick={save}>save</button>

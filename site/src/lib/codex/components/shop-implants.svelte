@@ -4,6 +4,7 @@
 		name: string;
 		description: string;
 		cost: number;
+		prerequisite?: number | null;
 	};
 </script>
 
@@ -30,11 +31,29 @@
 		return Math.max(0, implant.cost - (discounts.get(implant.id) ?? 0));
 	}
 
+	function prerequisiteMissing(implant: ShopImplant) {
+		return implant.prerequisite != null && !has(implant.prerequisite);
+	}
+
+	function isPrerequisiteFor(implant: ShopImplant) {
+		return selected.some((s) => {
+			const catalogEntry = catalog.find((c) => c.id === s.id);
+			return catalogEntry?.prerequisite === implant.id;
+		});
+	}
+
+	function prerequisiteName(implant: ShopImplant) {
+		if (implant.prerequisite == null) return null;
+		return catalog.find((c) => c.id === implant.prerequisite)?.name ?? null;
+	}
+
 	function toggle(implant: ShopImplant) {
 		if (has(implant.id)) {
+			if (isPrerequisiteFor(implant)) return;
 			selected = selected.filter((i) => i.id !== implant.id);
 		} else {
 			if (effectiveCost(implant) > remaining) return;
+			if (prerequisiteMissing(implant)) return;
 			selected = [
 				...selected,
 				{ id: implant.id, name: implant.name, description: implant.description }
@@ -53,6 +72,9 @@
 			{@const effective = Math.max(0, implant.cost - discount)}
 			{@const discounted = discount > 0 && implant.cost > 0}
 			{@const blocked = !owned && effective > remaining}
+			{@const reqMissing = prerequisiteMissing(implant)}
+			{@const isPrereq = isPrerequisiteFor(implant)}
+			{@const reqName = prerequisiteName(implant)}
 			<li class="entry" class:owned class:discounted>
 				<div class="entry-info">
 					<span class="entry-name">
@@ -61,6 +83,9 @@
 							<span class="discount-badge" title="company discount: -{discount}">deal</span>
 						{/if}
 					</span>
+					{#if reqMissing && reqName}
+						<span class="entry-req">requires: {reqName}</span>
+					{/if}
 					{#if implant.description}
 						<span class="entry-desc">{implant.description}</span>
 					{/if}
@@ -75,7 +100,7 @@
 					type="button"
 					class="toggle"
 					class:remove={owned}
-					disabled={blocked}
+					disabled={blocked || reqMissing || isPrereq}
 					onclick={() => toggle(implant)}
 				>
 					{owned ? 'remove' : 'buy'}
@@ -153,6 +178,12 @@
 	.entry-name {
 		font-size: 1.05em;
 		letter-spacing: 0.03em;
+	}
+
+	.entry-req {
+		font-size: 0.85em;
+		color: #d9a04c;
+		font-style: italic;
 	}
 
 	.entry-desc {

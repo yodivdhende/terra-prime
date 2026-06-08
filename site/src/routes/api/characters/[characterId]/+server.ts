@@ -9,7 +9,6 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
   return handleRequest(async () => {
     await authGuardForUser(getSessionToken(cookies), ['admin']);
     const { characterId } = params;
-    console.log('get character', { characterId, params });
     const numberId = isNumberOrError(characterId);
     const character = await characterRepo.getById(numberId);
     return json(character);

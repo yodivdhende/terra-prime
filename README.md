@@ -4,15 +4,15 @@ LARP event management system built with SvelteKit, MySQL, and Docker.
 
 ## Tech Stack
 
-| Layer       | Technology                          |
-| :---------- | :---------------------------------- |
-| Frontend    | SvelteKit 2, Svelte 5, TypeScript   |
-| 3D/Graphics | Three.js, Threlte                   |
-| Runtime     | Node.js 24                          |
-| Database    | MySQL 8.0+                          |
-| Real-time   | WebSocket (ws)                      |
-| Containers  | Docker + Docker Compose             |
-| Package mgr | pnpm                                |
+| Layer       | Technology                        |
+| :---------- | :-------------------------------- |
+| Frontend    | SvelteKit 2, Svelte 5, TypeScript |
+| 3D/Graphics | Three.js, Threlte                 |
+| Runtime     | Node.js 24                        |
+| Database    | MySQL 8.0+                        |
+| Real-time   | WebSocket (ws)                    |
+| Containers  | Docker + Docker Compose           |
+| Package mgr | pnpm                              |
 
 ---
 
@@ -64,6 +64,20 @@ MYSQLDATABASE=testaliceDB
 > When running via Docker Compose, these values are already set in `compose.yml`. The `.env`
 > file is only needed for running the app outside of Docker (e.g. `pnpm dev` on the host).
 
+#### google task cmp
+
+Create a .env in the root of the repository
+the following fields:
+
+```env
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REFRESH_TOKEN=
+```
+
+client id and secret are from `console.cloud.google.com`
+refresh toke is from `https://developers.google.com/oauthplayground`
+
 ---
 
 ## Running with Docker Compose (recommended)
@@ -77,12 +91,12 @@ docker compose up
 
 Services started:
 
-| Service     | URL / Port                   | Description                         |
-| :---------- | :--------------------------- | :---------------------------------- |
-| sveltekit   | http://localhost:5173        | SvelteKit dev server                |
-| db          | localhost:3307               | MySQL 8 database                    |
-| phpMyAdmin  | http://localhost:8081        | Database admin UI                   |
-| migrate     | —                            | One-off migration runner (exits)    |
+| Service    | URL / Port            | Description                      |
+| :--------- | :-------------------- | :------------------------------- |
+| sveltekit  | http://localhost:5173 | SvelteKit dev server             |
+| db         | localhost:3307        | MySQL 8 database                 |
+| phpMyAdmin | http://localhost:8081 | Database admin UI                |
+| migrate    | —                     | One-off migration runner (exits) |
 
 The `migrate` container runs automatically and exits when all migrations are applied. The
 `sveltekit` container waits for migrations to complete before starting.
@@ -111,14 +125,14 @@ docker compose down -v
 
 The `site/dockerfile` uses multi-stage builds:
 
-| Stage          | Purpose                                          |
-| :------------- | :----------------------------------------------- |
-| `base`         | Node 24-slim base with pnpm via Corepack         |
-| `prod-deps`    | Installs production dependencies only            |
-| `build`        | Full build (dev + prod deps, runs `pnpm build`)  |
-| `dev`          | Dev server target — runs `pnpm host` on port 5173 |
-| `migrate-runner` | Runs migrations only, then exits               |
-| `final`        | Production image — runs `node ./build/index.js`  |
+| Stage            | Purpose                                           |
+| :--------------- | :------------------------------------------------ |
+| `base`           | Node 24-slim base with pnpm via Corepack          |
+| `prod-deps`      | Installs production dependencies only             |
+| `build`          | Full build (dev + prod deps, runs `pnpm build`)   |
+| `dev`            | Dev server target — runs `pnpm host` on port 5173 |
+| `migrate-runner` | Runs migrations only, then exits                  |
+| `final`          | Production image — runs `node ./build/index.js`   |
 
 The `compose.yml` targets the `dev` stage for local development and `migrate-runner` for the
 migration service.

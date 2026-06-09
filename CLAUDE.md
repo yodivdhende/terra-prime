@@ -1,29 +1,27 @@
 
-<!-- BACKLOG.MD MCP GUIDELINES START -->
-
 <CRITICAL_INSTRUCTION>
 
-## BACKLOG WORKFLOW INSTRUCTIONS
+## TASK MANAGEMENT
 
-This project uses Backlog.md MCP for all task and project management activities.
+This project uses Google Tasks (via the `gtasks` MCP server) for all task tracking.
 
-**CRITICAL GUIDANCE**
+### ID format
+- Top-level tasks: `TP-0001`, `TP-0002`, … (4-digit zero-padded, increment from the highest existing ID)
+- Subtasks: `TP-0001.01`, `TP-0001.02`, … (parent ID + 2-digit zero-padded index)
+- Always prefix the task title with the ID: `TP-0003 add cost to`
 
-- If your client supports MCP resources, read `backlog://workflow/overview` to understand when and how to use Backlog for this project.
-- If your client only supports tools or the above request fails, call `backlog.get_backlog_instructions()` to load the tool-oriented overview. Use the `instruction` selector when you need `task-creation`, `task-execution`, or `task-finalization`.
+### Task notes = implementation plan
+- Every task must have a step-by-step implementation plan in its notes
+- Plans are numbered steps, plain text, no markdown headers
+- Each step names the specific file(s) to create or modify and what to do
+- Keep plans under 300 words
 
-- **First time working here?** Read the overview resource IMMEDIATELY to learn the workflow
-- **Already familiar?** You should have the overview cached ("## Backlog.md Overview (MCP)")
-- **When to read it**: BEFORE creating tasks, or when you're unsure whether to track work
-
-These guides cover:
-- Decision framework for when to create tasks
-- Search-first workflow to avoid duplicates
-- Links to detailed guides for task creation, execution, and finalization
-- MCP tools reference
-
-You MUST read the overview resource to understand the complete workflow. The information is NOT summarized here.
+### Rules
+- Use `mcp__gtasks__list` before creating new tasks (avoid duplicates)
+- Use `mcp__gtasks__search` to find a specific task by keyword
+- Mark tasks `In Progress` when you start work, `Done` when complete — don't batch updates
+- Use `mcp__gtasks__create` with title (including TP-XXXX prefix) and notes (implementation plan)
+- **Always pass both `title` and `notes` together when calling `mcp__gtasks__update`** — omitting either field will clear it
+- Use `mcp__gtasks__delete` to remove a task
 
 </CRITICAL_INSTRUCTION>
-
-<!-- BACKLOG.MD MCP GUIDELINES END -->

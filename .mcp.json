@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "gtasks": {
+      "command": "/home/yodi/repos/terraprime/.claude/gtasks-mcp.sh"
+    }
+  }
+}

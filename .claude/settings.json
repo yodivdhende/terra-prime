@@ -1,9 +1,1 @@
-{
-  "mcpServers": {
-    "backlog": {
-      "command": "npx",
-      "args": ["backlog.md", "mcp", "start"],
-      "cwd": "/home/yodi/repos/terraprime"
-    }
-  }
-}
+{}

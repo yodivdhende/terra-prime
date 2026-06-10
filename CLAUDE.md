@@ -3,25 +3,34 @@
 
 ## TASK MANAGEMENT
 
-This project uses Google Tasks (via the `gtasks` MCP server) for all task tracking.
+This project uses **GitHub Issues** (via the `gh` CLI) for all task tracking. The repo is `yodivdhende/terra-prime`.
 
-### ID format
-- Top-level tasks: `TP-0001`, `TP-0002`, … (4-digit zero-padded, increment from the highest existing ID)
-- Subtasks: `TP-0001.01`, `TP-0001.02`, … (parent ID + 2-digit zero-padded index)
-- Always prefix the task title with the ID: `TP-0003 add cost to`
-
-### Task notes = implementation plan
-- Every task must have a step-by-step implementation plan in its notes
+### Issue title and body
+- Every issue title must be prefixed with its TP ID (see **TP ID scheme** below)
+- Every task must have a step-by-step implementation plan in its body
 - Plans are numbered steps, plain text, no markdown headers
 - Each step names the specific file(s) to create or modify and what to do
 - Keep plans under 300 words
 
+### TP ID scheme
+- Every issue gets a TP ID in its title: `[TP-NNNN] <title>` where NNNN is the GitHub issue number zero-padded to 4 digits
+- After creating an issue, read back its number with `gh issue create ... | tail -1` (the URL contains the number), then immediately rename it: `gh issue edit <N> --title "[TP-NNNN] <title>"`
+- Subtasks use their **parent's** TP number plus a two-digit sequence: `[TP-NNNN.SS] <title>` (SS = 01, 02, 03…)
+- To find the next SS for a parent, count existing subtasks listed in the parent body and increment
+
+### Parent / subtask relationships
+- Parent issues get the `epic` label
+- Parent body ends with a `### Subtasks` section containing a checklist of `- [ ] #N [TP-NNNN.SS] <title>` lines
+- Subtask body starts with `Parent: #N` so the link is bidirectional
+- Tick the checkbox in the parent when a subtask is closed
+
 ### Rules
-- Use `mcp__gtasks__list` before creating new tasks (avoid duplicates)
-- Use `mcp__gtasks__search` to find a specific task by keyword
-- Mark tasks `In Progress` when you start work, `Done` when complete — don't batch updates
-- Use `mcp__gtasks__create` with title (including TP-XXXX prefix) and notes (implementation plan)
-- **Always pass both `title` and `notes` together when calling `mcp__gtasks__update`** — omitting either field will clear it
-- Use `mcp__gtasks__delete` to remove a task
+- Use `gh issue list` before creating new tasks (avoid duplicates)
+- Use `gh issue list --search "<keyword>"` to find a specific task
+- Use `gh issue create --title "[TP-NNNN] <title>" --body "<plan>"` (add `--label epic` for parents); apply the TP ID immediately after creation once the issue number is known
+- Mark work-in-progress by assigning yourself: `gh issue edit <N> --add-assignee @me`
+- Close with `gh issue close <N>` when complete — don't batch updates
+- Use `gh issue edit <N> --body "<new>"` to update; pass the full new body (it replaces, not appends)
+- Use `gh issue delete <N>` to remove a task
 
 </CRITICAL_INSTRUCTION>

@@ -64,20 +64,6 @@ MYSQLDATABASE=testaliceDB
 > When running via Docker Compose, these values are already set in `compose.yml`. The `.env`
 > file is only needed for running the app outside of Docker (e.g. `pnpm dev` on the host).
 
-#### google task cmp
-
-Create a .env in the root of the repository
-the following fields:
-
-```env
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_REFRESH_TOKEN=
-```
-
-client id and secret are from `console.cloud.google.com`
-refresh toke is from `https://developers.google.com/oauthplayground`
-
 ---
 
 ## Running with Docker Compose (recommended)

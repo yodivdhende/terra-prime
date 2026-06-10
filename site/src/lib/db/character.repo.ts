@@ -109,6 +109,10 @@ class CharacterRepo {
 			[url, id]
 		);
 	}
+
+	public async delete({ id }: { id: number }) {
+		await (mysqlconnFn()).execute('DELETE FROM Characters WHERE Id = ?', [id]);
+	}
 }
 
 export const characterRepo = new CharacterRepo();

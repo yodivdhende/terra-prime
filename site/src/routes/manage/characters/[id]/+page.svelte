@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto, invalidate } from '$app/navigation';
 	import CharacterForm from '$lib/components/character-form.svelte';
+	import ConfirmModal from '$lib/components/confirm-modal.svelte';
 	import { type Character } from '$lib/db/character.repo';
 	import { CirclePlus } from '@lucide/svelte';
 	import { type PageProps } from './$types';
@@ -35,6 +36,22 @@
 		}
 	}
 
+	let modal: ConfirmModal;
+
+	async function deleteCharacter() {
+		const id = $state.snapshot(character)?.id;
+		if (id == null) return;
+		try {
+			const result = await fetch(`/api/characters/${id}`, { method: 'delete' });
+			if (result.ok) {
+				TOAST_MANAGER.success('Character deleted');
+				await goto('.');
+			}
+		} catch (err: any) {
+			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		}
+	}
+
 	async function addVersion() {
 		const characterToSave = $state.snapshot(character);
 		if (characterToSave == null) return;
@@ -59,7 +76,10 @@
 	{/if}
 	<div>
 		<button onclick={save}>save</button>
+		<button onclick={() => modal.open()}>delete</button>
 	</div>
+
+	<ConfirmModal bind:this={modal} message="Delete this character?" onconfirm={deleteCharacter} oncancel={() => modal.close()} />
 
 	<section class="versions">
 		<h3>Versions</h3>

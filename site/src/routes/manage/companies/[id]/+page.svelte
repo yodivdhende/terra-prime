@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import CompanyForm from '$lib/components/company-form.svelte';
+	import ConfirmModal from '$lib/components/confirm-modal.svelte';
 	import type { Company } from '$lib/db/companies.repo';
 	import type { CompanyDiscounts } from '$lib/db/company_discounts.repo';
 	import type { Item } from '$lib/db/items.repo';
@@ -11,6 +12,7 @@
 
 	let { data }: PageProps = $props();
 
+	let modal: ConfirmModal;
 	let company: Company = $state({ id: null, name: '', description: '', link: null });
 	let discounts: CompanyDiscounts = $state({ items: [], implants: [], skills: [] });
 	let items: Item[] = $state([]);
@@ -107,7 +109,7 @@
 			<CompanyForm bind:company />
 			<div class="actions">
 				<button onclick={saveCompany}>save</button>
-				<button onclick={removeCompany}>delete</button>
+				<button onclick={() => modal.open()}>delete</button>
 			</div>
 		</section>
 
@@ -189,6 +191,8 @@
 	</section>
 	</div>
 </main>
+
+<ConfirmModal bind:this={modal} message="Delete this company?" onconfirm={removeCompany} oncancel={() => modal.close()} />
 
 <style>
 	main {

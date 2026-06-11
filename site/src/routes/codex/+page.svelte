@@ -11,13 +11,17 @@
 	let { data }: PageProps = $props();
 	let feImageEl: SVGFEImageElement;
 
-	$effect(() => FEATURE_MANAGER.setFlags({ loginEnabled: data.loginEnabled, registerEnabled: data.registerEnabled }));
 	$effect(() => WINDOW_MANAGER.addWindows(data.files));
 	$effect(() => WINDOW_MANAGER.setRegisterEnabled(CREDENTIAL_MANAGER.isLogedIn));
-	$effect(() => WINDOW_MANAGER.setLoginEnabled(FEATURE_MANAGER.loginEnabled && !CREDENTIAL_MANAGER.isLogedIn));
 	$effect(() => WINDOW_MANAGER.setLogoutEnabled(CREDENTIAL_MANAGER.isLogedIn));
+	$effect(() => {
+		FEATURE_MANAGER.setFlags({ loginEnabled: data.loginEnabled, registerEnabled: data.registerEnabled });
+		WINDOW_MANAGER.setLoginEnabled(FEATURE_MANAGER.loginEnabled && !CREDENTIAL_MANAGER.isLogedIn);
+	});
 
 	onMount(() => {
+		CREDENTIAL_MANAGER.initFromStorage();
+
 		const size = 256;
 		const canvas = document.createElement('canvas');
 		canvas.width = canvas.height = size;

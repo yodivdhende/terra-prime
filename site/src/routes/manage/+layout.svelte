@@ -37,7 +37,7 @@
 			}}
 		></div>
 		<aside>
-			<button onclick={() => sidePanelManager.close()}><CircleX /></button>
+			<button class="btn" onclick={() => sidePanelManager.close()}><CircleX /></button>
 			<sidePanelManager.component />
 		</aside>
 	{/if}

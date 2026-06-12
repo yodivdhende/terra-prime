@@ -88,7 +88,7 @@
             {user.verified ? 'email verified ✓' : 'email not verified'}
         </span>
         {#if !user.verified}
-            <button onclick={resendVerification} disabled={resendStatus === 'sending'}>
+            <button class="btn" onclick={resendVerification} disabled={resendStatus === 'sending'}>
                 {resendStatus === 'sending' ? 'sending…' : 'Resend verification email'}
             </button>
         {/if}
@@ -100,7 +100,7 @@
     </div>
 
     <div class="reset">
-        <button onclick={sendPasswordReset} disabled={resetStatus === 'sending'}>
+        <button class="btn" onclick={sendPasswordReset} disabled={resetStatus === 'sending'}>
             {resetStatus === 'sending' ? 'sending…' : 'Send password reset email'}
         </button>
         {#if resetStatus === 'sent'}
@@ -110,7 +110,7 @@
         {/if}
     </div>
     {/if}
-    <button onclick={save}>Save</button>
+    <button class="btn" onclick={save}>Save</button>
 </main>
 <style>
     main {

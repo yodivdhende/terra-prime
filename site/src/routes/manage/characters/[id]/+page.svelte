@@ -75,8 +75,8 @@
 		<CharacterForm bind:character {users} />
 	{/if}
 	<div>
-		<button onclick={save}>save</button>
-		<button onclick={() => modal.open()}>delete</button>
+		<button class="btn" onclick={save}>save</button>
+		<button class="btn" onclick={() => modal.open()}>delete</button>
 	</div>
 
 	<ConfirmModal bind:this={modal} message="Delete this character?" onconfirm={deleteCharacter} oncancel={() => modal.close()} />
@@ -86,7 +86,7 @@
 		{#if versions.length === 0}
 			<p class="empty">no versions yet</p>
 		{:else}
-			<button class="add-version" onclick={addVersion}><CirclePlus size={14} /></button>
+			<button class="btn add-version" onclick={addVersion}><CirclePlus size={14} /></button>
 			<table>
 				<thead>
 					<tr>

@@ -104,7 +104,7 @@
 	<a href="..">back</a>
 	<h2>Event Budget</h2>
 
-	<button class="add" onclick={addDraft} aria-label="Add character budget">
+	<button class="btn add" onclick={addDraft} aria-label="Add character budget">
 		<CirclePlus />
 	</button>
 
@@ -139,10 +139,10 @@
 							/>
 						</td>
 						<td>
-							<button onclick={() => saveDraft(draft)} disabled={draft.characterId == null}>
+							<button class="btn" onclick={() => saveDraft(draft)} disabled={draft.characterId == null}>
 								save
 							</button>
-							<button onclick={() => removeDraft(draft.key)}>cancel</button>
+							<button class="btn" onclick={() => removeDraft(draft.key)}>cancel</button>
 						</td>
 					</tr>
 				{/each}
@@ -163,7 +163,7 @@
 									}}
 								/>
 							</td>
-							<td><button onclick={() => saveBudget(cid)}>save</button></td>
+							<td><button class="btn" onclick={() => saveBudget(cid)}>save</button></td>
 						</tr>
 					{/if}
 				{/each}

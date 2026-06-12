@@ -108,8 +108,8 @@
 			<h2>Company</h2>
 			<CompanyForm bind:company />
 			<div class="actions">
-				<button onclick={saveCompany}>save</button>
-				<button onclick={() => modal.open()}>delete</button>
+				<button class="btn" onclick={saveCompany}>save</button>
+				<button class="btn" onclick={() => modal.open()}>delete</button>
 			</div>
 		</section>
 
@@ -132,12 +132,12 @@
 							</select>
 						</td>
 						<td><input type="number" bind:value={row.discount} min="0" /></td>
-						<td><button onclick={() => removeItemDiscount(i)}>remove</button></td>
+						<td><button class="btn" onclick={() => removeItemDiscount(i)}>remove</button></td>
 					</tr>
 				{/each}
 			</tbody>
 		</table>
-		<button onclick={addItemDiscount}>+ add item discount</button>
+		<button class="btn" onclick={addItemDiscount}>+ add item discount</button>
 
 		<h3>Implants</h3>
 		<table>
@@ -155,12 +155,12 @@
 							</select>
 						</td>
 						<td><input type="number" bind:value={row.discount} min="0" /></td>
-						<td><button onclick={() => removeImplantDiscount(i)}>remove</button></td>
+						<td><button class="btn" onclick={() => removeImplantDiscount(i)}>remove</button></td>
 					</tr>
 				{/each}
 			</tbody>
 		</table>
-		<button onclick={addImplantDiscount}>+ add implant discount</button>
+		<button class="btn" onclick={addImplantDiscount}>+ add implant discount</button>
 
 		<h3>Skills</h3>
 		<table>
@@ -178,15 +178,15 @@
 							</select>
 						</td>
 						<td><input type="number" bind:value={row.discount} min="0" /></td>
-						<td><button onclick={() => removeSkillDiscount(i)}>remove</button></td>
+						<td><button class="btn" onclick={() => removeSkillDiscount(i)}>remove</button></td>
 					</tr>
 				{/each}
 			</tbody>
 		</table>
-		<button onclick={addSkillDiscount}>+ add skill discount</button>
+		<button class="btn" onclick={addSkillDiscount}>+ add skill discount</button>
 
 		<div class="actions">
-			<button onclick={saveDiscounts}>save discounts</button>
+			<button class="btn" onclick={saveDiscounts}>save discounts</button>
 		</div>
 	</section>
 	</div>

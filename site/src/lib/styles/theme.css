@@ -30,6 +30,30 @@
 
 }
 
+.btn {
+	font-family: var(--font-mono);
+	font-size: 0.75em;
+	letter-spacing: 0.08em;
+	padding: 0.3rem 0.75rem;
+	background: transparent;
+	color: var(--color-main);
+	border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+	cursor: pointer;
+	transition:
+		border-color 0.15s,
+		color 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+	border-color: var(--color-accent);
+	color: var(--color-accent);
+}
+
+.btn:disabled {
+	opacity: 0.25;
+	cursor: default;
+}
+
 .scroll {
 	scrollbar-width: thin;
 	scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);

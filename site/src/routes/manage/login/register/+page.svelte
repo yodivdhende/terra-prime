@@ -39,9 +39,9 @@
 			<div class="password">
 				<input type={passwordInputType} name="password" id="password" value={password} />
 				{#if showPassword}
-					<button onclick={toggleShowPassword}>◎</button>
+					<button class="btn" onclick={toggleShowPassword}>◎</button>
 				{:else}
-					<button onclick={toggleShowPassword}>◉</button>
+					<button class="btn" onclick={toggleShowPassword}>◉</button>
 				{/if}
 			</div>
 			<div class="password">
@@ -52,12 +52,12 @@
 					value={password}
 				/>
 				{#if showPassword}
-					<button onclick={toggleShowPassword}>◎</button>
+					<button class="btn" onclick={toggleShowPassword}>◎</button>
 				{:else}
-					<button onclick={toggleShowPassword}>◉</button>
+					<button class="btn" onclick={toggleShowPassword}>◉</button>
 				{/if}
 			</div>
-			<button> Register </button>
+			<button class="btn"> Register </button>
 		</form>
 		<a href="/login">Login</a>
 	</div>

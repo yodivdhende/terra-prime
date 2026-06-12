@@ -35,7 +35,7 @@
 	<h1>new email template</h1>
 	<EmailTemplateForm bind:template={template} />
 	<div>
-		<button onclick={save}>save</button>
+		<button class="btn" onclick={save}>save</button>
 	</div>
 </main>
 

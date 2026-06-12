@@ -68,8 +68,8 @@
 		<SkillGroupForm bind:group={group} />
 	{/if}
 	<div>
-		<button onclick={save}>save</button>
-		<button onclick={remove}>delete</button>
+		<button class="btn" onclick={save}>save</button>
+		<button class="btn" onclick={remove}>delete</button>
 	</div>
 </main>
 

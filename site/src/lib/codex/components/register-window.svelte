@@ -45,10 +45,10 @@
 	</div>
 
 	<footer>
-		<button onclick={REGISTER_MANAGER.back} disabled={REGISTER_MANAGER.currentStep === 0}
+		<button class="btn" onclick={REGISTER_MANAGER.back} disabled={REGISTER_MANAGER.currentStep === 0}
 			>back</button
 		>
-		<button onclick={REGISTER_MANAGER.next} disabled={!REGISTER_MANAGER.canAdvance}>next</button>
+		<button class="btn" onclick={REGISTER_MANAGER.next} disabled={!REGISTER_MANAGER.canAdvance}>next</button>
 	</footer>
 </div>
 
@@ -107,27 +107,5 @@
 		border-top: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
 	}
 
-	button {
-		font-family: var(--font-mono);
-		font-size: 0.75em;
-		letter-spacing: 0.08em;
-		padding: 0.3rem 0.75rem;
-		background: transparent;
-		color: var(--color-main);
-		border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
-		cursor: pointer;
-		transition:
-			border-color 0.15s,
-			color 0.15s;
-	}
 
-	button:hover:not(:disabled) {
-		border-color: var(--color-accent);
-		color: var(--color-accent);
-	}
-
-	button:disabled {
-		opacity: 0.25;
-		cursor: default;
-	}
 </style>

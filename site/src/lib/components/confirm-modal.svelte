@@ -1,5 +1,9 @@
 <script lang="ts">
-	let { message, onconfirm, oncancel }: {
+	let {
+		message,
+		onconfirm,
+		oncancel
+	}: {
 		message: string;
 		onconfirm: () => void;
 		oncancel: () => void;
@@ -30,8 +34,8 @@
 	<div class="card">
 		<p>{message}</p>
 		<div class="actions">
-			<button class="cancel" onclick={handleCancel}>Cancel</button>
-			<button class="confirm" onclick={handleConfirm}>Confirm</button>
+			<button class="btn cancel" onclick={handleCancel}>Cancel</button>
+			<button class="btn confirm" onclick={handleConfirm}>Confirm</button>
 		</div>
 	</div>
 </dialog>
@@ -42,19 +46,15 @@
 	}
 
 	dialog {
-		position: fixed;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
 		border: none;
 		padding: 0;
 		background: transparent;
+		color: var(--color-main);
 	}
 
 	.card {
 		background: var(--color-bg, #1a1a1a);
 		border: 1px solid var(--color-border, #444);
-		border-radius: 8px;
 		padding: 24px;
 		min-width: 280px;
 		display: flex;

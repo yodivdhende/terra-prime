@@ -69,7 +69,7 @@
 			{:else if saved}
 				<span class="success">saved</span>
 			{/if}
-			<button onclick={save} disabled={saving}>
+			<button class="btn" onclick={save} disabled={saving}>
 				{saving ? 'saving…' : 'save'}
 			</button>
 		</div>

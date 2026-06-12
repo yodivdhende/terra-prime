@@ -23,7 +23,7 @@
 				<option value={role} >{role}</option>   
 			{/each}
 		</select>
-		<button disabled={canCreate === false}> create </button>
+		<button class="btn" disabled={canCreate === false}> create </button>
 	</form>
 </main>
 

@@ -16,7 +16,9 @@
 		"start": "node ./build/index.js",
 		"start:websocket": "node ./websocket-server",
 		"migrate": "tsx db/migrate.ts",
-		"seed": "tsx db/seed.ts"
+		"seed": "tsx db/seed.ts",
+		"test": "vitest run",
+		"test:watch": "vitest"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.1",
@@ -37,7 +39,8 @@
 		"svelte-check": "^4.4.8",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.59.2",
-		"vite": "^6.4.2"
+		"vite": "^6.4.2",
+		"vitest": "^4.1.8"
 	},
 	"dependencies": {
 		"@google-cloud/local-auth": "^2.1.1",

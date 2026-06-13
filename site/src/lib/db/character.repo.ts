@@ -110,8 +110,26 @@ class CharacterRepo {
 		);
 	}
 
-	public async delete({ id }: { id: number }) {
-		await (mysqlconnFn()).execute('DELETE FROM Characters WHERE Id = ?', [id]);
+	public async delete(id: number): Promise<void> {
+		const connection = mysqlconnFn();
+
+		const [versionRows] = await connection.execute(
+			`SELECT Id FROM Character_Versions WHERE Character = ?`,
+			[id]
+		);
+		const versionIds = (versionRows as any[]).map((r) => r.Id);
+
+		if (versionIds.length > 0) {
+			const placeholders = versionIds.map(() => '?').join(', ');
+			await connection.execute(`DELETE FROM Character_Version_Skills WHERE CharacterVersion IN (${placeholders})`, versionIds);
+			await connection.execute(`DELETE FROM Character_Version_Items WHERE CharacterVersion IN (${placeholders})`, versionIds);
+			await connection.execute(`DELETE FROM Character_Version_Implants WHERE CharacterVersion IN (${placeholders})`, versionIds);
+			await connection.execute(`DELETE FROM Event_Participants WHERE CharacterVersion IN (${placeholders})`, versionIds);
+		}
+
+		await connection.execute(`DELETE FROM Character_Versions WHERE Character = ?`, [id]);
+		await connection.execute(`DELETE FROM Party_Members WHERE Member = ?`, [id]);
+		await connection.execute(`DELETE FROM Characters WHERE Id = ?`, [id]);
 	}
 }
 

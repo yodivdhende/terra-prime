@@ -1,4 +1,3 @@
-
 <CRITICAL_INSTRUCTION>
 
 ## TASK MANAGEMENT
@@ -34,3 +33,92 @@ This project uses **GitHub Issues** (via the `gh` CLI) for all task tracking. Th
 - Use `gh issue delete <N>` to remove a task
 
 </CRITICAL_INSTRUCTION>
+
+# Terra-Prime
+
+Full-stack SvelteKit + TypeScript web app for managing LARP events and characters. MySQL backend, real-time WebSocket support, and an Arduino/ESP32 companion device (`/cyd`).
+
+## Project structure
+
+```
+site/   - SvelteKit app (frontend + REST API)
+db/     - MySQL init scripts and migrations
+cyd/    - Arduino/ESP32 firmware (PlatformIO)
+```
+
+## Running the app
+
+```bash
+cd site
+pnpm dev          # dev server
+pnpm build        # production build
+pnpm start        # run production build
+```
+
+Docker Compose starts MySQL + PhpMyAdmin:
+```bash
+docker compose up
+```
+
+## Running tests
+
+```bash
+cd site
+pnpm test          # run once
+pnpm test:watch    # watch mode
+```
+
+Tests live in `site/src/tests/`. The test runner is **Vitest** (`site/vitest.config.ts`).
+
+## API
+
+All API routes are SvelteKit server files under `site/src/routes/api/`. They follow the pattern:
+
+```
+GET/POST/PUT/DELETE /api/<domain>/+server.ts
+```
+
+Key utilities:
+- `$lib/utils/request.ts` — `handleRequest`, `authGuard`, `authGuardForUser`
+- `$lib/utils/cookies.ts` — `getSessionToken`, `setSessionToken`
+- `$lib/types/errors.ts` — `BadRequest`, `NotFoundRequest`, `UnAutherizedRequestError`, `NoAccesRequest`
+- `$lib/db/*.repo.ts` — all database access (repository pattern, mysql2)
+
+## Testing rules
+
+**Whenever you add or modify an API route handler, you must also add or update the corresponding tests.**
+
+- Tests go in `site/src/tests/<domain>/`
+- Use `mockCookies(token?)` from `src/tests/helpers/mockCookies` to simulate auth
+- Use `mockRequest(body?)` from `src/tests/helpers/mockRequest` to build a request body
+- Use `createSessionRepoMock(session?)` from `src/tests/mocks/sessionRepo` and `vi.mock('$lib/db/session.repo', ...)` to stub auth
+- Every handler test must cover at minimum:
+  - Happy path (correct response body + status)
+  - Missing/invalid auth (expect rejection or error)
+  - Invalid request body where applicable (expect 400)
+
+Example test skeleton:
+
+```ts
+import { describe, it, expect, vi } from 'vitest';
+import { mockCookies } from '../../tests/helpers/mockCookies';
+import { createSessionRepoMock } from '../../tests/mocks/sessionRepo';
+
+vi.mock('$lib/db/session.repo', () => ({ sessionRepo: createSessionRepoMock() }));
+vi.mock('$lib/db/skills.repo', () => ({ skillRepo: { getAll: vi.fn().mockResolvedValue([]) } }));
+
+import { GET } from '../../routes/api/skills/+server';
+
+describe('GET /api/skills', () => {
+  it('returns 200 with skills for an admin', async () => {
+    const res = await GET({ cookies: mockCookies('valid-token') } as any);
+    expect(res.status).toBe(200);
+  });
+});
+```
+
+## Auth roles
+
+`admin` | `player` | `extra` | `user`
+
+Most write endpoints require `admin`. Read endpoints vary — check the `authGuard` / `authGuardForUser` call in each handler.

@@ -76,7 +76,7 @@
 	{/if}
 	<div>
 		<button class="btn" onclick={save}>save</button>
-		<button class="btn" onclick={() => modal.open()}>delete</button>
+		<button class="btn btn-danger" onclick={() => modal.open()}>delete</button>
 	</div>
 
 	<ConfirmModal bind:this={modal} message="Delete this character?" onconfirm={deleteCharacter} oncancel={() => modal.close()} />

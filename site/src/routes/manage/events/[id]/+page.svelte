@@ -68,7 +68,7 @@
 	{/if}
 	<div>
 		<button class="btn" onclick={save}>save</button>
-		<button class="btn" onclick={remove}>delete</button>
+		<button class="btn btn-danger" onclick={remove}>delete</button>
 	</div>
 	{#if event?.id != null}
 		<a href="{event.id}/budget">Manage Budget →</a>

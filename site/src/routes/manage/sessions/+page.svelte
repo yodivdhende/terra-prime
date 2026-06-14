@@ -94,7 +94,7 @@
 								<ul class="options">
 									<li><button class="btn">edit</button></li>
 									<li><button class="btn" onclick={() => sendCommand("virus", session.token)}>send virus</button></li>
-									<li><button class="btn" onclick={() => deleteConnection(session.token)}>delete</button></li>
+									<li><button class="btn btn-danger" onclick={() => deleteConnection(session.token)}>delete</button></li>
 								</ul>
 							{/snippet}
 						</td>

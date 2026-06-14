@@ -109,7 +109,7 @@
 			<CompanyForm bind:company />
 			<div class="actions">
 				<button class="btn" onclick={saveCompany}>save</button>
-				<button class="btn" onclick={() => modal.open()}>delete</button>
+				<button class="btn btn-danger" onclick={() => modal.open()}>delete</button>
 			</div>
 		</section>
 

@@ -59,6 +59,11 @@ export class GoogleDriveService {
     return result.data.files?.filter(file => file.name != null && file.name[0] !== '_') ?? [];
   }
 
+  public async getFileMimeType(fileId: string): Promise<string> {
+    const res = await this.getService().files.get({ fileId, fields: 'mimeType' });
+    return res.data.mimeType ?? 'application/octet-stream';
+  }
+
   public async getFileStream(fileId: string): Promise<ReadableStream> {
     const response = await this.getService().files.get(
       { fileId, alt: 'media' },

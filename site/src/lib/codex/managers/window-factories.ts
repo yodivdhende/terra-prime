@@ -1,6 +1,6 @@
 export type CodexWindow = {
   id: string;
-  type: 'pdf' | 'dir' | 'doc' | 'image' | 'form' | 'settings' | 'login' | 'register' | 'logout';
+  type: 'pdf' | 'dir' | 'doc' | 'image' | 'audio' | 'form' | 'settings' | 'login' | 'register' | 'logout';
   state: 'open' | 'hidden' | 'closed';
   dimension: { w: number, h: number };
   position: { x: number, y: number, z: number };
@@ -76,6 +76,19 @@ export function createImageWindow({ name, index, id, side }: { name: string, ind
     contentData: id,
     title: formatName(name),
     icon: { type: 'image', side },
+  }
+}
+
+export function createAudioWindow({ name, index, id, side }: { name: string, index: number, id: string, side: 'left' | 'right' }): CodexWindow {
+  return {
+    id,
+    type: 'audio',
+    state: getState(name),
+    dimension: { w: 380, h: 120 },
+    position: { x: 400 + 20 * index, y: 20 * index, z: index },
+    contentData: id,
+    title: formatName(name),
+    icon: { type: 'file', side },
   }
 }
 

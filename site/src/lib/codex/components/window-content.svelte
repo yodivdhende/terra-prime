@@ -9,6 +9,7 @@
 	import LogoutWindow from '$lib/codex/components/logout-window.svelte';
 	import RegisterWindow from '$lib/codex/components/register-window.svelte';
 	import FormWindow from '$lib/codex/components/form-window.svelte';
+	import AudioWindow from '$lib/codex/components/audio-window.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
 </script>
@@ -31,4 +32,6 @@
 	<RegisterWindow {window} />
 {:else if window.type === 'form'}
 	<FormWindow formId={window.contentData} />
+{:else if window.type === 'audio'}
+	<AudioWindow {window} />
 {/if}

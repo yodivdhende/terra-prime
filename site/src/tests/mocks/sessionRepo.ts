@@ -4,7 +4,7 @@ import { vi } from 'vitest';
 export type MockSession = { userId: number; roles: UserRole[] };
 
 export const adminSession: MockSession = { userId: 1, roles: ['admin'] };
-export const playerSession: MockSession = { userId: 2, roles: ['player'] };
+export const playerSession: MockSession = { userId: 2, roles: ['user'] };
 
 export function createSessionRepoMock(session: MockSession | null = adminSession) {
 	return {

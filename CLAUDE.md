@@ -4,6 +4,22 @@
 
 Always use the `staging` branch for development when no specific branch is specified. Never default to `main` for development work.
 
+### Branch naming
+
+When creating a branch from a GitHub issue, use one of these prefixes followed by `TP-NNNN-` and the issue title (lowercase, hyphenated):
+
+- `feature/TP-NNNN-title` — new functionality
+- `fix/TP-NNNN-title` — bug fixes
+- `chore/TP-NNNN-title` — maintenance, config, tooling
+
+Example: `feature/TP-0042-add-login-page`
+
+### Commit messages
+
+Every commit message must start with the TP ID: `TP-NNNN: <description>`
+
+Example: `TP-0042: add login page component`
+
 <CRITICAL_INSTRUCTION>
 
 ## TASK MANAGEMENT

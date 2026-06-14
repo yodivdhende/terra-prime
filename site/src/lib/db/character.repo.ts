@@ -114,7 +114,7 @@ class CharacterRepo {
 		const connection = mysqlconnFn();
 
 		const [versionRows] = await connection.execute(
-			`SELECT Id FROM Character_Versions WHERE Character = ?`,
+			`SELECT Id FROM Character_Versions WHERE \`Character\` = ?`,
 			[id]
 		);
 		const versionIds = (versionRows as any[]).map((r) => r.Id);
@@ -127,7 +127,7 @@ class CharacterRepo {
 			await connection.execute(`DELETE FROM Event_Participants WHERE CharacterVersion IN (${placeholders})`, versionIds);
 		}
 
-		await connection.execute(`DELETE FROM Character_Versions WHERE Character = ?`, [id]);
+		await connection.execute(`DELETE FROM Character_Versions WHERE \`Character\` = ?`, [id]);
 		await connection.execute(`DELETE FROM Party_Members WHERE Member = ?`, [id]);
 		await connection.execute(`DELETE FROM Characters WHERE Id = ?`, [id]);
 	}

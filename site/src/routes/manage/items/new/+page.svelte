@@ -37,7 +37,7 @@
 		<ItemForm bind:item={item}  />
 	{/if}
 	<div>
-		<button onclick={save}>save</button>
+		<button class="btn" onclick={save}>save</button>
 	</div>
 </main>
 

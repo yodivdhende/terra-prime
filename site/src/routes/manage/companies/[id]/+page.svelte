@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import CompanyForm from '$lib/components/company-form.svelte';
+	import ConfirmModal from '$lib/components/confirm-modal.svelte';
 	import type { Company } from '$lib/db/companies.repo';
 	import type { CompanyDiscounts } from '$lib/db/company_discounts.repo';
 	import type { Item } from '$lib/db/items.repo';
@@ -11,6 +12,7 @@
 
 	let { data }: PageProps = $props();
 
+	let modal: ConfirmModal;
 	let company: Company = $state({ id: null, name: '', description: '', link: null });
 	let discounts: CompanyDiscounts = $state({ items: [], implants: [], skills: [] });
 	let items: Item[] = $state([]);
@@ -106,8 +108,8 @@
 			<h2>Company</h2>
 			<CompanyForm bind:company />
 			<div class="actions">
-				<button onclick={saveCompany}>save</button>
-				<button onclick={removeCompany}>delete</button>
+				<button class="btn" onclick={saveCompany}>save</button>
+				<button class="btn btn-danger" onclick={() => modal.open()}>delete</button>
 			</div>
 		</section>
 
@@ -130,12 +132,12 @@
 							</select>
 						</td>
 						<td><input type="number" bind:value={row.discount} min="0" /></td>
-						<td><button onclick={() => removeItemDiscount(i)}>remove</button></td>
+						<td><button class="btn" onclick={() => removeItemDiscount(i)}>remove</button></td>
 					</tr>
 				{/each}
 			</tbody>
 		</table>
-		<button onclick={addItemDiscount}>+ add item discount</button>
+		<button class="btn" onclick={addItemDiscount}>+ add item discount</button>
 
 		<h3>Implants</h3>
 		<table>
@@ -153,12 +155,12 @@
 							</select>
 						</td>
 						<td><input type="number" bind:value={row.discount} min="0" /></td>
-						<td><button onclick={() => removeImplantDiscount(i)}>remove</button></td>
+						<td><button class="btn" onclick={() => removeImplantDiscount(i)}>remove</button></td>
 					</tr>
 				{/each}
 			</tbody>
 		</table>
-		<button onclick={addImplantDiscount}>+ add implant discount</button>
+		<button class="btn" onclick={addImplantDiscount}>+ add implant discount</button>
 
 		<h3>Skills</h3>
 		<table>
@@ -176,19 +178,21 @@
 							</select>
 						</td>
 						<td><input type="number" bind:value={row.discount} min="0" /></td>
-						<td><button onclick={() => removeSkillDiscount(i)}>remove</button></td>
+						<td><button class="btn" onclick={() => removeSkillDiscount(i)}>remove</button></td>
 					</tr>
 				{/each}
 			</tbody>
 		</table>
-		<button onclick={addSkillDiscount}>+ add skill discount</button>
+		<button class="btn" onclick={addSkillDiscount}>+ add skill discount</button>
 
 		<div class="actions">
-			<button onclick={saveDiscounts}>save discounts</button>
+			<button class="btn" onclick={saveDiscounts}>save discounts</button>
 		</div>
 	</section>
 	</div>
 </main>
+
+<ConfirmModal bind:this={modal} message="Delete this company?" onconfirm={removeCompany} oncancel={() => modal.close()} />
 
 <style>
 	main {

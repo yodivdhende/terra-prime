@@ -67,8 +67,8 @@
 		<ItemForm bind:item={ item } />
 	{/if}
 	<div>
-		<button onclick={save}>save</button>
-		<button onclick={remove}>delete</button>
+		<button class="btn" onclick={save}>save</button>
+		<button class="btn btn-danger" onclick={remove}>delete</button>
 	</div>
 </main>
 

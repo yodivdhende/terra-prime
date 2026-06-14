@@ -39,7 +39,7 @@
 		<BackstoryLink characterId={character.id} backstoryUrl={character.backstoryUrl} />
 	{/if}
 	<div>
-		<button onclick={save}>save</button>
+		<button class="btn" onclick={save}>save</button>
 	</div>
 </main>
 

@@ -92,9 +92,9 @@
 							{/snippet}
 							{#snippet content()}
 								<ul class="options">
-									<li><button>edit</button></li>
-									<li><button onclick={() => sendCommand("virus", session.token)}>send virus</button></li>
-									<li><button onclick={() => deleteConnection(session.token)}>delete</button></li>
+									<li><button class="btn">edit</button></li>
+									<li><button class="btn" onclick={() => sendCommand("virus", session.token)}>send virus</button></li>
+									<li><button class="btn btn-danger" onclick={() => deleteConnection(session.token)}>delete</button></li>
 								</ul>
 							{/snippet}
 						</td>

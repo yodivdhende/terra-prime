@@ -1,9 +1,9 @@
 import type { Handle } from '@sveltejs/kit';
-import { getGoogleSheetManager } from '$lib/managers/google-sheet-manager.svelte';
+import { getFeatureFlags } from '$lib/server/feature-flags';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	try {
-		event.locals.featureFlags = await getGoogleSheetManager().getFeatureFlags();
+		event.locals.featureFlags = await getFeatureFlags();
 	} catch {
 		event.locals.featureFlags = {};
 	}

@@ -32,8 +32,9 @@ export const POST: RequestHandler = async ({ cookies, params, request }) => {
 export const DELETE: RequestHandler = async ({ cookies, params }) => {
   return handleRequest(async () => {
     await authGuardForUser(getSessionToken(cookies), ['admin']);
-    const id = isNumberOrError(params.characterId);
-    await characterRepo.delete({ id });
+    const { characterId } = params;
+    const numberId = isNumberOrError(characterId);
+    await characterRepo.delete(numberId);
     return new Response();
   });
 };

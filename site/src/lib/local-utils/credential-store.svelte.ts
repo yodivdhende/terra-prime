@@ -19,7 +19,10 @@ function createCredentialStore() {
       _credentials = value;
       if (browser) localStorage.setItem(localStorageKeys.activeUser, JSON.stringify(value));
     },
-    init() {
+    get isLoggedIn(): boolean {
+      return _credentials.roles.includes('user');
+    },
+    initFromStorage() {
       if (!browser) return;
       try {
         const raw = localStorage.getItem(localStorageKeys.activeUser);
@@ -28,7 +31,7 @@ function createCredentialStore() {
         console.error('init could not load', { error });
       }
     },
-    clear() {
+    logout() {
       _credentials = DEFAULT;
       if (browser) localStorage.removeItem(localStorageKeys.activeUser);
     }

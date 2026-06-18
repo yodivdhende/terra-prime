@@ -54,6 +54,17 @@ export class GoogleDriveService {
     return html.replace(/_[^_]*_/g, '');
   }
 
+  public async findBackgroundFolder(): Promise<string | null> {
+    const result = await this.getService().files.list({
+      q: `'1FiG0BRYkVHD_0s6Hu236iNZaYo9lZfEQ' in parents and name = '_Background' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+      fields: 'files(id)',
+      spaces: 'drive',
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
+    });
+    return result.data.files?.[0]?.id ?? null;
+  }
+
   private async getExcludedFolderIds(): Promise<Set<string>> {
     const result = await this.getService().files.list({
       q: `mimeType = 'application/vnd.google-apps.folder' and trashed = false`,

@@ -3,6 +3,7 @@
 	import Window from '$lib/codex/components/window.svelte';
 	import WindowContent from '$lib/codex/components/window-content.svelte';
 	import DirWindow from '$lib/codex/components/dir-window.svelte';
+	import BackgroundWindow from '$lib/codex/components/background-window.svelte';
 
 	let windows = $derived(WINDOW_MANAGER.windows);
 </script>
@@ -14,6 +15,8 @@
 				{#snippet content()}
 					{#if window.type === 'dir'}
 						<DirWindow window={windows[index]} />
+					{:else if window.type === 'background'}
+						<BackgroundWindow window={windows[index]} />
 					{:else}
 						<WindowContent window={windows[index]} />
 					{/if}

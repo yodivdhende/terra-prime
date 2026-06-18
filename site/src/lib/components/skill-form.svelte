@@ -14,6 +14,8 @@
 	</select>
 	<label for="description">description</label>
 	<input type="textarea" bind:value={skill.description} />
+	<label for="cost">cost</label>
+	<input id="cost" type="number" min="0" bind:value={skill.cost} />
 </main>
 
 <style>

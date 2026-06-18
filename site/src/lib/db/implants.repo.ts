@@ -85,15 +85,15 @@ class ImplantRepo {
 		return this.edit(implant);
 	}
 
-	public async create({ name, description, prerequisite }: Omit<Implant, 'id'>) {
+	public async create({ name, description, prerequisite, cost }: Omit<Implant, 'id'>) {
 		try {
 			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
-				INSERT INTO Implants (Name, Description, Prerequisite)
-				Values (?,?,?)
+				INSERT INTO Implants (Name, Description, Prerequisite, Cost)
+				Values (?,?,?,?)
         `,
-				[name, description, prerequisite ?? null]
+				[name, description, prerequisite ?? null, cost ?? 0]
 			);
 			if ('serverStatus' in result && result.serverStatus !== 2) return null;
 			if ('insertId' in result === false || result.insertId == null) return null;
@@ -103,7 +103,7 @@ class ImplantRepo {
 		}
 	}
 
-	public async edit({ id, name, description, prerequisite }: Implant) {
+	public async edit({ id, name, description, prerequisite, cost }: Implant) {
 		try {
 			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
@@ -111,10 +111,11 @@ class ImplantRepo {
 				UPDATE Implants
 				SET Name = ?,
 				Description = ?,
-				Prerequisite = ?
+				Prerequisite = ?,
+				Cost = ?
 				WHERE Id = ?
         `,
-				[name, description, prerequisite ?? null, id]
+				[name, description, prerequisite ?? null, cost ?? 0, id]
 			);
 			if ('serverStatus' in result && result.serverStatus !== 2) return null;
 			return id;

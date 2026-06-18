@@ -89,15 +89,15 @@ class ItemRepo {
 		return this.edit(item);
 	}
 
-	public async create({ name, description }: Omit<Item, 'id'>) {
+	public async create({ name, description, cost }: Omit<Item, 'id'>) {
 		try {
 			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
-				INSERT INTO Items (Name, Description)
-				Values (?,?)
+				INSERT INTO Items (Name, Description, Cost)
+				Values (?,?,?)
         `,
-				[name, description]
+				[name, description, cost ?? 0]
 			);
 			if ('serverStatus' in result && result.serverStatus !== 2) return null;
 			if ('insertId' in result === false || result.insertId == null) return null;
@@ -107,17 +107,18 @@ class ItemRepo {
 		}
 	}
 
-	public async edit({ id, name, description }: Item) {
+	public async edit({ id, name, description, cost }: Item) {
 		try {
 			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				UPDATE Items
 				SET Name = ?,
-				Description = ?
+				Description = ?,
+				Cost = ?
 				WHERE Id = ?
         `,
-				[name, description, id]
+				[name, description, cost ?? 0, id]
 			);
 			if ('serverStatus' in result && result.serverStatus !== 2) return null;
 			return id;

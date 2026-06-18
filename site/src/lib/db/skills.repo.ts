@@ -103,16 +103,17 @@ class SkillRepo {
 	public async create({
 		name,
 		description,
-		groupId
-	}: Pick<Skill, 'name' | 'description' | 'groupId'>) {
+		groupId,
+		cost
+	}: Pick<Skill, 'name' | 'description' | 'groupId' | 'cost'>) {
 		try {
 			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
-				 INSERT INTO Skills (Name, Description, \`Group\`)
-				Values (?,?,?)
+				 INSERT INTO Skills (Name, Description, \`Group\`, Cost)
+				Values (?,?,?,?)
         `,
-				[name, description, groupId]
+				[name, description, groupId, cost ?? 0]
 			);
 			if (Array.isArray(result) === false) return null;
 			if (result.length === 0) return null;
@@ -128,19 +129,21 @@ class SkillRepo {
 		id,
 		name,
 		description,
-		groupId
-	}: Pick<Skill, 'id' | 'name' | 'description' | 'groupId'>) {
+		groupId,
+		cost
+	}: Pick<Skill, 'id' | 'name' | 'description' | 'groupId' | 'cost'>) {
 		try {
 			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
-				UPDATE Skills 
+				UPDATE Skills
 				SET Name = ?,
 				Description = ?,
-				\`Group\` = ?
+				\`Group\` = ?,
+				Cost = ?
 				WHERE Id = ?
         `,
-				[name, description, groupId, id]
+				[name, description, groupId, cost ?? 0, id]
 			);
 			if (Array.isArray(result) === false) return null;
 			if (result.length === 0) return null;

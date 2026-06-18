@@ -26,6 +26,8 @@
 			<option value={option.id}>{option.name}</option>
 		{/each}
 	</select>
+	<label for="cost">cost</label>
+	<input id="cost" type="number" min="0" bind:value={implant.cost} />
 </main>
 
 <style>

@@ -59,15 +59,24 @@ export class GoogleDriveService {
     return result.data.files?.filter(file => file.name != null && file.name[0] !== '_') ?? [];
   }
 
-  public async getFileMimeType(fileId: string): Promise<string> {
-    const res = await this.getService().files.get({ fileId, fields: 'mimeType' });
-    return res.data.mimeType ?? 'application/octet-stream';
+  public async getFileMetadata(fileId: string): Promise<{ mimeType: string; size: number }> {
+    const res = await this.getService().files.get({
+      fileId,
+      fields: 'mimeType,size',
+      supportsAllDrives: true,
+    });
+    return {
+      mimeType: res.data.mimeType ?? 'application/octet-stream',
+      size: Number(res.data.size ?? 0),
+    };
   }
 
-  public async getFileStream(fileId: string): Promise<ReadableStream> {
+  public async getFileStream(fileId: string, rangeHeader?: string): Promise<ReadableStream> {
+    const headers: Record<string, string> = {};
+    if (rangeHeader) headers['Range'] = rangeHeader;
     const response = await this.getService().files.get(
-      { fileId, alt: 'media' },
-      { responseType: 'stream' },
+      { fileId, alt: 'media', supportsAllDrives: true },
+      { responseType: 'stream', headers },
     );
     const nodeStream = response.data as unknown as NodeJS.ReadableStream;
     return new ReadableStream({

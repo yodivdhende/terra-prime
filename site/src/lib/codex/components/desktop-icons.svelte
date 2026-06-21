@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ICON_MANAGER, type Icon } from '$lib/codex/managers/icon-manager.svelte';
 	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
-	import { File, Folder, Image, Settings, ClipboardPen, UserRound, ClipboardPenLine } from '@lucide/svelte';
+	import { File, Folder, Image, FileHeadphone, Settings, ClipboardPen, UserRound, ClipboardPenLine } from '@lucide/svelte';
 
 	let icons = $derived(ICON_MANAGER.icons);
 	let localIcons = $derived(icons.filter(i => i.side === 'left'));
@@ -29,6 +29,12 @@
 	{#if icon.type === 'image'}
 		<button onclick={() => openWindow(icon)}>
 			<div class="icon"><Image size={64} strokeWidth={1} /></div>
+			{icon.title}
+		</button>
+	{/if}
+	{#if icon.type === 'audio'}
+		<button onclick={() => openWindow(icon)}>
+			<div class="icon"><FileHeadphone size={64} strokeWidth={1} /></div>
 			{icon.title}
 		</button>
 	{/if}

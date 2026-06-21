@@ -10,7 +10,7 @@ export type CodexWindow = {
 }
 
 export type Icon = {
-  type: 'file' | 'dir' | 'image' | 'form' | 'settings' | 'login' | 'register' | 'logout';
+  type: 'file' | 'dir' | 'image' | 'audio' | 'form' | 'settings' | 'login' | 'register' | 'logout';
   side: 'left' | 'right';
 }
 
@@ -88,7 +88,7 @@ export function createAudioWindow({ name, index, id, side }: { name: string, ind
     position: { x: 400 + 20 * index, y: 20 * index, z: index },
     contentData: id,
     title: formatName(name),
-    icon: { type: 'file', side },
+    icon: { type: 'audio', side },
   }
 }
 

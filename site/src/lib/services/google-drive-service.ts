@@ -46,17 +46,41 @@ export class GoogleDriveService {
     return html.replace(/_[^_]*_/g, '');
   }
 
-  public async searchFiles(query: string) {
-    const escaped = query.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  private async getExcludedFolderIds(): Promise<Set<string>> {
     const result = await this.getService().files.list({
-      q: `name contains '${escaped}' and trashed = false`,
-      fields: 'files(id, name, mimeType)',
+      q: `mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+      fields: 'files(id, name)',
       spaces: 'drive',
       supportsAllDrives: true,
       includeItemsFromAllDrives: true,
-      pageSize: 20,
     });
-    return result.data.files?.filter(file => file.name != null && file.name[0] !== '_') ?? [];
+    const ids = new Set<string>();
+    for (const folder of result.data.files ?? []) {
+      if (folder.name && folder.name.startsWith('_') && folder.id) {
+        ids.add(folder.id);
+      }
+    }
+    return ids;
+  }
+
+  public async searchFiles(query: string) {
+    const escaped = query.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const [result, excludedFolderIds] = await Promise.all([
+      this.getService().files.list({
+        q: `name contains '${escaped}' and trashed = false`,
+        fields: 'files(id, name, mimeType, parents)',
+        spaces: 'drive',
+        supportsAllDrives: true,
+        includeItemsFromAllDrives: true,
+        pageSize: 20,
+      }),
+      this.getExcludedFolderIds(),
+    ]);
+    return result.data.files?.filter(file => {
+      if (!file.name || file.name.startsWith('_')) return false;
+      if (file.parents?.some(parentId => excludedFolderIds.has(parentId))) return false;
+      return true;
+    }) ?? [];
   }
 
   public async getFileMetadata(fileId: string): Promise<{ mimeType: string; size: number }> {

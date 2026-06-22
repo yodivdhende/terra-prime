@@ -9,6 +9,8 @@
 	<input id="name" type="text" bind:value={item.name} />
 	<label for="description">description</label>
 	<input type="textarea" bind:value={item.description} />
+	<label for="cost">cost</label>
+	<input id="cost" type="number" min="0" bind:value={item.cost} />
 </main>
 
 <style>

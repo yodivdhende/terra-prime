@@ -7,7 +7,8 @@ class CharacterRepo {
 		c.Name as name,
 		c.Owner as ownerId,
 		u.Name as ownerName,
-		c.BackstoryUrl as backstoryUrl
+		c.BackstoryUrl as backstoryUrl,
+		c.ImplantLimit as implantLimit
 	FROM Characters c
 	JOIN Users u
 		on u.id = c.Owner
@@ -25,6 +26,7 @@ class CharacterRepo {
 				ownerId: firstCharacter.ownerId,
 				ownerName: firstCharacter.ownerName,
 				backstoryUrl: firstCharacter.backstoryUrl ?? null,
+				implantLimit: firstCharacter.implantLimit ?? 2,
 			};
 		} else {
 			throw new Error(`character not found with id: ${id}`);
@@ -34,7 +36,7 @@ class CharacterRepo {
 	public async getByOwner(ownerId: number): Promise<Character[]> {
 		const connection = mysqlconnFn();
 		const [result] = await connection.execute(
-			`SELECT c.Id as id, c.Name as name, c.Owner as ownerId, u.Name as ownerName
+			`SELECT c.Id as id, c.Name as name, c.Owner as ownerId, u.Name as ownerName, c.ImplantLimit as implantLimit
 			 FROM Characters c
 			 JOIN Users u ON u.Id = c.Owner
 			 WHERE c.Owner = ?`,
@@ -63,6 +65,7 @@ class CharacterRepo {
 						ownerId: character.ownerId,
 						ownerName: character.ownerName,
 						backstoryUrl: character.backstoryUrl ?? null,
+						implantLimit: character.implantLimit ?? 2,
 					};
 				} else {
 					console.error(`can't convert to character: `, { character });
@@ -80,8 +83,8 @@ class CharacterRepo {
 	private async create(character: NewCharacter): Promise<number> {
 		const connection = mysqlconnFn();
 		const [result] = await connection.execute(
-			`INSERT INTO Characters (Name, Owner, BackstoryUrl) VALUES (?, ?, ?)`,
-			[character.name, character.ownerId, character.backstoryUrl ?? null]
+			`INSERT INTO Characters (Name, Owner, BackstoryUrl, ImplantLimit) VALUES (?, ?, ?, ?)`,
+			[character.name, character.ownerId, character.backstoryUrl ?? null, character.implantLimit ?? 2]
 		);
 		return (result as any).insertId as number;
 	}
@@ -93,10 +96,11 @@ class CharacterRepo {
 				UPDATE Characters
 				SET Name = ?,
 					Owner = ?,
-					BackstoryUrl = COALESCE(?, BackstoryUrl)
+					BackstoryUrl = COALESCE(?, BackstoryUrl),
+					ImplantLimit = ?
 				WHERE id = ?
 			`,
-				[character.name, character.ownerId, character.backstoryUrl ?? null, character.id]
+				[character.name, character.ownerId, character.backstoryUrl ?? null, character.implantLimit ?? 2, character.id]
 			);
 		} catch (error) {
 			throw error;
@@ -139,6 +143,7 @@ export type Character = NewCharacter & {
 	id: number;
 	ownerName: string;
 	backstoryUrl?: string | null;
+	implantLimit?: number;
 };
 
 export function isCharacter(character: any): character is Character {
@@ -153,6 +158,7 @@ export type NewCharacter = {
 	name: string;
 	ownerId: number;
 	backstoryUrl?: string | null;
+	implantLimit?: number;
 };
 
 export function isNewCharacter(character: any): character is NewCharacter {

@@ -3,15 +3,23 @@ import { VITE_GOOGLE_CLIENT_EMAIL, VITE_GOOGLE_PRIVATE_KEY } from '$env/static/p
 
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
-export class GoogleDriveService {
-  private getService() {
-    const auth = new google.auth.JWT(
+let cachedAuth: InstanceType<typeof google.auth.JWT> | null = null;
+
+function getAuth() {
+  if (!cachedAuth) {
+    cachedAuth = new google.auth.JWT(
       VITE_GOOGLE_CLIENT_EMAIL,
       undefined,
       VITE_GOOGLE_PRIVATE_KEY.replace(/\\\n/gm, '\n'),
       SCOPES,
-    )
-    return google.drive({ version: 'v3', auth })
+    );
+  }
+  return cachedAuth;
+}
+
+export class GoogleDriveService {
+  private getService() {
+    return google.drive({ version: 'v3', auth: getAuth() });
   }
 
   public async getHomeFiles() {

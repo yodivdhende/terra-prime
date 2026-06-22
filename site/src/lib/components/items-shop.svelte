@@ -31,6 +31,15 @@
 		if (item.count === 0) return;
 		item.count--;
 	}
+
+	function add(item: Item & { count: number }) {
+		if (item.maxPerCharacter != null && item.count >= item.maxPerCharacter) return;
+		item.count++;
+	}
+
+	function isAtLimit(item: Item & { count: number }): boolean {
+		return item.maxPerCharacter != null && item.count >= item.maxPerCharacter;
+	}
 </script>
 
 <main>
@@ -42,8 +51,8 @@
 				<div class="item-name">{item.name}</div>
 				<div class="item-description">{item.description}</div>
 				<button onclick={() => remove(item)}><CircleMinus /></button>
-				<input type="number" bind:value={item.count} />
-				<button onclick={() => item.count++}><PlusCircle /></button>
+				<input type="number" bind:value={item.count} min="0" max={item.maxPerCharacter ?? undefined} />
+				<button onclick={() => add(item)} disabled={isAtLimit(item)} class:limit-reached={isAtLimit(item)}><PlusCircle /></button>
 			</div>
 		{/each}
 	</div>
@@ -109,5 +118,10 @@
 
 	.items button:first-child {
 		grid-area: remove;
+	}
+
+	.limit-reached {
+		opacity: 0.3;
+		cursor: not-allowed;
 	}
 </style>

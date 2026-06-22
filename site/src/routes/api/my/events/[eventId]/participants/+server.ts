@@ -5,6 +5,7 @@ import {
   type CharacterVersionBare,
 } from '$lib/db/character_version.repo';
 import { eventParticipantsRepo } from '$lib/db/event_participants.repo';
+import { itemRepo } from '$lib/db/items.repo';
 import { isNumberOrError } from '$lib/request.utils';
 import { BadRequest } from '$lib/types/errors';
 import { UserRole } from '$lib/types/roles';
@@ -56,6 +57,17 @@ export const PUT: RequestHandler = async ({ cookies, params, request }) => {
 
     const lastVersion = body.versions.at(-1);
     if (lastVersion == null) throw new BadRequest();
+
+    if (lastVersion.items.length > 0) {
+      const allItems = await itemRepo.getAll();
+      const itemMap = new Map(allItems.map((i) => [i.id, i]));
+      for (const versionItem of lastVersion.items) {
+        const catalogItem = itemMap.get(versionItem.id);
+        if (catalogItem?.maxPerCharacter != null && versionItem.count > catalogItem.maxPerCharacter) {
+          throw new BadRequest();
+        }
+      }
+    }
 
     const versionToSave =
       existingParticipation?.characterVersionId === lastVersion.id

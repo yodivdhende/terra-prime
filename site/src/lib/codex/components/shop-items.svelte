@@ -4,6 +4,7 @@
 		name: string;
 		description: string;
 		cost: number;
+		maxPerCharacter?: number | null;
 	};
 </script>
 
@@ -40,6 +41,7 @@
 
 	function add(item: ShopItem) {
 		if (effectiveCost(item) > remaining) return;
+		if (item.maxPerCharacter != null && countOf(item.id) >= item.maxPerCharacter) return;
 		const existing = selected.find((i) => i.id === item.id);
 		if (existing) {
 			selected = selected.map((i) => (i.id === item.id ? { ...i, count: i.count + 1 } : i));
@@ -77,7 +79,7 @@
 				{@const discount = discounts.get(item.id) ?? 0}
 				{@const effective = Math.max(0, item.cost - discount)}
 				{@const discounted = discount > 0 && item.cost > 0}
-				{@const blocked = effective > remaining}
+				{@const blocked = effective > remaining || (item.maxPerCharacter != null && count >= item.maxPerCharacter)}
 				<li class="entry" class:owned class:discounted>
 					<div class="entry-info">
 						<span class="entry-name">

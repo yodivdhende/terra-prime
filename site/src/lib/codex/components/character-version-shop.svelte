@@ -96,7 +96,7 @@
 		name={version.name}
 		skills={{ count: version.skills.length, groups: skillsForGroups, spent: skillsSpent }}
 		items={{ count: version.items.length, total: itemsTotal, spent: itemsSpent }}
-		implants={{ count: version.implants.length, spent: implantsSpent }}
+		implants={{ count: version.implants.length, spent: implantsSpent, slotCount: character.implantLimit ?? 2 }}
 		{budget}
 		remaining={navRemaining}
 	/>
@@ -124,6 +124,7 @@
 				bind:selected={version.implants}
 				remaining={shopRemaining}
 				discounts={implantDiscountById}
+				slotCount={character.implantLimit ?? 2}
 			/>
 		{/if}
 	</div>

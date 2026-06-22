@@ -22,7 +22,7 @@
 		name: string;
 		skills: { count: number; groups: NavSkillGroup[]; spent: number };
 		items: { count: number; total: number; spent: number };
-		implants: { count: number; spent: number };
+		implants: { count: number; spent: number; slotCount: number };
 		budget: number;
 		remaining: number;
 	} = $props();
@@ -98,10 +98,12 @@
 					{#if implants.count > 0}
 						<span class="overview-stat">
 							<Icon src={implantLogo} color="white" tooltip="Implants" size={iconSize} />
-							{implants.count}
+							{implants.count} / {implants.slotCount}
 						</span>
 					{:else}
-						<span class="overview-empty">none selected</span>
+						<span class="overview-empty">0 / {implants.slotCount} slots</span>
+					{/if}
+					{#if implants.spent > 0}
 						<span class="overview-cost">{implants.spent}</span>
 					{/if}
 				</span>

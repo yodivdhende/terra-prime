@@ -14,6 +14,7 @@ export type Character = {
   ownerName: string;
   ownerId: number;
   backstoryUrl?: string | null;
+  implantLimit?: number;
 };
 
 function emptyCharacter(): Character {

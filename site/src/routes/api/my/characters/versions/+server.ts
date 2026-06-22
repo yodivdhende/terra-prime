@@ -29,6 +29,7 @@ export type VersionImplant = {
 	id: number;
 	name: string;
 	description: string;
+	slot: number;
 };
 
 export type VersionEvent = {
@@ -129,10 +130,10 @@ function toFullVersion(
 			if (!item) return [];
 			return [{ id: i.id, name: item.name, description: item.description, count: i.count }];
 		}),
-		implants: version.implants.flatMap((id) => {
-			const implant = implantById.get(id);
+		implants: version.implants.flatMap((vi) => {
+			const implant = implantById.get(vi.id);
 			if (!implant) return [];
-			return [{ id, name: implant.name, description: implant.description }];
+			return [{ id: vi.id, name: implant.name, description: implant.description, slot: vi.slot }];
 		}),
 		events: version.id != null ? (eventsByVersionId.get(version.id) ?? []) : []
 	};

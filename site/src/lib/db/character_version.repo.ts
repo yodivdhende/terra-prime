@@ -48,7 +48,7 @@ class CharacterVersionRepo {
           implants.status === 'fulfilled'
             ? implants.value
               .filter(({ characterVersionId }) => characterVersionId, characterItem.characterId)
-              .map(({ implantId }) => implantId)
+              .map(({ implantId, slot }) => ({ id: implantId, slot }))
             : []
       });
     }
@@ -135,13 +135,14 @@ class CharacterVersionRepo {
 
   public async getImplantsforCharacterVersions(
     ids: number[]
-  ): Promise<{ characterVersionId: number; implantId: number }[]> {
+  ): Promise<{ characterVersionId: number; implantId: number; slot: number }[]> {
     const connection = mysqlconnFn();
     const [result] = await connection.query(
       `
-      SELECT 
+      SELECT
         cvim.CharacterVersion as characterVersionId,
-        cvim.Implant as implantId
+        cvim.Implant as implantId,
+        cvim.Slot as slot
       FROM Character_Version_Implants cvim
       WHERE cvim.CharacterVersion in (:ids)
       `,
@@ -149,12 +150,13 @@ class CharacterVersionRepo {
     );
     if (Array.isArray(result) === false) return [];
     if (result.length === 0) return [];
-    const implants: { characterVersionId: number; implantId: number }[] = [];
+    const implants: { characterVersionId: number; implantId: number; slot: number }[] = [];
     for (const item of result) {
       if ('characterVersionId' in item === false || typeof item.characterVersionId !== 'number')
         continue;
       if ('implantId' in item === false || typeof item.implantId != 'number') continue;
-      implants.push({ characterVersionId: item.characterVersionId, implantId: item.implantId });
+      if ('slot' in item === false || typeof item.slot != 'number') continue;
+      implants.push({ characterVersionId: item.characterVersionId, implantId: item.implantId, slot: item.slot });
     }
     return implants;
   }
@@ -217,11 +219,11 @@ class CharacterVersionRepo {
     );
   }
 
-  public async saveImplants({ versionId, implants }: { versionId: number; implants: number[] }) {
+  public async saveImplants({ versionId, implants }: { versionId: number; implants: CharacterVersionImplant[] }) {
     const connection = mysqlconnFn();
     await connection.query(
-      `INSERT INTO Character_Version_Implants (CharacterVersion, Implant) VALUES ?`,
-      [implants.map((id) => [versionId, id])]
+      `INSERT INTO Character_Version_Implants (CharacterVersion, Implant, Slot) VALUES ?`,
+      [implants.map((i) => [versionId, i.id, i.slot])]
     );
   }
 
@@ -278,7 +280,7 @@ class CharacterVersionRepo {
         implants:
           valueOrLogOfPromiseSetteld(implants)
             ?.filter(({ characterVersionId }) => characterVersionId === characterItem.id)
-            .map(({ implantId }) => implantId) ?? []
+            .map(({ implantId, slot }) => ({ id: implantId, slot })) ?? []
       });
     }
     return characterVersions;
@@ -339,7 +341,7 @@ class CharacterVersionRepo {
         implants:
           valueOrLogOfPromiseSetteld(implants)
             ?.filter(({ characterVersionId }) => characterVersionId === row.id)
-            .map(({ implantId }) => implantId) ?? []
+            .map(({ implantId, slot }) => ({ id: implantId, slot })) ?? []
       });
     }
     return characterVersions;
@@ -428,7 +430,7 @@ class CharacterVersionRepo {
         implants:
           valueOrLogOfPromiseSetteld(implants)
             ?.filter(({ characterVersionId }) => characterVersionId === row.id)
-            .map(({ implantId }) => implantId) ?? []
+            .map(({ implantId, slot }) => ({ id: implantId, slot })) ?? []
       });
     }
     return characterVersions;
@@ -468,13 +470,29 @@ export function isCharacterVersionItem(item: unknown): item is CharacterVersionI
 
 
 
+export type CharacterVersionImplant = {
+  id: number;
+  slot: number;
+};
+
+export function isCharacterVersionImplant(value: unknown): value is CharacterVersionImplant {
+  return (
+    typeof value === 'object' &&
+    value != null &&
+    'id' in value &&
+    typeof value.id === 'number' &&
+    'slot' in value &&
+    typeof value.slot === 'number'
+  );
+}
+
 export type CharacterVersionBare = {
   id: number | null;
   characterId: number;
   name: string;
   skills: CharacterVerionSkill[];
   items: CharacterVersionItem[];
-  implants: number[];
+  implants: CharacterVersionImplant[];
   company: number;
 };
 
@@ -496,7 +514,7 @@ export function isCharacterVersionBare(value: unknown): value is CharacterVersio
     value.items.every(isCharacterVersionItem) &&
     'implants' in value &&
     Array.isArray(value.implants) &&
-    value.implants.every((implant) => typeof implant === 'number') &&
+    value.implants.every(isCharacterVersionImplant) &&
     'company' in value &&
     typeof value.company === 'number'
   );

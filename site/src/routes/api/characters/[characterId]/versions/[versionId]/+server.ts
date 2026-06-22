@@ -53,10 +53,10 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 				if (!item) return [];
 				return [{ id: i.id, name: item.name, description: item.description, count: i.count }];
 			}),
-			implants: bare.implants.flatMap((id): VersionImplant[] => {
-				const implant = implantById.get(id);
+			implants: bare.implants.flatMap((vi): VersionImplant[] => {
+				const implant = implantById.get(vi.id);
 				if (!implant) return [];
-				return [{ id, name: implant.name, description: implant.description }];
+				return [{ id: vi.id, name: implant.name, description: implant.description, slot: vi.slot }];
 			}),
 			events: []
 		};
@@ -77,7 +77,7 @@ export const POST: RequestHandler = async ({ cookies, params, request }) => {
 			company: body.company.id,
 			skills: body.skills.map((s: VersionSkill) => ({ id: s.id, value: s.value })),
 			items: body.items.map((i: VersionItem) => ({ id: i.id, count: i.count })),
-			implants: body.implants.map((i: VersionImplant) => i.id)
+			implants: body.implants.map((i: VersionImplant) => ({ id: i.id, slot: i.slot }))
 		});
 		return new Response(null, { status: 200 });
 	});

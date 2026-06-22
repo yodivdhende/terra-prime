@@ -31,46 +31,7 @@ export class GoogleSheetService {
     const result = await sheets.spreadsheets.values.get({
       spreadsheetId: '1ZNb4uCkKHMEpzW6w-v_ApPAQZumXS23u5XtUp_8Cfxc',
       range: 'A1:B10',
-    }); window - manager.svelte.ts: 40 Uncaught(in promise) TypeError: Cannot read properties of undefined(reading 'filter')
-
-      in $effect
-      in +page.svelte
-      in +layout.svelte
-      in root.svelte
-      in undefined
-
-    at Object.addWindows(window - manager.svelte.ts: 40: 11)
-    at $effect(+page.svelte: 14: 31)
-    at update_reaction(chunk - OMORP2TP.js ? v = d4aad37b : 4075: 18)
-    at update_effect(chunk - OMORP2TP.js ? v = d4aad37b : 4216: 21)
-    at flush_queued_effects(chunk - OMORP2TP.js ? v = d4aad37b : 3196: 7)
-    at _Batch.process_fn(chunk - OMORP2TP.js ? v = d4aad37b : 2970: 5)
-    at _Batch.flush(chunk - OMORP2TP.js ? v = d4aad37b : 2693: 59)
-    at Array.<anonymous>(chunk - OMORP2TP.js ? v = d4aad37b : 2808: 19)
-    at run_all(chunk - OMORP2TP.js ? v = d4aad37b : 52: 11)
-    at run_micro_tasks(chunk - OMORP2TP.js ? v = d4aad37b : 729: 3)
-addWindows @window-manager.svelte.ts: 40
-      (anonymous) @ +page.svelte: 14
-update_reaction @chunk-OMORP2TP.js ? v = d4aad37b : 4075
-update_effect @chunk-OMORP2TP.js ? v = d4aad37b : 4216
-flush_queued_effects @chunk-OMORP2TP.js ? v = d4aad37b : 3196
-process_fn @chunk-OMORP2TP.js ? v = d4aad37b : 2970
-flush @chunk-OMORP2TP.js ? v = d4aad37b : 2693
-      (anonymous) @chunk-OMORP2TP.js ? v = d4aad37b : 2808
-run_all @chunk-OMORP2TP.js ? v = d4aad37b : 52
-run_micro_tasks @chunk-OMORP2TP.js ? v = d4aad37b : 729
-flush_tasks @chunk-OMORP2TP.js ? v = d4aad37b : 742
-flushSync @chunk-OMORP2TP.js ? v = d4aad37b : 3142
-Svelte4Component @chunk-YJD5BL33.js ? v = d4aad37b : 862
-      (anonymous) @chunk-YJD5BL33.js ? v = d4aad37b : 809
-initialize @client.js?v = d4aad37b: 680
-_hydrate @client.js?v = d4aad37b: 3022
-    await in _hydrate
-start @client.js?v = d4aad37b: 388
-    await in start
-      (anonymous) @codex: 3318
-    Promise.then
-      (anonymous) @codex: 3317
+    });
 
     return result.data.values;
   }

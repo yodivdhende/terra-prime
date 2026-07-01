@@ -38,6 +38,7 @@ export class GoogleDriveService {
       q: `'${folderId}' in parents and trashed = false`,
       fields: 'nextPageToken, files(id, name, mimeType)',
       spaces: 'drive',
+      corpora: 'allDrives',
       supportsAllDrives: true,
       includeItemsFromAllDrives: true,
     });
@@ -55,14 +56,7 @@ export class GoogleDriveService {
   }
 
   public async findBackgroundFolder(): Promise<string | null> {
-    const result = await this.getService().files.list({
-      q: `'1FiG0BRYkVHD_0s6Hu236iNZaYo9lZfEQ' in parents and name = '_Background' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
-      fields: 'files(id)',
-      spaces: 'drive',
-      supportsAllDrives: true,
-      includeItemsFromAllDrives: true,
-    });
-    return result.data.files?.[0]?.id ?? null;
+    return '1IET6eLvhyEwpYiTOaWf7Xq-DvaoTTJCh';
   }
 
   private async getExcludedFolderIds(): Promise<Set<string>> {

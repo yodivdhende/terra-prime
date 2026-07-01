@@ -17,13 +17,32 @@
 	let error = $state<string | null>(null);
 	let success = $state(false);
 
+	type ImplantCatalogEntry = { id: number; name: string; description: string };
+	let implantCatalog = $state<Map<number, ImplantCatalogEntry>>(new Map());
+
+	$effect(() => {
+		fetch('/api/implants')
+			.then((r) => (r.ok ? r.json() : []))
+			.then((implants: ImplantCatalogEntry[]) => {
+				implantCatalog = new Map(implants.map((i) => [i.id, i]));
+			})
+			.catch(() => {});
+	});
+
+	let summaryImplants = $derived(
+		CHARACTER_MANAGER.version.implants.map((vi) => {
+			const entry = implantCatalog.get(vi.id);
+			return { id: vi.id, slot: vi.slot, name: entry?.name ?? '', description: entry?.description };
+		})
+	);
+
 	type CharacterVersionBare = {
 		id: number | null;
 		characterId: number;
 		name: string;
 		skills: { id: number; value: number }[];
 		items: { id: number; count: number }[];
-		implants: number[];
+		implants: { id: number; slot: number }[];
 		company: number | null;
 	};
 
@@ -103,7 +122,7 @@
 					name: version.name,
 					skills: version.skills.map(({ id, value }) => ({ id, value })),
 					items: version.items.map(({ id, count }) => ({ id, count })),
-					implants: version.implants.map(({ id }) => id),
+					implants: version.implants.map(({ id, slot }) => ({ id, slot })),
 					company: version.company?.id ?? null
 				}
 			]
@@ -136,7 +155,7 @@
 				companyName={CHARACTER_MANAGER.version.company?.name ?? null}
 				skills={CHARACTER_MANAGER.version.skills}
 				items={CHARACTER_MANAGER.version.items}
-				implants={CHARACTER_MANAGER.version.implants}
+				implants={summaryImplants}
 			/>
 		{/if}
 

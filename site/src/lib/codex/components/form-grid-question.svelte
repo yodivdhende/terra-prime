@@ -18,9 +18,6 @@
 	const columns = $derived(group.grid?.columns?.options ?? []);
 	const isCheckbox = $derived(group.grid?.columns?.type === 'CHECKBOX');
 	const rows = $derived(group.questions ?? []);
-
-	$inspect(group);
-	$inspect(isCheckbox);
 </script>
 
 <div class="grid-question">

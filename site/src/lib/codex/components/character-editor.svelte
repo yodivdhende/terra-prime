@@ -12,9 +12,6 @@
 		version: CharacterVersionFull;
 	} = $props();
 
-	$inspect(character);
-	$inspect(version);
-
 	onMount(() => {
 		if (version.name == false) version.name = 'Version 1';
 	});

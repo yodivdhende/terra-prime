@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ExternalLink } from '@lucide/svelte';
 	import { type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
 	import WindowContent from '$lib/codex/components/window-content.svelte';
 
@@ -29,6 +30,18 @@
 				selected.mimeType.includes('pdf') ||
 				selected.mimeType.includes('document'))
 	);
+
+	function googleUrl(entry: DirEntry): string {
+		const { id, mimeType } = entry;
+		if (mimeType.includes('spreadsheet'))
+			return `https://docs.google.com/spreadsheets/d/${id}/edit`;
+		if (mimeType.includes('presentation'))
+			return `https://docs.google.com/presentation/d/${id}/edit`;
+		if (mimeType.includes('document')) return `https://docs.google.com/document/d/${id}/edit`;
+		return `https://drive.google.com/file/d/${id}/view`;
+	}
+
+	let driveUrl = $derived(selected != null ? googleUrl(selected) : null);
 
 	$effect(() => {
 		loading = true;
@@ -96,13 +109,29 @@
 	</div>
 
 	<div class="preview">
-		{#if selected == null}
-			<span class="status">select a file to preview</span>
-		{:else if !previewable}
-			<span class="status">no preview available</span>
-		{:else if previewWindow}
-			<WindowContent window={previewWindow} />
+		{#if selected != null}
+			<div class="preview-header">
+				<span class="preview-name">{selected.name}</span>
+				<a
+					href={driveUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="open-link"
+					title="Open in Google Drive"
+				>
+					<ExternalLink size={24} />
+				</a>
+			</div>
 		{/if}
+		<div class="preview-content">
+			{#if selected == null}
+				<span class="status">select a file to preview</span>
+			{:else if !previewable}
+				<span class="status">no preview available</span>
+			{:else if previewWindow}
+				<WindowContent window={previewWindow} />
+			{/if}
+		</div>
 	</div>
 </div>
 
@@ -147,6 +176,7 @@
 		grid-template-columns: 1fr 2fr;
 		height: 100%;
 		overflow: hidden;
+		font-size: 1rem;
 	}
 
 	.tree {
@@ -161,8 +191,42 @@
 		overflow: hidden;
 		position: relative;
 		display: flex;
-		align-items: flex-start;
-		justify-content: flex-start;
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.preview-header {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.35rem 0.75rem;
+		border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
+		flex-shrink: 0;
+		font-size: 1.2em;
+	}
+
+	.preview-name {
+		flex: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: 0.7em;
+		opacity: 0.6;
+		letter-spacing: 0.05em;
+	}
+
+	.open-link {
+		color: var(--color-main);
+		opacity: 0.45;
+		display: flex;
+		align-items: center;
+		flex-shrink: 0;
+		transition: opacity 0.1s;
+	}
+
+	.open-link:hover {
+		opacity: 1;
+		color: var(--color-accent);
 	}
 
 	.entry {
@@ -220,18 +284,25 @@
 		opacity: 1;
 	}
 
-	.preview .status {
+	.preview-content .status {
 		padding: 0.75rem;
 		align-self: flex-start;
 	}
 
-	.preview :global(img),
-	.preview :global(embed) {
+	.preview-content :global(img),
+	.preview-content :global(embed) {
 		width: 100%;
 		height: 100%;
 	}
 
-	.preview :global(.doc-content) {
+	.preview-content :global(.doc-content) {
 		height: 100%;
+	}
+
+	.preview-content {
+		flex: 1;
+		min-height: 0;
+		overflow: hidden;
+		position: relative;
 	}
 </style>

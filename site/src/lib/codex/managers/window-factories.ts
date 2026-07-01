@@ -107,7 +107,7 @@ export function createLoginWindow({ shouldCreate }: { shouldCreate: boolean }): 
 }
 
 export function createLogoutWindow({ shouldCreate }: { shouldCreate: boolean }): CodexWindow | null {
-  if (!shouldCreate) return null;
+  if (shouldCreate === false) return null;
   return {
     id: 'logout',
     type: 'logout',
@@ -116,6 +116,7 @@ export function createLogoutWindow({ shouldCreate }: { shouldCreate: boolean }):
     position: { x: 300, y: 100, z: 0 },
     contentData: 'logout',
     title: 'account',
+    icon: { type: 'login', side: 'left' },
   };
 }
 

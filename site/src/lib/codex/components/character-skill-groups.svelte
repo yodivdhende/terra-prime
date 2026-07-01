@@ -7,8 +7,6 @@
 
 	let { skills, size = '1em' }: { skills: CharacterVerionSkill[]; size?: string } = $props();
 
-	$effect(() => console.log('size', size));
-
 	const GROUP_ICON: Record<number, string> = {
 		1: EngineeringIcon,
 		2: LifeSciencesIcon,

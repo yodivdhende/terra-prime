@@ -17,6 +17,7 @@
 		id: number;
 		name: string;
 		description?: string;
+		slot?: number;
 	};
 </script>
 
@@ -160,7 +161,7 @@
 		<section class="section">
 			<h4 class="section-label">implants</h4>
 			<ul class="entry-list">
-				{#each implants as implant (implant.id)}
+				{#each implants as implant (implant.slot ?? implant.id)}
 					<li class="entry">
 						<span class="entry-name">{implant.name}</span>
 						{#if implant.description}

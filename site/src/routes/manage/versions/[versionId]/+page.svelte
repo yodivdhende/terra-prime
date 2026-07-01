@@ -10,8 +10,6 @@
 	let character = $state<Character | null>(null);
 	let version = $state<CharacterVersionFull | null>(null);
 
-	$inspect(data);
-
 	$effect(() => {
 		character = data.character ?? null;
 		version = data.version ?? null;

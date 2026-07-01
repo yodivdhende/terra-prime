@@ -77,7 +77,7 @@ export const POST: RequestHandler = async ({ cookies, params, request }) => {
 			company: body.company.id,
 			skills: body.skills.map((s: VersionSkill) => ({ id: s.id, value: s.value })),
 			items: body.items.map((i: VersionItem) => ({ id: i.id, count: i.count })),
-			implants: body.implants.map((i: VersionImplant) => ({ id: i.id, slot: i.slot }))
+			implants: body.implants.map((i) => ({ id: i.id, slot: i.slot }))
 		});
 		return new Response(null, { status: 200 });
 	});

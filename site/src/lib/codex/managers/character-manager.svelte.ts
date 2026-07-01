@@ -36,10 +36,6 @@ export function createCharacterManager() {
   let character = $state<Character>(emptyCharacter());
   let version = $state<CharacterVersionFull>(emptyCharacterVersion());
 
-  $effect(() => {
-    console.log('version', version)
-  })
-
   const ready = $derived.by(() => {
     if (character.name.trim().length <= 0) return false;
     if (version.name.trim().length <= 0) return false;

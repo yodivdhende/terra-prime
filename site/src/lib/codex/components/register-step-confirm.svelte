@@ -51,7 +51,7 @@
 		name: string;
 		ownerId: number;
 		ownerName: string;
-		backstoryUrl?: string | null;
+		backstoryId?: string | null;
 		versions: CharacterVersionBare[];
 	};
 
@@ -114,7 +114,7 @@
 			name: character.name,
 			ownerId: character.ownerId,
 			ownerName: character.ownerName,
-			backstoryUrl: character.backstoryUrl ?? null,
+			backstoryId: character.backstoryId ?? null,
 			versions: [
 				{
 					id: version.id,

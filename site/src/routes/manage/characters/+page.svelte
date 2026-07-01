@@ -9,7 +9,7 @@
 		{ label: 'Id', key: 'id' },
 		{ label: 'Name', key: 'name' },
 		{ label: 'Player', key: 'ownerName' },
-		{ label: 'Backstory', key: 'backstoryUrl' }
+		{ label: 'Backstory', key: 'backstoryId' }
 	];
 </script>
 
@@ -23,8 +23,8 @@
 				<td>{character.name}</td>
 				<td>{character.ownerName}</td>
 				<td>
-					{#if character.backstoryUrl}
-						<a href={character.backstoryUrl} target="_blank" rel="noopener noreferrer">Open</a>
+					{#if character.backstoryId}
+						<a href={`https://docs.google.com/document/d/${character.backstoryId}/edit`} target="_blank" rel="noopener noreferrer">Open</a>
 					{/if}
 				</td>
 			</tr>

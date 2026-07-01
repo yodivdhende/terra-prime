@@ -18,7 +18,7 @@ type CharacterWithVersions = {
   name: string;
   ownerId: number;
   ownerName: string;
-  backstoryUrl?: string | null;
+  backstoryId?: string | null;
   versions: CharacterVersionBare[];
 };
 
@@ -42,13 +42,13 @@ export const PUT: RequestHandler = async ({ cookies, params, request }) => {
     const [characterId, existingParticipation] = await Promise.all([
       characterRepo.save(
         body.id == null
-          ? { name: body.name, ownerId: body.ownerId, backstoryUrl: body.backstoryUrl ?? null }
+          ? { name: body.name, ownerId: body.ownerId, backstoryId: body.backstoryId ?? null }
           : {
             id: body.id,
             name: body.name,
             ownerId: body.ownerId,
             ownerName: body.ownerName,
-            backstoryUrl: body.backstoryUrl ?? null,
+            backstoryId: body.backstoryId ?? null,
           }
       ),
       eventParticipantsRepo.getUserParticipation({ eventId, userId }),

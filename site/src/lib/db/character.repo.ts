@@ -7,7 +7,7 @@ class CharacterRepo {
 		c.Name as name,
 		c.Owner as ownerId,
 		u.Name as ownerName,
-		c.BackstoryUrl as backstoryUrl,
+		c.BackstoryId as backstoryId,
 		c.ImplantLimit as implantLimit
 	FROM Characters c
 	JOIN Users u
@@ -25,7 +25,7 @@ class CharacterRepo {
         name: firstCharacter.name,
         ownerId: firstCharacter.ownerId,
         ownerName: firstCharacter.ownerName,
-        backstoryUrl: firstCharacter.backstoryUrl ?? null,
+        backstoryId: firstCharacter.backstoryId ?? null,
         implantLimit: firstCharacter.implantLimit ?? 2,
       };
     } else {
@@ -67,7 +67,7 @@ class CharacterRepo {
             name: character.name,
             ownerId: character.ownerId,
             ownerName: character.ownerName,
-            backstoryUrl: character.backstoryUrl ?? null,
+            backstoryId: character.backstoryId ?? null,
             implantLimit: character.implantLimit ?? 2,
           };
         } else {
@@ -86,8 +86,8 @@ class CharacterRepo {
   private async create(character: NewCharacter): Promise<number> {
     const connection = mysqlconnFn();
     const [result] = await connection.execute(
-      `INSERT INTO Characters (Name, Owner, BackstoryUrl, ImplantLimit) VALUES (?, ?, ?, ?)`,
-      [character.name, character.ownerId, character.backstoryUrl ?? null, character.implantLimit ?? 2]
+      `INSERT INTO Characters (Name, Owner, BackstoryId, ImplantLimit) VALUES (?, ?, ?, ?)`,
+      [character.name, character.ownerId, character.backstoryId ?? null, character.implantLimit ?? 2]
     );
     return (result as any).insertId as number;
   }
@@ -99,21 +99,21 @@ class CharacterRepo {
 				UPDATE Characters
 				SET Name = ?,
 					Owner = ?,
-					BackstoryUrl = COALESCE(?, BackstoryUrl),
+					BackstoryId = COALESCE(?, BackstoryId),
 					ImplantLimit = ?
 				WHERE id = ?
 			`,
-        [character.name, character.ownerId, character.backstoryUrl ?? null, character.implantLimit ?? 2, character.id]
+        [character.name, character.ownerId, character.backstoryId ?? null, character.implantLimit ?? 2, character.id]
       );
     } catch (error) {
       throw error;
     }
   }
 
-  public async saveBackstoryUrl(id: number, url: string) {
+  public async saveBackstoryId(id: number, backstoryId: string) {
     (await mysqlconnFn()).execute(
-      'UPDATE Characters SET BackstoryUrl = ? WHERE Id = ?',
-      [url, id]
+      'UPDATE Characters SET BackstoryId = ? WHERE Id = ?',
+      [backstoryId, id]
     );
   }
 
@@ -145,7 +145,7 @@ export const characterRepo = new CharacterRepo();
 export type Character = NewCharacter & {
   id: number;
   ownerName: string;
-  backstoryUrl?: string | null;
+  backstoryId?: string | null;
   implantLimit?: number;
 };
 
@@ -160,7 +160,7 @@ export function isCharacter(character: any): character is Character {
 export type NewCharacter = {
   name: string;
   ownerId: number;
-  backstoryUrl?: string | null;
+  backstoryId?: string | null;
   implantLimit?: number;
 };
 

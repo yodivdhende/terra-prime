@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ICON_MANAGER, type Icon } from '$lib/codex/managers/icon-manager.svelte';
 	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
-	import { File, Folder, Image, FileHeadphone, Settings, ClipboardPen, UserRound, ClipboardPenLine } from '@lucide/svelte';
+	import { File, Folder, Image, FileHeadphone, Settings, ClipboardPen, UserRound, ClipboardPenLine, BookOpen } from '@lucide/svelte';
 
 	let icons = $derived(ICON_MANAGER.icons);
 	let localIcons = $derived(icons.filter(i => i.side === 'left'));
@@ -59,6 +59,12 @@
 	{#if icon.type === 'register'}
 		<button onclick={() => openWindow(icon)}>
 			<div class="icon"><ClipboardPenLine size={64} strokeWidth={1} /></div>
+			{icon.title}
+		</button>
+	{/if}
+	{#if icon.type === 'background'}
+		<button onclick={() => openWindow(icon)}>
+			<div class="icon"><BookOpen size={64} strokeWidth={1} /></div>
 			{icon.title}
 		</button>
 	{/if}

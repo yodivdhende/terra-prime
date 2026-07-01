@@ -36,7 +36,7 @@
 	<a href=".">back</a>
 	{#if character != null}
 		<CharacterForm bind:character={character} {users} />
-		<BackstoryLink characterId={character.id} backstoryUrl={character.backstoryUrl} />
+		<BackstoryLink characterId={character.id} backstoryId={character.backstoryId} />
 	{/if}
 	<div>
 		<button class="btn" onclick={save}>save</button>

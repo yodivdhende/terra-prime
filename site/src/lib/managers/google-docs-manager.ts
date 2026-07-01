@@ -44,7 +44,7 @@ export class GoogleDocsManager {
 			console.warn('could not set anyone-with-link permission on backstory doc', err);
 		}
 
-		return `https://docs.google.com/document/d/${docId}/edit`;
+		return docId;
 	}
 }
 

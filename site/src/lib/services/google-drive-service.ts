@@ -38,6 +38,7 @@ export class GoogleDriveService {
       q: `'${folderId}' in parents and trashed = false`,
       fields: 'nextPageToken, files(id, name, mimeType)',
       spaces: 'drive',
+      corpora: 'allDrives',
       supportsAllDrives: true,
       includeItemsFromAllDrives: true,
     });
@@ -52,6 +53,10 @@ export class GoogleDriveService {
     const buffer = response.data as ArrayBuffer;
     const html = Buffer.from(buffer).toString('utf-8');
     return html.replace(/_[^_]*_/g, '');
+  }
+
+  public async findBackgroundFolder(): Promise<string | null> {
+    return '1IET6eLvhyEwpYiTOaWf7Xq-DvaoTTJCh';
   }
 
   private async getExcludedFolderIds(): Promise<Set<string>> {

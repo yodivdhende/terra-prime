@@ -2,11 +2,11 @@
 	let {
 		characterId,
 		characterName,
-		backstoryUrl = $bindable()
+		backstoryId = $bindable()
 	}: {
 		characterId: number | null;
 		characterName?: string;
-		backstoryUrl?: string | null;
+		backstoryId?: string | null;
 	} = $props();
 
 	let loading = $state(false);
@@ -14,6 +14,10 @@
 
 	const canCreate = $derived(
 		characterId != null || (characterName != null && characterName.trim().length > 0)
+	);
+
+	const docUrl = $derived(
+		backstoryId ? `https://docs.google.com/document/d/${backstoryId}/edit` : null
 	);
 
 	async function createDoc() {
@@ -33,7 +37,7 @@
 				return;
 			}
 			const data = await res.json();
-			backstoryUrl = data.url;
+			backstoryId = data.id;
 		} catch {
 			error = 'Failed to create backstory document';
 		} finally {
@@ -43,8 +47,8 @@
 </script>
 
 <div class="backstory">
-	{#if backstoryUrl}
-		<a href={backstoryUrl} target="_blank" rel="noopener noreferrer">Open Backstory</a>
+	{#if docUrl}
+		<a href={docUrl} target="_blank" rel="noopener noreferrer">Open Backstory</a>
 	{:else}
 		<button onclick={createDoc} disabled={loading || !canCreate}>
 			{loading ? 'Creating...' : 'Create Backstory Document'}

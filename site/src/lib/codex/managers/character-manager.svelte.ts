@@ -13,7 +13,7 @@ export type Character = {
   name: string;
   ownerName: string;
   ownerId: number;
-  backstoryUrl?: string | null;
+  backstoryId?: string | null;
   implantLimit?: number;
 };
 

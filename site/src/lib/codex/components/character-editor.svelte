@@ -46,7 +46,7 @@
 	<BackstoryLink
 		characterId={character.id}
 		characterName={character.name}
-		bind:backstoryUrl={character.backstoryUrl}
+		bind:backstoryId={character.backstoryId}
 	/>
 </div>
 

@@ -22,6 +22,7 @@
 		{:else}
 			<a class="entry" href="/manage/users">Users</a>
 			<a class="entry" href="/manage/events">Events</a>
+			<a class="entry" href="/manage/docs">API Docs</a>
 			<button class="entry folder" onclick={() => (manageOpen = !manageOpen)}>
 				<span class="arrow">{manageOpen ? 'v' : '>'}</span>
 				<span class="name">Manage</span>

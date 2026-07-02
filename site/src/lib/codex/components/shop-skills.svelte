@@ -24,7 +24,7 @@
 	import SocialogyAndDiplomacyIcon from '$lib/assets/images/SkillLogo-SocialogyAndDiplomacy.svg?raw';
 	import SoftwareAndHakcingIcon from '$lib/assets/images/SkillLogo-SoftwareAndHakcing.svg?raw';
 	import Icon from './icon.svelte';
-	import SegmentBar from './segment-bar.svelte';
+	import SkillSlider from './skill-slider.svelte';
 	import type { VersionSkill } from '$lib/codex/managers/character-manager.svelte';
 
 	const GROUP_COLOR: Record<number, string> = {
@@ -184,7 +184,7 @@
 								</span>
 							{/if}
 						</div>
-						<SegmentBar
+						<SkillSlider
 							value={currentValue}
 							color={group.color}
 							{remaining}

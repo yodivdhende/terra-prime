@@ -36,7 +36,7 @@
 	import SocialogyAndDiplomacyIcon from '$lib/assets/images/SkillLogo-SocialogyAndDiplomacy.svg?raw';
 	import SoftwareAndHackingIcon from '$lib/assets/images/SkillLogo-SoftwareAndHakcing.svg?raw';
 	import Icon from './icon.svelte';
-	import SegmentBar from './segment-bar.svelte';
+	import ProgressBar from './progress-bar.svelte';
 
 	const GROUP_COLOR: Record<number, string> = {
 		1: '#f0c040',
@@ -130,7 +130,7 @@
 									{/if}
 									<span class="skill-name">{skill.name}</span>
 									<div class="skill-bar">
-										<SegmentBar value={skill.value} color={group.color} />
+										<ProgressBar value={skill.value} color={group.color} name={skill.name} />
 									</div>
 								</li>
 							{/each}
@@ -270,7 +270,6 @@
 	.skill-bar {
 		flex-shrink: 0;
 		width: 7rem;
-		pointer-events: none;
 	}
 
 	.entry-list {

@@ -4,6 +4,7 @@
 	import InformationTechnologyIcon from '$lib/assets/images/SkillLogo-InformationTechnology.svg?raw';
 	import SocialeWetenschapIcon from '$lib/assets/images/SkillLogo-SocialeWetenschap.svg?raw';
 	import Icon from '$lib/codex/components/icon.svelte';
+	import ProgressBar from '$lib/codex/components/progress-bar.svelte';
 
 	let { skills, size = '1em' }: { skills: CharacterVerionSkill[]; size?: string } = $props();
 
@@ -22,19 +23,28 @@
 	};
 
 	const groups = $derived.by(() => {
-		const map = new Map<number, { id: number; name: string; color: string; total: number }>();
+		const map = new Map<
+			number,
+			{ id: number; name: string; color: string; total: number; count: number }
+		>();
 		for (const skill of skills) {
 			if (!map.has(skill.group)) {
 				map.set(skill.group, {
 					id: skill.group,
 					name: skill.groupName,
 					color: GROUP_COLOR[skill.group] ?? 'var(--color-accent)',
-					total: 0
+					total: 0,
+					count: 0
 				});
 			}
-			map.get(skill.group)!.total += skill.value;
+			const group = map.get(skill.group)!;
+			group.total += skill.value;
+			group.count += 1;
 		}
-		return Array.from(map.values());
+		return Array.from(map.values()).map((group) => ({
+			...group,
+			average: group.count > 0 ? group.total / group.count : 0
+		}));
 	});
 </script>
 
@@ -45,7 +55,9 @@
 			{#if icon}
 				<Icon src={icon} color={group.color} tooltip={group.name} {size} />
 			{/if}
-			<span class="total" style="color: {group.color}">{group.total}</span>
+			<div class="bar">
+				<ProgressBar value={group.average} color={group.color} name={group.name} />
+			</div>
 		</div>
 	{/each}
 </div>
@@ -63,7 +75,7 @@
 		gap: 0.25rem;
 	}
 
-	.total {
-		opacity: 0.85;
+	.bar {
+		width: 4rem;
 	}
 </style>

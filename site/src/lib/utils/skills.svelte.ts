@@ -1,4 +1,4 @@
-import type { Skill } from "$lib/db/skills.repo";
+import type { Skill } from '$lib/db/skills.repo';
 
 export function groupSkills(skills: Skill[] | null) {
 	if (skills == null) return [];
@@ -29,20 +29,23 @@ class SkillGroupWithValue {
 		this._skills = skills;
 	}
 
-	private _total: number = $derived.by(() => this._skills.reduce((total, skill) => total + skill.value, 0));
-	public get total() {
-		return this._total;
+	private _average: number = $derived.by(() => {
+		if (this._skills.length === 0) return 0;
+		const sum = this._skills.reduce((total, skill) => total + skill.value, 0);
+		return sum / this._skills.length;
+	});
+	public get average() {
+		return this._average;
 	}
 
-	constructor({ id, name }: { id: number, name: string }) {
+	constructor({ id, name }: { id: number; name: string }) {
 		this.id = id;
 		this.name = name;
 	}
 
-	public setValueOfSkill({ id: skillId, value }: { id: number, value: number }) {
+	public setValueOfSkill({ id: skillId, value }: { id: number; value: number }) {
 		const skillIndex = this._skills.findIndex(({ id }) => id === skillId);
 		if (skillIndex < 0) return;
 		this._skills[skillIndex].value = value;
 	}
-
 }

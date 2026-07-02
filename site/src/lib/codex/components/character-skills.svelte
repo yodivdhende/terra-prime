@@ -9,6 +9,7 @@
 	import HistoricalAnalysis from '$lib/assets/images/SkillLogo-HistoryicalAnalysis.svg?raw';
 	import SociologyAndDiplomacy from '$lib/assets/images/SkillLogo-SocialogyAndDiplomacy.svg?raw';
 	import Icon from '$lib/codex/components/icon.svelte';
+	import ProgressBar from '$lib/codex/components/progress-bar.svelte';
 
 	type Skill = {
 		id: number;
@@ -17,7 +18,7 @@
 		value: number;
 	};
 
-	let { skills, maxValue = 5 }: { skills: Skill[]; maxValue?: number } = $props();
+	let { skills }: { skills: Skill[] } = $props();
 
 	const SKILL_INFO: Record<number, { name: string; icon: string }> = {
 		1: { name: 'Mechanical Engineering', icon: MechanicalEngineering },
@@ -53,10 +54,6 @@
 		}
 		return Array.from(map.values());
 	});
-
-	function dots(value: number, max: number): boolean[] {
-		return Array.from({ length: max }, (_, i) => i < value);
-	}
 </script>
 
 <div class="character-skills">
@@ -76,12 +73,11 @@
 							<span class="skill-name skill-name--unknown">skill #{skill.id}</span>
 						{/if}
 						<div class="skill-value">
-							<span class="value-number">{skill.value}</span>
-							<span class="dots" aria-hidden="true">
-								{#each dots(skill.value, maxValue) as filled}
-									<span class="dot" class:filled></span>
-								{/each}
-							</span>
+							<ProgressBar
+								value={skill.value}
+								color={group.color}
+								name={info?.name ?? `skill #${skill.id}`}
+							/>
 						</div>
 					</li>
 				{/each}
@@ -149,30 +145,6 @@
 		align-items: center;
 		gap: 0.3rem;
 		flex-shrink: 0;
-	}
-
-	.value-number {
-		font-size: 0.65em;
-		min-width: 1ch;
-		text-align: right;
-		opacity: 0.6;
-		color: var(--group-color);
-	}
-
-	.dots {
-		display: flex;
-		gap: 2px;
-	}
-
-	.dot {
-		width: 5px;
-		height: 5px;
-		border: 1px solid var(--group-color);
-		opacity: 0.4;
-	}
-
-	.dot.filled {
-		background-color: var(--group-color);
-		opacity: 0.9;
+		width: 5rem;
 	}
 </style>

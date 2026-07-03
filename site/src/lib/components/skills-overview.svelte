@@ -4,7 +4,7 @@
 
 	let { skills, values }: { skills: Skill[]; values: { id: number; value: number }[] } = $props();
 
-	let groupedSkills = groupSkills(skills);
+	let groupedSkills = $derived(groupSkills(skills));
 	$effect(() => fillSkills(groupedSkills, values));
 
 	function fillSkills(groups: typeof groupedSkills, values: { id: number; value: number }[]) {

@@ -3,12 +3,14 @@ import { mysqlconnFn } from './mysql';
 class ItemRepo {
 	public async getAll(): Promise<Item[]> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(`
         SELECT
           i.Id as id,
           i.Name as name,
-          i.Description as description
+          i.Description as description,
+          i.Cost as cost,
+          i.MaxPerCharacter as maxPerCharacter
         FROM Items i
         `);
 			if (Array.isArray(result) === false) return [];
@@ -29,13 +31,15 @@ class ItemRepo {
 
 	public async getWithId(id: number) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
         SELECT
           i.Id as id,
           i.Name as name,
-          i.Description as description
+          i.Description as description,
+          i.Cost as cost,
+          i.MaxPerCharacter as maxPerCharacter
         FROM Items i
 		WHERE i.Id = ?
         `,
@@ -53,13 +57,15 @@ class ItemRepo {
 
 	public async getWithIds(ids: number[]): Promise<Item[]> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
         SELECT
           i.Id as id,
           i.Name as name,
-          i.Description as description
+          i.Description as description,
+          i.Cost as cost,
+          i.MaxPerCharacter as maxPerCharacter
         FROM Items i
         WHERE I.id in (:ids)
         `,
@@ -86,15 +92,15 @@ class ItemRepo {
 		return this.edit(item);
 	}
 
-	public async create({ name, description }: Omit<Item, 'id'>) {
+	public async create({ name, description, cost, maxPerCharacter }: Omit<Item, 'id'>) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
-				INSERT INTO Items (Name, Description)
-				Values (?,?)
+				INSERT INTO Items (Name, Description, Cost, MaxPerCharacter)
+				Values (?,?,?,?)
         `,
-				[name, description]
+				[name, description, cost ?? 0, maxPerCharacter ?? null]
 			);
 			if ('serverStatus' in result && result.serverStatus !== 2) return null;
 			if ('insertId' in result === false || result.insertId == null) return null;
@@ -104,17 +110,19 @@ class ItemRepo {
 		}
 	}
 
-	public async edit({ id, name, description }: Item) {
+	public async edit({ id, name, description, cost, maxPerCharacter }: Item) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				UPDATE Items
 				SET Name = ?,
-				Description = ?
+				Description = ?,
+				Cost = ?,
+				MaxPerCharacter = ?
 				WHERE Id = ?
         `,
-				[name, description, id]
+				[name, description, cost ?? 0, maxPerCharacter ?? null, id]
 			);
 			if ('serverStatus' in result && result.serverStatus !== 2) return null;
 			return id;
@@ -125,7 +133,7 @@ class ItemRepo {
 
 	public async delete({ id }: { id: number }) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			await connection.execute(
 				`
                 DELETE 
@@ -146,6 +154,8 @@ export type Item = {
 	id: number | null;
 	name: string;
 	description: string;
+	cost?: number;
+	maxPerCharacter?: number | null;
 };
 
 export function isItem(item: unknown): item is Item {

@@ -3,12 +3,13 @@ import { mysqlconnFn } from './mysql';
 class ImplantRepo {
 	public async getAll(): Promise<Implant[]> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(`
         SELECT
           i.Id as id,
           i.Name as name,
-          i.Description as description
+          i.Description as description,
+          i.Cost as cost
         FROM Implants i
         `);
 			if (Array.isArray(result) === false) return [];
@@ -29,13 +30,14 @@ class ImplantRepo {
 
 	public async getWithId(id: number) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
         SELECT
           i.Id as id,
           i.Name as name,
-          i.Description as description
+          i.Description as description,
+          i.Cost as cost
         FROM Implants i
 		WHERE i.Id = ?
         `,
@@ -53,13 +55,14 @@ class ImplantRepo {
 
 	public async getWithIds(ids: number) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
         SELECT
           i.Id as id,
           i.Name as name,
-          i.Description as description
+          i.Description as description,
+          i.Cost as cost
         FROM Implants i
 				WHERE i.Id in (:ids)
         `,
@@ -80,15 +83,15 @@ class ImplantRepo {
 		return this.edit(implant);
 	}
 
-	public async create({ name, description }: Omit<Implant, 'id'>) {
+	public async create({ name, description, cost }: Omit<Implant, 'id'>) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
-				INSERT INTO Implants (Name, Description)
-				Values (?,?)
+				INSERT INTO Implants (Name, Description, Cost)
+				Values (?,?,?)
         `,
-				[name, description]
+				[name, description, cost ?? 0]
 			);
 			if ('serverStatus' in result && result.serverStatus !== 2) return null;
 			if ('insertId' in result === false || result.insertId == null) return null;
@@ -98,17 +101,18 @@ class ImplantRepo {
 		}
 	}
 
-	public async edit({ id, name, description }: Implant) {
+	public async edit({ id, name, description, cost }: Implant) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
-				UPDATE Implants 
+				UPDATE Implants
 				SET Name = ?,
-				Description = ?
+				Description = ?,
+				Cost = ?
 				WHERE Id = ?
         `,
-				[name, description, id]
+				[name, description, cost ?? 0, id]
 			);
 			if ('serverStatus' in result && result.serverStatus !== 2) return null;
 			return id;
@@ -119,11 +123,11 @@ class ImplantRepo {
 
 	public async delete({ id }: { id: number }) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			await connection.execute(
 				`
-                DELETE 
-                FROM Implants 
+                DELETE
+                FROM Implants
                 WHERE Id = ?
             `,
 				[id]
@@ -139,6 +143,7 @@ export type Implant = {
 	id: number | null;
 	name: string;
 	description: string;
+	cost?: number;
 };
 
 export function isImplants(implant: unknown): implant is Implant {

@@ -89,8 +89,8 @@
 			'. 	title				.'
 			'. 	input				.'
 			'.  count-down 	.';
-		color: #00ff00;
-		font-family: 'Courier New', Courier, monospace;
+		color: var(--color-accent);
+		font-family: var(--font-mono);
 		z-index: 1;
 	}
 
@@ -129,9 +129,9 @@
 		border: none;
 		outline: none;
 		text-align: center;
-		color: green;
+		color: var(--color-accent);
 		font-size: 2rem;
-		background-color: black;
+		background-color: var(--color-bg);
 	}
 
 	.count-down {
@@ -149,11 +149,11 @@
 		right: 0;
 		width: min(500px, calc(100vw - 2rem - 4px));
 		height: calc(100vh - 2rem - 2px);
-		color: #00ff00;
-		font-family: 'Courier New', Courier, monospace;
+		color: var(--color-accent);
+		font-family: var(--font-mono);
 		padding: 1rem;
-		border: 1px solid #00ff00;
-		background-color: rgba(0, 0, 0, 0.95);
+		border: 1px solid var(--color-accent);
+		background-color: var(--color-bg-panel);
 		z-index: 2;
 	}
 

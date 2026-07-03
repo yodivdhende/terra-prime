@@ -1,0 +1,10 @@
+INSERT INTO `Skills` (`Id`, `Group`, `Name`, `Description`, `Cost`) VALUES
+(1, 1, 'Mechanical Engineering', 'Expertise in het bouwen, repareren en onderhouden van mechanische constructies zoals motoren, wapens, machines en structuren.', 10),
+(2, 1, 'Electrical Engineering', 'Expertise in het installeren, repareren en manipuleren van elektrische systemen zoals stroomnetten, generators en elektronische toestellen.', 10),
+(3, 2, 'Medical and Trauma Care', 'Expertise in het behandelen van verwondingen en ziektes, van eerste hulp tot chirurgische ingrepen. Hiermee kan je diagnoses stellen, patiënten stabiliseren en medische (mentale en fysieke) behandelingen uitvoeren.', 10),
+(4, 2, 'Chemistry', 'Expertise in het analyseren en manipuleren van chemische stoffen. Hiermee kan je medicatie ontwikkelen, onbekende substanties onderzoeken en toxines of chemische reacties identificeren.', 10),
+(5, 2, 'Ecologie', 'Kennis van flora, fauna en ecosystemen in natuurlijke omgevingen. Hiermee kan je dieren volgen, voedselbronnen herkennen en de natuur gebruiken om te overleven of informatie te verzamelen.', 10),
+(6, 3, 'Software & Hacking', 'Expertise in het analyseren, programmeren en manipuleren van computersystemen. Hiermee kan je software ontwikkelen, beveiligingen doorbreken en digitale systemen aanpassen of herstellen.', 10),
+(7, 3, 'Communication Systems', 'Expertise in elektronische communicatie en netwerktechnologie. Hiermee kan je radiosignalen, communicatienetwerken en dataverbindingen installeren, analyseren en gebruiken.', 10),
+(8, 4, 'Historical Analysis', 'Expertise in geschiedenis en geografische context van werelden en beschavingen. Hiermee kan je gebeurtenissen uit het verleden analyseren en verbanden leggen die helpen om de huidige situatie te begrijpen.', 10),
+(9, 4, 'Sociology & Diplomacy', 'Expertise in samenlevingen, culturen en politieke structuren. Hiermee kan je facties, volkeren en machtsverhoudingen beter begrijpen en diplomatieke situaties analyseren.', 10);

@@ -8,19 +8,23 @@
 	let implantItems: (Implant & { selected: boolean })[] = $derived.by(() =>
 		implants.map((implant) => ({
 			...implant,
-			selected: characterManager.implants.includes(implant.id ?? -1)
+			selected: characterManager.implants.some((i) => i.id === (implant.id ?? -1))
 		}))
+	);
+
+	let nextSlot = $derived(
+		characterManager.implants.length > 0
+			? Math.max(...characterManager.implants.map((i) => i.slot)) + 1
+			: 1
 	);
 
 	function addImplant(id: number | null) {
 		if (id == null) return;
-		if (characterManager.implants.includes(id)) return;
-		characterManager.implants = [...characterManager.implants, id];
+		characterManager.implants = [...characterManager.implants, { id, slot: nextSlot }];
 	}
 	function removeImplant(id: number | null) {
 		if (id == null) return;
-		if (!characterManager.implants.includes(id)) return;
-		characterManager.implants = characterManager.implants.filter((implantId) => implantId !== id);
+		characterManager.implants = characterManager.implants.filter((i) => i.id !== id);
 	}
 </script>
 
@@ -41,7 +45,7 @@
 
 <style>
 	h1 {
-		font-size: 1.5rem;
+		font-size: 1.5em;
 	}
 
 	.grid {

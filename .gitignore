@@ -1,6 +1,7 @@
-site/node_modules
+**/node_modules
 
 # Output
+stemtest/dist
 site/.output
 site/.vercel
 site/.netlify
@@ -9,14 +10,14 @@ site/.svelte-kit
 site/build
 
 # OS
-site/.DS_Store
+*.DS_Store
 site/Thumbs.db
 
 # Env
-site/.env
-site/.env.*
-site/!.env.example
-site/!.env.test
+*.env
+*.env.*
+*!.env.example
+*!.env.test
 
 # Vite
 site/vite.config.js.timestamp-*
@@ -29,3 +30,6 @@ cyd/.vscode
 #google credentials
 *google-api-credentials.json
 *google-service-account-key.json
+
+*.pnpm-store
+

@@ -6,13 +6,18 @@
 	let { event = $bindable<LarpEvent>() }: { event: LarpEvent } = $props();
 	let startDate = $derived(dateToHTMLDateTime(event.start));
 	let endDate = $derived(dateToHTMLDateTime(event.end));
-	// const EventStatus = {
-	// 	Draft: 'Draft',
-	// 	Open: 'Open',
-	// 	Live: 'Live',
-	// 	Canceled: 'Canceled'
-	// } as const;
 	let eventStatuses = Object.values(EventStatus);
+
+	function parseFormId(raw: string): string | null {
+		if (!raw.trim()) return null;
+		const match = raw.match(/\/forms\/d\/([^/?#]+)/);
+		return match ? match[1] : raw.trim();
+	}
+
+	function onFormIdInput(e: Event) {
+		const value = (e.currentTarget as HTMLInputElement).value;
+		event.formId = parseFormId(value) ?? undefined;
+	}
 </script>
 
 <main>
@@ -33,6 +38,16 @@
 			<option value={status}>{status}</option>
 		{/each}
 	</select>
+	<label for="budget">budget</label>
+	<input id="budget" type="number" min="0" step="0.01" bind:value={event.budget} />
+	<label for="formId">google form id</label>
+	<input
+		id="formId"
+		type="text"
+		placeholder="form ID or full Google Forms URL"
+		value={event.formId ?? ''}
+		oninput={onFormIdInput}
+	/>
 </main>
 
 <style>

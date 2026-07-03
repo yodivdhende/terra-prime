@@ -47,7 +47,8 @@ INSERT INTO `Admins` (`UserId`) VALUES
 CREATE TABLE `Characters` (
   `Id` int NOT NULL,
   `Name` varchar(254) DEFAULT NULL,
-  `Owner` int DEFAULT NULL
+  `Owner` int DEFAULT NULL,
+  `BackstoryUrl` varchar(512) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --

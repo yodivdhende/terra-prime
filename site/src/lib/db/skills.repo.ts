@@ -3,12 +3,13 @@ import { mysqlconnFn } from './mysql';
 class SkillRepo {
 	public async getAll(): Promise<Skill[]> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(`
 			 SELECT
 					s.Id as id,
 					s.Name as name,
 					s.Description as description,
+					s.Cost as cost,
 					sg.Id as groupId,
 					sg.Name as groupName
 				FROM Skills s
@@ -33,13 +34,14 @@ class SkillRepo {
 
 	public async getWithId(id: number) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 			 SELECT
 					s.Id as id,
 					s.Name as name,
 					s.Description as description,
+					s.Cost as cost,
 					sg.Id as groupId,
 					sg.Name as groupName
 				FROM Skills s
@@ -61,7 +63,7 @@ class SkillRepo {
 
 	public async getWithIds(ids: number[]): Promise<Skill[]> {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				SELECT
@@ -101,16 +103,17 @@ class SkillRepo {
 	public async create({
 		name,
 		description,
-		groupId
-	}: Pick<Skill, 'name' | 'description' | 'groupId'>) {
+		groupId,
+		cost
+	}: Pick<Skill, 'name' | 'description' | 'groupId' | 'cost'>) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
-				 INSERT INTO Skills (Name, Description, \`Group\`)
-				Values (?,?,?)
+				 INSERT INTO Skills (Name, Description, \`Group\`, Cost)
+				Values (?,?,?,?)
         `,
-				[name, description, groupId]
+				[name, description, groupId, cost ?? 0]
 			);
 			if (Array.isArray(result) === false) return null;
 			if (result.length === 0) return null;
@@ -126,19 +129,21 @@ class SkillRepo {
 		id,
 		name,
 		description,
-		groupId
-	}: Pick<Skill, 'id' | 'name' | 'description' | 'groupId'>) {
+		groupId,
+		cost
+	}: Pick<Skill, 'id' | 'name' | 'description' | 'groupId' | 'cost'>) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
-				UPDATE Skills 
+				UPDATE Skills
 				SET Name = ?,
 				Description = ?,
-				\`Group\` = ?
+				\`Group\` = ?,
+				Cost = ?
 				WHERE Id = ?
         `,
-				[name, description, groupId, id]
+				[name, description, groupId, cost ?? 0, id]
 			);
 			if (Array.isArray(result) === false) return null;
 			if (result.length === 0) return null;
@@ -152,7 +157,7 @@ class SkillRepo {
 
 	public async delete({ id }: { id: number }) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			await connection.execute(
 				`
                 DELETE 
@@ -169,7 +174,7 @@ class SkillRepo {
 
 	public async getAllGroups() {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(`
 			 SELECT
 					sg.Id as id,
@@ -195,7 +200,7 @@ class SkillRepo {
 
 	public async getGroupWithId(id: number) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 			 SELECT
@@ -223,7 +228,7 @@ class SkillRepo {
 
 	private async createSkillGroup({ name, description }: Pick<SkillGroup, 'name' | 'description'>) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				INSERT INTO Skill_Groups (Name, Description)
@@ -245,7 +250,7 @@ class SkillRepo {
 		description
 	}: Pick<SkillGroup, 'id' | 'name' | 'description'>) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				UPDATE Skill_Groups
@@ -269,7 +274,7 @@ class SkillRepo {
 
 	private async deleteAllSkillsWithGroup(groupId: number) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				DELETE
@@ -287,7 +292,7 @@ class SkillRepo {
 
 	private async deleteSkillGroupWithId(groupId: number) {
 		try {
-			const connection = await mysqlconnFn();
+			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
 				DELETE
@@ -312,6 +317,7 @@ export type Skill = {
 	description: string;
 	groupId: number;
 	groupName: string;
+	cost?: number;
 };
 
 export function isSkill(skill: unknown): skill is Skill {

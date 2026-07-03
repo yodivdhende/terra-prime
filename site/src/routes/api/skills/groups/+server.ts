@@ -6,7 +6,7 @@ import { json, type RequestHandler } from "@sveltejs/kit";
 
 export const GET: RequestHandler = async ({ cookies }) => {
 	return handleRequest(async () => {
-		await authGuardForUser(getSessionToken(cookies), ['admin']);
+		await authGuardForUser(getSessionToken(cookies), ['admin', 'user']);
 		return json(await skillRepo.getAllGroups());
 	});
 };

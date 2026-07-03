@@ -3,14 +3,11 @@
 	import CodeScroller from '$lib/components/code-scroller.svelte';
 	import PlaytestForm from '$lib/components/playtest-form.svelte';
 
-
 	const logoAnimationDuration = 3;
 	const contentAnimationDuration = 2;
 	let startCode = $state(false);
-	let formData = $state();
 
 	setTimeout(() => (startCode = true), (logoAnimationDuration + contentAnimationDuration) * 1000);
-
 </script>
 
 <main
@@ -90,7 +87,7 @@
 				</p>
 				<h2>Jouw plaats wacht in de Federatie!</h2>
 
-					<PlaytestForm formResult={formData as any}/>
+				<PlaytestForm />
 			</div>
 		</section>
 	</div>
@@ -101,11 +98,18 @@
 		--custom-green: #aaaaaa;
 		--font-green: #ffffff;
 		--section-padding: 2em;
+		--section-width: calc(100vw - 40px - 4rem);
 	}
 
 	@media (max-width: 600px) {
 		main {
 			--section-padding: 1em;
+			--section-width: 90vw;
+			font-size: 0.8rem;
+		}
+
+		section {
+			margin: 0 0 0 0 !important;
 		}
 	}
 
@@ -114,8 +118,8 @@
 		height: 100vh;
 		overflow: hidden;
 		position: relative;
-		font-family: 'Courier New', Courier, monospace;
-		background-color: black;
+		font-family: var(--font-mono);
+		background-color: var(--color-bg);
 	}
 
 	.code {
@@ -125,7 +129,7 @@
 		z-index: 0;
 		width: 100%;
 		height: 100%;
-		background-color: black;
+		background-color: var(--color-bg);
 	}
 
 	.grid {
@@ -141,8 +145,8 @@
 		height: 100vh;
 		overflow-x: hidden;
 		overflow-y: auto;
-		scrollbar-color: white black;
-		background-color: black;
+		scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
+		background-color: var(--color-bg);
 	}
 
 	.logo {
@@ -190,13 +194,13 @@
 		margin: 0 20px 30px;
 		overflow: hidden;
 		word-wrap: none;
-		background-color: black;
+		background-color: var(--color-bg);
 	}
 
 	.glow-border {
-		border: 3px solid var(--custom-green);
-		border-radius: 10px;
-		box-shadow: var(--custom-green) 0px 0px 10px;
+		border: var(--border-width) solid var(--color-border);
+		border-radius: var(--border-radius);
+		box-shadow: var(--glow-shadow);
 	}
 
 	.grow-animation {
@@ -226,14 +230,14 @@
 		100% {
 			opacity: 1;
 			padding: var(--section-padding);
-			width: calc(100vw - 40px - 4rem);
+			width: var(--section-width);
 			height: 100%;
 		}
 	}
 
 	.content {
-		font-family: 'Courier New', Courier, monospace;
-		color: var(--font-green);
+		font-family: var(--font-mono);
+		color: var(--color-main);
 	}
 
 	.content p {
@@ -241,14 +245,14 @@
 	}
 
 	.content h2 {
-		font-family: 'Science Gothic', 'Courier New', Courier, monospace;
+		font-family: var(--font-display);
 		font-size: 1.2em;
 		font-weight: bold;
 		margin: 1em 0;
 	}
 
 	.content h3 {
-		font-family: 'Science Gothic', 'Courier New', Courier, monospace;
+		font-family: var(--font-display);
 		font-weight: bold;
 		margin: 1em 0;
 	}

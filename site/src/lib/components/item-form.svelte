@@ -9,6 +9,10 @@
 	<input id="name" type="text" bind:value={item.name} />
 	<label for="description">description</label>
 	<input type="textarea" bind:value={item.description} />
+	<label for="cost">cost</label>
+	<input id="cost" type="number" min="0" bind:value={item.cost} />
+	<label for="maxPerCharacter">max per character</label>
+	<input id="maxPerCharacter" type="number" min="1" bind:value={item.maxPerCharacter} />
 </main>
 
 <style>

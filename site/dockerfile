@@ -9,20 +9,34 @@ RUN corepack enable
 COPY . /app
 WORKDIR /app
 
-ARG VITE_GOOGLE_CLIENT_EMAIL
-ARG VITE_GOOGLE_PRIVATE_KEY
-
 
 FROM base AS prod-deps
 RUN pnpm install --prod --frozen-lockfile
 
 FROM base AS build
+ARG VITE_GOOGLE_CLIENT_EMAIL
+ARG VITE_GOOGLE_PRIVATE_KEY
+ARG VITE_GOOGLE_EMAIL_SUBJECT
+ARG PUBLIC_BASE_URL
+ARG VITE_GOOGLE_CLIENT_EMAIL=$VITE_GOOGLE_CLIENT_EMAIL
+ARG VITE_GOOGLE_PRIVATE_KEY=$VITE_GOOGLE_PRIVATE_KEY
+ARG VITE_GOOGLE_EMAIL_SUBJECT=$VITE_GOOGLE_EMAIL_SUBJECT
+ARG PUBLIC_BASE_URL=$PUBLIC_BASE_URL
 RUN pnpm install  --frozen-lockfile
-RUN pnpm run build 
+RUN pnpm run build
+
+FROM base AS dev
+RUN pnpm install --frozen-lockfile
+EXPOSE 5173
+CMD ["pnpm", "host"]
+
+FROM base AS migrate-runner
+COPY --from=build /app/node_modules node_modules/
+CMD ["pnpm", "migrate"]
 
 FROM base
 COPY --from=prod-deps /app/node_modules node_modules/
 COPY --from=build /app/build build/
 EXPOSE 4174
-CMD [ "pnpm", "start" ]
+CMD ["sh", "-c", "pnpm migrate && pnpm start"]
 

@@ -83,6 +83,10 @@ class ImplantRepo {
 		return this.edit(implant);
 	}
 
+	public async saveBulk(items: Implant[]) {
+		return Promise.all(items.map((item) => this.save(item)));
+	}
+
 	public async create({ name, description, cost }: Omit<Implant, 'id'>) {
 		try {
 			const connection = mysqlconnFn();

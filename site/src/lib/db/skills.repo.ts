@@ -100,6 +100,10 @@ class SkillRepo {
 		return this.edit(item);
 	}
 
+	public async saveBulk(items: Skill[]) {
+		return Promise.all(items.map((item) => this.save(item)));
+	}
+
 	public async create({
 		name,
 		description,

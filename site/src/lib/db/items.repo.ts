@@ -92,6 +92,10 @@ class ItemRepo {
 		return this.edit(item);
 	}
 
+	public async saveBulk(items: Item[]) {
+		return Promise.all(items.map((item) => this.save(item)));
+	}
+
 	public async create({ name, description, cost, maxPerCharacter }: Omit<Item, 'id'>) {
 		try {
 			const connection = mysqlconnFn();

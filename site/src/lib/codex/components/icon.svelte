@@ -13,8 +13,21 @@
 
 	const svg = $derived(
 		src
-			.replace(/\sstyle="[^"]*"/g, '')
+			.replace(/^[\s\S]*?(?=<svg)/i, '')
+			.replace(/xlink:href=/g, 'href=')
+			.replace(/\sstyle="([^"]*)"/g, (_, style) => {
+				const fillRule = style.match(/fill-rule:\s*(evenodd|nonzero)/)?.[1];
+				const clipRule = style.match(/clip-rule:\s*(evenodd|nonzero)/)?.[1];
+				const attrs = [
+					fillRule ? `fill-rule="${fillRule}"` : '',
+					clipRule ? `clip-rule="${clipRule}"` : ''
+				]
+					.filter(Boolean)
+					.join(' ');
+				return attrs ? ` ${attrs}` : '';
+			})
 			.replace(/fill="(?!none)[^"]*"/g, 'fill="currentColor"')
+			.replace(/<svg\b/i, '<svg fill="currentColor"')
 	);
 </script>
 

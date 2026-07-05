@@ -40,7 +40,10 @@
 				fetch(`/api/events/${eventId}`)
 			]);
 
-			if (skillsRes.ok) skills = await skillsRes.json();
+			if (skillsRes.ok) {
+				skills = await skillsRes.json();
+				CHARACTER_MANAGER.setCatalog(skills);
+			}
 			if (itemsRes.ok) items = await itemsRes.json();
 			if (implantsRes.ok) implants = await implantsRes.json();
 			if (eventRes.ok) {
@@ -83,6 +86,7 @@
 			{items}
 			{implants}
 			{budget}
+			skillManager={CHARACTER_MANAGER.skillManager}
 		/>
 	{/if}
 </div>

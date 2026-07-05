@@ -10,48 +10,11 @@
 </script>
 
 <script lang="ts">
-	import ChemistryIcon from '$lib/assets/images/SkillLogo-Chemistry.svg?raw';
-	import CommunicationSystemsIcon from '$lib/assets/images/SkillLogo-CommunicationSystems.svg?raw';
-	import EcologieIcon from '$lib/assets/images/SkillLogo-Ecologie.svg?raw';
-	import ElectricalEngineeringIcon from '$lib/assets/images/SkillLogo-ElectricalEngineering.svg?raw';
-	import EngineeringIcon from '$lib/assets/images/SkillLogo-Engineering.svg?raw';
-	import HistoryicalAnalysisIcon from '$lib/assets/images/SkillLogo-HistoryicalAnalysis.svg?raw';
-	import InformationTechnologyIcon from '$lib/assets/images/SkillLogo-InformationTechnology.svg?raw';
-	import LifeSciencesIcon from '$lib/assets/images/SkillLogo-LifeSciences.svg?raw';
-	import MechanicalEngineeringIcon from '$lib/assets/images/SkillLogo-MechanicalEngineering.svg?raw';
-	import MedicalAndTraumaCareIcon from '$lib/assets/images/SkillLogo-MedicalAndTraumaCare.svg?raw';
-	import SocialeWetenschapIcon from '$lib/assets/images/SkillLogo-SocialeWetenschap.svg?raw';
-	import SocialogyAndDiplomacyIcon from '$lib/assets/images/SkillLogo-SocialogyAndDiplomacy.svg?raw';
-	import SoftwareAndHakcingIcon from '$lib/assets/images/SkillLogo-SoftwareAndHakcing.svg?raw';
 	import Icon from './icon.svelte';
-	import SegmentBar from './segment-bar.svelte';
+	import SkillSlider from './skill-slider.svelte';
 	import type { VersionSkill } from '$lib/codex/managers/character-manager.svelte';
-
-	const GROUP_COLOR: Record<number, string> = {
-		1: '#f0c040',
-		2: '#4caf82',
-		3: '#4a9edd',
-		4: '#d95c5c'
-	};
-
-	const SKILL_ICONS: Record<number, string> = {
-		1: MechanicalEngineeringIcon,
-		2: ElectricalEngineeringIcon,
-		3: MedicalAndTraumaCareIcon,
-		4: ChemistryIcon,
-		5: EcologieIcon,
-		6: SoftwareAndHakcingIcon,
-		7: CommunicationSystemsIcon,
-		8: HistoryicalAnalysisIcon,
-		9: SocialogyAndDiplomacyIcon
-	};
-
-	const GROUP_ICONS: Record<number, string> = {
-		1: EngineeringIcon,
-		2: LifeSciencesIcon,
-		3: InformationTechnologyIcon,
-		4: SocialeWetenschapIcon
-	};
+	import ProgressBar from './progress-bar.svelte';
+	import { GROUP_COLORS, GROUP_ICONS, SKILL_INFO } from '$lib/codex/managers/skill-icons';
 
 	let {
 		catalog,
@@ -74,7 +37,7 @@
 				map.set(s.groupId, {
 					id: s.groupId,
 					name: s.groupName,
-					color: GROUP_COLOR[s.groupId] ?? 'var(--color-accent)',
+					color: GROUP_COLORS[s.groupId] ?? 'var(--color-accent)',
 					skills: []
 				});
 			}
@@ -84,10 +47,6 @@
 	});
 
 	const budgetFill = $derived(budget > 0 ? Math.min((budget - remaining) / budget, 1) * 100 : 0);
-
-	function getSkillIcon(id: number): string | undefined {
-		return SKILL_ICONS[name.toLowerCase().replace(/[^a-z0-9]/g, '')];
-	}
 
 	function getValue(id: number | null): number {
 		if (id == null) return 0;
@@ -133,14 +92,19 @@
 	<p class="empty">no skills available</p>
 {:else}
 	{#each skillGroups as group (group.id)}
+		{@const groupAverage =
+			group.skills.reduce((sum, s) => sum + getValue(s.id), 0) / group.skills.length}
 		<div class="group">
 			<h4 class="group-name" style="color: {group.color}">
-				{group.name}
 				<Icon src={GROUP_ICONS[group.id]} color={group.color} size={iconSize} />
+				{group.name}
 			</h4>
+			<div class="group-value">
+				<ProgressBar value={groupAverage} max={100} color={group.color} name={group.name} />
+			</div>
 			<ul class="catalog">
 				{#each group.skills as skill (skill.id)}
-					{@const skillIcon = SKILL_ICONS[skill.id ?? 0]}
+					{@const skillIcon = SKILL_INFO[skill.id ?? 0]?.icon}
 					{@const currentValue = getValue(skill.id)}
 					{@const skillCost = skill.cost ?? 0}
 					{@const skillDiscount = skill.id != null ? (discounts.get(skill.id) ?? 0) : 0}
@@ -164,32 +128,14 @@
 									<span class="entry-desc">{skill.description}</span>
 								{/if}
 							</div>
-							{#if skillCost > 0 && currentValue > 0}
-								<span class="entry-cost">
-									{#if discounted}
-										<span class="cost-old">{skillCost * currentValue}</span>
-									{/if}
-									<span class="cost-new" class:free={discounted && effectiveCost === 0}
-										>{effectiveCost * currentValue}</span
-									>
-								</span>
-							{:else if skillCost > 0}
-								<span class="entry-cost muted">
-									{#if discounted}
-										<span class="cost-old">{skillCost}</span>
-										<span class="cost-new free-pt">{effectiveCost}</span>/pt
-									{:else}
-										{skillCost}/pt
-									{/if}
-								</span>
-							{/if}
 						</div>
-						<SegmentBar
+						<SkillSlider
 							value={currentValue}
 							color={group.color}
 							{remaining}
 							cost={effectiveCost}
 							name={skill.name}
+							max={100}
 							onchange={(v) => setSkillValue(skill, v)}
 						/>
 					</li>
@@ -260,6 +206,10 @@
 		opacity: 0.85;
 	}
 
+	.group-value {
+		margin-bottom: 1em;
+	}
+
 	.catalog {
 		list-style: none;
 		margin: 0;
@@ -306,19 +256,6 @@
 		vertical-align: middle;
 	}
 
-	.cost-old {
-		text-decoration: line-through;
-		opacity: 0.4;
-		margin-right: 0.35rem;
-		font-size: 0.9em;
-	}
-
-	.cost-new.free,
-	.cost-new.free-pt {
-		color: #4caf82;
-		font-weight: bold;
-	}
-
 	.entry-header {
 		display: flex;
 		align-items: center;
@@ -347,16 +284,6 @@
 		-webkit-line-clamp: 2;
 		line-clamp: 2;
 		-webkit-box-orient: vertical;
-	}
-
-	.entry-cost {
-		font-size: 1em;
-		color: var(--color-accent);
-		flex-shrink: 0;
-	}
-
-	.entry-cost.muted {
-		opacity: 0.4;
 	}
 
 	.empty {

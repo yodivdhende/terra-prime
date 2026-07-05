@@ -15,8 +15,7 @@ class CredentialManager {
 	}
 
 	public initFromStorage(): void {
-		if (!browser) return;
-		void credentialStore.roles;
+		credentialStore.init();
 	}
 
 	public logout(): void {

@@ -26,6 +26,7 @@
 	import Icon from './icon.svelte';
 	import SkillSlider from './skill-slider.svelte';
 	import type { VersionSkill } from '$lib/codex/managers/character-manager.svelte';
+	import ProgressBar from './progress-bar.svelte';
 
 	const GROUP_COLOR: Record<number, string> = {
 		1: '#f0c040',
@@ -133,11 +134,16 @@
 	<p class="empty">no skills available</p>
 {:else}
 	{#each skillGroups as group (group.id)}
+		{@const groupAverage =
+			group.skills.reduce((sum, s) => sum + getValue(s.id), 0) / group.skills.length}
 		<div class="group">
 			<h4 class="group-name" style="color: {group.color}">
-				{group.name}
 				<Icon src={GROUP_ICONS[group.id]} color={group.color} size={iconSize} />
+				{group.name}
 			</h4>
+			<div class="group-value">
+				<ProgressBar value={groupAverage} max={100} color={group.color} name={group.name} />
+			</div>
 			<ul class="catalog">
 				{#each group.skills as skill (skill.id)}
 					{@const skillIcon = SKILL_ICONS[skill.id ?? 0]}
@@ -164,25 +170,6 @@
 									<span class="entry-desc">{skill.description}</span>
 								{/if}
 							</div>
-							{#if skillCost > 0 && currentValue > 0}
-								<span class="entry-cost">
-									{#if discounted}
-										<span class="cost-old">{skillCost * currentValue}</span>
-									{/if}
-									<span class="cost-new" class:free={discounted && effectiveCost === 0}
-										>{effectiveCost * currentValue}</span
-									>
-								</span>
-							{:else if skillCost > 0}
-								<span class="entry-cost muted">
-									{#if discounted}
-										<span class="cost-old">{skillCost}</span>
-										<span class="cost-new free-pt">{effectiveCost}</span>/pt
-									{:else}
-										{skillCost}/pt
-									{/if}
-								</span>
-							{/if}
 						</div>
 						<SkillSlider
 							value={currentValue}
@@ -190,6 +177,7 @@
 							{remaining}
 							cost={effectiveCost}
 							name={skill.name}
+							max={100}
 							onchange={(v) => setSkillValue(skill, v)}
 						/>
 					</li>
@@ -260,6 +248,10 @@
 		opacity: 0.85;
 	}
 
+	.group-value {
+		margin-bottom: 1em;
+	}
+
 	.catalog {
 		list-style: none;
 		margin: 0;
@@ -306,19 +298,6 @@
 		vertical-align: middle;
 	}
 
-	.cost-old {
-		text-decoration: line-through;
-		opacity: 0.4;
-		margin-right: 0.35rem;
-		font-size: 0.9em;
-	}
-
-	.cost-new.free,
-	.cost-new.free-pt {
-		color: #4caf82;
-		font-weight: bold;
-	}
-
 	.entry-header {
 		display: flex;
 		align-items: center;
@@ -347,16 +326,6 @@
 		-webkit-line-clamp: 2;
 		line-clamp: 2;
 		-webkit-box-orient: vertical;
-	}
-
-	.entry-cost {
-		font-size: 1em;
-		color: var(--color-accent);
-		flex-shrink: 0;
-	}
-
-	.entry-cost.muted {
-		opacity: 0.4;
 	}
 
 	.empty {

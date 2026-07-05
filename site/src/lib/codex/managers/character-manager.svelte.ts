@@ -5,6 +5,8 @@ import type {
   VersionItem,
   VersionSkill
 } from '../../../routes/api/my/characters/versions/+server';
+import { createSkillManager } from './skill-manager.svelte';
+import type { Skill } from '$lib/db/skills.repo';
 
 export type { CharacterVersionFull, VersionImplant, VersionItem, VersionSkill };
 
@@ -35,6 +37,11 @@ function emptyCharacterVersion(): CharacterVersionFull {
 export function createCharacterManager() {
   let character = $state<Character>(emptyCharacter());
   let version = $state<CharacterVersionFull>(emptyCharacterVersion());
+  const skillManager = createSkillManager();
+
+  $effect(() => {
+    skillManager.setValues(version.skills);
+  });
 
   const ready = $derived.by(() => {
     if (character.name.trim().length <= 0) return false;
@@ -49,6 +56,11 @@ export function createCharacterManager() {
   function reset() {
     character = emptyCharacter();
     version = emptyCharacterVersion();
+    skillManager.reset();
+  }
+
+  function setCatalog(catalog: Skill[]) {
+    skillManager.setCatalog(catalog);
   }
 
   return {
@@ -59,6 +71,8 @@ export function createCharacterManager() {
     get ready() { return ready; },
     get isNewCharacter() { return isNewCharacter; },
     get isNewVersion() { return isNewVersion; },
+    get skillManager() { return skillManager; },
+    setCatalog,
     reset,
   };
 }

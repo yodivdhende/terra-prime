@@ -5,6 +5,7 @@
 	import ShopItems, { type ShopItem } from './shop-items.svelte';
 	import ShopImplants, { type ShopImplant } from './shop-implants.svelte';
 	import type { Character, CharacterVersionFull } from '../managers/character-manager.svelte';
+	import type { SkillManager } from '../managers/skill-manager.svelte';
 
 	let {
 		character = $bindable(),
@@ -12,7 +13,8 @@
 		skills = [],
 		items = [],
 		implants = [],
-		budget = 0
+		budget = 0,
+		skillManager
 	}: {
 		character: Character;
 		version: CharacterVersionFull;
@@ -20,6 +22,7 @@
 		items?: ShopItem[];
 		implants?: ShopImplant[];
 		budget?: number;
+		skillManager?: SkillManager;
 	} = $props();
 
 	type DiscountEntry = { id: number; discount: number };
@@ -99,6 +102,7 @@
 		implants={{ count: version.implants.length, spent: implantsSpent, slotCount: character.implantLimit ?? 2 }}
 		{budget}
 		remaining={navRemaining}
+		{skillManager}
 	/>
 
 	<div class="shop scroll">

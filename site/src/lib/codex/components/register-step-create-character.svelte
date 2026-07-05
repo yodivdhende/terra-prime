@@ -86,6 +86,7 @@
 			{items}
 			{implants}
 			{budget}
+			skillManager={CHARACTER_MANAGER.skillManager}
 		/>
 	{/if}
 </div>

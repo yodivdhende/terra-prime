@@ -8,6 +8,7 @@
 	import Icon from './icon.svelte';
 	import itemLogo from '$lib/assets/images/ItemLogo.svg?raw';
 	import implantLogo from '$lib/assets/images/ImplantLogo.svg?raw';
+	import type { SkillManager } from '$lib/codex/managers/skill-manager.svelte';
 
 	let {
 		activeStep = $bindable<Step>('details'),
@@ -16,7 +17,8 @@
 		items,
 		implants,
 		budget,
-		remaining
+		remaining,
+		skillManager
 	}: {
 		activeStep: Step;
 		name: string;
@@ -25,6 +27,7 @@
 		implants: { count: number; spent: number; slotCount: number };
 		budget: number;
 		remaining: number;
+		skillManager?: SkillManager;
 	} = $props();
 
 	const iconSize = '2em';
@@ -52,7 +55,9 @@
 					{/if}
 				</span>
 				<span class="step-overview">
-					{#if skills.groups.length > 0}
+					{#if skillManager && skillManager.selected.length > 0}
+						<CharacterSkillGroups manager={skillManager} size={iconSize} />
+					{:else if !skillManager && skills.groups.length > 0}
 						<CharacterSkillGroups skills={skills.groups} size={iconSize} />
 					{:else}
 						<span class="overview-empty">none selected</span>

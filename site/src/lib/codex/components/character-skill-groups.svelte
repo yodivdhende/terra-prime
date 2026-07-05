@@ -2,17 +2,36 @@
 	import Icon from '$lib/codex/components/icon.svelte';
 	import ProgressBar from '$lib/codex/components/progress-bar.svelte';
 	import { GROUP_COLORS, GROUP_ICONS, SKILL_INFO } from '$lib/codex/managers/skill-icons';
+	import type { SkillManager } from '$lib/codex/managers/skill-manager.svelte';
 
-	let { skills, size = '1em' }: { skills: CharacterVerionSkill[]; size?: string } = $props();
+	type SkillGroupEntry = { id: number; group: number; groupName: string; name?: string; value: number };
+
+	let {
+		skills = [],
+		manager,
+		size = '1em'
+	}: { skills?: SkillGroupEntry[]; manager?: SkillManager; size?: string } = $props();
 
 	const groups = $derived.by(() => {
+		if (manager) {
+			return manager.groups
+				.map((g) => ({
+					id: g.id,
+					name: g.name,
+					color: GROUP_COLORS[g.id] ?? 'var(--color-accent)',
+					average: g.average,
+					skills: manager.selected.filter((s) => s.group === g.id)
+				}))
+				.filter((g) => g.skills.length > 0);
+		}
+
 		const map = new Map<
 			number,
 			{
 				id: number;
 				name: string;
 				color: string;
-				skills: CharacterVerionSkill[];
+				skills: SkillGroupEntry[];
 				total: number;
 				count: number;
 			}

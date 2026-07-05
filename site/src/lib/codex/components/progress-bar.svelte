@@ -1,7 +1,7 @@
 <script lang="ts">
 	let {
 		value = 0,
-		max = 10,
+		max = 100,
 		color,
 		name = ''
 	}: {

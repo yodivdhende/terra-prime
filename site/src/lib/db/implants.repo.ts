@@ -83,6 +83,38 @@ class ImplantRepo {
 		return this.edit(implant);
 	}
 
+	public async saveBulk(items: Implant[]) {
+		const toCreate = items.filter((i) => i.id == null);
+		const toUpdate = items.filter((i) => i.id != null);
+		const conn = await mysqlconnFn().getConnection();
+		try {
+			await conn.beginTransaction();
+			if (toCreate.length > 0) {
+				const placeholders = toCreate.map(() => '(?,?,?)').join(',');
+				const values = toCreate.flatMap((i) => [i.name, i.description, i.cost ?? 0]);
+				await conn.execute(
+					`INSERT INTO Implants (Name, Description, Cost) VALUES ${placeholders}`,
+					values
+				);
+			}
+			if (toUpdate.length > 0) {
+				const placeholders = toUpdate.map(() => '(?,?,?,?)').join(',');
+				const values = toUpdate.flatMap((i) => [i.id, i.name, i.description, i.cost ?? 0]);
+				await conn.execute(
+					`INSERT INTO Implants (Id, Name, Description, Cost) VALUES ${placeholders}
+					 ON DUPLICATE KEY UPDATE Name=VALUES(Name), Description=VALUES(Description), Cost=VALUES(Cost)`,
+					values
+				);
+			}
+			await conn.commit();
+		} catch (err) {
+			await conn.rollback();
+			throw err;
+		} finally {
+			conn.release();
+		}
+	}
+
 	public async create({ name, description, cost }: Omit<Implant, 'id'>) {
 		try {
 			const connection = mysqlconnFn();

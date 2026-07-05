@@ -80,6 +80,7 @@ Templates are `{ id, key, docUrl }` rows. `docUrl` is a Google Doc URL whose HTM
 | GET | `/api/skills/[id]` | admin | `Skill` (JSON) | Get skill by ID |
 | POST | `/api/skills/[id]` | admin | empty body (200) | Update skill; body: `Skill` |
 | DELETE | `/api/skills/[id]` | admin | empty body (200) | Delete skill |
+| POST | `/api/skills/bulk` | admin | empty body (200) | Bulk update skills; body: `Skill[]` |
 | GET | `/api/skills/groups` | admin/user | `SkillGroup[]` (JSON) — `SkillGroup = { id: number \| null, name: string, description: string }` | List all skill groups |
 | PUT | `/api/skills/groups` | admin | empty body (200) | Create/update skill group; body: `SkillGroup` |
 | GET | `/api/skills/groups/[id]` | admin | `SkillGroup` (JSON) | Get skill group by ID |
@@ -97,6 +98,7 @@ Templates are `{ id, key, docUrl }` rows. `docUrl` is a Google Doc URL whose HTM
 | GET | `/api/items/[id]` | admin | `Item` (JSON) | Get item by ID |
 | POST | `/api/items/[id]` | admin | empty body (200) | Update item; body: `Item` |
 | DELETE | `/api/items/[id]` | admin | empty body (200) | Delete item |
+| POST | `/api/items/bulk` | admin | empty body (200) | Bulk update items; body: `Item[]` |
 
 ---
 
@@ -109,6 +111,7 @@ Templates are `{ id, key, docUrl }` rows. `docUrl` is a Google Doc URL whose HTM
 | GET | `/api/implants/[id]` | admin | `Implant` (JSON) | Get implant by ID |
 | POST | `/api/implants/[id]` | admin | empty body (200) | Update implant; body: `Implant` |
 | DELETE | `/api/implants/[id]` | admin | empty body (200) | Delete implant |
+| POST | `/api/implants/bulk` | admin | empty body (200) | Bulk update implants; body: `Implant[]` |
 
 ---
 

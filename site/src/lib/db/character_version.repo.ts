@@ -352,8 +352,8 @@ class CharacterVersionRepo {
     await connection.query(
       `
 			DELETE
-      FROM Character_Version cv
-      WHERE cv.CharacterVersion in (:characterVersionId)
+      FROM Character_Versions
+      WHERE Id = :characterVersionId
       `,
       { characterVersionId }
     );

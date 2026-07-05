@@ -14,7 +14,10 @@
 		character = loadCharacter ?? null;
 	});
 	const users = $derived(data.users);
-	const versions = $derived(data.versions as { id: number; name: string }[]);
+	let versions: { id: number; name: string }[] = $state([]);
+	$effect(() => {
+		versions = data.versions as { id: number; name: string }[];
+	});
 
 	async function save() {
 		const characterToSave = $state.snapshot(character);
@@ -52,6 +55,30 @@
 		}
 	}
 
+	let versionModal: ConfirmModal;
+	let pendingDeleteVersionId: number | null = $state(null);
+
+	function requestDeleteVersion(id: number) {
+		pendingDeleteVersionId = id;
+		versionModal.open();
+	}
+
+	async function deleteVersion() {
+		const id = pendingDeleteVersionId;
+		if (id == null) return;
+		try {
+			const result = await fetch(`/api/characters/versions/${id}`, { method: 'delete' });
+			if (result.ok) {
+				versions = versions.filter((version) => version.id !== id);
+				TOAST_MANAGER.success('Version deleted');
+			} else {
+				TOAST_MANAGER.error(`Delete failed (${result.status})`);
+			}
+		} catch (err: any) {
+			TOAST_MANAGER.error(err?.message ?? 'Something went wrong');
+		}
+	}
+
 	async function addVersion() {
 		const characterToSave = $state.snapshot(character);
 		if (characterToSave == null) return;
@@ -79,7 +106,12 @@
 		<button class="btn btn-danger" onclick={() => modal.open()}>delete</button>
 	</div>
 
-	<ConfirmModal bind:this={modal} message="Delete this character?" onconfirm={deleteCharacter} oncancel={() => modal.close()} />
+	<ConfirmModal
+		bind:this={modal}
+		message="Delete this character?"
+		onconfirm={deleteCharacter}
+		oncancel={() => modal.close()}
+	/>
 
 	<section class="versions">
 		<h3>Versions</h3>
@@ -93,6 +125,7 @@
 						<th>Id</th>
 						<th>Name</th>
 						<th></th>
+						<th></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -101,12 +134,24 @@
 							<td>{version.id}</td>
 							<td>{version.name}</td>
 							<td><a href="/manage/versions/{version.id}">edit</a></td>
+							<td
+								><button class="btn btn-danger" onclick={() => requestDeleteVersion(version.id)}
+									>delete</button
+								></td
+							>
 						</tr>
 					{/each}
 				</tbody>
 			</table>
 		{/if}
 	</section>
+
+	<ConfirmModal
+		bind:this={versionModal}
+		message="Delete this character version?"
+		onconfirm={deleteVersion}
+		oncancel={() => versionModal.close()}
+	/>
 </main>
 
 <style>

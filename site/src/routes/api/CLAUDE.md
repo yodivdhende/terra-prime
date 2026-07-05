@@ -132,6 +132,7 @@ Templates are `{ id, key, docUrl }` rows. `docUrl` is a Google Doc URL whose HTM
 | PUT | `/api/characters/versions` | user | `{ id: number }` (JSON) | Create character version; body: `CharacterVersionBare` |
 | GET | `/api/characters/versions/[versionId]` | user | `CharacterVersionBare \| null` (JSON; null when not found) | Get character version by ID |
 | PUT | `/api/characters/versions/[versionId]` | user | `number` (JSON-encoded id) | Update character version; body: `CharacterVersionBare` |
+| DELETE | `/api/characters/versions/[versionId]` | admin | empty body (200) | Delete character version and its skills/items/implants |
 | GET | `/api/characters/versions/[versionId]/full` | user | `{}` (JSON) | Get full version detail — **not yet implemented** |
 | PUT | `/api/characters/versions/[versionId]/skills` | user | empty body (200) | Replace version skills; body: `CharacterVersionSkill[]` |
 

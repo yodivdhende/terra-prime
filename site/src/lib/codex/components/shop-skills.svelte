@@ -10,49 +10,11 @@
 </script>
 
 <script lang="ts">
-	import ChemistryIcon from '$lib/assets/images/SkillLogo-Chemistry.svg?raw';
-	import CommunicationSystemsIcon from '$lib/assets/images/SkillLogo-CommunicationSystems.svg?raw';
-	import EcologieIcon from '$lib/assets/images/SkillLogo-Ecologie.svg?raw';
-	import ElectricalEngineeringIcon from '$lib/assets/images/SkillLogo-ElectricalEngineering.svg?raw';
-	import EngineeringIcon from '$lib/assets/images/SkillLogo-Engineering.svg?raw';
-	import HistoryicalAnalysisIcon from '$lib/assets/images/SkillLogo-HistoryicalAnalysis.svg?raw';
-	import InformationTechnologyIcon from '$lib/assets/images/SkillLogo-InformationTechnology.svg?raw';
-	import LifeSciencesIcon from '$lib/assets/images/SkillLogo-LifeSciences.svg?raw';
-	import MechanicalEngineeringIcon from '$lib/assets/images/SkillLogo-MechanicalEngineering.svg?raw';
-	import MedicalAndTraumaCareIcon from '$lib/assets/images/SkillLogo-MedicalAndTraumaCare.svg?raw';
-	import SocialeWetenschapIcon from '$lib/assets/images/SkillLogo-SocialeWetenschap.svg?raw';
-	import SocialogyAndDiplomacyIcon from '$lib/assets/images/SkillLogo-SocialogyAndDiplomacy.svg?raw';
-	import SoftwareAndHakcingIcon from '$lib/assets/images/SkillLogo-SoftwareAndHakcing.svg?raw';
 	import Icon from './icon.svelte';
 	import SkillSlider from './skill-slider.svelte';
 	import type { VersionSkill } from '$lib/codex/managers/character-manager.svelte';
 	import ProgressBar from './progress-bar.svelte';
-
-	const GROUP_COLOR: Record<number, string> = {
-		1: '#f0c040',
-		2: '#4caf82',
-		3: '#4a9edd',
-		4: '#d95c5c'
-	};
-
-	const SKILL_ICONS: Record<number, string> = {
-		1: MechanicalEngineeringIcon,
-		2: ElectricalEngineeringIcon,
-		3: MedicalAndTraumaCareIcon,
-		4: ChemistryIcon,
-		5: EcologieIcon,
-		6: SoftwareAndHakcingIcon,
-		7: CommunicationSystemsIcon,
-		8: HistoryicalAnalysisIcon,
-		9: SocialogyAndDiplomacyIcon
-	};
-
-	const GROUP_ICONS: Record<number, string> = {
-		1: EngineeringIcon,
-		2: LifeSciencesIcon,
-		3: InformationTechnologyIcon,
-		4: SocialeWetenschapIcon
-	};
+	import { GROUP_COLORS, GROUP_ICONS, SKILL_INFO } from '$lib/codex/managers/skill-icons';
 
 	let {
 		catalog,
@@ -75,7 +37,7 @@
 				map.set(s.groupId, {
 					id: s.groupId,
 					name: s.groupName,
-					color: GROUP_COLOR[s.groupId] ?? 'var(--color-accent)',
+					color: GROUP_COLORS[s.groupId] ?? 'var(--color-accent)',
 					skills: []
 				});
 			}
@@ -85,10 +47,6 @@
 	});
 
 	const budgetFill = $derived(budget > 0 ? Math.min((budget - remaining) / budget, 1) * 100 : 0);
-
-	function getSkillIcon(id: number): string | undefined {
-		return SKILL_ICONS[name.toLowerCase().replace(/[^a-z0-9]/g, '')];
-	}
 
 	function getValue(id: number | null): number {
 		if (id == null) return 0;
@@ -146,7 +104,7 @@
 			</div>
 			<ul class="catalog">
 				{#each group.skills as skill (skill.id)}
-					{@const skillIcon = SKILL_ICONS[skill.id ?? 0]}
+					{@const skillIcon = SKILL_INFO[skill.id ?? 0]?.icon}
 					{@const currentValue = getValue(skill.id)}
 					{@const skillCost = skill.cost ?? 0}
 					{@const skillDiscount = skill.id != null ? (discounts.get(skill.id) ?? 0) : 0}

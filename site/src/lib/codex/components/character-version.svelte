@@ -22,44 +22,9 @@
 </script>
 
 <script lang="ts">
-	import ChemistryIcon from '$lib/assets/images/SkillLogo-Chemistry.svg?raw';
-	import CommunicationSystemsIcon from '$lib/assets/images/SkillLogo-CommunicationSystems.svg?raw';
-	import EcologieIcon from '$lib/assets/images/SkillLogo-Ecologie.svg?raw';
-	import ElectricalEngineeringIcon from '$lib/assets/images/SkillLogo-ElectricalEngineering.svg?raw';
-	import EngineeringIcon from '$lib/assets/images/SkillLogo-Engineering.svg?raw';
-	import HistoricalAnalysisIcon from '$lib/assets/images/SkillLogo-HistoryicalAnalysis.svg?raw';
-	import InformationTechnologyIcon from '$lib/assets/images/SkillLogo-InformationTechnology.svg?raw';
-	import LifeSciencesIcon from '$lib/assets/images/SkillLogo-LifeSciences.svg?raw';
-	import MechanicalEngineeringIcon from '$lib/assets/images/SkillLogo-MechanicalEngineering.svg?raw';
-	import MedicalAndTraumaCareIcon from '$lib/assets/images/SkillLogo-MedicalAndTraumaCare.svg?raw';
-	import SocialeWetenschapIcon from '$lib/assets/images/SkillLogo-SocialeWetenschap.svg?raw';
-	import SocialogyAndDiplomacyIcon from '$lib/assets/images/SkillLogo-SocialogyAndDiplomacy.svg?raw';
-	import SoftwareAndHackingIcon from '$lib/assets/images/SkillLogo-SoftwareAndHakcing.svg?raw';
 	import Icon from './icon.svelte';
 	import ProgressBar from './progress-bar.svelte';
-
-	const GROUP_COLOR: Record<number, string> = {
-		1: '#f0c040',
-		2: '#4caf82',
-		3: '#4a9edd',
-		4: '#d95c5c'
-	};
-
-	const SKILL_ICONS: Record<string, string> = {
-		engineering: EngineeringIcon,
-		mechanicalengineering: MechanicalEngineeringIcon,
-		electricalengineering: ElectricalEngineeringIcon,
-		lifesciences: LifeSciencesIcon,
-		chemistry: ChemistryIcon,
-		ecologie: EcologieIcon,
-		medicalandtraumacare: MedicalAndTraumaCareIcon,
-		informationtechnology: InformationTechnologyIcon,
-		softwarehacking: SoftwareAndHackingIcon,
-		communicationsystems: CommunicationSystemsIcon,
-		socialewetenschap: SocialeWetenschapIcon,
-		historicalanalysis: HistoricalAnalysisIcon,
-		sociologydiplomacy: SocialogyAndDiplomacyIcon
-	};
+	import { GROUP_COLORS, getSkillIcon } from '$lib/codex/managers/skill-icons';
 
 	let {
 		characterName,
@@ -87,7 +52,7 @@
 				map.set(skill.group, {
 					id: skill.group,
 					name: skill.groupName,
-					color: GROUP_COLOR[skill.group] ?? 'var(--color-accent)',
+					color: GROUP_COLORS[skill.group] ?? 'var(--color-accent)',
 					skills: []
 				});
 			}
@@ -96,11 +61,7 @@
 		return Array.from(map.values());
 	});
 
-	function getSkillIcon(name: string): string | undefined {
-		const key = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-		const result = SKILL_ICONS[key];
-		return result;
-	}
+
 </script>
 
 <div class="character-version">

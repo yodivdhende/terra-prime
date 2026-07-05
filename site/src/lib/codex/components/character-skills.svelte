@@ -1,15 +1,7 @@
 <script lang="ts">
-	import MechanicalEngineering from '$lib/assets/images/SkillLogo-MechanicalEngineering.svg?raw';
-	import ElectricalEngineering from '$lib/assets/images/SkillLogo-ElectricalEngineering.svg?raw';
-	import MedicalAndTraumaCare from '$lib/assets/images/SkillLogo-MedicalAndTraumaCare.svg?raw';
-	import Chemistry from '$lib/assets/images/SkillLogo-Chemistry.svg?raw';
-	import Ecologie from '$lib/assets/images/SkillLogo-Ecologie.svg?raw';
-	import SoftwareAndHacking from '$lib/assets/images/SkillLogo-SoftwareAndHakcing.svg?raw';
-	import CommunicationSystems from '$lib/assets/images/SkillLogo-CommunicationSystems.svg?raw';
-	import HistoricalAnalysis from '$lib/assets/images/SkillLogo-HistoryicalAnalysis.svg?raw';
-	import SociologyAndDiplomacy from '$lib/assets/images/SkillLogo-SocialogyAndDiplomacy.svg?raw';
 	import Icon from '$lib/codex/components/icon.svelte';
 	import ProgressBar from '$lib/codex/components/progress-bar.svelte';
+	import { GROUP_COLORS, SKILL_INFO } from '$lib/codex/managers/skill-icons';
 
 	type Skill = {
 		id: number;
@@ -20,25 +12,6 @@
 
 	let { skills }: { skills: Skill[] } = $props();
 
-	const SKILL_INFO: Record<number, { name: string; icon: string }> = {
-		1: { name: 'Mechanical Engineering', icon: MechanicalEngineering },
-		2: { name: 'Electrical Engineering', icon: ElectricalEngineering },
-		3: { name: 'Medical & Trauma Care', icon: MedicalAndTraumaCare },
-		4: { name: 'Chemistry', icon: Chemistry },
-		5: { name: 'Ecologie', icon: Ecologie },
-		6: { name: 'Software & Hacking', icon: SoftwareAndHacking },
-		7: { name: 'Communication Systems', icon: CommunicationSystems },
-		8: { name: 'Historical Analysis', icon: HistoricalAnalysis },
-		9: { name: 'Sociology & Diplomacy', icon: SociologyAndDiplomacy }
-	};
-
-	const GROUP_COLOR: Record<number, string> = {
-		1: '#f0c040',
-		2: '#4caf82',
-		3: '#4a9edd',
-		4: '#d95c5c'
-	};
-
 	const groups = $derived.by(() => {
 		const map = new Map<number, { id: number; name: string; color: string; skills: Skill[] }>();
 		for (const skill of skills) {
@@ -46,7 +19,7 @@
 				map.set(skill.group, {
 					id: skill.group,
 					name: skill.groupName,
-					color: GROUP_COLOR[skill.group] ?? 'var(--color-accent)',
+					color: GROUP_COLORS[skill.group] ?? 'var(--color-accent)',
 					skills: []
 				});
 			}

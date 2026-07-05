@@ -93,7 +93,35 @@ class ItemRepo {
 	}
 
 	public async saveBulk(items: Item[]) {
-		return Promise.all(items.map((item) => this.save(item)));
+		const toCreate = items.filter((i) => i.id == null);
+		const toUpdate = items.filter((i) => i.id != null);
+		const conn = await mysqlconnFn().getConnection();
+		try {
+			await conn.beginTransaction();
+			if (toCreate.length > 0) {
+				const placeholders = toCreate.map(() => '(?,?,?,?)').join(',');
+				const values = toCreate.flatMap((i) => [i.name, i.description, i.cost ?? 0, i.maxPerCharacter ?? null]);
+				await conn.execute(
+					`INSERT INTO Items (Name, Description, Cost, MaxPerCharacter) VALUES ${placeholders}`,
+					values
+				);
+			}
+			if (toUpdate.length > 0) {
+				const placeholders = toUpdate.map(() => '(?,?,?,?,?)').join(',');
+				const values = toUpdate.flatMap((i) => [i.id, i.name, i.description, i.cost ?? 0, i.maxPerCharacter ?? null]);
+				await conn.execute(
+					`INSERT INTO Items (Id, Name, Description, Cost, MaxPerCharacter) VALUES ${placeholders}
+					 ON DUPLICATE KEY UPDATE Name=VALUES(Name), Description=VALUES(Description), Cost=VALUES(Cost), MaxPerCharacter=VALUES(MaxPerCharacter)`,
+					values
+				);
+			}
+			await conn.commit();
+		} catch (err) {
+			await conn.rollback();
+			throw err;
+		} finally {
+			conn.release();
+		}
 	}
 
 	public async create({ name, description, cost, maxPerCharacter }: Omit<Item, 'id'>) {

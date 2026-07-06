@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
+	import BackstoryLink from '$lib/components/backstory-link.svelte';
+	import { FEATURE_MANAGER } from '$lib/codex/managers/feature-manager.svelte';
 	import CharacterVersion, {
 		type CharacterVersionExpertise,
 		type CharacterVersionItem,
@@ -31,9 +33,19 @@
 	let characters = $state<CharacterEntry[]>([]);
 	let loading = $state(true);
 	let failed = $state(false);
-	let selectedId = $state<number | null>(null);
+	let selectedVersionId = $state<number | null>(null);
 
-	let selected = $derived(characters.find((c) => c.id === selectedId) ?? null);
+	const selectedVersion = $derived.by(() => {
+		for (const c of characters) {
+			const v = c.versions.find((v) => v.id === selectedVersionId);
+			if (v) return v;
+		}
+		return null;
+	});
+
+	const selectedCharacter = $derived(
+		characters.find((c) => c.versions.some((v) => v.id === selectedVersionId)) ?? null
+	);
 
 	$effect(() => {
 		loading = true;
@@ -45,8 +57,8 @@
 			})
 			.then((data: { characters: CharacterEntry[] }) => {
 				characters = data.characters;
-				if (characters.length > 0 && selectedId == null) {
-					selectedId = characters[0].id;
+				if (selectedVersionId == null) {
+					selectedVersionId = characters[0]?.versions[0]?.id ?? null;
 				}
 				loading = false;
 			})
@@ -67,58 +79,54 @@
 			<span class="status">no characters found</span>
 		{:else}
 			{#each characters as character (character.id)}
-				<button
-					class="entry"
-					class:active={selectedId === character.id}
-					onclick={() => (selectedId = character.id)}
-				>
-					{character.name}
-				</button>
+				<div class="character-node">
+					<div class="character-header">
+						<span class="character-name">{character.name}</span>
+						{#if FEATURE_MANAGER.backstoryEnabled}
+							<BackstoryLink
+								characterId={character.id}
+								characterName={character.name}
+								bind:backstoryId={character.backstoryId}
+							/>
+						{/if}
+					</div>
+					{#each character.versions as version (version.id)}
+						<button
+							class="version-entry"
+							class:active={selectedVersionId === version.id}
+							onclick={() => (selectedVersionId = version.id)}
+						>
+							{version.name}
+						</button>
+					{/each}
+					{#if character.versions.length === 0}
+						<span class="no-versions">no versions</span>
+					{/if}
+				</div>
 			{/each}
 		{/if}
 	</div>
 
 	<div class="detail">
-		{#if selected == null}
-			<span class="status">select a character</span>
+		{#if selectedVersion == null}
+			<span class="status">select a version</span>
 		{:else}
 			<div class="detail-scroll">
-				{#if selected.backstoryId}
-					<div class="backstory-row">
-						<a
-							href="https://docs.google.com/document/d/{selected.backstoryId}/edit"
-							target="_blank"
-							rel="noopener noreferrer"
-							class="backstory-link"
-						>
-							open backstory
-						</a>
+				{#if selectedVersion.events.length > 0}
+					<div class="version-events">
+						{#each selectedVersion.events as event (event.id)}
+							<span class="event-tag">{event.name}</span>
+						{/each}
 					</div>
 				{/if}
-
-				{#each selected.versions as version (version.id)}
-					<div class="version-block">
-						{#if version.events.length > 0}
-							<div class="version-events">
-								{#each version.events as event (event.id)}
-									<span class="event-tag">{event.name}</span>
-								{/each}
-							</div>
-						{/if}
-						<CharacterVersion
-							characterName={selected.name}
-							versionName={version.name}
-							companyName={version.company?.name ?? null}
-							expertise={version.expertise}
-							items={version.items}
-							implants={version.implants}
-						/>
-					</div>
-				{/each}
-
-				{#if selected.versions.length === 0}
-					<span class="status">no versions yet</span>
-				{/if}
+				<CharacterVersion
+					characterName={selectedCharacter?.name ?? ''}
+					versionName={selectedVersion.name}
+					companyName={selectedVersion.company?.name ?? null}
+					expertise={selectedVersion.expertise}
+					items={selectedVersion.items}
+					implants={selectedVersion.implants}
+				/>
 			</div>
 		{/if}
 	</div>
@@ -141,33 +149,66 @@
 		flex-direction: column;
 	}
 
-	.entry {
+	.character-node {
+		display: flex;
+		flex-direction: column;
+		border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 15%, transparent);
+		padding: 0.4rem 0;
+	}
+
+	.character-header {
 		display: flex;
 		align-items: center;
-		padding: 0.25rem 0.75rem;
+		justify-content: space-between;
+		padding: 0.2rem 0.75rem;
+		gap: 0.5rem;
+	}
+
+	.character-name {
+		font-size: 0.75em;
+		letter-spacing: 0.03em;
+		opacity: 0.9;
+		flex: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.version-entry {
+		display: flex;
+		align-items: center;
+		padding: 0.2rem 0.75rem 0.2rem 1.25rem;
 		background: none;
 		border: none;
 		color: var(--color-main);
 		font-family: inherit;
-		font-size: 0.75em;
+		font-size: 0.68em;
 		text-align: left;
 		cursor: pointer;
 		width: 100%;
 		letter-spacing: 0.03em;
-		opacity: 0.75;
+		opacity: 0.55;
 		transition: opacity 0.1s;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
-	.entry:hover {
-		opacity: 1;
+	.version-entry:hover {
+		opacity: 0.85;
 	}
 
-	.entry.active {
+	.version-entry.active {
 		opacity: 1;
 		color: var(--color-accent);
+	}
+
+	.no-versions {
+		padding: 0.15rem 0.75rem 0.15rem 1.25rem;
+		font-size: 0.62em;
+		opacity: 0.3;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
 	}
 
 	.status {
@@ -197,39 +238,6 @@
 		flex-direction: column;
 		gap: 1.5rem;
 		flex: 1;
-	}
-
-	.backstory-row {
-		padding-bottom: 0.5rem;
-		border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
-	}
-
-	.backstory-link {
-		font-size: 0.72em;
-		color: var(--color-accent);
-		text-decoration: none;
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		opacity: 0.8;
-		transition: opacity 0.1s;
-	}
-
-	.backstory-link:hover {
-		opacity: 1;
-		text-decoration: underline;
-	}
-
-	.version-block {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		padding-bottom: 1.5rem;
-		border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 15%, transparent);
-	}
-
-	.version-block:last-child {
-		border-bottom: none;
-		padding-bottom: 0;
 	}
 
 	.version-events {

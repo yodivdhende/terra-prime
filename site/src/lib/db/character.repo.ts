@@ -36,7 +36,7 @@ class CharacterRepo {
   public async getByOwner(ownerId: number): Promise<Character[]> {
     const connection = mysqlconnFn();
     const [result] = await connection.execute(
-      `SELECT c.Id as id, c.Name as name, c.Owner as ownerId, u.Name as ownerName, c.ImplantLimit as implantLimit
+      `SELECT c.Id as id, c.Name as name, c.Owner as ownerId, u.Name as ownerName, c.BackstoryId as backstoryId, c.ImplantLimit as implantLimit
 			 FROM Characters c
 			 JOIN Users u ON u.Id = c.Owner
 			 WHERE c.Owner = ?`,

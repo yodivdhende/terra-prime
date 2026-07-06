@@ -31,7 +31,8 @@ function createCredentialStore() {
         console.error('init could not load', { error });
       }
     },
-    logout() {
+    async logout() {
+      await fetch('/api/authentication/logout', { method: 'POST' }).catch(() => {});
       _credentials = DEFAULT;
       if (browser) localStorage.removeItem(localStorageKeys.activeUser);
     }

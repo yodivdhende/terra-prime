@@ -18,8 +18,8 @@ class CredentialManager {
 		credentialStore.initFromStorage();
 	}
 
-	public logout(): void {
-		credentialStore.logout();
+	public async logout(): Promise<void> {
+		await credentialStore.logout();
 	}
 }
 

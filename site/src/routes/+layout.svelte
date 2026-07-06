@@ -7,34 +7,60 @@
 	import { credentialStore } from '$lib/local-utils/credential-store.svelte';
 	import { codexWindowManager } from '$lib/managers/codex-window-manager.svelte';
 
-	const PUBLIC_PATHS = ['/promo', '/main/login', '/info'];
+	const PUBLIC_PATHS = ['/promo', '/manage/login', '/info'];
+
+	let initialized = $state(false);
 
 	onMount(async () => {
-		if (page.url.pathname === '/') {
-			goto('/promo');
-			return;
-		}
-
 		credentialStore.initFromStorage();
 
-		const response = await fetch('/api/users/active');
-		if (response.status === 401) {
-			credentialStore.logout();
+		if (page.url.pathname === '/') {
+			goto('/codex');
 		}
+
+		const response = await fetch('/api/my/user');
+		if (response.status === 401) {
+			await credentialStore.logout();
+		}
+
+		initialized = true;
+
+		const originalFetch = window.fetch.bind(window);
+		let sessionCheckPromise: Promise<void> | null = null;
+
+		window.fetch = async (...args: Parameters<typeof fetch>): Promise<Response> => {
+			const res = await originalFetch(...args);
+			if (res.status === 401) {
+				const url = args[0]?.toString() ?? '';
+				if (!url.includes('/api/my/user')) {
+					if (!sessionCheckPromise) {
+						sessionCheckPromise = originalFetch('/api/my/user')
+							.then(async (check) => {
+								if (check.status === 401) await credentialStore.logout();
+							})
+							.finally(() => {
+								sessionCheckPromise = null;
+							});
+					}
+					await sessionCheckPromise;
+				}
+			}
+			return res;
+		};
 	});
 
 	$effect(() => {
+		if (!initialized) return;
 		if (!credentialStore.isLoggedIn) {
 			const path = page.url.pathname;
 			if (PUBLIC_PATHS.some((p) => path.startsWith(p))) return;
 
 			if (path.startsWith('/codex')) {
 				codexWindowManager.closeAll();
-				goto('/main/login');
-			} else if (path.startsWith('/main/dashboard/manage')) {
-				goto('/main/dashboard/manage');
+			} else if (path.startsWith('/manage')) {
+				goto('/manage/login');
 			} else if (path !== '/') {
-				goto('/main/login');
+				goto('/codex');
 			}
 		}
 	});

@@ -5,8 +5,8 @@
 
 	let { window }: { window: CodexWindow } = $props();
 
-	function logout() {
-		CREDENTIAL_MANAGER.logout();
+	async function logout() {
+		await CREDENTIAL_MANAGER.logout();
 		WINDOW_MANAGER.closeWindow(window.id);
 	}
 </script>

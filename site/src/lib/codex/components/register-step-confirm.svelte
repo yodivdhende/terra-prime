@@ -76,8 +76,9 @@
 						body: JSON.stringify(REGISTER_MANAGER.formAnswers)
 					}
 				);
-				const formData: { ok: boolean; status: number; error?: string } =
-					await formRes.json().catch(() => ({ ok: false, status: formRes.status }));
+				const formData: { ok: boolean; status: number; error?: string } = await formRes
+					.json()
+					.catch(() => ({ ok: false, status: formRes.status }));
 				if (!formData.ok) {
 					formSubmitError = {
 						message: formData.error ?? `form submission failed (${formData.status})`,
@@ -145,10 +146,12 @@
 				you are registered for <span class="highlight">{event?.name}</span> as
 				<span class="highlight">{CHARACTER_MANAGER.character.name}</span>
 			</p>
-			{#if FEATURE_MANAGER.backstoryEnabled && registeredCharacterId != null}
-				<BackstoryLink characterId={registeredCharacterId} />
-			{/if}
 		</div>
+		{#if FEATURE_MANAGER.backstoryEnabled && registeredCharacterId != null}
+			<div class="success create-backround">
+				<BackstoryLink characterId={registeredCharacterId} />
+			</div>
+		{/if}
 	{:else}
 		<div class="event-row">
 			<span class="event-label">event</span>
@@ -174,7 +177,12 @@
 				<p class="error">// {formSubmitError.message}</p>
 				{#if formSubmitError.responderUri}
 					<p class="form-error-hint">submit directly on the Google network:</p>
-					<a class="form-error-link" href={formSubmitError.responderUri} target="_blank" rel="noopener noreferrer">
+					<a
+						class="form-error-link"
+						href={formSubmitError.responderUri}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
 						{formSubmitError.responderUri}
 					</a>
 				{/if}
@@ -297,5 +305,9 @@
 	.highlight {
 		opacity: 1;
 		color: var(--color-main);
+	}
+
+	.create-backround {
+		background: color-mix(in srgb, var(--color-accent) 5%, transparent);
 	}
 </style>

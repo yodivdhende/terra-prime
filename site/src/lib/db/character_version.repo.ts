@@ -30,25 +30,25 @@ class CharacterVersionRepo {
       if (typeof characterItem.company !== 'number') continue;
       characterVersions.push({
         id: characterItem.id,
-        characterId: characterItem.charaacterId,
+        characterId: characterItem.characterId,
         name: characterItem.name,
         company: characterItem.company,
         expertise:
           expertise.status === 'fulfilled'
             ? expertise.value
-              .filter(({ characterVersionId }) => characterVersionId, characterItem.characterId)
+              .filter(({ characterVersionId }) => characterVersionId === characterItem.id)
               .map(({ expertiseId, value }) => ({ id: expertiseId, value }))
             : [],
         items:
           items.status === 'fulfilled'
             ? items.value
-              .filter(({ characterVersionId }) => characterVersionId, characterItem.characterId)
+              .filter(({ characterVersionId }) => characterVersionId === characterItem.id)
               .map(({ itemId, count }) => ({ id: itemId, count }))
             : [],
         implants:
           implants.status === 'fulfilled'
             ? implants.value
-              .filter(({ characterVersionId }) => characterVersionId, characterItem.characterId)
+              .filter(({ characterVersionId }) => characterVersionId === characterItem.id)
               .map(({ implantId, slot }) => ({ id: implantId, slot }))
             : []
       });
@@ -274,15 +274,26 @@ class CharacterVersionRepo {
         expertise:
           valueOrLogOfPromiseSetteld(expertise)
             ?.filter(({ characterVersionId }) => characterVersionId === characterItem.id)
-            .map(({ expertiseId, value }) => ({ id: expertiseId, value })) ?? [],
+            .reduce((acc, { expertiseId, value }) => {
+              if (!acc.some((e) => e.id === expertiseId)) acc.push({ id: expertiseId, value });
+              return acc;
+            }, [] as CharacterVersionExpertise[]) ?? [],
         items:
           valueOrLogOfPromiseSetteld(items)
             ?.filter(({ characterVersionId }) => characterVersionId === characterItem.id)
-            .map(({ itemId, count }) => ({ id: itemId, count })) ?? [],
+            .reduce((acc, { itemId, count }) => {
+              const existing = acc.find((i) => i.id === itemId);
+              if (existing) existing.count += count;
+              else acc.push({ id: itemId, count });
+              return acc;
+            }, [] as CharacterVersionItem[]) ?? [],
         implants:
           valueOrLogOfPromiseSetteld(implants)
             ?.filter(({ characterVersionId }) => characterVersionId === characterItem.id)
-            .map(({ implantId, slot }) => ({ id: implantId, slot })) ?? []
+            .reduce((acc, { implantId, slot }) => {
+              if (!acc.some((i) => i.id === implantId)) acc.push({ id: implantId, slot });
+              return acc;
+            }, [] as CharacterVersionImplant[]) ?? []
       });
     }
     return characterVersions;

@@ -8,8 +8,8 @@
 
 	let { data }: PageProps = $props();
 
-	let character = $state<Character | null>(null);
-	let version = $state<CharacterVersionFull | null>(null);
+	let character = $state<Character | null>(data.character ?? null);
+	let version = $state<CharacterVersionFull | null>(data.version ?? null);
 
 	$effect(() => {
 		character = data.character ?? null;

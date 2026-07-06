@@ -2,8 +2,6 @@
 	import { onMount } from 'svelte';
 	import type { Character, CharacterVersionFull } from '../managers/character-manager.svelte';
 	import CompanySelect from '$lib/components/company-select.svelte';
-	import BackstoryLink from '$lib/components/backstory-link.svelte';
-	import { FEATURE_MANAGER } from '../managers/feature-manager.svelte';
 
 	let {
 		character = $bindable(),
@@ -42,16 +40,6 @@
 	<span class="label">Company</span>
 	<CompanySelect bind:company={version.company} />
 </label>
-{#if !FEATURE_MANAGER.backstoryEnabled || character.id != null}
-<div class="name-field">
-	<span class="label">Backstory</span>
-	<BackstoryLink
-		characterId={character.id}
-		characterName={character.name}
-		bind:backstoryId={character.backstoryId}
-	/>
-</div>
-{/if}
 
 <style>
 	.name-field {

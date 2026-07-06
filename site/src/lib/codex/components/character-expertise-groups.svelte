@@ -4,13 +4,25 @@
 	import { GROUP_COLORS, GROUP_ICONS, EXPERTISE_INFO } from '$lib/codex/managers/expertise-icons';
 	import type { ExpertiseManager } from '$lib/codex/managers/expertise-manager.svelte';
 
-	type ExpertiseGroupEntry = { id: number; group: number; groupName: string; name?: string; value: number };
+	type ExpertiseGroupEntry = {
+		id: number;
+		group: number;
+		groupName: string;
+		name?: string;
+		value: number;
+	};
 
 	let {
 		expertise = [],
 		manager,
-		size = '1em'
-	}: { expertise?: ExpertiseGroupEntry[]; manager?: ExpertiseManager; size?: string } = $props();
+		size = '1em',
+		showNames = false
+	}: {
+		expertise?: ExpertiseGroupEntry[];
+		manager?: ExpertiseManager;
+		size?: string;
+		showNames?: boolean;
+	} = $props();
 
 	const groups = $derived.by(() => {
 		if (manager) {
@@ -36,6 +48,7 @@
 				count: number;
 			}
 		>();
+
 		for (const entry of expertise) {
 			if (!map.has(entry.group)) {
 				map.set(entry.group, {
@@ -57,28 +70,42 @@
 			average: group.count > 0 ? group.total / group.count : 0
 		}));
 	});
+
+	console.log({ EXPERTISE_INFO });
 </script>
 
 <div class="expertise-groups">
 	{#each groups as group (group.id)}
 		{@const groupIcon = GROUP_ICONS[group.id]}
 		<div class="group">
-			<div class="group-header">
-				{#if groupIcon}
+			{#if groupIcon}
+				<div class="group-icon">
 					<Icon src={groupIcon} color={group.color} tooltip={group.name} {size} />
-				{/if}
-				<div class="bar">
-					<ProgressBar value={group.average} color={group.color} name={group.name} />
 				</div>
+			{/if}
+			{#if showNames}
+				<div class="group-name">
+					<span class="group-name" style="color: {group.color}">{group.name}</span>
+				</div>
+			{/if}
+			<div class="group-bar bar">
+				<ProgressBar value={group.average} color={group.color} name={group.name} />
 			</div>
 			<div class="expertise">
 				{#each group.expertise as entry (entry.id)}
 					{@const entryIcon = EXPERTISE_INFO[entry.id]?.icon}
 					<div class="entry">
 						{#if entryIcon}
-							<Icon src={entryIcon} color={group.color} tooltip={entry.name} {size} />
+							<div class="entry-icon">
+								<Icon src={entryIcon} color={group.color} tooltip={entry.name} {size} />
+							</div>
 						{/if}
-						<div class="bar">
+						<!-- {#if showNames} -->
+						<div>
+							<span class="entry-name">{EXPERTISE_INFO[entry.id]?.name}</span>
+						</div>
+						<!-- {/if} -->
+						<div class="entry-bar bar">
 							<ProgressBar value={entry.value} color={group.color} name={entry.name} />
 						</div>
 					</div>
@@ -95,21 +122,36 @@
 		flex-direction: column;
 		gap: 0.75rem;
 		width: 100%;
+		font: 1.5em;
 	}
 
 	.group {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-	}
-
-	.group-header {
-		display: flex;
+		display: grid;
+		grid-template:
+			'icon name' min-content
+			'bar bar' min-content
+			'expertise expertise' min-content
+			/ min-content 1fr;
 		align-items: center;
 		gap: 0.25rem;
 	}
 
+	.group-icon {
+		grid-area: icon;
+	}
+	.group-name {
+		grid-area: name;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		opacity: 0.8;
+		white-space: nowrap;
+	}
+	.group-bar {
+		grid-area: bar;
+	}
+
 	.expertise {
+		grid-area: expertise;
 		display: flex;
 		flex-direction: column;
 		gap: 0.2rem;
@@ -117,12 +159,35 @@
 	}
 
 	.entry {
-		display: flex;
+		display: grid;
+		grid-template:
+			'icon name' min-content
+			'bar bar' min-content
+			/ min-content 1fr;
 		align-items: center;
 		gap: 0.25rem;
 	}
 
 	.bar {
 		width: 100%;
+	}
+
+	.entry-icon {
+		grid-area: icon;
+	}
+
+	.entry-name {
+		grid-area: name;
+		font-size: 0.7em;
+		opacity: 0.8;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		min-width: 0;
+		flex: 1;
+	}
+
+	.entry-bar {
+		grid-area: bar;
 	}
 </style>

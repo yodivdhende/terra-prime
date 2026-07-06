@@ -3,7 +3,7 @@ import {
   createLoginWindow,
   createLogoutWindow,
   createRegisterWindow,
-  createBackgroundWindow,
+  createCharacterOverviewWindow,
   createFolderWindow,
   createPdfWindow,
   createDocWindow,
@@ -31,9 +31,9 @@ function createWindowManager() {
     else if (!created && index >= 0) windows.splice(index, 1);
   }
 
-  function setBackgroundsEnabled(isLoggedIn: boolean) {
-    const created = createBackgroundWindow();
-    const index = windows.findIndex(w => w.id === 'backgrounds');
+  function setCharacterOverviewEnabled(isLoggedIn: boolean) {
+    const created = createCharacterOverviewWindow();
+    const index = windows.findIndex(w => w.id === 'character-overview');
     if (isLoggedIn && created && index < 0) windows.push(created);
     else if (!isLoggedIn && index >= 0) windows.splice(index, 1);
   }
@@ -120,7 +120,7 @@ function createWindowManager() {
     setLoginEnabled,
     setLogoutEnabled,
     setRegisterEnabled,
-    setBackgroundsEnabled,
+    setCharacterOverviewEnabled,
   }
 }
 

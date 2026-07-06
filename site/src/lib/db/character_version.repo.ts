@@ -1,5 +1,6 @@
 import { valueOrLogOfPromiseSetteld } from '$lib/utils/request';
 import { mysqlconnFn } from './mysql';
+import { eventParticipantsRepo } from './event_participants.repo';
 
 class CharacterVersionRepo {
   public async getAll(): Promise<CharacterVersionBare[]> {
@@ -98,9 +99,10 @@ class CharacterVersionRepo {
 
   public async delete(characterVersionId: number): Promise<void> {
     await Promise.all([
-      await this.deleteItems(characterVersionId),
-      await this.deleteImplants(characterVersionId),
-      await this.deleteSkills(characterVersionId)
+      this.deleteItems(characterVersionId),
+      this.deleteImplants(characterVersionId),
+      this.deleteSkills(characterVersionId),
+      eventParticipantsRepo.deleteForCharacterVersion(characterVersionId),
     ]);
     await this.deleteCharacterVerion(characterVersionId);
   }

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import { invalidate } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 	import Dropdown from '$lib/components/dropdown.svelte';
 	import { Settings2 } from '@lucide/svelte';
 	import type {
@@ -52,7 +52,7 @@
 			} else {
 				TOAST_MANAGER.error(`Delete failed (${response.status})`);
 			}
-			invalidate('/api/sessions');
+			await invalidateAll();
 		} catch (err: any) {
 			TOAST_MANAGER.error(err?.message ?? 'Something went wrong');
 		}

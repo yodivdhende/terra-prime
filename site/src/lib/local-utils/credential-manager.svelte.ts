@@ -15,11 +15,11 @@ class CredentialManager {
 	}
 
 	public initFromStorage(): void {
-		credentialStore.init();
+		credentialStore.initFromStorage();
 	}
 
-	public logout(): void {
-		credentialStore.clear();
+	public async logout(): Promise<void> {
+		await credentialStore.logout();
 	}
 }
 

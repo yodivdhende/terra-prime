@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import EventForm from '$lib/components/event-form.svelte';
-	import CharacterVersionOverview from '$lib/components/character-version-overview.svelte';
+	import CharacterVersionPreview from '$lib/components/character-version-preview.svelte';
 	import type { PageProps } from './$types';
 	import type { LarpEvent } from '$lib/db/event.repo';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
 	const participants = $derived(data.participants ?? []);
-	const skills = $derived(data.skills ?? []);
 	let event: LarpEvent | null = $state(null);
 	$effect(()=> {
 		const {event:loadEvent} = data;
@@ -87,8 +86,7 @@
 					<h3>{character.name} <span class="owner">({character.ownerName})</span></h3>
 					{#if version != null}
 						<p class="version-name">{version.name}</p>
-						<CharacterVersionOverview
-							skillCatalog={skills}
+						<CharacterVersionPreview
 							skills={version.skills}
 							items={version.items}
 							implants={version.implants}

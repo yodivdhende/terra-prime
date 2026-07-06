@@ -11,31 +11,24 @@ export type EventParticipantWithVersion = {
 export const load: PageServerLoad = async ({ params, fetch }) => {
 	return handleRequest(async () => {
 		const { id } = params;
-		if (id == null || typeof id != 'string')
-			return { event: undefined, participants: [], skills: [] };
+		if (id == null || typeof id != 'string') return { event: undefined, participants: [] };
 		const event = await (await fetch(`/api/events/${id}`, { method: 'GET' }))?.json();
-		if (event == null) return { event: undefined, participants: [], skills: [] };
+		if (event == null) return { event: undefined, participants: [] };
 
 		const characters: EventParticipantCharacter[] = await (
 			await fetch(`/api/events/${id}/participants`, { method: 'GET' })
 		)?.json();
 
-		const [participants, skillsRes] = await Promise.all([
-			Promise.all(
-				(characters ?? []).map(async (character) => {
-					const versionRes = await fetch(
-						`/api/characters/versions/${character.characterVersionId}/full`
-					);
-					const version = versionRes.ok
-						? ((await versionRes.json()) as CharacterVersionFull)
-						: null;
-					return { character, version };
-				})
-			),
-			fetch('/api/skills')
-		]);
-		const skills = skillsRes.ok ? await skillsRes.json() : [];
+		const participants: EventParticipantWithVersion[] = await Promise.all(
+			(characters ?? []).map(async (character) => {
+				const versionRes = await fetch(
+					`/api/characters/versions/${character.characterVersionId}/full`
+				);
+				const version = versionRes.ok ? ((await versionRes.json()) as CharacterVersionFull) : null;
+				return { character, version };
+			})
+		);
 
-		return { event, participants, skills };
+		return { event, participants };
 	});
 };

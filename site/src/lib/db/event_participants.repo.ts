@@ -30,7 +30,7 @@ class EventParticipatnsRepo {
       const connection = mysqlconnFn();
       await connection.execute(
         `
-                DELETE Event_Participants 
+                DELETE Event_Participants
                 WHERE EventId = :eventId
                 AND CharacterId = :characterVersionId
             `,
@@ -41,7 +41,7 @@ class EventParticipatnsRepo {
     }
   }
 
-  public async getPerticipants({ eventId }: { eventId: number }): Promise<Character[]> {
+  public async getPerticipants({ eventId }: { eventId: number }): Promise<EventParticipantCharacter[]> {
     try {
       const connection = mysqlconnFn();
       const [result] = await connection.execute(
@@ -50,7 +50,8 @@ class EventParticipatnsRepo {
 						c.Id as id,
 						c.Name as name,
 						u.Id as ownerId,
-						u.Name as ownerName
+						u.Name as ownerName,
+						cv.Id as characterVersionId
 					FROM Event_Participants ep
 					JOIN Character_Versions cv
 						on cv.Id = ep.CharacterVersion
@@ -64,12 +65,14 @@ class EventParticipatnsRepo {
       );
       if (Array.isArray(result) === false) return [];
       if (result.length === 0) return [];
-      const characters: Character[] = [];
-      for (const characterResult of result) {
-        if (isCharacter(characterResult)) characters.push(characterResult);
-        else
+      const characters: EventParticipantCharacter[] = [];
+      for (const row of result as any[]) {
+        const characterVersionId = row.characterVersionId;
+        if (isCharacter(row) && typeof characterVersionId === 'number') {
+          characters.push({ ...row, characterVersionId });
+        } else
           console.error(`%c sql result is not a character`, `background:red;color:black`, {
-            characterResult
+            characterResult: row
           });
       }
       return characters;
@@ -183,6 +186,8 @@ class EventParticipatnsRepo {
 }
 
 export const eventParticipantsRepo = new EventParticipatnsRepo();
+
+export type EventParticipantCharacter = Character & { characterVersionId: number };
 
 export type EventParticapant = {
   eventId: number;

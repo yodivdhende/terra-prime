@@ -16,10 +16,10 @@ class CharacterVersionRepo {
     if (Array.isArray(results) === false) return [];
     if (results.length === 0) return [];
     const ids = (results as any[]).map(({ id }) => id).filter((id): id is number => typeof id === 'number');
-    const [items, implants, skills] = await Promise.allSettled([
+    const [items, implants, expertise] = await Promise.allSettled([
       this.getItemsforCharacterVersions(ids),
       this.getImplantsforCharacterVersions(ids),
-      this.getSkillsForCharacterVerions(ids)
+      this.getExpertiseForCharacterVersions(ids)
     ]);
     const characterVersions: CharacterVersionBare[] = [];
     for (const characterItem of results as any[]) {
@@ -33,11 +33,11 @@ class CharacterVersionRepo {
         characterId: characterItem.charaacterId,
         name: characterItem.name,
         company: characterItem.company,
-        skills:
-          skills.status === 'fulfilled'
-            ? skills.value
+        expertise:
+          expertise.status === 'fulfilled'
+            ? expertise.value
               .filter(({ characterVersionId }) => characterVersionId, characterItem.characterId)
-              .map(({ skillId, value }) => ({ id: skillId, value }))
+              .map(({ expertiseId, value }) => ({ id: expertiseId, value }))
             : [],
         items:
           items.status === 'fulfilled'
@@ -69,7 +69,7 @@ class CharacterVersionRepo {
     );
     const versionId = (result as any).insertId as number;
     await Promise.all([
-      characterVersion.skills.length > 0 ? this.saveSkills({ versionId, skills: characterVersion.skills }) : Promise.resolve(),
+      characterVersion.expertise.length > 0 ? this.saveExpertise({ versionId, expertise: characterVersion.expertise }) : Promise.resolve(),
       characterVersion.items.length > 0 ? this.saveItems({ versionId, items: characterVersion.items }) : Promise.resolve(),
       characterVersion.implants.length > 0 ? this.saveImplants({ versionId, implants: characterVersion.implants }) : Promise.resolve(),
     ]);
@@ -87,10 +87,10 @@ class CharacterVersionRepo {
     await Promise.all([
       this.deleteItems(versionId),
       this.deleteImplants(versionId),
-      this.deleteSkills(versionId)
+      this.deleteExpertise(versionId)
     ]);
     await Promise.all([
-      characterVersion.skills.length > 0 ? this.saveSkills({ versionId, skills: characterVersion.skills }) : Promise.resolve(),
+      characterVersion.expertise.length > 0 ? this.saveExpertise({ versionId, expertise: characterVersion.expertise }) : Promise.resolve(),
       characterVersion.items.length > 0 ? this.saveItems({ versionId, items: characterVersion.items }) : Promise.resolve(),
       characterVersion.implants.length > 0 ? this.saveImplants({ versionId, implants: characterVersion.implants }) : Promise.resolve(),
     ]);
@@ -101,7 +101,7 @@ class CharacterVersionRepo {
     await Promise.all([
       this.deleteItems(characterVersionId),
       this.deleteImplants(characterVersionId),
-      this.deleteSkills(characterVersionId),
+      this.deleteExpertise(characterVersionId),
       eventParticipantsRepo.deleteForCharacterVersion(characterVersionId),
     ]);
     await this.deleteCharacterVerion(characterVersionId);
@@ -113,7 +113,7 @@ class CharacterVersionRepo {
     const connection = mysqlconnFn();
     const [result] = await connection.query(
       `
-      SELECT 
+      SELECT
         cvit.CharacterVersion as characterVersionId,
         cvit.Item as itemId,
 				cvit.Count as count
@@ -163,53 +163,53 @@ class CharacterVersionRepo {
     return implants;
   }
 
-  public async getSkillsForCharacterVerions(
+  public async getExpertiseForCharacterVersions(
     ids: number[]
-  ): Promise<{ characterVersionId: number; skillId: number; value: number }[]> {
+  ): Promise<{ characterVersionId: number; expertiseId: number; value: number }[]> {
     const connection = mysqlconnFn();
     const [result] = await connection.query(
       `
       SELECT
-        cvs.CharacterVersion as characterVersionId,
-        cvs.Skill as skillId,
-        cvs.Value as value
-      FROM Character_Version_Skills cvs
-      WHERE cvs.CharacterVersion in (:ids)
+        cve.CharacterVersion as characterVersionId,
+        cve.Expertise as expertiseId,
+        cve.Value as value
+      FROM Character_Version_Expertise cve
+      WHERE cve.CharacterVersion in (:ids)
       `,
       { ids }
     );
     if (Array.isArray(result) === false) return [];
     if (result.length === 0) return [];
-    const skills: { characterVersionId: number; skillId: number; value: number }[] = [];
+    const expertise: { characterVersionId: number; expertiseId: number; value: number }[] = [];
     for (const item of result) {
       if ('characterVersionId' in item === false || typeof item.characterVersionId !== 'number')
         continue;
-      if ('skillId' in item === false || typeof item.skillId != 'number') continue;
+      if ('expertiseId' in item === false || typeof item.expertiseId != 'number') continue;
       if ('value' in item === false || typeof item.value != 'number') continue;
-      skills.push({
+      expertise.push({
         characterVersionId: item.characterVersionId,
-        skillId: item.skillId,
+        expertiseId: item.expertiseId,
         value: item.value
       });
     }
-    return skills;
+    return expertise;
   }
 
-  public async saveSkills({
+  public async saveExpertise({
     versionId,
-    skills
+    expertise
   }: {
     versionId: number;
-    skills: CharacterVerionSkill[];
+    expertise: CharacterVersionExpertise[];
   }) {
-    this.deleteSkills(versionId);
+    this.deleteExpertise(versionId);
     const connection = mysqlconnFn();
     const [result] = await connection.query(
       `
-				INSERT INTO Character_Version_Skills (CharacterVersion, Skill, Value)
+				INSERT INTO Character_Version_Expertise (CharacterVersion, Expertise, Value)
 				VALUES ?
 			`,
-      [skills.map((skill) => [versionId, skill.id, skill.value])]
+      [expertise.map((e) => [versionId, e.id, e.value])]
     );
   }
 
@@ -229,10 +229,10 @@ class CharacterVersionRepo {
     );
   }
 
-  private async deleteSkills(versionId: number): Promise<void> {
+  private async deleteExpertise(versionId: number): Promise<void> {
     const connection = mysqlconnFn();
     await connection.query(
-      `DELETE FROM Character_Version_Skills cvs WHERE cvs.CharacterVersion = ?`,
+      `DELETE FROM Character_Version_Expertise cve WHERE cve.CharacterVersion = ?`,
       [versionId]
     );
   }
@@ -254,10 +254,10 @@ class CharacterVersionRepo {
     if (Array.isArray(results) === false) return [];
     if (results.length === 0) return [];
     const existingIds = (results as any[]).map(({ id }) => id).filter((id): id is number => typeof id === 'number');
-    const [items, implants, skills] = await Promise.allSettled([
+    const [items, implants, expertise] = await Promise.allSettled([
       this.getItemsforCharacterVersions(existingIds),
       this.getImplantsforCharacterVersions(existingIds),
-      this.getSkillsForCharacterVerions(existingIds)
+      this.getExpertiseForCharacterVersions(existingIds)
     ]);
     const characterVersions: CharacterVersionBare[] = [];
     for (const characterItem of results as any[]) {
@@ -271,10 +271,10 @@ class CharacterVersionRepo {
         characterId: characterItem.characterId,
         name: characterItem.name,
         company: characterItem.company,
-        skills:
-          valueOrLogOfPromiseSetteld(skills)
+        expertise:
+          valueOrLogOfPromiseSetteld(expertise)
             ?.filter(({ characterVersionId }) => characterVersionId === characterItem.id)
-            .map(({ skillId, value }) => ({ id: skillId, value })) ?? [],
+            .map(({ expertiseId, value }) => ({ id: expertiseId, value })) ?? [],
         items:
           valueOrLogOfPromiseSetteld(items)
             ?.filter(({ characterVersionId }) => characterVersionId === characterItem.id)
@@ -316,10 +316,10 @@ class CharacterVersionRepo {
     const versionIds = (results as any[])
       .map(({ id }) => id)
       .filter((id): id is number => typeof id === 'number');
-    const [items, implants, skills] = await Promise.allSettled([
+    const [items, implants, expertise] = await Promise.allSettled([
       this.getItemsforCharacterVersions(versionIds),
       this.getImplantsforCharacterVersions(versionIds),
-      this.getSkillsForCharacterVerions(versionIds)
+      this.getExpertiseForCharacterVersions(versionIds)
     ]);
     const characterVersions: CharacterVersionBare[] = [];
     for (const row of results as any[]) {
@@ -332,10 +332,10 @@ class CharacterVersionRepo {
         characterId: row.characterId,
         name: row.name,
         company: row.company,
-        skills:
-          valueOrLogOfPromiseSetteld(skills)
+        expertise:
+          valueOrLogOfPromiseSetteld(expertise)
             ?.filter(({ characterVersionId }) => characterVersionId === row.id)
-            .map(({ skillId, value }) => ({ id: skillId, value })) ?? [],
+            .map(({ expertiseId, value }) => ({ id: expertiseId, value })) ?? [],
         items:
           valueOrLogOfPromiseSetteld(items)
             ?.filter(({ characterVersionId }) => characterVersionId === row.id)
@@ -405,10 +405,10 @@ class CharacterVersionRepo {
     const versionIds = (results as any[])
       .map(({ id }) => id)
       .filter((id): id is number => typeof id === 'number');
-    const [items, implants, skills] = await Promise.allSettled([
+    const [items, implants, expertise] = await Promise.allSettled([
       this.getItemsforCharacterVersions(versionIds),
       this.getImplantsforCharacterVersions(versionIds),
-      this.getSkillsForCharacterVerions(versionIds)
+      this.getExpertiseForCharacterVersions(versionIds)
     ]);
     const characterVersions: CharacterVersionBare[] = [];
     for (const row of results as any[]) {
@@ -421,10 +421,10 @@ class CharacterVersionRepo {
         characterId: row.characterId,
         name: row.name,
         company: row.company,
-        skills:
-          valueOrLogOfPromiseSetteld(skills)
+        expertise:
+          valueOrLogOfPromiseSetteld(expertise)
             ?.filter(({ characterVersionId }) => characterVersionId === row.id)
-            .map(({ skillId, value }) => ({ id: skillId, value })) ?? [],
+            .map(({ expertiseId, value }) => ({ id: expertiseId, value })) ?? [],
         items:
           valueOrLogOfPromiseSetteld(items)
             ?.filter(({ characterVersionId }) => characterVersionId === row.id)
@@ -440,19 +440,19 @@ class CharacterVersionRepo {
 }
 export const characterVersionRepo = new CharacterVersionRepo();
 
-export type CharacterVerionSkill = {
+export type CharacterVersionExpertise = {
   id: number;
   value: number;
 };
 
-export function isCharacterVersionSkill(skill: unknown): skill is CharacterVerionSkill {
+export function isCharacterVersionExpertise(expertise: unknown): expertise is CharacterVersionExpertise {
   return (
-    typeof skill === 'object' &&
-    skill != null &&
-    'id' in skill &&
-    typeof skill.id === 'number' &&
-    'value' in skill &&
-    typeof skill.value === 'number'
+    typeof expertise === 'object' &&
+    expertise != null &&
+    'id' in expertise &&
+    typeof expertise.id === 'number' &&
+    'value' in expertise &&
+    typeof expertise.value === 'number'
   );
 }
 
@@ -492,7 +492,7 @@ export type CharacterVersionBare = {
   id: number | null;
   characterId: number;
   name: string;
-  skills: CharacterVerionSkill[];
+  expertise: CharacterVersionExpertise[];
   items: CharacterVersionItem[];
   implants: CharacterVersionImplant[];
   company: number;
@@ -508,9 +508,9 @@ export function isCharacterVersionBare(value: unknown): value is CharacterVersio
     typeof value.name === 'string' &&
     'characterId' in value &&
     typeof value.characterId === 'number' &&
-    'skills' in value &&
-    Array.isArray(value.skills) &&
-    value.skills.every(isCharacterVersionSkill) &&
+    'expertise' in value &&
+    Array.isArray(value.expertise) &&
+    value.expertise.every(isCharacterVersionExpertise) &&
     'items' in value &&
     Array.isArray(value.items) &&
     value.items.every(isCharacterVersionItem) &&
@@ -521,4 +521,3 @@ export function isCharacterVersionBare(value: unknown): value is CharacterVersio
     typeof value.company === 'number'
   );
 }
-

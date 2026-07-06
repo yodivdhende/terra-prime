@@ -1,22 +1,22 @@
 <script lang="ts">
 	import Icon from '$lib/codex/components/icon.svelte';
 	import ProgressBar from '$lib/codex/components/progress-bar.svelte';
-	import { GROUP_COLORS, GROUP_ICONS } from '$lib/codex/managers/skill-icons';
+	import { GROUP_COLORS, GROUP_ICONS } from '$lib/codex/managers/expertise-icons';
 	import type {
 		VersionImplant,
 		VersionItem,
-		VersionSkill
+		VersionExpertise
 	} from '$lib/codex/managers/character-manager.svelte';
 	import itemLogo from '$lib/assets/images/ItemLogo.svg?raw';
 	import implantLogo from '$lib/assets/images/ImplantLogo.svg?raw';
 
 	let {
-		skills,
+		expertise,
 		items,
 		implants,
 		size = '1.2em'
 	}: {
-		skills: VersionSkill[];
+		expertise: VersionExpertise[];
 		items: VersionItem[];
 		implants: VersionImplant[];
 		size?: string;
@@ -27,18 +27,18 @@
 			number,
 			{ id: number; name: string; color: string; total: number; count: number }
 		>();
-		for (const skill of skills) {
-			if (!map.has(skill.group)) {
-				map.set(skill.group, {
-					id: skill.group,
-					name: skill.groupName,
-					color: GROUP_COLORS[skill.group] ?? 'var(--color-accent)',
+		for (const entry of expertise) {
+			if (!map.has(entry.group)) {
+				map.set(entry.group, {
+					id: entry.group,
+					name: entry.groupName,
+					color: GROUP_COLORS[entry.group] ?? 'var(--color-accent)',
 					total: 0,
 					count: 0
 				});
 			}
-			const group = map.get(skill.group)!;
-			group.total += skill.value;
+			const group = map.get(entry.group)!;
+			group.total += entry.value;
 			group.count += 1;
 		}
 		return Array.from(map.values()).map((group) => ({

@@ -3,18 +3,18 @@ import { getContext, setContext } from "svelte";
 
 class EventCharacterVersionManager {
   public static CONTEXT_KEY = Symbol('EVENT_CHARACTER_VERSION_MANAGER_CONTEXT_KEY');
-  public skills: CharacterVersionBare['skills'] = $state([]);
+  public expertise: CharacterVersionBare['expertise'] = $state([]);
   public implants: CharacterVersionBare['implants'] = $state([]);
   public items: CharacterVersionBare['items'] = $state([]);
 
   public setCharacterVersion(character: CharacterVersionBare) {
-    this.skills = character.skills;
+    this.expertise = character.expertise;
     this.implants = character.implants;
     this.items = character.items;
   }
 
   public reset() {
-    this.skills = [];
+    this.expertise = [];
     this.implants = [];
     this.items = [];
   }

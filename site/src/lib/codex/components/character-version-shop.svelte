@@ -1,32 +1,32 @@
 <script lang="ts">
 	import CharacterEditor from './character-editor.svelte';
 	import CharacterCreateNav, { type Step } from './character-create-nav.svelte';
-	import ShopSkills, { type ShopSkill } from './shop-skills.svelte';
+	import ShopExpertise, { type ShopExpertise as ShopExpertiseType } from './shop-expertise.svelte';
 	import ShopItems, { type ShopItem } from './shop-items.svelte';
 	import ShopImplants, { type ShopImplant } from './shop-implants.svelte';
 	import type { Character, CharacterVersionFull } from '../managers/character-manager.svelte';
-	import type { SkillManager } from '../managers/skill-manager.svelte';
+	import type { ExpertiseManager } from '../managers/expertise-manager.svelte';
 
 	let {
 		character = $bindable(),
 		version = $bindable(),
-		skills = [],
+		expertise = [],
 		items = [],
 		implants = [],
 		budget = 0,
-		skillManager
+		expertiseManager
 	}: {
 		character: Character;
 		version: CharacterVersionFull;
-		skills?: ShopSkill[];
+		expertise?: ShopExpertiseType[];
 		items?: ShopItem[];
 		implants?: ShopImplant[];
 		budget?: number;
-		skillManager?: SkillManager;
+		expertiseManager?: ExpertiseManager;
 	} = $props();
 
 	type DiscountEntry = { id: number; discount: number };
-	type Discounts = { skills: DiscountEntry[]; items: DiscountEntry[]; implants: DiscountEntry[] };
+	type Discounts = { expertise: DiscountEntry[]; items: DiscountEntry[]; implants: DiscountEntry[] };
 
 	let activeStep = $state<Step>('details');
 	let discounts = $state<Discounts | null>(null);
@@ -39,29 +39,29 @@
 		}
 		fetch(`/api/companies/${companyId}/discounts`)
 			.then((r) => (r.ok ? r.json() : null))
-			.then((d: { skills: { skillId: number; discount: number }[]; items: { itemId: number; discount: number }[]; implants: { implantId: number; discount: number }[] } | null) => {
+			.then((d: { expertise: { expertiseId: number; discount: number }[]; items: { itemId: number; discount: number }[]; implants: { implantId: number; discount: number }[] } | null) => {
 				if (d == null) return;
 				discounts = {
-					skills: d.skills.map(({ skillId, discount }) => ({ id: skillId, discount })),
+					expertise: d.expertise.map(({ expertiseId, discount }) => ({ id: expertiseId, discount })),
 					items: d.items.map(({ itemId, discount }) => ({ id: itemId, discount })),
 					implants: d.implants.map(({ implantId, discount }) => ({ id: implantId, discount }))
 				};
 			});
 	});
 
-	const skillCostById = $derived(new Map(skills.map((s) => [s.id, s.cost ?? 0])));
+	const expertiseCostById = $derived(new Map(expertise.map((e) => [e.id, e.cost ?? 0])));
 	const itemCostById = $derived(new Map(items.map((i) => [i.id, i.cost ?? 0])));
 	const implantCostById = $derived(new Map(implants.map((i) => [i.id, i.cost ?? 0])));
 
-	const skillDiscountById = $derived(new Map((discounts?.skills ?? []).map((d) => [d.id, d.discount])));
+	const expertiseDiscountById = $derived(new Map((discounts?.expertise ?? []).map((d) => [d.id, d.discount])));
 	const itemDiscountById = $derived(new Map((discounts?.items ?? []).map((d) => [d.id, d.discount])));
 	const implantDiscountById = $derived(new Map((discounts?.implants ?? []).map((d) => [d.id, d.discount])));
 
-	const skillsSpent = $derived(
-		version.skills.reduce((sum, s) => {
-			const cost = skillCostById.get(s.id) ?? 0;
-			const discount = skillDiscountById.get(s.id) ?? 0;
-			return sum + Math.max(0, cost - discount) * s.value;
+	const expertiseSpent = $derived(
+		version.expertise.reduce((sum, e) => {
+			const cost = expertiseCostById.get(e.id) ?? 0;
+			const discount = expertiseDiscountById.get(e.id) ?? 0;
+			return sum + Math.max(0, cost - discount) * e.value;
 		}, 0)
 	);
 	const itemsSpent = $derived(
@@ -79,16 +79,16 @@
 			return sum + Math.max(0, cost - discount);
 		}, 0)
 	);
-	const spent = $derived(skillsSpent + itemsSpent + implantsSpent);
+	const spent = $derived(expertiseSpent + itemsSpent + implantsSpent);
 
 	// When no budget cap, shops are never blocked; nav hides the budget section.
 	const shopRemaining = $derived(budget > 0 ? budget - spent : Infinity);
 	const navRemaining = $derived(budget - spent);
 
-	const skillsForGroups = $derived(
-		version.skills.flatMap((ds) => {
-			const s = skills.find((sk) => sk.id === ds.id);
-			return s ? [{ id: ds.id, group: s.groupId, groupName: s.groupName, value: ds.value }] : [];
+	const expertiseForGroups = $derived(
+		version.expertise.flatMap((de) => {
+			const e = expertise.find((ex) => ex.id === de.id);
+			return e ? [{ id: de.id, group: e.groupId, groupName: e.groupName, value: de.value }] : [];
 		})
 	);
 </script>
@@ -97,23 +97,23 @@
 	<CharacterCreateNav
 		bind:activeStep
 		name={version.name}
-		skills={{ count: version.skills.length, groups: skillsForGroups, spent: skillsSpent }}
+		expertise={{ count: version.expertise.length, groups: expertiseForGroups, spent: expertiseSpent }}
 		items={{ count: version.items.length, total: itemsTotal, spent: itemsSpent }}
 		implants={{ count: version.implants.length, spent: implantsSpent, slotCount: character.implantLimit ?? 2 }}
 		{budget}
 		remaining={navRemaining}
-		{skillManager}
+		{expertiseManager}
 	/>
 
 	<div class="shop scroll">
 		{#if activeStep === 'details'}
 			<CharacterEditor bind:character bind:version />
-		{:else if activeStep === 'skills'}
-			<ShopSkills
-				catalog={skills}
-				bind:selected={version.skills}
+		{:else if activeStep === 'expertise'}
+			<ShopExpertise
+				catalog={expertise}
+				bind:selected={version.expertise}
 				remaining={shopRemaining}
-				discounts={skillDiscountById}
+				discounts={expertiseDiscountById}
 			/>
 		{:else if activeStep === 'items'}
 			<ShopItems

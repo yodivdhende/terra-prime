@@ -10,7 +10,7 @@
 	} from '../../../routes/api/my/characters/versions/+server';
 	import type { CharacterManager } from '../managers/character-manager.svelte';
 	import type { RegisterManager } from '../managers/register-manager.svelte';
-	import CharacterSkillGroups from './character-skill-groups.svelte';
+	import CharacterExpertiseGroups from './character-expertise-groups.svelte';
 
 	let {
 		REGISTER_MANAGER,
@@ -93,7 +93,7 @@
 								</div>
 								<div class="version-stats">
 									<span class="stat">
-										<CharacterSkillGroups skills={ver.skills} size={iconSize} />
+										<CharacterExpertiseGroups expertise={ver.expertise} size={iconSize} />
 									</span>
 									<span class="stat">
 										<Icon src={itemLogo} color="white" tooltip="Items" size={iconSize} />

@@ -3,12 +3,12 @@ import type {
   CharacterVersionFull,
   VersionImplant,
   VersionItem,
-  VersionSkill
+  VersionExpertise
 } from '../../../routes/api/my/characters/versions/+server';
-import { createSkillManager } from './skill-manager.svelte';
-import type { Skill } from '$lib/db/skills.repo';
+import { createExpertiseManager } from './expertise-manager.svelte';
+import type { Expertise } from '$lib/db/expertise.repo';
 
-export type { CharacterVersionFull, VersionImplant, VersionItem, VersionSkill };
+export type { CharacterVersionFull, VersionImplant, VersionItem, VersionExpertise };
 
 export type Character = {
   id: number | null;
@@ -31,16 +31,16 @@ function emptyCharacter(): Character {
 }
 
 function emptyCharacterVersion(): CharacterVersionFull {
-  return { id: null, characterId: 0, name: '', skills: [], items: [], implants: [], events: [], company: null };
+  return { id: null, characterId: 0, name: '', expertise: [], items: [], implants: [], events: [], company: null };
 }
 
 export function createCharacterManager() {
   let character = $state<Character>(emptyCharacter());
   let version = $state<CharacterVersionFull>(emptyCharacterVersion());
-  const skillManager = createSkillManager();
+  const expertiseManager = createExpertiseManager();
 
   $effect(() => {
-    skillManager.setValues(version.skills);
+    expertiseManager.setValues(version.expertise);
   });
 
   const ready = $derived.by(() => {
@@ -56,11 +56,11 @@ export function createCharacterManager() {
   function reset() {
     character = emptyCharacter();
     version = emptyCharacterVersion();
-    skillManager.reset();
+    expertiseManager.reset();
   }
 
-  function setCatalog(catalog: Skill[]) {
-    skillManager.setCatalog(catalog);
+  function setCatalog(catalog: Expertise[]) {
+    expertiseManager.setCatalog(catalog);
   }
 
   return {
@@ -71,7 +71,7 @@ export function createCharacterManager() {
     get ready() { return ready; },
     get isNewCharacter() { return isNewCharacter; },
     get isNewVersion() { return isNewVersion; },
-    get skillManager() { return skillManager; },
+    get expertiseManager() { return expertiseManager; },
     setCatalog,
     reset,
   };

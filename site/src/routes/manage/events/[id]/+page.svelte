@@ -87,7 +87,7 @@
 					{#if version != null}
 						<p class="version-name">{version.name}</p>
 						<CharacterVersionPreview
-							skills={version.skills}
+							expertise={version.expertise}
 							items={version.items}
 							implants={version.implants}
 						/>

@@ -40,7 +40,7 @@
 		id: number | null;
 		characterId: number;
 		name: string;
-		skills: { id: number; value: number }[];
+		expertise: { id: number; value: number }[];
 		items: { id: number; count: number }[];
 		implants: { id: number; slot: number }[];
 		company: number | null;
@@ -120,7 +120,7 @@
 					id: version.id,
 					characterId: character.id ?? 0,
 					name: version.name,
-					skills: version.skills.map(({ id, value }) => ({ id, value })),
+					expertise: version.expertise.map(({ id, value }) => ({ id, value })),
 					items: version.items.map(({ id, count }) => ({ id, count })),
 					implants: version.implants.map(({ id, slot }) => ({ id, slot })),
 					company: version.company?.id ?? null
@@ -153,7 +153,7 @@
 				characterName={CHARACTER_MANAGER.character.name}
 				versionName={CHARACTER_MANAGER.version.name}
 				companyName={CHARACTER_MANAGER.version.company?.name ?? null}
-				skills={CHARACTER_MANAGER.version.skills}
+				expertise={CHARACTER_MANAGER.version.expertise}
 				items={CHARACTER_MANAGER.version.items}
 				implants={summaryImplants}
 			/>

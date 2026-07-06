@@ -1,13 +1,12 @@
 <script lang="ts">
 	import { type PageProps } from './$types';
 	import ConfirmModal from '$lib/components/confirm-modal.svelte';
+	import CharacterVersionPreview from '$lib/components/character-version-preview.svelte';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
 
-	let versions: { id: number; name: string; characterId: number; characterName: string }[] = $state(
-		[]
-	);
+	let versions = $state(data.versions);
 	$effect(() => {
 		versions = data.versions;
 	});
@@ -46,6 +45,7 @@
 				<th>Id</th>
 				<th>Character</th>
 				<th>Name</th>
+				<th>Overview</th>
 				<th></th>
 				<th></th>
 			</tr>
@@ -56,6 +56,16 @@
 					<td>{version.id}</td>
 					<td>{version.characterName}</td>
 					<td>{version.name}</td>
+					<td class="preview-cell">
+						{#if version.full}
+							<CharacterVersionPreview
+								expertise={version.full.expertise}
+								items={version.full.items}
+								implants={version.full.implants}
+								size="1em"
+							/>
+						{/if}
+					</td>
 					<td><a href="/manage/versions/{version.id}">edit</a></td>
 					<td
 						><button class="btn btn-danger" onclick={() => requestDelete(version.id)}>delete</button
@@ -65,7 +75,7 @@
 			{/each}
 			{#if versions.length === 0}
 				<tr>
-					<td colspan="5" class="empty">no versions</td>
+					<td colspan="6" class="empty">no versions</td>
 				</tr>
 			{/if}
 		</tbody>
@@ -105,6 +115,11 @@
 
 	td {
 		padding: 8px;
+	}
+
+	.preview-cell {
+		min-width: 200px;
+		max-width: 320px;
 	}
 
 	.empty {

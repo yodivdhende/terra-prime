@@ -16,6 +16,15 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 	});
 };
 
+export const DELETE: RequestHandler = async ({ cookies, params }) => {
+	return handleRequest(async () => {
+		await authGuardForUser(getSessionToken(cookies), [UserRole.admin]);
+		const versionId = isNumberOrError(params.versionId);
+		await characterVersionRepo.delete(versionId);
+		return new Response();
+	});
+};
+
 export const PUT: RequestHandler = async ({ cookies, request}) => {
 	return handleRequest(async () => {
 		await authGuardForUser(getSessionToken(cookies), [UserRole.user]);

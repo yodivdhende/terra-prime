@@ -78,6 +78,14 @@ class EventParticipatnsRepo {
     }
   }
 
+  public async deleteForCharacterVersion(characterVersionId: number): Promise<void> {
+    const connection = mysqlconnFn();
+    await connection.execute(
+      `DELETE FROM Event_Participants WHERE CharacterVersion = ?`,
+      [characterVersionId]
+    );
+  }
+
   public async getEventsForCharacters(characterIds: number[]): Promise<{ characterId: number; characterVersionId: number; eventId: number; eventName: string }[]> {
     if (characterIds.length === 0) return [];
     try {

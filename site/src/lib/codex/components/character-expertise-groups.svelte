@@ -15,7 +15,7 @@
 	let {
 		expertise = [],
 		manager,
-		size = '1em',
+		size = '2em',
 		showNames = false
 	}: {
 		expertise?: ExpertiseGroupEntry[];
@@ -85,32 +85,32 @@
 			{/if}
 			{#if showNames}
 				<div class="group-name">
-					<span class="group-name" style="color: {group.color}">{group.name}</span>
+					<span style="color: {group.color}">{group.name}</span>
 				</div>
 			{/if}
 			<div class="group-bar bar">
 				<ProgressBar value={group.average} color={group.color} name={group.name} />
 			</div>
-			<div class="expertise">
-				{#each group.expertise as entry (entry.id)}
-					{@const entryIcon = EXPERTISE_INFO[entry.id]?.icon}
-					<div class="entry">
-						{#if entryIcon}
-							<div class="entry-icon">
-								<Icon src={entryIcon} color={group.color} tooltip={entry.name} {size} />
-							</div>
-						{/if}
-						<!-- {#if showNames} -->
-						<div>
-							<span class="entry-name">{EXPERTISE_INFO[entry.id]?.name}</span>
+		</div>
+		<div class="expertise">
+			{#each group.expertise as entry (entry.id)}
+				{@const entryIcon = EXPERTISE_INFO[entry.id]?.icon}
+				<div class="entry">
+					{#if entryIcon}
+						<div class="entry-icon">
+							<Icon src={entryIcon} color={group.color} tooltip={entry.name} {size} />
 						</div>
-						<!-- {/if} -->
-						<div class="entry-bar bar">
-							<ProgressBar value={entry.value} color={group.color} name={entry.name} />
-						</div>
+					{/if}
+					<!-- {#if showNames} -->
+					<div class="entry-name">
+						{EXPERTISE_INFO[entry.id]?.name}
 					</div>
-				{/each}
-			</div>
+					<!-- {/if} -->
+					<div class="entry-bar bar">
+						<ProgressBar value={entry.value} color={group.color} name={entry.name} />
+					</div>
+				</div>
+			{/each}
 		</div>
 	{/each}
 </div>
@@ -128,12 +128,11 @@
 	.group {
 		display: grid;
 		grid-template:
-			'icon name' min-content
-			'bar bar' min-content
-			'expertise expertise' min-content
+			'icon name' 1em
+			'icon bar' min-content
 			/ min-content 1fr;
 		align-items: center;
-		gap: 0.25rem;
+		column-gap: 0.25rem;
 	}
 
 	.group-icon {
@@ -151,7 +150,6 @@
 	}
 
 	.expertise {
-		grid-area: expertise;
 		display: flex;
 		flex-direction: column;
 		gap: 0.2rem;
@@ -161,8 +159,8 @@
 	.entry {
 		display: grid;
 		grid-template:
-			'icon name' min-content
-			'bar bar' min-content
+			'icon name' 0.7em
+			'icon bar' min-content
 			/ min-content 1fr;
 		align-items: center;
 		gap: 0.25rem;
@@ -182,9 +180,6 @@
 		opacity: 0.8;
 		white-space: nowrap;
 		overflow: hidden;
-		text-overflow: ellipsis;
-		min-width: 0;
-		flex: 1;
 	}
 
 	.entry-bar {

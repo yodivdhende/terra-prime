@@ -37,9 +37,10 @@ export type VersionEvent = {
 	name: string;
 };
 
-export type CharacterVersionFull = Omit<CharacterVersionBare, 'skills' | 'items' | 'company'> & {
+export type CharacterVersionFull = Omit<CharacterVersionBare, 'skills' | 'items' | 'implants' | 'company'> & {
 	skills: VersionSkill[];
 	items: VersionItem[];
+	implants: VersionImplant[];
 	events: VersionEvent[];
 	company: Company | null;
 };
@@ -129,7 +130,11 @@ function toFullVersion(
 			if (!item) return [];
 			return [{ id: i.id, name: item.name, description: item.description, count: i.count }];
 		}),
-		implants: version.implants.map((vi) => ({ id: vi.id, slot: vi.slot })),
+		implants: version.implants.flatMap((vi) => {
+			const implant = implantById.get(vi.id);
+			if (!implant) return [];
+			return [{ id: vi.id, name: implant.name, description: implant.description, slot: vi.slot }];
+		}),
 		events: version.id != null ? (eventsByVersionId.get(version.id) ?? []) : []
 	};
 }

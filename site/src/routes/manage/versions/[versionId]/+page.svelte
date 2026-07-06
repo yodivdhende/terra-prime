@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CharacterVersionShop from '$lib/codex/components/character-version-shop.svelte';
+	import CharacterVersionOverview from '$lib/components/character-version-overview.svelte';
 	import type { Character } from '$lib/db/character.repo';
 	import type { CharacterVersionFull } from '$lib/codex/managers/character-manager.svelte';
 	import { type PageProps } from './$types';
@@ -61,6 +62,13 @@
 			<CharacterVersionShop bind:character bind:version {skills} {items} {implants} />
 		</div>
 
+		<CharacterVersionOverview
+			skillCatalog={skills}
+			skills={version.skills}
+			items={version.items}
+			implants={version.implants}
+		/>
+
 		<div class="actions">
 			{#if saveError}
 				<span class="error">{saveError}</span>
@@ -87,6 +95,11 @@
 		flex: 1;
 		min-height: 0;
 		margin-top: 8px;
+	}
+
+	:global(.overview) {
+		margin-top: 8px;
+		flex-shrink: 0;
 	}
 
 	.actions {

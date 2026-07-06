@@ -13,5 +13,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		files,
 		loginEnabled: locals.featureFlags['Login'] ?? false,
 		registerEnabled: locals.featureFlags['Register'] ?? false,
+		backstoryEnabled: locals.featureFlags['Backstory'] ?? false,
 	};
 };

@@ -26,7 +26,11 @@
 	} = $props();
 
 	type DiscountEntry = { id: number; discount: number };
-	type Discounts = { expertise: DiscountEntry[]; items: DiscountEntry[]; implants: DiscountEntry[] };
+	type Discounts = {
+		expertise: DiscountEntry[];
+		items: DiscountEntry[];
+		implants: DiscountEntry[];
+	};
 
 	let activeStep = $state<Step>('details');
 	let discounts = $state<Discounts | null>(null);
@@ -39,23 +43,40 @@
 		}
 		fetch(`/api/companies/${companyId}/discounts`)
 			.then((r) => (r.ok ? r.json() : null))
-			.then((d: { expertise: { expertiseId: number; discount: number }[]; items: { itemId: number; discount: number }[]; implants: { implantId: number; discount: number }[] } | null) => {
-				if (d == null) return;
-				discounts = {
-					expertise: d.expertise.map(({ expertiseId, discount }) => ({ id: expertiseId, discount })),
-					items: d.items.map(({ itemId, discount }) => ({ id: itemId, discount })),
-					implants: d.implants.map(({ implantId, discount }) => ({ id: implantId, discount }))
-				};
-			});
+			.then(
+				(
+					d: {
+						expertise: { expertiseId: number; discount: number }[];
+						items: { itemId: number; discount: number }[];
+						implants: { implantId: number; discount: number }[];
+					} | null
+				) => {
+					if (d == null) return;
+					discounts = {
+						expertise: d.expertise.map(({ expertiseId, discount }) => ({
+							id: expertiseId,
+							discount
+						})),
+						items: d.items.map(({ itemId, discount }) => ({ id: itemId, discount })),
+						implants: d.implants.map(({ implantId, discount }) => ({ id: implantId, discount }))
+					};
+				}
+			);
 	});
 
 	const expertiseCostById = $derived(new Map(expertise.map((e) => [e.id, e.cost ?? 0])));
 	const itemCostById = $derived(new Map(items.map((i) => [i.id, i.cost ?? 0])));
 	const implantCostById = $derived(new Map(implants.map((i) => [i.id, i.cost ?? 0])));
 
-	const expertiseDiscountById = $derived(new Map((discounts?.expertise ?? []).map((d) => [d.id, d.discount])));
-	const itemDiscountById = $derived(new Map((discounts?.items ?? []).map((d) => [d.id, d.discount])));
-	const implantDiscountById = $derived(new Map((discounts?.implants ?? []).map((d) => [d.id, d.discount])));
+	const expertiseDiscountById = $derived(
+		new Map((discounts?.expertise ?? []).map((d) => [d.id, d.discount]))
+	);
+	const itemDiscountById = $derived(
+		new Map((discounts?.items ?? []).map((d) => [d.id, d.discount]))
+	);
+	const implantDiscountById = $derived(
+		new Map((discounts?.implants ?? []).map((d) => [d.id, d.discount]))
+	);
 
 	const expertiseSpent = $derived(
 		version.expertise.reduce((sum, e) => {
@@ -97,9 +118,17 @@
 	<CharacterCreateNav
 		bind:activeStep
 		name={version.name}
-		expertise={{ count: version.expertise.length, groups: expertiseForGroups, spent: expertiseSpent }}
+		expertise={{
+			count: version.expertise.length,
+			groups: expertiseForGroups,
+			spent: expertiseSpent
+		}}
 		items={{ count: version.items.length, total: itemsTotal, spent: itemsSpent }}
-		implants={{ count: version.implants.length, spent: implantsSpent, slotCount: character.implantLimit ?? 2 }}
+		implants={{
+			count: version.implants.length,
+			spent: implantsSpent,
+			slotCount: character.implantLimit ?? 2
+		}}
 		{budget}
 		remaining={navRemaining}
 		{expertiseManager}
@@ -139,12 +168,13 @@
 		display: grid;
 		grid-template-columns: 200px 1fr;
 		gap: 0;
-		height: 100%;
 		min-height: 0;
+		height: 100%;
 	}
 
 	.shop {
 		padding: 1rem 1.25rem;
 		overflow-y: auto;
+		height: 100%;
 	}
 </style>

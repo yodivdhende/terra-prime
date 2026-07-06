@@ -62,13 +62,6 @@
 			<CharacterVersionShop bind:character bind:version {expertise} {items} {implants} />
 		</div>
 
-		<CharacterVersionOverview
-			expertiseCatalog={expertise}
-			expertise={version.expertise}
-			items={version.items}
-			implants={version.implants}
-		/>
-
 		<div class="actions">
 			{#if saveError}
 				<span class="error">{saveError}</span>
@@ -87,13 +80,14 @@
 		display: flex;
 		flex-direction: column;
 		padding: 8px;
-		height: 100%;
+		height: 90vh;
 		box-sizing: border-box;
 	}
 
 	.shop-wrapper {
 		flex: 1;
 		min-height: 0;
+		overflow: hidden;
 		margin-top: 8px;
 	}
 

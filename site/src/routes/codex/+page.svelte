@@ -16,7 +16,7 @@
 	$effect(() => WINDOW_MANAGER.setLogoutEnabled(CREDENTIAL_MANAGER.isLogedIn));
 	$effect(() => WINDOW_MANAGER.setBackgroundsEnabled(CREDENTIAL_MANAGER.isLogedIn));
 	$effect(() => {
-		FEATURE_MANAGER.setFlags({ loginEnabled: data.loginEnabled, registerEnabled: data.registerEnabled });
+		FEATURE_MANAGER.setFlags({ loginEnabled: data.loginEnabled, registerEnabled: data.registerEnabled, backstoryEnabled: data.backstoryEnabled });
 		WINDOW_MANAGER.setLoginEnabled(FEATURE_MANAGER.loginEnabled && !CREDENTIAL_MANAGER.isLogedIn);
 	});
 

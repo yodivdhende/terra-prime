@@ -84,7 +84,7 @@ export const PUT: RequestHandler = async ({ cookies, params, request }) => {
       userId: body.ownerId,
       characterVersionId,
     });
-    return new Response();
+    return json({ characterId });
   });
 };
 

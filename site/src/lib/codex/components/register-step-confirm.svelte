@@ -6,6 +6,8 @@
 		type CharacterVersionFull
 	} from '../managers/character-manager.svelte';
 	import CharacterVersion from './character-version.svelte';
+	import { FEATURE_MANAGER } from '../managers/feature-manager.svelte';
+	import BackstoryLink from '$lib/components/backstory-link.svelte';
 
 	let {
 		REGISTER_MANAGER,
@@ -16,6 +18,7 @@
 	let submitting = $state(false);
 	let error = $state<string | null>(null);
 	let success = $state(false);
+	let registeredCharacterId = $state<number | null>(null);
 
 	type ImplantCatalogEntry = { id: number; name: string; description: string };
 	let implantCatalog = $state<Map<number, ImplantCatalogEntry>>(new Map());
@@ -94,6 +97,10 @@
 				body: JSON.stringify(body)
 			});
 			if (!res.ok) throw new Error(`registration failed (${res.status})`);
+			if (FEATURE_MANAGER.backstoryEnabled && REGISTER_MANAGER.isNewCharacter) {
+				const data = await res.json();
+				registeredCharacterId = data.characterId ?? null;
+			}
 			success = true;
 		} catch (err) {
 			error = `${err instanceof Error ? err.message : err}`;
@@ -138,6 +145,9 @@
 				you are registered for <span class="highlight">{event?.name}</span> as
 				<span class="highlight">{CHARACTER_MANAGER.character.name}</span>
 			</p>
+			{#if FEATURE_MANAGER.backstoryEnabled && registeredCharacterId != null}
+				<BackstoryLink characterId={registeredCharacterId} />
+			{/if}
 		</div>
 	{:else}
 		<div class="event-row">

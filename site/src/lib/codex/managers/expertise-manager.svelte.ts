@@ -16,11 +16,12 @@ export function createExpertiseManager() {
       g.total += e.value;
       g.count += 1;
     }
-    return Array.from(map.entries()).map(([id, { name, total, count }]) => ({
-      id: Number(id),
-      name,
-      average: count > 0 ? total / count : 0
-    }));
+    return Array.from(map.entries())
+      .map(([id, { name, total, count }]) => {
+        const average = count > 0 ? total / count : 0;
+        console.log({ name, average, count, total });
+        return { id: Number(id), name, average };
+      });
   });
 
   const selected: ExpertiseEntry[] = $derived(expertise.filter((e) => e.value > 0));

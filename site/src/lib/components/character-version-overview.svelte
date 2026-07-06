@@ -1,37 +1,37 @@
 <script lang="ts">
-	import type { Skill } from '$lib/db/skills.repo';
+	import type { Expertise } from '$lib/db/expertise.repo';
 	import type {
 		VersionImplant,
 		VersionItem,
-		VersionSkill
+		VersionExpertise
 	} from '$lib/codex/managers/character-manager.svelte';
-	import SkillsOverview from './skills-overview.svelte';
+	import ExpertiseOverview from './expertise-overview.svelte';
 
 	let {
 		title = 'Overview',
-		skillCatalog,
-		skills,
+		expertiseCatalog,
+		expertise,
 		items,
 		implants,
 		open = false
 	}: {
 		title?: string;
-		skillCatalog: Skill[];
-		skills: VersionSkill[];
+		expertiseCatalog: Expertise[];
+		expertise: VersionExpertise[];
 		items: VersionItem[];
 		implants: VersionImplant[];
 		open?: boolean;
 	} = $props();
 
-	const skillValues = $derived(skills.map((s) => ({ id: s.id, value: s.value })));
+	const expertiseValues = $derived(expertise.map((e) => ({ id: e.id, value: e.value })));
 </script>
 
 <details class="overview" {open}>
 	<summary>{title}</summary>
 	<div class="sections">
 		<section>
-			<h4>Skills</h4>
-			<SkillsOverview skills={skillCatalog} values={skillValues} />
+			<h4>Expertise</h4>
+			<ExpertiseOverview expertise={expertiseCatalog} values={expertiseValues} />
 		</section>
 		<section>
 			<h4>Items</h4>

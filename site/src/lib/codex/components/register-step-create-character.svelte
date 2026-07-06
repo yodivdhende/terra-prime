@@ -1,6 +1,6 @@
 <script lang="ts">
 	import CharacterVersionShop from './character-version-shop.svelte';
-	import type { ShopSkill } from './shop-skills.svelte';
+	import type { ShopExpertise } from './shop-expertise.svelte';
 	import type { ShopItem } from './shop-items.svelte';
 	import type { ShopImplant } from './shop-implants.svelte';
 	import type { RegisterManager } from '../managers/register-manager.svelte';
@@ -17,7 +17,7 @@
 		CHARACTER_MANAGER
 	}: { REGISTER_MANAGER: RegisterManager; CHARACTER_MANAGER: CharacterManager } = $props();
 
-	let skills = $state<ShopSkill[]>([]);
+	let expertise = $state<ShopExpertise[]>([]);
 	let items = $state<ShopItem[]>([]);
 	let implants = $state<ShopImplant[]>([]);
 	let budget = $state<number>(0);
@@ -33,16 +33,16 @@
 		error = null;
 		try {
 			const characterId = CHARACTER_MANAGER.character.id;
-			const [skillsRes, itemsRes, implantsRes, eventRes] = await Promise.all([
-				fetch('/api/skills'),
+			const [expertiseRes, itemsRes, implantsRes, eventRes] = await Promise.all([
+				fetch('/api/expertise'),
 				fetch('/api/items'),
 				fetch('/api/implants'),
 				fetch(`/api/events/${eventId}`)
 			]);
 
-			if (skillsRes.ok) {
-				skills = await skillsRes.json();
-				CHARACTER_MANAGER.setCatalog(skills);
+			if (expertiseRes.ok) {
+				expertise = await expertiseRes.json();
+				CHARACTER_MANAGER.setCatalog(expertise);
 			}
 			if (itemsRes.ok) items = await itemsRes.json();
 			if (implantsRes.ok) implants = await implantsRes.json();
@@ -82,11 +82,11 @@
 		<CharacterVersionShop
 			bind:character={CHARACTER_MANAGER.character}
 			bind:version={CHARACTER_MANAGER.version}
-			{skills}
+			{expertise}
 			{items}
 			{implants}
 			{budget}
-			skillManager={CHARACTER_MANAGER.skillManager}
+			expertiseManager={CHARACTER_MANAGER.expertiseManager}
 		/>
 	{/if}
 </div>

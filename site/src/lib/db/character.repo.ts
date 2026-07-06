@@ -128,7 +128,7 @@ class CharacterRepo {
 
     if (versionIds.length > 0) {
       const placeholders = versionIds.map(() => '?').join(', ');
-      await connection.execute(`DELETE FROM Character_Version_Skills WHERE CharacterVersion IN (${placeholders})`, versionIds);
+      await connection.execute(`DELETE FROM Character_Version_Expertise WHERE CharacterVersion IN (${placeholders})`, versionIds);
       await connection.execute(`DELETE FROM Character_Version_Items WHERE CharacterVersion IN (${placeholders})`, versionIds);
       await connection.execute(`DELETE FROM Character_Version_Implants WHERE CharacterVersion IN (${placeholders})`, versionIds);
       await connection.execute(`DELETE FROM Event_Participants WHERE CharacterVersion IN (${placeholders})`, versionIds);

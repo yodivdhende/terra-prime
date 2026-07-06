@@ -16,7 +16,7 @@
 		version = data.version ?? null;
 	});
 
-	const skills = $derived(data.skills);
+	const expertise = $derived(data.expertise);
 	const items = $derived(data.items);
 	const implants = $derived(data.implants);
 
@@ -59,12 +59,12 @@
 		<a href="/manage/characters/{character.id}">back</a>
 
 		<div class="shop-wrapper">
-			<CharacterVersionShop bind:character bind:version {skills} {items} {implants} />
+			<CharacterVersionShop bind:character bind:version {expertise} {items} {implants} />
 		</div>
 
 		<CharacterVersionOverview
-			skillCatalog={skills}
-			skills={version.skills}
+			expertiseCatalog={expertise}
+			expertise={version.expertise}
 			items={version.items}
 			implants={version.implants}
 		/>

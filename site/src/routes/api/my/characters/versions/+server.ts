@@ -4,13 +4,13 @@ import { companyRepo, type Company } from "$lib/db/companies.repo";
 import { eventParticipantsRepo } from "$lib/db/event_participants.repo";
 import { implantRepo, type Implant } from "$lib/db/implants.repo";
 import { itemRepo, type Item } from "$lib/db/items.repo";
-import { skillRepo, type Skill } from "$lib/db/skills.repo";
+import { expertiseRepo, type Expertise } from "$lib/db/expertise.repo";
 import { UserRole } from "$lib/types/roles";
 import { getSessionToken } from "$lib/utils/cookies";
 import { authGuardForUser, handleRequest } from "$lib/utils/request";
 import { json, type RequestHandler } from "@sveltejs/kit";
 
-export type VersionSkill = {
+export type VersionExpertise = {
 	id: number;
 	name: string;
 	group: number;
@@ -37,8 +37,8 @@ export type VersionEvent = {
 	name: string;
 };
 
-export type CharacterVersionFull = Omit<CharacterVersionBare, 'skills' | 'items' | 'implants' | 'company'> & {
-	skills: VersionSkill[];
+export type CharacterVersionFull = Omit<CharacterVersionBare, 'expertise' | 'items' | 'implants' | 'company'> & {
+	expertise: VersionExpertise[];
 	items: VersionItem[];
 	implants: VersionImplant[];
 	events: VersionEvent[];
@@ -54,17 +54,17 @@ export type MyCharacterVersionsResponse = {
 export const GET: RequestHandler = async ({ cookies }) => {
 	return handleRequest(async () => {
 		const { userId } = await authGuardForUser(getSessionToken(cookies), [UserRole.user]);
-		const [characters, versions, skills, items, implants, companies] = await Promise.all([
+		const [characters, versions, expertise, items, implants, companies] = await Promise.all([
 			characterRepo.getByOwner(userId),
 			characterVersionRepo.getForUser(userId),
-			skillRepo.getAll(),
+			expertiseRepo.getAll(),
 			itemRepo.getAll(),
 			implantRepo.getAll(),
 			companyRepo.getAll()
 		]);
 		const events = await eventParticipantsRepo.getEventsForCharacters(characters.map((c) => c.id));
 		const response: MyCharacterVersionsResponse = {
-			characters: toCharactersWithVersions(characters, versions, skills, items, implants, events, companies)
+			characters: toCharactersWithVersions(characters, versions, expertise, items, implants, events, companies)
 		};
 		return json(response);
 	});
@@ -73,13 +73,13 @@ export const GET: RequestHandler = async ({ cookies }) => {
 function toCharactersWithVersions(
 	characters: Character[],
 	versions: CharacterVersionBare[],
-	skills: Skill[],
+	expertise: Expertise[],
 	items: Item[],
 	implants: Implant[],
 	events: { characterVersionId: number; eventId: number; eventName: string }[],
 	companies: Company[]
 ): CharacterWithVersions[] {
-	const skillById = new Map(skills.flatMap((s) => (s.id == null ? [] : [[s.id, s] as const])));
+	const expertiseById = new Map(expertise.flatMap((e) => (e.id == null ? [] : [[e.id, e] as const])));
 	const itemById = new Map(items.flatMap((i) => (i.id == null ? [] : [[i.id, i] as const])));
 	const implantById = new Map(
 		implants.flatMap((i) => (i.id == null ? [] : [[i.id, i] as const]))
@@ -95,13 +95,13 @@ function toCharactersWithVersions(
 		...character,
 		versions: versions
 			.filter((version) => version.characterId === character.id)
-			.map((version) => toFullVersion(version, skillById, itemById, implantById, eventsByVersionId, companyById))
+			.map((version) => toFullVersion(version, expertiseById, itemById, implantById, eventsByVersionId, companyById))
 	}));
 }
 
 function toFullVersion(
 	version: CharacterVersionBare,
-	skillById: Map<number, Skill>,
+	expertiseById: Map<number, Expertise>,
 	itemById: Map<number, Item>,
 	implantById: Map<number, Implant>,
 	eventsByVersionId: Map<number, VersionEvent[]>,
@@ -112,16 +112,16 @@ function toFullVersion(
 		characterId: version.characterId,
 		name: version.name,
 		company: version.company != null ? (companyById.get(version.company) ?? null) : null,
-		skills: version.skills.flatMap((s) => {
-			const skill = skillById.get(s.id);
-			if (!skill) return [];
+		expertise: version.expertise.flatMap((e) => {
+			const expertise = expertiseById.get(e.id);
+			if (!expertise) return [];
 			return [
 				{
-					id: s.id,
-					name: skill.name,
-					group: skill.groupId,
-					groupName: skill.groupName,
-					value: s.value
+					id: e.id,
+					name: expertise.name,
+					group: expertise.groupId,
+					groupName: expertise.groupName,
+					value: e.value
 				}
 			];
 		}),

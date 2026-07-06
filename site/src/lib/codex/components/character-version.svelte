@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	export type CharacterVersionSkill = {
+	export type CharacterVersionExpertise = {
 		id: number;
 		name: string;
 		group: number;
@@ -24,39 +24,39 @@
 <script lang="ts">
 	import Icon from './icon.svelte';
 	import ProgressBar from './progress-bar.svelte';
-	import { GROUP_COLORS, getSkillIcon } from '$lib/codex/managers/skill-icons';
+	import { GROUP_COLORS, getExpertiseIcon } from '$lib/codex/managers/expertise-icons';
 
 	let {
 		characterName,
 		versionName,
 		companyName,
-		skills = [],
+		expertise = [],
 		items = [],
 		implants = []
 	}: {
 		characterName: string;
 		versionName?: string;
 		companyName?: string | null;
-		skills?: CharacterVersionSkill[];
+		expertise?: CharacterVersionExpertise[];
 		items?: CharacterVersionItem[];
 		implants?: CharacterVersionImplant[];
 	} = $props();
 
-	const skillGroups = $derived.by(() => {
+	const expertiseGroups = $derived.by(() => {
 		const map = new Map<
 			number,
-			{ id: number; name: string; color: string; skills: CharacterVersionSkill[] }
+			{ id: number; name: string; color: string; expertise: CharacterVersionExpertise[] }
 		>();
-		for (const skill of skills) {
-			if (!map.has(skill.group)) {
-				map.set(skill.group, {
-					id: skill.group,
-					name: skill.groupName,
-					color: GROUP_COLORS[skill.group] ?? 'var(--color-accent)',
-					skills: []
+		for (const entry of expertise) {
+			if (!map.has(entry.group)) {
+				map.set(entry.group, {
+					id: entry.group,
+					name: entry.groupName,
+					color: GROUP_COLORS[entry.group] ?? 'var(--color-accent)',
+					expertise: []
 				});
 			}
-			map.get(skill.group)!.skills.push(skill);
+			map.get(entry.group)!.expertise.push(entry);
 		}
 		return Array.from(map.values());
 	});
@@ -75,23 +75,23 @@
 		{/if}
 	</div>
 
-	{#if skills.length > 0}
+	{#if expertise.length > 0}
 		<section class="section">
-			<h4 class="section-label">skills</h4>
-			<div class="skill-groups">
-				{#each skillGroups as group (group.id)}
+			<h4 class="section-label">expertise</h4>
+			<div class="expertise-groups">
+				{#each expertiseGroups as group (group.id)}
 					<div class="group">
 						<span class="group-name" style="color: {group.color}">{group.name}</span>
-						<ul class="skill-list">
-							{#each group.skills as skill (skill.id)}
-								{@const icon = getSkillIcon(skill.name)}
-								<li class="skill">
+						<ul class="expertise-list">
+							{#each group.expertise as entry (entry.id)}
+								{@const icon = getExpertiseIcon(entry.name)}
+								<li class="expertise">
 									{#if icon}
 										<Icon src={icon} color={group.color} size="2rem" />
 									{/if}
-									<span class="skill-name">{skill.name}</span>
-									<div class="skill-bar">
-										<ProgressBar value={skill.value} color={group.color} name={skill.name} />
+									<span class="expertise-name">{entry.name}</span>
+									<div class="expertise-bar">
+										<ProgressBar value={entry.value} color={group.color} name={entry.name} />
 									</div>
 								</li>
 							{/each}
@@ -182,7 +182,7 @@
 		font-weight: normal;
 	}
 
-	.skill-groups {
+	.expertise-groups {
 		display: flex;
 		flex-direction: column;
 		gap: 0.6rem;
@@ -203,7 +203,7 @@
 		opacity: 0.8;
 	}
 
-	.skill-list {
+	.expertise-list {
 		list-style: none;
 		margin: 0;
 		padding: 0;
@@ -212,13 +212,13 @@
 		gap: 0.3rem;
 	}
 
-	.skill {
+	.expertise {
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
 	}
 
-	.skill-name {
+	.expertise-name {
 		flex: 1;
 		font-size: 0.7em;
 		opacity: 0.8;
@@ -228,7 +228,7 @@
 		min-width: 0;
 	}
 
-	.skill-bar {
+	.expertise-bar {
 		flex-shrink: 0;
 		width: 7rem;
 	}

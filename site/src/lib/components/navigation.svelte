@@ -27,7 +27,7 @@
 				<span class="name">Manage</span>
 			</button>
 			{#if manageOpen}
-				<a class="entry child" href="/manage/skills">Skills</a>
+				<a class="entry child" href="/manage/expertise">Expertise</a>
 				<a class="entry child" href="/manage/items">Items</a>
 				<a class="entry child" href="/manage/implants">Implants</a>
 				<a class="entry child" href="/manage/companies">Companies</a>

@@ -1,33 +1,33 @@
 <script lang="ts" module>
-	export type Step = 'details' | 'skills' | 'items' | 'implants';
-	export type NavSkillGroup = { id: number; group: number; groupName: string; value: number };
+	export type Step = 'details' | 'expertise' | 'items' | 'implants';
+	export type NavExpertiseGroup = { id: number; group: number; groupName: string; value: number };
 </script>
 
 <script lang="ts">
-	import CharacterSkillGroups from './character-skill-groups.svelte';
+	import CharacterExpertiseGroups from './character-expertise-groups.svelte';
 	import Icon from './icon.svelte';
 	import itemLogo from '$lib/assets/images/ItemLogo.svg?raw';
 	import implantLogo from '$lib/assets/images/ImplantLogo.svg?raw';
-	import type { SkillManager } from '$lib/codex/managers/skill-manager.svelte';
+	import type { ExpertiseManager } from '$lib/codex/managers/expertise-manager.svelte';
 
 	let {
 		activeStep = $bindable<Step>('details'),
 		name,
-		skills,
+		expertise,
 		items,
 		implants,
 		budget,
 		remaining,
-		skillManager
+		expertiseManager
 	}: {
 		activeStep: Step;
 		name: string;
-		skills: { count: number; groups: NavSkillGroup[]; spent: number };
+		expertise: { count: number; groups: NavExpertiseGroup[]; spent: number };
 		items: { count: number; total: number; spent: number };
 		implants: { count: number; spent: number; slotCount: number };
 		budget: number;
 		remaining: number;
-		skillManager?: SkillManager;
+		expertiseManager?: ExpertiseManager;
 	} = $props();
 
 	const iconSize = '2em';
@@ -46,24 +46,24 @@
 			</button>
 		</li>
 
-		<li class="step" class:active={activeStep === 'skills'}>
-			<button type="button" onclick={() => (activeStep = 'skills')}>
+		<li class="step" class:active={activeStep === 'expertise'}>
+			<button type="button" onclick={() => (activeStep = 'expertise')}>
 				<span class="step-label">
-					skills
-					{#if skills.count > 0}
-						<span class="step-count">{skills.count}</span>
+					expertise
+					{#if expertise.count > 0}
+						<span class="step-count">{expertise.count}</span>
 					{/if}
 				</span>
 				<span class="step-overview">
-					{#if skillManager && skillManager.selected.length > 0}
-						<CharacterSkillGroups manager={skillManager} size={iconSize} />
-					{:else if !skillManager && skills.groups.length > 0}
-						<CharacterSkillGroups skills={skills.groups} size={iconSize} />
+					{#if expertiseManager && expertiseManager.selected.length > 0}
+						<CharacterExpertiseGroups manager={expertiseManager} size={iconSize} />
+					{:else if !expertiseManager && expertise.groups.length > 0}
+						<CharacterExpertiseGroups expertise={expertise.groups} size={iconSize} />
 					{:else}
 						<span class="overview-empty">none selected</span>
 					{/if}
-					{#if skills.spent > 0}
-						<span class="overview-cost">{skills.spent}</span>
+					{#if expertise.spent > 0}
+						<span class="overview-cost">{expertise.spent}</span>
 					{/if}
 				</span>
 			</button>

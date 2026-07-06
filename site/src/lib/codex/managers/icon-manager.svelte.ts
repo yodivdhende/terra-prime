@@ -3,7 +3,7 @@ import { WINDOW_MANAGER } from './window-manager.svelte';
 export type Icon = {
   windowId: string;
   title: string;
-  type: 'file' | 'dir' | 'image' | 'form' | 'settings' | 'playtest' | 'login' | 'register' | 'background';
+  type: 'file' | 'dir' | 'image' | 'form' | 'settings' | 'playtest' | 'login' | 'register' | 'characterOverview';
   side: 'left' | 'right';
 }
 

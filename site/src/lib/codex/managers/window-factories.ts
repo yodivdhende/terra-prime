@@ -1,6 +1,6 @@
 export type CodexWindow = {
   id: string;
-  type: 'pdf' | 'dir' | 'doc' | 'image' | 'audio' | 'form' | 'settings' | 'login' | 'register' | 'logout' | 'background';
+  type: 'pdf' | 'dir' | 'doc' | 'image' | 'audio' | 'form' | 'settings' | 'login' | 'register' | 'logout' | 'characterOverview';
   state: 'open' | 'hidden' | 'closed';
   dimension: { w: number, h: number };
   position: { x: number, y: number, z: number };
@@ -10,7 +10,7 @@ export type CodexWindow = {
 }
 
 export type Icon = {
-  type: 'file' | 'dir' | 'image' | 'audio' | 'form' | 'settings' | 'login' | 'register' | 'logout' | 'background';
+  type: 'file' | 'dir' | 'image' | 'audio' | 'form' | 'settings' | 'login' | 'register' | 'logout' | 'characterOverview';
   side: 'left' | 'right';
 }
 
@@ -120,17 +120,17 @@ export function createLogoutWindow({ shouldCreate }: { shouldCreate: boolean }):
   };
 }
 
-export function createBackgroundWindow(): CodexWindow | null {
+export function createCharacterOverviewWindow(): CodexWindow | null {
   if (typeof window === 'undefined') return null;
   return {
-    id: 'backgrounds',
-    type: 'background',
+    id: 'character-overview',
+    type: 'characterOverview',
     state: 'closed',
     dimension: { w: Math.round(window.innerWidth * 0.55), h: Math.round(window.innerHeight * 0.6) },
     position: { x: 420, y: 40, z: 0 },
-    contentData: 'backgrounds',
-    title: 'Backgrounds',
-    icon: { type: 'background', side: 'left' },
+    contentData: 'character-overview',
+    title: 'Character Overview',
+    icon: { type: 'characterOverview', side: 'left' },
   };
 }
 

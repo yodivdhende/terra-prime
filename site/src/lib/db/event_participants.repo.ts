@@ -81,6 +81,26 @@ class EventParticipatnsRepo {
     }
   }
 
+  public async getSumPriorRewardBudget({
+    characterId,
+    excludeEventId
+  }: {
+    characterId: number;
+    excludeEventId: number;
+  }): Promise<number> {
+    const connection = mysqlconnFn();
+    const [result] = await connection.execute(
+      `SELECT COALESCE(SUM(e.RewardBudget), 0) AS totalReward
+       FROM Event_Participants ep
+       JOIN Character_Versions cv ON cv.Id = ep.CharacterVersion
+       JOIN Events e ON e.Id = ep.Event
+       WHERE cv.Character = ? AND ep.Event != ?`,
+      [characterId, excludeEventId]
+    );
+    if (!Array.isArray(result) || result.length === 0) return 0;
+    return Number((result[0] as { totalReward: number }).totalReward);
+  }
+
   public async deleteForCharacterVersion(characterVersionId: number): Promise<void> {
     const connection = mysqlconnFn();
     await connection.execute(

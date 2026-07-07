@@ -34,6 +34,14 @@ class EventBudgetRepo {
 			[eventId, characterId, budget, budget]
 		);
 	}
+
+	public async initializeBudgetIfMissing(eventId: number, characterId: number, budget: number): Promise<void> {
+		const connection = await mysqlconnFn();
+		await connection.execute(
+			`INSERT IGNORE INTO Event_Character_Budget (Event, \`Character\`, Budget) VALUES (?, ?, ?)`,
+			[eventId, characterId, budget]
+		);
+	}
 }
 
 export const eventBudgetRepo = new EventBudgetRepo();

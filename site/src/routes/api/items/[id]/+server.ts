@@ -30,10 +30,15 @@ export const POST: RequestHandler = async ({cookies, params, request}) => {
 	return handleRequest(async ()=> {
 		await authGuard(getSessionToken(cookies), ['admin']);
 		const {id} = params;
-		isNumberOrError(id);
-		const item= await request.json();
+		const numberId = isNumberOrError(id);
+		const item = await request.json();
 		if(isItem(item) === false) throw new BadRequest();
-		itemRepo.save(item);
+		await itemRepo.save(item);
+		await itemRepo.setCharacterAccess(
+			numberId,
+			item.characterAccess ?? 'all',
+			item.allowedCharacterIds ?? []
+		);
 		return new Response();
 	})
 }

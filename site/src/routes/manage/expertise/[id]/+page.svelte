@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto, invalidate } from '$app/navigation';
 	import ExpertiseForm from '$lib/components/expertise-form.svelte';
+	import CharacterAccessSelect from '$lib/components/character-access-select.svelte';
 	import type { Expertise } from '$lib/db/expertise.repo';
 	import type { PageProps } from './$types';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
@@ -9,7 +10,7 @@
 	let expertise: Expertise | null = $state(null);
 	$effect(() => {
 		const { expertise: loadExpertise } = data;
-		expertise = loadExpertise;
+		expertise = loadExpertise ?? null;
 	});
 
 	async function save() {
@@ -59,12 +60,35 @@
 			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
 	}
+
 </script>
 
 <main>
 	<a href=".">back</a>
 	{#if expertise != null}
 		<ExpertiseForm bind:expertise groups={data.groups ?? []} />
+
+		<fieldset>
+			<legend>Character Access</legend>
+			<label>
+				<input type="radio" bind:group={expertise.characterAccess} value="all" />
+				All characters
+			</label>
+			<label>
+				<input type="radio" bind:group={expertise.characterAccess} value="none" />
+				No characters
+			</label>
+			<label>
+				<input type="radio" bind:group={expertise.characterAccess} value="specific" />
+				Specific characters
+			</label>
+			{#if expertise.characterAccess === 'specific'}
+				<CharacterAccessSelect
+					characters={data.characters ?? []}
+					bind:selectedIds={expertise.allowedCharacterIds}
+				/>
+			{/if}
+		</fieldset>
 	{/if}
 	<div>
 		<button class="btn" onclick={save}>save</button>
@@ -78,4 +102,30 @@
 		flex-direction: column;
 		padding: 8px;
 	}
+
+	fieldset {
+		border: 1px solid var(--color-border, #444);
+		border-radius: 4px;
+		padding: 8px 12px;
+		margin-top: 8px;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	legend {
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		opacity: 0.6;
+		padding: 0 4px;
+	}
+
+	label {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		cursor: pointer;
+	}
+
 </style>

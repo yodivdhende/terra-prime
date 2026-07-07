@@ -33,10 +33,11 @@
 		error = null;
 		try {
 			const characterId = CHARACTER_MANAGER.character.id;
+			const charParam = characterId != null ? `?characterId=${characterId}` : '';
 			const [expertiseRes, itemsRes, implantsRes, eventRes] = await Promise.all([
-				fetch('/api/expertise'),
-				fetch('/api/items'),
-				fetch('/api/implants'),
+				fetch(`/api/expertise${charParam}`),
+				fetch(`/api/items${charParam}`),
+				fetch(`/api/implants${charParam}`),
 				fetch(`/api/events/${eventId}`)
 			]);
 

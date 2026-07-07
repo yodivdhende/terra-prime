@@ -30,10 +30,15 @@ export const POST: RequestHandler = async ({ cookies, params, request }) => {
 	return handleRequest(async () => {
 		await authGuard(getSessionToken(cookies), ['admin']);
 		const { id } = params;
-		isNumberOrError(id);
+		const numberId = isNumberOrError(id);
 		const item = await request.json();
 		if (isExpertise(item) === false) throw new BadRequest();
-		expertiseRepo.save(item);
+		await expertiseRepo.save(item);
+		await expertiseRepo.setCharacterAccess(
+			numberId,
+			item.characterAccess ?? 'all',
+			item.allowedCharacterIds ?? []
+		);
 		return new Response();
 	});
 };

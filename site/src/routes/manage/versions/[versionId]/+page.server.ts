@@ -6,12 +6,13 @@ export const load: PageServerLoad = async ({ fetch, params }) => {
 
   if (!bare) return { character: null, version: null, expertise: [], items: [], implants: [] };
 
+  const characterId = bare.characterId;
   const [characterRes, fullVersionRes, expertiseRes, itemsRes, implantsRes] = await Promise.all([
-    fetch(`/api/characters/${bare.characterId}`),
-    fetch(`/api/characters/${bare.characterId}/versions/${params.versionId}`),
-    fetch('/api/expertise'),
-    fetch('/api/items'),
-    fetch('/api/implants')
+    fetch(`/api/characters/${characterId}`),
+    fetch(`/api/characters/${characterId}/versions/${params.versionId}`),
+    fetch(`/api/expertise?characterId=${characterId}`),
+    fetch(`/api/items?characterId=${characterId}`),
+    fetch(`/api/implants?characterId=${characterId}`)
   ]);
 
   const character = characterRes.ok ? await characterRes.json() : null;

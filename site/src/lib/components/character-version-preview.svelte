@@ -1,12 +1,12 @@
 <script lang="ts">
-	import Icon from '$lib/codex/components/icon.svelte';
-	import ProgressBar from '$lib/codex/components/progress-bar.svelte';
-	import { GROUP_COLORS, GROUP_ICONS } from '$lib/codex/managers/expertise-icons';
+	import Icon from '$lib/components/icon.svelte';
+	import ProgressBar from '$lib/components/progress-bar.svelte';
+	import { GROUP_COLORS, GROUP_ICONS } from '$lib/managers/expertise-icons';
 	import type {
 		VersionImplant,
 		VersionItem,
 		VersionExpertise
-	} from '$lib/codex/managers/character-manager.svelte';
+	} from '$lib/managers/character-manager.svelte';
 	import itemLogo from '$lib/assets/images/ItemLogo.svg?raw';
 	import implantLogo from '$lib/assets/images/ImplantLogo.svg?raw';
 

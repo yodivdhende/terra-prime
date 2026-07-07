@@ -1,9 +1,10 @@
 <script lang="ts">
 	import type { Expertise } from '$lib/db/expertise.repo';
 	import { groupExpertise } from '$lib/utils/expertise.svelte';
-	import ProgressBar from '$lib/codex/components/progress-bar.svelte';
+	import ProgressBar from '$lib/components/progress-bar.svelte';
 
-	let { expertise, values }: { expertise: Expertise[]; values: { id: number; value: number }[] } = $props();
+	let { expertise, values }: { expertise: Expertise[]; values: { id: number; value: number }[] } =
+		$props();
 
 	let groupedExpertise = $derived(groupExpertise(expertise));
 	$effect(() => fillExpertise(groupedExpertise, values));
@@ -29,6 +30,10 @@
 </dl>
 
 <style>
+	dl {
+		max-width: 300px;
+	}
+
 	h3 {
 		font-weight: bold;
 	}

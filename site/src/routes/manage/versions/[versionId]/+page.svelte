@@ -1,19 +1,17 @@
 <script lang="ts">
-	import CharacterVersionShop from '$lib/codex/components/character-version-shop.svelte';
-	import CharacterVersionOverview from '$lib/components/character-version-overview.svelte';
-	import type { Character } from '$lib/db/character.repo';
-	import type { CharacterVersionFull } from '$lib/codex/managers/character-manager.svelte';
+	import CharacterVersionShop from '$lib/components/character-version-shop.svelte';
+	import { createCharacterManager } from '$lib/managers/character-manager.svelte';
 	import { type PageProps } from './$types';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
 
-	let character = $state<Character | null>(null);
-	let version = $state<CharacterVersionFull | null>(null);
+	const manager = createCharacterManager();
 
 	$effect(() => {
-		character = data.character ?? null;
-		version = data.version ?? null;
+		if (data.character) manager.character = data.character;
+		if (data.version) manager.version = data.version;
+		manager.setCatalog(data.expertise ?? []);
 	});
 
 	const expertise = $derived(data.expertise);
@@ -25,16 +23,19 @@
 	let saved = $state(false);
 
 	async function save() {
-		if (character == null || version == null) return;
+		if (manager.character.id == null || manager.version.id == null) return;
 		saving = true;
 		saveError = null;
 		saved = false;
 		try {
-			const result = await fetch(`/api/characters/${character.id}/versions/${version.id}`, {
-				method: 'post',
-				body: JSON.stringify($state.snapshot(version)),
-				headers: { 'content-type': 'application/json' }
-			});
+			const result = await fetch(
+				`/api/characters/${manager.character.id}/versions/${manager.version.id}`,
+				{
+					method: 'post',
+					body: JSON.stringify($state.snapshot(manager.version)),
+					headers: { 'content-type': 'application/json' }
+				}
+			);
 			if (result.ok) {
 				saved = true;
 				TOAST_MANAGER.success('Version saved');
@@ -52,22 +53,22 @@
 </script>
 
 <main>
-	{#if character == null || version == null}
+	{#if manager.character.id == null || manager.version.id == null}
 		<a href="/manage/characters">back</a>
 		<p class="status">not found</p>
 	{:else}
-		<a href="/manage/characters/{character.id}">back</a>
+		<a href="/manage/characters/{manager.character.id}">back</a>
 
 		<div class="shop-wrapper">
-			<CharacterVersionShop bind:character bind:version {expertise} {items} {implants} />
+			<CharacterVersionShop
+				bind:character={manager.character}
+				bind:version={manager.version}
+				{expertise}
+				{items}
+				{implants}
+				expertiseManager={manager.expertiseManager}
+			/>
 		</div>
-
-		<CharacterVersionOverview
-			expertiseCatalog={expertise}
-			expertise={version.expertise}
-			items={version.items}
-			implants={version.implants}
-		/>
 
 		<div class="actions">
 			{#if saveError}
@@ -87,13 +88,14 @@
 		display: flex;
 		flex-direction: column;
 		padding: 8px;
-		height: 100%;
+		height: 90vh;
 		box-sizing: border-box;
 	}
 
 	.shop-wrapper {
 		flex: 1;
 		min-height: 0;
+		overflow: hidden;
 		margin-top: 8px;
 	}
 

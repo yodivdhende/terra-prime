@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { handleRequest } from '$lib/utils/request';
 import type { EventParticipantCharacter } from '$lib/db/event_participants.repo';
-import type { CharacterVersionFull } from '$lib/codex/managers/character-manager.svelte';
+import type { CharacterVersionFull } from '$lib/managers/character-manager.svelte';
 
 export type EventParticipantWithVersion = {
 	character: EventParticipantCharacter;

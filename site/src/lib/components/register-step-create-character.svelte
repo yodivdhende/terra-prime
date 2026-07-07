@@ -3,8 +3,8 @@
 	import type { ShopExpertise } from './shop-expertise.svelte';
 	import type { ShopItem } from './shop-items.svelte';
 	import type { ShopImplant } from './shop-implants.svelte';
-	import type { RegisterManager } from '../managers/register-manager.svelte';
-	import type { CharacterManager } from '../managers/character-manager.svelte';
+	import type { RegisterManager } from '$lib/managers/register-manager.svelte';
+	import type { CharacterManager } from '$lib/managers/character-manager.svelte';
 
 	type EventResponse = {
 		id: number;

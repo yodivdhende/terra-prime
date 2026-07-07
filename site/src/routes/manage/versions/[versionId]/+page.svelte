@@ -1,6 +1,6 @@
 <script lang="ts">
-	import CharacterVersionShop from '$lib/codex/components/character-version-shop.svelte';
-	import { createCharacterManager } from '$lib/codex/managers/character-manager.svelte';
+	import CharacterVersionShop from '$lib/components/character-version-shop.svelte';
+	import { createCharacterManager } from '$lib/managers/character-manager.svelte';
 	import { type PageProps } from './$types';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 

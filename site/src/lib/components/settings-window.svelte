@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
-	import { EFFECTS_MANAGER } from '$lib/codex/managers/effects-manager.svelte';
+	import { type CodexWindow } from '$lib/managers/window-manager.svelte';
+	import { EFFECTS_MANAGER } from '$lib/managers/effects-manager.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
 

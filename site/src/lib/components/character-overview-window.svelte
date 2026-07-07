@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
+	import { type CodexWindow } from '$lib/managers/window-manager.svelte';
 	import BackstoryLink from '$lib/components/backstory-link.svelte';
-	import { FEATURE_MANAGER } from '$lib/codex/managers/feature-manager.svelte';
+	import { FEATURE_MANAGER } from '$lib/managers/feature-manager.svelte';
 	import CharacterVersion, {
 		type CharacterVersionExpertise,
 		type CharacterVersionItem,
 		type CharacterVersionImplant
-	} from '$lib/codex/components/character-version.svelte';
+	} from '$lib/components/character-version.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
 

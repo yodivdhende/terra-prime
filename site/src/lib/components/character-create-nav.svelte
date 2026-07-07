@@ -8,7 +8,7 @@
 	import Icon from './icon.svelte';
 	import itemLogo from '$lib/assets/images/ItemLogo.svg?raw';
 	import implantLogo from '$lib/assets/images/ImplantLogo.svg?raw';
-	import type { ExpertiseManager } from '$lib/codex/managers/expertise-manager.svelte';
+	import type { ExpertiseManager } from '$lib/managers/expertise-manager.svelte';
 
 	let {
 		activeStep = $bindable<Step>('details'),

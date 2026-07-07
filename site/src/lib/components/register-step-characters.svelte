@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Icon from '$lib/codex/components/icon.svelte';
+	import Icon from '$lib/components/icon.svelte';
 	import itemLogo from '$lib/assets/images/ItemLogo.svg?raw';
 	import implantLogo from '$lib/assets/images/ImplantLogo.svg?raw';
 
@@ -7,9 +7,9 @@
 		CharacterVersionFull,
 		CharacterWithVersions,
 		MyCharacterVersionsResponse
-	} from '../../../routes/api/my/characters/versions/+server';
-	import type { CharacterManager } from '../managers/character-manager.svelte';
-	import type { RegisterManager } from '../managers/register-manager.svelte';
+	} from '../../routes/api/my/characters/versions/+server';
+	import type { CharacterManager } from '$lib/managers/character-manager.svelte';
+	import type { RegisterManager } from '$lib/managers/register-manager.svelte';
 	import CharacterExpertiseGroups from './character-expertise-groups.svelte';
 
 	let {

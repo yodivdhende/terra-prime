@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import type { Character, CharacterVersionFull } from '../managers/character-manager.svelte';
+	import type { Character, CharacterVersionFull } from '$lib/managers/character-manager.svelte';
 	import CompanySelect from '$lib/components/company-select.svelte';
 
 	let {

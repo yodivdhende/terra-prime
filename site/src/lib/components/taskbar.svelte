@@ -1,10 +1,10 @@
 <script lang="ts">
-	import SearchBar from '$lib/codex/components/search-bar.svelte';
+	import SearchBar from '$lib/components/search-bar.svelte';
 	import TaskIcons from './task-icons.svelte';
 	import { UserRound } from '@lucide/svelte';
-	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
+	import { WINDOW_MANAGER } from '$lib/managers/window-manager.svelte';
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
-	import { FEATURE_MANAGER } from '../managers/feature-manager.svelte';
+	import { FEATURE_MANAGER } from '$lib/managers/feature-manager.svelte';
 
 	function openUserWindow() {
 		const id = CREDENTIAL_MANAGER.isLogedIn ? 'logout' : 'login';

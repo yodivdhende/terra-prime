@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { StringLarpEvent } from '$lib/db/event.repo';
-	import { type RegisterManager } from '../managers/register-manager.svelte';
+	import { type RegisterManager } from '$lib/managers/register-manager.svelte';
 	import FormFields from './form-fields.svelte';
 
 	let { REGISTER_MANAGER }: { REGISTER_MANAGER: RegisterManager } = $props();

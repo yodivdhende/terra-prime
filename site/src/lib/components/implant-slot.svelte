@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ShopImplant } from './shop-implants.svelte';
-	import type { VersionImplant } from '$lib/codex/managers/character-manager.svelte';
+	import type { VersionImplant } from '$lib/managers/character-manager.svelte';
 	import { ChevronDown, ChevronRight, X } from '@lucide/svelte';
 
 	let {

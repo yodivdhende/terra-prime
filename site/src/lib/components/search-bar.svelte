@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Search } from '@lucide/svelte';
-	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
+	import { WINDOW_MANAGER } from '$lib/managers/window-manager.svelte';
 
 	type DriveFile = { id: string; name: string; mimeType: string };
 

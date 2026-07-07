@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
-	import { WINDOW_MANAGER, type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
-	import { FEATURE_MANAGER } from '$lib/codex/managers/feature-manager.svelte';
+	import { WINDOW_MANAGER, type CodexWindow } from '$lib/managers/window-manager.svelte';
+	import { FEATURE_MANAGER } from '$lib/managers/feature-manager.svelte';
 	import type { ActionResult } from '@sveltejs/kit';
 	import ForgotPasswordForm from './forgot-password-form.svelte';
 

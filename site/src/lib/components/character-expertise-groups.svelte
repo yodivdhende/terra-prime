@@ -1,8 +1,8 @@
 <script lang="ts">
-	import Icon from '$lib/codex/components/icon.svelte';
-	import ProgressBar from '$lib/codex/components/progress-bar.svelte';
-	import { GROUP_COLORS, GROUP_ICONS, EXPERTISE_INFO } from '$lib/codex/managers/expertise-icons';
-	import type { ExpertiseManager } from '$lib/codex/managers/expertise-manager.svelte';
+	import Icon from '$lib/components/icon.svelte';
+	import ProgressBar from '$lib/components/progress-bar.svelte';
+	import { GROUP_COLORS, GROUP_ICONS, EXPERTISE_INFO } from '$lib/managers/expertise-icons';
+	import type { ExpertiseManager } from '$lib/managers/expertise-manager.svelte';
 
 	type ExpertiseGroupEntry = {
 		id: number;

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { ICON_MANAGER, type Icon } from '$lib/codex/managers/icon-manager.svelte';
-	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
+	import { ICON_MANAGER, type Icon } from '$lib/managers/icon-manager.svelte';
+	import { WINDOW_MANAGER } from '$lib/managers/window-manager.svelte';
 	import { File, Folder, Image, FileHeadphone, Settings, ClipboardPen, UserRound, ClipboardPenLine, IdCard } from '@lucide/svelte';
 
 	let icons = $derived(ICON_MANAGER.icons);

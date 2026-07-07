@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { type RegisterManager } from '../managers/register-manager.svelte';
+	import { type RegisterManager } from '$lib/managers/register-manager.svelte';
 	import {
 		type Character,
 		type CharacterManager,
 		type CharacterVersionFull
-	} from '../managers/character-manager.svelte';
+	} from '$lib/managers/character-manager.svelte';
 	import CharacterVersion from './character-version.svelte';
-	import { FEATURE_MANAGER } from '../managers/feature-manager.svelte';
+	import { FEATURE_MANAGER } from '$lib/managers/feature-manager.svelte';
 	import BackstoryLink from '$lib/components/backstory-link.svelte';
 
 	let {

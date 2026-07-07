@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
-	import { createRegisterManager, type RegisterManager } from '../managers/register-manager.svelte';
+	import { type CodexWindow } from '$lib/managers/window-manager.svelte';
+	import { createRegisterManager, type RegisterManager } from '$lib/managers/register-manager.svelte';
 	import RegisterStepEvents from './register-step-events.svelte';
 	import RegisterStepCharacters from './register-step-characters.svelte';
 	import RegisterStepCreateCharacter from './register-step-create-character.svelte';
@@ -8,7 +8,7 @@
 	import {
 		createCharacterManager,
 		type CharacterManager
-	} from '../managers/character-manager.svelte';
+	} from '$lib/managers/character-manager.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
 

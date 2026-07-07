@@ -12,9 +12,9 @@
 <script lang="ts">
 	import Icon from './icon.svelte';
 	import ExpertiseSlider from './expertise-slider.svelte';
-	import type { VersionExpertise } from '$lib/codex/managers/character-manager.svelte';
+	import type { VersionExpertise } from '$lib/managers/character-manager.svelte';
 	import ProgressBar from './progress-bar.svelte';
-	import { GROUP_COLORS, GROUP_ICONS, EXPERTISE_INFO } from '$lib/codex/managers/expertise-icons';
+	import { GROUP_COLORS, GROUP_ICONS, EXPERTISE_INFO } from '$lib/managers/expertise-icons';
 
 	let {
 		catalog,

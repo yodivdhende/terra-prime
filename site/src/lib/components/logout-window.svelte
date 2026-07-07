@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
-	import { WINDOW_MANAGER, type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
+	import { WINDOW_MANAGER, type CodexWindow } from '$lib/managers/window-manager.svelte';
 	import ForgotPasswordForm from './forgot-password-form.svelte';
 
 	let { window }: { window: CodexWindow } = $props();

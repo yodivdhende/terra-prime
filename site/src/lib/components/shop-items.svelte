@@ -9,7 +9,7 @@
 </script>
 
 <script lang="ts">
-	import type { VersionItem } from '$lib/codex/managers/character-manager.svelte';
+	import type { VersionItem } from '$lib/managers/character-manager.svelte';
 
 	let {
 		catalog,

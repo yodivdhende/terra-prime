@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import Desktop from '$lib/codex/components/desktop.svelte';
-	import Taskbar from '$lib/codex/components/taskbar.svelte';
+	import Desktop from '$lib/components/desktop.svelte';
+	import Taskbar from '$lib/components/taskbar.svelte';
 	import { type PageProps } from './$types';
-	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
-	import { EFFECTS_MANAGER } from '$lib/codex/managers/effects-manager.svelte';
-	import { FEATURE_MANAGER } from '$lib/codex/managers/feature-manager.svelte';
+	import { WINDOW_MANAGER } from '$lib/managers/window-manager.svelte';
+	import { EFFECTS_MANAGER } from '$lib/managers/effects-manager.svelte';
+	import { FEATURE_MANAGER } from '$lib/managers/feature-manager.svelte';
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 
 	let { data }: PageProps = $props();

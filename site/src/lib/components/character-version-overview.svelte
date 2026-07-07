@@ -4,7 +4,7 @@
 		VersionImplant,
 		VersionItem,
 		VersionExpertise
-	} from '$lib/codex/managers/character-manager.svelte';
+	} from '$lib/managers/character-manager.svelte';
 	import ExpertiseOverview from './expertise-overview.svelte';
 
 	let {

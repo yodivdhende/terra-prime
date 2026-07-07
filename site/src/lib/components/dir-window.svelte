@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { type CodexWindow } from '$lib/codex/managers/window-manager.svelte';
-	import WindowContent from '$lib/codex/components/window-content.svelte';
+	import { type CodexWindow } from '$lib/managers/window-manager.svelte';
+	import WindowContent from '$lib/components/window-content.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
 

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
-	import Window from '$lib/codex/components/window.svelte';
-	import WindowContent from '$lib/codex/components/window-content.svelte';
-	import DirWindow from '$lib/codex/components/dir-window.svelte';
-	import CharacterOverviewWindow from '$lib/codex/components/character-overview-window.svelte';
+	import { WINDOW_MANAGER } from '$lib/managers/window-manager.svelte';
+	import Window from '$lib/components/window.svelte';
+	import WindowContent from '$lib/components/window-content.svelte';
+	import DirWindow from '$lib/components/dir-window.svelte';
+	import CharacterOverviewWindow from '$lib/components/character-overview-window.svelte';
 
 	let windows = $derived(WINDOW_MANAGER.windows);
 </script>

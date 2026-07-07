@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Logo from '$lib/assets/images/Logo.gif';
-	import DesktopIcons from '$lib/codex/components/desktop-icons.svelte';
-	import DesktopWindows from '$lib/codex/components/desktop-windows.svelte';
+	import DesktopIcons from '$lib/components/desktop-icons.svelte';
+	import DesktopWindows from '$lib/components/desktop-windows.svelte';
 	import Toast from '$lib/components/toast.svelte';
 </script>
 

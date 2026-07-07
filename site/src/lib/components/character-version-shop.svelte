@@ -4,8 +4,8 @@
 	import ShopExpertise, { type ShopExpertise as ShopExpertiseType } from './shop-expertise.svelte';
 	import ShopItems, { type ShopItem } from './shop-items.svelte';
 	import ShopImplants, { type ShopImplant } from './shop-implants.svelte';
-	import type { Character, CharacterVersionFull } from '../managers/character-manager.svelte';
-	import type { ExpertiseManager } from '../managers/expertise-manager.svelte';
+	import type { Character, CharacterVersionFull } from '$lib/managers/character-manager.svelte';
+	import type { ExpertiseManager } from '$lib/managers/expertise-manager.svelte';
 
 	let {
 		character = $bindable(),

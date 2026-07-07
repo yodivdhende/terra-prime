@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import type { CharacterVersionFull } from '$lib/codex/managers/character-manager.svelte';
+import type { CharacterVersionFull } from '$lib/managers/character-manager.svelte';
 
 export const load: PageServerLoad = async ({ fetch }) => {
     const res = await fetch('/api/characters/versions');

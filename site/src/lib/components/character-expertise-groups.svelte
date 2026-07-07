@@ -122,6 +122,7 @@
 		flex-direction: column;
 		gap: 0.75rem;
 		width: 100%;
+		max-width: 200px;
 		font: 1.5em;
 	}
 

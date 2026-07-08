@@ -52,6 +52,8 @@ export function createRegisterManager(characterManager: CharacterManager) {
   let formLoading = $state(false);
   let formError = $state(false);
 
+  let couponCode = $state('');
+
   const canAdvance = $derived.by(() => {
     if (currentStep === 0) {
       if (selectedEventId === null) return false;
@@ -89,6 +91,7 @@ export function createRegisterManager(characterManager: CharacterManager) {
     const event = events.find(e => e.id === id);
     const formId = event?.formId ?? null;
     resetForm();
+    couponCode = '';
     if (formId) {
       formLoading = true;
       fetch(`/api/forms/${formId}`)
@@ -138,6 +141,7 @@ export function createRegisterManager(characterManager: CharacterManager) {
     selectedCharacterId = null;
     selectedVersionId = null;
     resetForm();
+    couponCode = '';
     characterManager.reset();
   }
 
@@ -158,6 +162,8 @@ export function createRegisterManager(characterManager: CharacterManager) {
     get formAnswers() { return formAnswers; },
     get formLoading() { return formLoading; },
     get formError() { return formError; },
+    get couponCode() { return couponCode; },
+    set couponCode(value: string) { couponCode = value; },
     next,
     back,
     selectEvent,

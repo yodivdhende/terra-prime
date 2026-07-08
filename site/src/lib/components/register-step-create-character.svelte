@@ -75,6 +75,15 @@
 	{:else if error}
 		<p class="status error">failed to load: {error}</p>
 	{:else}
+		<label class="coupon-field">
+			<span>coupon code</span>
+			<input
+				type="text"
+				placeholder="optional"
+				value={REGISTER_MANAGER.couponCode}
+				oninput={(e) => (REGISTER_MANAGER.couponCode = (e.target as HTMLInputElement).value)}
+			/>
+		</label>
 		<CharacterVersionShop
 			bind:character={CHARACTER_MANAGER.character}
 			bind:version={CHARACTER_MANAGER.version}
@@ -112,5 +121,30 @@
 	.status.error {
 		color: #d95c5c;
 		opacity: 0.7;
+	}
+
+	/* ── Coupon field ── */
+
+	.coupon-field {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.75em;
+		padding-bottom: 0.75rem;
+	}
+
+	.coupon-field span {
+		opacity: 0.5;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+	}
+
+	.coupon-field input {
+		font-family: var(--font-mono);
+		background: var(--color-bg);
+		color: var(--color-main);
+		border: none;
+		padding: 4px 8px;
+		outline: none;
 	}
 </style>

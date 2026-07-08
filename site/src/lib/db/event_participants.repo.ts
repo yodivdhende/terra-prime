@@ -93,7 +93,9 @@ class EventParticipatnsRepo {
       `SELECT COALESCE(SUM(e.RewardBudget), 0) AS totalReward
        FROM Event_Participants ep
        JOIN Character_Versions cv ON cv.Id = ep.CharacterVersion
-       JOIN Events e ON e.Id = ep.Event
+       JOIN Events e
+        ON e.Id = ep.Event
+        AND e.Status = 'Done'
        WHERE cv.Character = ? AND ep.Event != ?`,
       [characterId, excludeEventId]
     );

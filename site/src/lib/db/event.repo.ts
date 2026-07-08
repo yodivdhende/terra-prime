@@ -14,6 +14,7 @@ class EventRepo {
                     EndTime as end,
                     Status as status,
                     Budget as budget,
+                    RewardBudget as rewardBudget,
                     FormId as formId,
                     SheetId as sheetId
                 FROM Events
@@ -46,6 +47,7 @@ class EventRepo {
                     EndTime as end,
                     Status as status,
                     Budget as budget,
+                    RewardBudget as rewardBudget,
                     FormId as formId,
                     SheetId as sheetId
                 FROM Events
@@ -75,6 +77,7 @@ class EventRepo {
                     EndTime as end,
                     Status as status,
                     Budget as budget,
+                    RewardBudget as rewardBudget,
                     FormId as formId,
                     SheetId as sheetId
                 FROM Events
@@ -96,20 +99,20 @@ class EventRepo {
 		}
 	}
 
-	public save({ id, name, start, end, status, budget, formId, sheetId }: LarpEvent) {
-		if (id == null) return this.create({ name, start, end, status, budget, formId, sheetId });
-		return this.edit({ id, name, start, end, status, budget, formId, sheetId });
+	public save({ id, name, start, end, status, budget, rewardBudget, formId, sheetId }: LarpEvent) {
+		if (id == null) return this.create({ name, start, end, status, budget, rewardBudget, formId, sheetId });
+		return this.edit({ id, name, start, end, status, budget, rewardBudget, formId, sheetId });
 	}
 
-	public async create({ name, start, end, status, budget, formId, sheetId }: Omit<LarpEvent, 'id'>) {
+	public async create({ name, start, end, status, budget, rewardBudget, formId, sheetId }: Omit<LarpEvent, 'id'>) {
 		try {
 			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
 				`
-                INSERT Events (Name, StartTime, EndTime, Status, Budget, FormId, SheetId)
-                VALUES (?,?,?,?,?,?,?)
+                INSERT Events (Name, StartTime, EndTime, Status, Budget, RewardBudget, FormId, SheetId)
+                VALUES (?,?,?,?,?,?,?,?)
             `,
-				[name, dateToSqlstring(start), dateToSqlstring(end), status, budget ?? null, formId ?? null, sheetId ?? null]
+				[name, dateToSqlstring(start), dateToSqlstring(end), status, budget ?? null, rewardBudget ?? null, formId ?? null, sheetId ?? null]
 			);
 			if ('serverStatus' in result && result.serverStatus !== 2) return null;
 			if ('insertId' in result === false || result.insertId == null) return null;
@@ -119,7 +122,7 @@ class EventRepo {
 		}
 	}
 
-	public async edit({ id, name, start, end, status, budget, formId, sheetId }: LarpEvent) {
+	public async edit({ id, name, start, end, status, budget, rewardBudget, formId, sheetId }: LarpEvent) {
 		try {
 			const connection = mysqlconnFn();
 			const [result] = await connection.execute(
@@ -130,11 +133,12 @@ class EventRepo {
                 EndTime = ?,
 				Status = ?,
 				Budget = ?,
+				RewardBudget = ?,
 				FormId = ?,
 				SheetId = ?
                 WHERE id = ?
             `,
-				[name, dateToSqlstring(start), dateToSqlstring(end), status, budget ?? null, formId ?? null, sheetId ?? null, id]
+				[name, dateToSqlstring(start), dateToSqlstring(end), status, budget ?? null, rewardBudget ?? null, formId ?? null, sheetId ?? null, id]
 			);
 			if ('serverStatus' in result && result.serverStatus !== 2) return null;
 			return id;
@@ -177,7 +181,9 @@ class EventRepo {
                     e.Name as name,
                     e.StartTime as start,
                     e.EndTime as end,
-					e.Status as status
+					e.Status as status,
+					e.Budget as budget,
+					e.RewardBudget as rewardBudget
                 FROM Events e
                 JOIN Event_Participants ep
                     on ep.event = e.id
@@ -213,6 +219,7 @@ export type LarpEvent = {
 	end: Date;
 	status: EventStatus;
 	budget?: number;
+	rewardBudget?: number;
 	formId?: string | null;
 	sheetId?: string | null;
 };

@@ -4,7 +4,9 @@ import {
   isCharacterVersionBare,
   type CharacterVersionBare,
 } from '$lib/db/character_version.repo';
+import { eventBudgetRepo } from '$lib/db/event_budget.repo';
 import { eventParticipantsRepo } from '$lib/db/event_participants.repo';
+import { eventRepo } from '$lib/db/event.repo';
 import { itemRepo } from '$lib/db/items.repo';
 import { isNumberOrError } from '$lib/request.utils';
 import { BadRequest } from '$lib/types/errors';
@@ -84,6 +86,14 @@ export const PUT: RequestHandler = async ({ cookies, params, request }) => {
       userId: body.ownerId,
       characterVersionId,
     });
+
+    const [event, priorReward] = await Promise.all([
+      eventRepo.getWithId(eventId),
+      eventParticipantsRepo.getSumPriorRewardBudget({ characterId, excludeEventId: eventId }),
+    ]);
+    const autoBudget = (event?.budget ?? 0) + priorReward;
+    await eventBudgetRepo.initializeBudgetIfMissing(eventId, characterId, autoBudget);
+
     return json({ characterId });
   });
 };

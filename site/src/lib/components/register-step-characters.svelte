@@ -2,7 +2,6 @@
 	import Icon from '$lib/components/icon.svelte';
 	import itemLogo from '$lib/assets/images/ItemLogo.svg?raw';
 	import implantLogo from '$lib/assets/images/ImplantLogo.svg?raw';
-
 	import type {
 		CharacterVersionFull,
 		CharacterWithVersions,

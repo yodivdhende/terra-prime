@@ -9,74 +9,77 @@
 	let { data }: PageProps = $props();
 	const participants = $derived(data.participants ?? []);
 	let event: LarpEvent | null = $state(null);
-	$effect(()=> {
-		const {event:loadEvent} = data;
+	$effect(() => {
+		const { event: loadEvent } = data;
 		const result: LarpEvent = {
 			...loadEvent,
 			start: new Date(loadEvent.start),
-			end: new Date(loadEvent.end),
-		}
+			end: new Date(loadEvent.end)
+		};
 		event = result;
-	})
+	});
 
 	async function save() {
 		const eventToSave = $state.snapshot(event);
-		if(eventToSave == null) return;
-		const {id: eventId} = eventToSave;
-		if(eventId == null) return;
+		if (eventToSave == null) return;
+		const { id: eventId } = eventToSave;
+		if (eventId == null) return;
 		try {
 			const result = await fetch(`/api/events/${eventId}`, {
 				method: 'post',
 				body: JSON.stringify(eventToSave),
 				headers: {
-					'content-type': 'application/json',
+					'content-type': 'application/json'
 				}
-			})
-			if(result.ok) {
+			});
+			if (result.ok) {
 				TOAST_MANAGER.success('Event saved');
 				await goto('.');
 			}
-		} catch( err: any) {
+		} catch (err: any) {
 			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
-    }
+	}
 
 	async function remove() {
 		const eventToSave = $state.snapshot(event);
-		if(eventToSave == null) return;
-		const {id: eventId} = eventToSave;
-		if(eventId == null) return;
+		if (eventToSave == null) return;
+		const { id: eventId } = eventToSave;
+		if (eventId == null) return;
 		try {
 			const result = await fetch(`/api/events/${eventId}`, {
 				method: 'delete',
 				headers: {
-					'content-type': 'application/json',
+					'content-type': 'application/json'
 				}
-			})
-			if(result.ok) {
+			});
+			if (result.ok) {
 				TOAST_MANAGER.success('Event deleted');
 				await goto('.');
 			}
-		} catch( err: any) {
+		} catch (err: any) {
 			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
 		}
-	 }
+	}
 </script>
 
 <main>
-	<a href=".">back</a>
+	<div class="event-header">
+		<a href=".">back</a>
+	</div>
 	{#if event != null}
-		<EventForm bind:event={ event } />
+		<div class="event-config">
+			<EventForm bind:event />
+		</div>
 	{/if}
 	<div>
 		<button class="btn" onclick={save}>save</button>
 		<button class="btn btn-danger" onclick={remove}>delete</button>
 	</div>
-	{#if event?.id != null}
-		<a href="{event.id}/budget">Manage Budget →</a>
-	{/if}
-
-	<section class="participants">
+	<section class="event-participants">
+		{#if event?.id != null}
+			<a href="{event.id}/budget">Manage Budget →</a>
+		{/if}
 		<h2>Participants</h2>
 		{#if participants.length === 0}
 			<p class="status">No participants registered for this event.</p>
@@ -102,12 +105,25 @@
 
 <style>
 	main {
-		display: flex;
-		flex-direction: column;
+		display: grid;
+		grid-template:
+			'header header' min-content
+			'config participants' min-content
+			/ min-content min-content;
+		gap: 1em;
 		padding: 8px;
 	}
 
-	.participants {
+	.event-header {
+		grid-area: header;
+	}
+
+	.event-config {
+		grid-area: config;
+	}
+
+	.event-participants {
+		grid-area: participants;
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
@@ -118,6 +134,8 @@
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
+		padding: 0.5em;
+		border-bottom: 1px solid var(--color-border);
 	}
 
 	.participant h3 {

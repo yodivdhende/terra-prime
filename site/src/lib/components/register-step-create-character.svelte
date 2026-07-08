@@ -51,13 +51,8 @@
 				const event: EventResponse = await eventRes.json();
 				const base = event.budget ?? 0;
 				if (characterId != null) {
-					const extraRes = await fetch(
-						`/api/events/${eventId}/budget/characters/${characterId}`
-					);
-					const extra = extraRes.ok
-						? ((await extraRes.json()) as { budget: number }).budget
-						: 0;
-					budget = base + extra;
+					const extraRes = await fetch(`/api/events/${eventId}/budget/characters/${characterId}`);
+					budget = extraRes.ok ? ((await extraRes.json()) as { budget: number }).budget : 0;
 				} else {
 					budget = base;
 				}

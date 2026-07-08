@@ -40,6 +40,8 @@
 	</select>
 	<label for="budget">budget</label>
 	<input id="budget" type="number" min="0" step="0.01" bind:value={event.budget} />
+	<label for="rewardBudget">reward budget</label>
+	<input id="rewardBudget" type="number" min="0" step="1" bind:value={event.rewardBudget} />
 	<label for="formId">google form id</label>
 	<input
 		id="formId"

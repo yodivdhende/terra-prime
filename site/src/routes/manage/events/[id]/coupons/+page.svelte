@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import SearchSelect from '$lib/components/search-select.svelte';
+	import DataTable from '$lib/components/data-table.svelte';
 	import type { User } from '$lib/db/user.repo';
 	import type { EventCoupon } from '$lib/db/event_coupon.repo';
 	import { CirclePlus } from '@lucide/svelte';
@@ -8,6 +9,14 @@
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
+
+	const columns = [
+		{ label: 'Player', key: 'userName' },
+		{ label: 'Code', key: 'code' },
+		{ label: 'Extra Budget', key: 'value' },
+		{ label: 'Redeemed', key: 'redeemed' },
+		{ label: '', key: '' }
+	];
 
 	const allUsers = $derived<User[]>(data.allUsers ?? []);
 	const coupons = $derived<EventCoupon[]>(data.coupons ?? []);
@@ -64,19 +73,8 @@
 		<CirclePlus />
 	</button>
 
-	{#if coupons.length === 0 && drafts.length === 0}
-		<p>No coupons for this event.</p>
-	{:else}
-		<table>
-			<thead>
-				<tr>
-					<th>Player</th>
-					<th>Code</th>
-					<th>Extra Budget</th>
-					<th>Redeemed</th>
-					<th></th>
-				</tr>
-			</thead>
+	{#if drafts.length > 0}
+		<table class="drafts">
 			<tbody>
 				{#each drafts as draft (draft.key)}
 					<tr>
@@ -104,17 +102,25 @@
 						</td>
 					</tr>
 				{/each}
-				{#each coupons as coupon (coupon.id)}
-					<tr>
-						<td>{coupon.userName}</td>
-						<td class="code">{coupon.code}</td>
-						<td>{coupon.value}</td>
-						<td>{coupon.redeemed ? 'yes' : 'no'}</td>
-						<td><button class="btn" onclick={() => deleteCoupon(coupon.id)}>delete</button></td>
-					</tr>
-				{/each}
 			</tbody>
 		</table>
+	{/if}
+
+	{#if coupons.length === 0 && drafts.length === 0}
+		<p>No coupons for this event.</p>
+	{:else if coupons.length > 0}
+		<DataTable items={coupons} {columns}>
+			{#snippet row(item)}
+				{@const coupon = item as EventCoupon}
+				<tr>
+					<td>{coupon.userName}</td>
+					<td class="code">{coupon.code}</td>
+					<td>{coupon.value}</td>
+					<td>{coupon.redeemed ? 'yes' : 'no'}</td>
+					<td><button class="btn" onclick={() => deleteCoupon(coupon.id)}>delete</button></td>
+				</tr>
+			{/snippet}
+		</DataTable>
 	{/if}
 </main>
 
@@ -133,10 +139,10 @@
 		cursor: pointer;
 		color: var(--color-accent);
 	}
-	table {
+	table.drafts {
 		border-collapse: collapse;
+		width: 100%;
 	}
-	th,
 	td {
 		padding: 6px 10px;
 		border-bottom: 1px solid silver;

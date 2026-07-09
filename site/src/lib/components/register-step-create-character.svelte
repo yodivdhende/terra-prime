@@ -6,12 +6,6 @@
 	import type { RegisterManager } from '$lib/managers/register-manager.svelte';
 	import type { CharacterManager } from '$lib/managers/character-manager.svelte';
 
-	type EventResponse = {
-		id: number;
-		name: string;
-		budget?: number | null;
-	};
-
 	let {
 		REGISTER_MANAGER,
 		CHARACTER_MANAGER
@@ -20,7 +14,6 @@
 	let expertise = $state<ShopExpertise[]>([]);
 	let items = $state<ShopItem[]>([]);
 	let implants = $state<ShopImplant[]>([]);
-	let budget = $state<number>(0);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
@@ -34,11 +27,10 @@
 		try {
 			const characterId = CHARACTER_MANAGER.character.id;
 			const charParam = characterId != null ? `?characterId=${characterId}` : '';
-			const [expertiseRes, itemsRes, implantsRes, eventRes] = await Promise.all([
+			const [expertiseRes, itemsRes, implantsRes] = await Promise.all([
 				fetch(`/api/expertise${charParam}`),
 				fetch(`/api/items${charParam}`),
-				fetch(`/api/implants${charParam}`),
-				fetch(`/api/events/${eventId}`)
+				fetch(`/api/implants${charParam}`)
 			]);
 
 			if (expertiseRes.ok) {
@@ -47,16 +39,7 @@
 			}
 			if (itemsRes.ok) items = await itemsRes.json();
 			if (implantsRes.ok) implants = await implantsRes.json();
-			if (eventRes.ok) {
-				const event: EventResponse = await eventRes.json();
-				const base = event.budget ?? 0;
-				if (characterId != null) {
-					const extraRes = await fetch(`/api/events/${eventId}/budget/characters/${characterId}`);
-					budget = extraRes.ok ? ((await extraRes.json()) as { budget: number }).budget : 0;
-				} else {
-					budget = base;
-				}
-			}
+			await REGISTER_MANAGER.loadBudget(characterId);
 		} catch (err) {
 			error = `${err}`;
 		} finally {
@@ -75,23 +58,15 @@
 	{:else if error}
 		<p class="status error">failed to load: {error}</p>
 	{:else}
-		<label class="coupon-field">
-			<span>coupon code</span>
-			<input
-				type="text"
-				placeholder="optional"
-				value={REGISTER_MANAGER.couponCode}
-				oninput={(e) => (REGISTER_MANAGER.couponCode = (e.target as HTMLInputElement).value)}
-			/>
-		</label>
 		<CharacterVersionShop
 			bind:character={CHARACTER_MANAGER.character}
 			bind:version={CHARACTER_MANAGER.version}
 			{expertise}
 			{items}
 			{implants}
-			{budget}
+			budget={REGISTER_MANAGER.availableBudget}
 			expertiseManager={CHARACTER_MANAGER.expertiseManager}
+			{REGISTER_MANAGER}
 		/>
 	{/if}
 </div>
@@ -121,30 +96,5 @@
 	.status.error {
 		color: #d95c5c;
 		opacity: 0.7;
-	}
-
-	/* ── Coupon field ── */
-
-	.coupon-field {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		font-size: 0.75em;
-		padding-bottom: 0.75rem;
-	}
-
-	.coupon-field span {
-		opacity: 0.5;
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
-	}
-
-	.coupon-field input {
-		font-family: var(--font-mono);
-		background: var(--color-bg);
-		color: var(--color-main);
-		border: none;
-		padding: 4px 8px;
-		outline: none;
 	}
 </style>

@@ -6,6 +6,7 @@
 	import ShopImplants, { type ShopImplant } from './shop-implants.svelte';
 	import type { Character, CharacterVersionFull } from '$lib/managers/character-manager.svelte';
 	import type { ExpertiseManager } from '$lib/managers/expertise-manager.svelte';
+	import type { RegisterManager } from '$lib/managers/register-manager.svelte';
 
 	let {
 		character = $bindable(),
@@ -14,7 +15,8 @@
 		items = [],
 		implants = [],
 		budget = 0,
-		expertiseManager
+		expertiseManager,
+		REGISTER_MANAGER
 	}: {
 		character: Character;
 		version: CharacterVersionFull;
@@ -23,6 +25,7 @@
 		implants?: ShopImplant[];
 		budget?: number;
 		expertiseManager?: ExpertiseManager;
+		REGISTER_MANAGER?: RegisterManager;
 	} = $props();
 
 	type DiscountEntry = { id: number; discount: number };
@@ -136,7 +139,7 @@
 
 	<div class="shop scroll">
 		{#if activeStep === 'details'}
-			<CharacterEditor bind:character bind:version />
+			<CharacterEditor bind:character bind:version {REGISTER_MANAGER} />
 		{:else if activeStep === 'expertise'}
 			<ShopExpertise
 				catalog={expertise}

@@ -175,6 +175,7 @@ A coupon is a discrete grant tied to one user and one event. Multiple coupons ma
 | Method | Path | Auth | Returns | Description |
 |--------|------|------|---------|-------------|
 | GET | `/api/events/[eventId]/budget/characters/[characterId]` | admin/user | `{ budget: number }` (JSON) | Total available budget for a character at an event: `event.budget + priorRewardBudget + sum(redeemed 'budget' coupons for the character's owner at this event)` |
+| GET | `/api/my/events/[eventId]/coupons/[code]` | user | `{ valid: boolean, value: number }` (JSON, always 200) | Check whether `code` is an unredeemed 'budget' coupon for the current user at this event, without redeeming it. Used to preview the budget effect of a coupon before final registration submit |
 
 `PUT /api/my/events/[eventId]/participants` (see "My" section) now also accepts an optional `couponCode?: string | null` on the body. If provided, it must match an unredeemed coupon for the current user at this event or the request is rejected with 400 (`invalid or already used coupon code`). The endpoint also recomputes the submitted character version's total cost server-side and rejects with 400 (`character exceeds available budget`) if it exceeds the available budget (including the coupon being redeemed, if any). On success, a matched coupon is marked redeemed.
 

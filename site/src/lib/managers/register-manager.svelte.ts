@@ -53,6 +53,11 @@ export function createRegisterManager(characterManager: CharacterManager) {
   let formError = $state(false);
 
   let couponCode = $state('');
+  let baseBudget = $state(0);
+  let budgetLoading = $state(false);
+  let couponValue = $state(0);
+  let couponStatus = $state<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
+  const availableBudget = $derived(baseBudget + (couponStatus === 'valid' ? couponValue : 0));
 
   const canAdvance = $derived.by(() => {
     if (currentStep === 0) {
@@ -92,6 +97,9 @@ export function createRegisterManager(characterManager: CharacterManager) {
     const formId = event?.formId ?? null;
     resetForm();
     couponCode = '';
+    baseBudget = 0;
+    couponValue = 0;
+    couponStatus = 'idle';
     if (formId) {
       formLoading = true;
       fetch(`/api/forms/${formId}`)
@@ -121,6 +129,49 @@ export function createRegisterManager(characterManager: CharacterManager) {
     formError = false;
   }
 
+  async function loadBudget(characterId: number | null) {
+    if (selectedEventId === null) return;
+    budgetLoading = true;
+    try {
+      const eventRes = await fetch(`/api/events/${selectedEventId}`);
+      if (!eventRes.ok) {
+        baseBudget = 0;
+        return;
+      }
+      const event: { budget?: number | null } = await eventRes.json();
+      const base = event.budget ?? 0;
+      if (characterId != null) {
+        const extraRes = await fetch(`/api/events/${selectedEventId}/budget/characters/${characterId}`);
+        baseBudget = extraRes.ok ? ((await extraRes.json()) as { budget: number }).budget : 0;
+      } else {
+        baseBudget = base;
+      }
+    } finally {
+      budgetLoading = false;
+    }
+  }
+
+  async function validateCoupon() {
+    const code = couponCode.trim();
+    if (!code || selectedEventId === null) {
+      couponValue = 0;
+      couponStatus = 'idle';
+      return;
+    }
+    couponStatus = 'checking';
+    try {
+      const res = await fetch(`/api/my/events/${selectedEventId}/coupons/${encodeURIComponent(code)}`);
+      const data: { valid: boolean; value: number } = res.ok
+        ? await res.json()
+        : { valid: false, value: 0 };
+      couponValue = data.valid ? data.value : 0;
+      couponStatus = data.valid ? 'valid' : 'invalid';
+    } catch {
+      couponValue = 0;
+      couponStatus = 'invalid';
+    }
+  }
+
   function selectCharacter(charId: number, versionId: number | null) {
     selectedCharacterId = charId;
     selectedVersionId = versionId;
@@ -142,6 +193,9 @@ export function createRegisterManager(characterManager: CharacterManager) {
     selectedVersionId = null;
     resetForm();
     couponCode = '';
+    baseBudget = 0;
+    couponValue = 0;
+    couponStatus = 'idle';
     characterManager.reset();
   }
 
@@ -164,6 +218,11 @@ export function createRegisterManager(characterManager: CharacterManager) {
     get formError() { return formError; },
     get couponCode() { return couponCode; },
     set couponCode(value: string) { couponCode = value; },
+    get budget() { return baseBudget; },
+    get budgetLoading() { return budgetLoading; },
+    get availableBudget() { return availableBudget; },
+    get couponValue() { return couponValue; },
+    get couponStatus() { return couponStatus; },
     next,
     back,
     selectEvent,
@@ -173,6 +232,8 @@ export function createRegisterManager(characterManager: CharacterManager) {
     selectCharacter,
     preselectCharacter,
     clearCharacter,
+    loadBudget,
+    validateCoupon,
     reset,
   };
 }

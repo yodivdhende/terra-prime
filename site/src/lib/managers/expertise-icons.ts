@@ -12,45 +12,24 @@ import SocialeWetenschapIcon from '$lib/assets/images/ExpertiseLogo-SocialeWeten
 import SocialogyAndDiplomacyIcon from '$lib/assets/images/ExpertiseLogo-SocialogyAndDiplomacy.svg?raw';
 import SoftwareAndHackingIcon from '$lib/assets/images/ExpertiseLogo-SoftwareAndHakcing.svg?raw';
 
-export const GROUP_COLORS: Record<number, string> = {
-	1: '#f0c040',
-	2: '#4caf82',
-	3: '#4a9edd',
-	4: '#d95c5c'
-};
-
-export const GROUP_ICONS: Record<number, string> = {
-	1: EngineeringIcon,
-	2: LifeSciencesIcon,
-	3: InformationTechnologyIcon,
-	4: SocialeWetenschapIcon
-};
-
-export const EXPERTISE_INFO: Record<number, { name: string; icon: string }> = {
-	1: { name: 'Mechanical Engineering', icon: MechanicalEngineeringIcon },
-	2: { name: 'Electrical Engineering', icon: ElectricalEngineeringIcon },
-	3: { name: 'Medical & Trauma Care', icon: MedicalAndTraumaCareIcon },
-	4: { name: 'Chemistry', icon: ChemistryIcon },
-	5: { name: 'Ecologie', icon: EcologieIcon },
-	6: { name: 'Software & Hacking', icon: SoftwareAndHackingIcon },
-	7: { name: 'Communication Systems', icon: CommunicationSystemsIcon },
-	8: { name: 'Historical Analysis', icon: HistoricalAnalysisIcon },
-	9: { name: 'Sociology & Diplomacy', icon: SocialogyAndDiplomacyIcon }
-};
-
-const EXPERTISE_ICONS_BY_NAME: Record<string, string> = {
-	...Object.fromEntries(
-		Object.values(EXPERTISE_INFO).map((info) => [
-			info.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
-			info.icon
-		])
-	),
-	engineering: EngineeringIcon,
-	lifesciences: LifeSciencesIcon,
-	informationtechnology: InformationTechnologyIcon,
-	socialewetenschap: SocialeWetenschapIcon
-};
-
-export function getExpertiseIcon(name: string): string | undefined {
-	return EXPERTISE_ICONS_BY_NAME[name.toLowerCase().replace(/[^a-z0-9]/g, '')];
-}
+/**
+ * The bundled logos offered as quick-pick presets in the icon picker. Icons and
+ * group colours now live in the database (`Expertise.Icon`, `Expertise_Groups.Icon`
+ * / `Expertise_Groups.Color`); these presets are only a convenience for the admin
+ * forms — every read surface renders the icon/colour stored on the row itself.
+ */
+export const ICON_PRESETS: { name: string; svg: string }[] = [
+	{ name: 'Engineering', svg: EngineeringIcon },
+	{ name: 'Mechanical Engineering', svg: MechanicalEngineeringIcon },
+	{ name: 'Electrical Engineering', svg: ElectricalEngineeringIcon },
+	{ name: 'Life Sciences', svg: LifeSciencesIcon },
+	{ name: 'Medical & Trauma Care', svg: MedicalAndTraumaCareIcon },
+	{ name: 'Chemistry', svg: ChemistryIcon },
+	{ name: 'Ecologie', svg: EcologieIcon },
+	{ name: 'Information Technology', svg: InformationTechnologyIcon },
+	{ name: 'Software & Hacking', svg: SoftwareAndHackingIcon },
+	{ name: 'Communication Systems', svg: CommunicationSystemsIcon },
+	{ name: 'Sociale Wetenschap', svg: SocialeWetenschapIcon },
+	{ name: 'Historical Analysis', svg: HistoricalAnalysisIcon },
+	{ name: 'Sociology & Diplomacy', svg: SocialogyAndDiplomacyIcon }
+];

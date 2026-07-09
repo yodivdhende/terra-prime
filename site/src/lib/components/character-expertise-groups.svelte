@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Icon from '$lib/components/icon.svelte';
 	import ProgressBar from '$lib/components/progress-bar.svelte';
-	import { GROUP_COLORS, GROUP_ICONS, EXPERTISE_INFO } from '$lib/managers/expertise-icons';
 	import type { ExpertiseManager } from '$lib/managers/expertise-manager.svelte';
 
 	type ExpertiseGroupEntry = {
@@ -10,6 +9,9 @@
 		groupName: string;
 		name?: string;
 		value: number;
+		icon?: string | null;
+		groupIcon?: string | null;
+		groupColor?: string | null;
 	};
 
 	let {
@@ -30,7 +32,8 @@
 				.map((g) => ({
 					id: g.id,
 					name: g.name,
-					color: GROUP_COLORS[g.id] ?? 'var(--color-accent)',
+					color: g.color ?? 'var(--color-accent)',
+					icon: g.icon ?? null,
 					average: g.average,
 					expertise: manager.selected.filter((e) => e.group === g.id)
 				}))
@@ -44,6 +47,7 @@
 				id: number;
 				name: string;
 				color: string;
+				icon: string | null;
 				expertise: ExpertiseGroupEntry[];
 				total: number;
 				count: number;
@@ -55,7 +59,8 @@
 				map.set(entry.group, {
 					id: entry.group,
 					name: entry.groupName,
-					color: GROUP_COLORS[entry.group] ?? 'var(--color-accent)',
+					color: entry.groupColor ?? 'var(--color-accent)',
+					icon: entry.groupIcon ?? null,
 					expertise: [],
 					total: 0,
 					count: 0
@@ -71,17 +76,14 @@
 			average: group.count > 0 ? group.total / group.count : 0
 		}));
 	});
-
-	console.log({ EXPERTISE_INFO });
 </script>
 
 <div class="expertise-groups">
 	{#each groups as group (group.id)}
-		{@const groupIcon = GROUP_ICONS[group.id]}
 		<div class="group">
-			{#if groupIcon}
+			{#if group.icon}
 				<div class="group-icon">
-					<Icon src={groupIcon} color={group.color} tooltip={group.name} {size} />
+					<Icon src={group.icon} color={group.color} tooltip={group.name} {size} />
 				</div>
 			{/if}
 			{#if showNames}
@@ -95,16 +97,15 @@
 		</div>
 		<div class="expertise">
 			{#each group.expertise as entry (entry.id)}
-				{@const entryIcon = EXPERTISE_INFO[entry.id]?.icon}
 				<div class="entry">
-					{#if entryIcon}
+					{#if entry.icon}
 						<div class="entry-icon">
-							<Icon src={entryIcon} color={group.color} tooltip={entry.name} {size} />
+							<Icon src={entry.icon} color={group.color} tooltip={entry.name} {size} />
 						</div>
 					{/if}
 					<!-- {#if showNames} -->
 					<div class="entry-name">
-						{EXPERTISE_INFO[entry.id]?.name}
+						{entry.name}
 					</div>
 					<!-- {/if} -->
 					<div class="entry-bar bar">

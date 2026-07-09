@@ -52,7 +52,10 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 						name: expertise.name,
 						group: expertise.groupId,
 						groupName: expertise.groupName,
-						value: e.value
+						value: e.value,
+						icon: expertise.icon ?? null,
+						groupIcon: expertise.groupIcon ?? null,
+						groupColor: expertise.groupColor ?? null
 					}
 				];
 			}),

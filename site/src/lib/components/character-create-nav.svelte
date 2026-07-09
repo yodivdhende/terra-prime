@@ -1,6 +1,15 @@
 <script lang="ts" module>
 	export type Step = 'details' | 'expertise' | 'items' | 'implants';
-	export type NavExpertiseGroup = { id: number; group: number; groupName: string; value: number };
+	export type NavExpertiseGroup = {
+		id: number;
+		group: number;
+		groupName: string;
+		value: number;
+		name?: string;
+		icon?: string | null;
+		groupIcon?: string | null;
+		groupColor?: string | null;
+	};
 </script>
 
 <script lang="ts">

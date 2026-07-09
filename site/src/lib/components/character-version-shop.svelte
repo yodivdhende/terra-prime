@@ -112,7 +112,20 @@
 	const expertiseForGroups = $derived(
 		version.expertise.flatMap((de) => {
 			const e = expertise.find((ex) => ex.id === de.id);
-			return e ? [{ id: de.id, group: e.groupId, groupName: e.groupName, value: de.value }] : [];
+			return e
+				? [
+						{
+							id: de.id,
+							group: e.groupId,
+							groupName: e.groupName,
+							value: de.value,
+							name: e.name,
+							icon: e.icon ?? null,
+							groupIcon: e.groupIcon ?? null,
+							groupColor: e.groupColor ?? null
+						}
+					]
+				: [];
 		})
 	);
 </script>

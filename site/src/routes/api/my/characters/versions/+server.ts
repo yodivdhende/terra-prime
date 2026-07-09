@@ -16,6 +16,9 @@ export type VersionExpertise = {
 	group: number;
 	groupName: string;
 	value: number;
+	icon: string | null;
+	groupIcon: string | null;
+	groupColor: string | null;
 };
 
 export type VersionItem = {
@@ -121,7 +124,10 @@ function toFullVersion(
 					name: expertise.name,
 					group: expertise.groupId,
 					groupName: expertise.groupName,
-					value: e.value
+					value: e.value,
+					icon: expertise.icon ?? null,
+					groupIcon: expertise.groupIcon ?? null,
+					groupColor: expertise.groupColor ?? null
 				}
 			];
 		}),

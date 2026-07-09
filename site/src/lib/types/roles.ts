@@ -4,7 +4,7 @@ export const PublicUserRole = {
     extra : 'extra',
 } as const;
 export type PublicUserRole = typeof PublicUserRole[keyof typeof PublicUserRole];
-export function isPublicUserRole(role: any): role is PublicUserRole{
+export function isPublicUserRole(role: unknown): role is PublicUserRole{
     return (
         typeof role === 'string' &&
         Object.values(PublicUserRole).includes(role as PublicUserRole)
@@ -17,7 +17,7 @@ export const UserRole = {
 } as const
 export type UserRole = typeof UserRole[keyof typeof UserRole];
 
-export function isUserRole(role: any): role is UserRole {
+export function isUserRole(role: unknown): role is UserRole {
     return (
         typeof role === 'string' &&
         Object.values(UserRole).includes(role as UserRole)

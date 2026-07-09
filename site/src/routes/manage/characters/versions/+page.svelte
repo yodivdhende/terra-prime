@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { type PageProps } from './$types';
 	import ConfirmModal from '$lib/components/confirm-modal.svelte';
 	import CharacterVersionPreview from '$lib/components/character-version-preview.svelte';
@@ -6,10 +7,7 @@
 
 	let { data }: PageProps = $props();
 
-	let versions = $state(data.versions);
-	$effect(() => {
-		versions = data.versions;
-	});
+	let versions = $derived(data.versions);
 
 	let modal: ConfirmModal;
 	let pendingDeleteId: number | null = $state(null);
@@ -30,14 +28,14 @@
 			} else {
 				TOAST_MANAGER.error(`Delete failed (${result.status})`);
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err?.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 </script>
 
 <main>
-	<a href="..">back</a>
+	<a href={resolve('/manage/characters')}>back</a>
 
 	<table>
 		<thead>
@@ -51,7 +49,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each versions as version}
+			{#each versions as version (version.id)}
 				<tr>
 					<td>{version.id}</td>
 					<td>{version.characterName}</td>
@@ -66,7 +64,7 @@
 							/>
 						{/if}
 					</td>
-					<td><a href="/manage/versions/{version.id}">edit</a></td>
+					<td><a href={resolve('/manage/versions/[versionId]', { versionId: String(version.id) })}>edit</a></td>
 					<td
 						><button class="btn btn-danger" onclick={() => requestDelete(version.id)}>delete</button
 						></td

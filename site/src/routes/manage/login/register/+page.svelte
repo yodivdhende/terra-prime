@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
+	import { resolve } from '$app/paths';
 	import type { PageProps } from './$types';
 
 	let showPassword = $state(false);
@@ -59,7 +60,7 @@
 			</div>
 			<button class="btn"> Register </button>
 		</form>
-		<a href="/login">Login</a>
+		<a href={resolve('/manage/login')}>Login</a>
 	</div>
 </main>
 

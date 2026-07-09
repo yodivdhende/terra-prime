@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import ImplantForm from '$lib/components/implant-form.svelte';
 	import CharacterAccessSelect from '$lib/components/character-access-select.svelte';
 	import type { Implant } from '$lib/db/implants.repo';
@@ -28,12 +29,12 @@
 			})
 			if(result.ok) {
 				TOAST_MANAGER.success('Implant saved');
-				await goto('.');
+				await goto(resolve('/manage/implants'));
 			} else {
 				TOAST_MANAGER.error('Failed to save implant');
 			}
-		} catch(err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
     }
 
@@ -51,19 +52,19 @@
 			})
 			if(result.ok) {
 				TOAST_MANAGER.success('Implant deleted');
-				await goto('.');
+				await goto(resolve('/manage/implants'));
 			} else {
 				TOAST_MANAGER.error('Failed to delete implant');
 			}
-		} catch(err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	 }
 
 </script>
 
 <main>
-	<a href=".">back</a>
+	<a href={resolve('/manage/implants')}>back</a>
 	{#if implant != null}
 		<ImplantForm bind:implant={implant} />
 
@@ -84,7 +85,10 @@
 			{#if implant.characterAccess === 'specific'}
 				<CharacterAccessSelect
 					characters={data.characters ?? []}
-					bind:selectedIds={implant.allowedCharacterIds}
+					bind:selectedIds={
+						() => implant!.allowedCharacterIds ?? [],
+						(v) => (implant!.allowedCharacterIds = v)
+					}
 				/>
 			{/if}
 		</fieldset>

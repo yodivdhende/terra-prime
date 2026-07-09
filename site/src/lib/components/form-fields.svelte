@@ -24,6 +24,9 @@
 		items: GoogleFormItem[];
 	};
 
+	// The Forms API supports a rating question type that isn't yet reflected in googleapis' Schema$Item types.
+	type RatingQuestion = { ratingQuestion?: { ratingScaleLevel?: number; iconType?: string } };
+
 	function buildSections(items: GoogleFormItem[]): Section[] {
 		const result: Section[] = [{ title: null, description: null, items: [] }];
 		for (const item of items) {
@@ -77,6 +80,7 @@
 					{#if question?.required}<span class="required">*</span>{/if}
 				</span>
 				{#if item.description}
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -- formatText() HTML-escapes the source before reinserting safe <a>/<br> markup -->
 					<span class="q-desc">{@html formatText(item.description)}</span>
 				{/if}
 
@@ -170,8 +174,8 @@
 						value={(answers[qid] as string) ?? ''}
 						onchange={(v) => setAnswer(qid, v)}
 					/>
-				{:else if (question as any)?.ratingQuestion}
-					{@const rating = (question as any).ratingQuestion}
+				{:else if (question as RatingQuestion | undefined)?.ratingQuestion}
+					{@const rating = (question as RatingQuestion).ratingQuestion!}
 					{@const level = rating.ratingScaleLevel ?? 5}
 					{@const iconType = rating.iconType ?? 'STAR'}
 					{@const selected = Number((answers[qid] as string) ?? 0) || 0}
@@ -205,7 +209,8 @@
 		{:else if item.textItem}
 			<div class="text-item">
 				<span class="q-title">{item.title ?? ''}</span>
-				{#if item.description}<p class="q-desc">{@html formatText(item.description)}</p>{/if}
+				{#if item.description}<!-- eslint-disable-next-line svelte/no-at-html-tags -- formatText() HTML-escapes the source before reinserting safe <a>/<br> markup -->
+					<p class="q-desc">{@html formatText(item.description)}</p>{/if}
 			</div>
 		{:else if item.imageItem?.image?.contentUri}
 			<img src={item.imageItem.image.contentUri} alt={item.title ?? ''} />
@@ -243,8 +248,6 @@
 	}
 
 	input[type='text'],
-	input[type='date'],
-	input[type='time'],
 	textarea,
 	select {
 		background: transparent;
@@ -263,8 +266,6 @@
 	}
 
 	input[type='text']:focus,
-	input[type='date']:focus,
-	input[type='time']:focus,
 	textarea:focus,
 	select:focus {
 		outline: none;

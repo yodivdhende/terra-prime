@@ -1,5 +1,6 @@
 <script lang='ts'>
     import { goto, invalidate } from "$app/navigation";
+    import { resolve } from "$app/paths";
     import { untrack } from "svelte";
     import type { PageProps } from "./$types";
     import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
@@ -21,12 +22,12 @@
             })
             if(result.ok) {
                 TOAST_MANAGER.success('User saved');
-                goto('.');
+                goto(resolve('/manage/users'));
             } else {
                 TOAST_MANAGER.error(`Save failed (${result.status})`);
             }
-        } catch (err: any) {
-            TOAST_MANAGER.error(err?.message ?? 'Something went wrong');
+        } catch (err) {
+            TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
         }
     }
 
@@ -76,7 +77,7 @@
     }
 </script>
 <main>
-    <a href=".">back</a>
+    <a href={resolve('/manage/users')}>back</a>
     {#if user}
     <label for="name">Name</label>
     <input type="text" id="name" bind:value={user.name}/>

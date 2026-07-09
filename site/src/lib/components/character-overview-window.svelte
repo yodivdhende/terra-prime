@@ -8,7 +8,7 @@
 		type CharacterVersionImplant
 	} from '$lib/components/character-version.svelte';
 
-	let { window }: { window: CodexWindow } = $props();
+	let { window: _window }: { window: CodexWindow } = $props();
 
 	type VersionEvent = { id: number; name: string };
 

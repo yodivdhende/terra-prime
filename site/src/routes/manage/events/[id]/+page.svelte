@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import EventForm from '$lib/components/event-form.svelte';
 	import CharacterVersionPreview from '$lib/components/character-version-preview.svelte';
 	import type { PageProps } from './$types';
@@ -34,10 +35,10 @@
 			});
 			if (result.ok) {
 				TOAST_MANAGER.success('Event saved');
-				await goto('.');
+				await goto(resolve('/manage/events'));
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 
@@ -55,17 +56,17 @@
 			});
 			if (result.ok) {
 				TOAST_MANAGER.success('Event deleted');
-				await goto('.');
+				await goto(resolve('/manage/events'));
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 </script>
 
 <main>
 	<div class="event-header">
-		<a href=".">back</a>
+		<a href={resolve('/manage/events')}>back</a>
 	</div>
 	{#if event != null}
 		<div class="event-config">
@@ -78,7 +79,7 @@
 	</div>
 	<section class="event-participants">
 		{#if event?.id != null}
-			<a href="{event.id}/budget">Manage Budget →</a>
+			<a href={resolve('/manage/events/[id]/budget', { id: String(event.id) })}>Manage Budget →</a>
 		{/if}
 		<h2>Participants</h2>
 		{#if participants.length === 0}

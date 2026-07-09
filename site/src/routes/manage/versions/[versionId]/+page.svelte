@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CharacterVersionShop from '$lib/components/character-version-shop.svelte';
+	import { resolve } from '$app/paths';
 	import { createCharacterManager } from '$lib/managers/character-manager.svelte';
 	import { type PageProps } from './$types';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
@@ -43,9 +44,9 @@
 				saveError = `save failed (${result.status})`;
 				TOAST_MANAGER.error(`Save failed (${result.status})`);
 			}
-		} catch (err: any) {
+		} catch (err) {
 			saveError = `${err}`;
-			TOAST_MANAGER.error(err?.message ?? 'Something went wrong');
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		} finally {
 			saving = false;
 		}
@@ -54,10 +55,10 @@
 
 <main>
 	{#if manager.character.id == null || manager.version.id == null}
-		<a href="/manage/characters">back</a>
+		<a href={resolve('/manage/characters')}>back</a>
 		<p class="status">not found</p>
 	{:else}
-		<a href="/manage/characters/{manager.character.id}">back</a>
+		<a href={resolve('/manage/characters/[id]', { id: String(manager.character.id) })}>back</a>
 
 		<div class="shop-wrapper">
 			<CharacterVersionShop

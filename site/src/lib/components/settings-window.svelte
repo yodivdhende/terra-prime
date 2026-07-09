@@ -2,7 +2,7 @@
 	import { type CodexWindow } from '$lib/managers/window-manager.svelte';
 	import { EFFECTS_MANAGER } from '$lib/managers/effects-manager.svelte';
 
-	let { window }: { window: CodexWindow } = $props();
+	let { window: _window }: { window: CodexWindow } = $props();
 
 	const effects = [
 		{
@@ -26,7 +26,7 @@
 <div class="settings">
 	<section>
 		<h2>effects</h2>
-		{#each effects as effect}
+		{#each effects as effect (effect.label)}
 			<div class="row">
 				<span class="label">{effect.label}</span>
 				<button class="toggle" class:on={effect.get()} onclick={() => effect.set(!effect.get())}>

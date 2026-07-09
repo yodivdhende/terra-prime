@@ -6,10 +6,7 @@
 		content: Snippet;
 		open?: boolean;
 	} = $props();
-	let showContent: boolean = $state(open);
-	$effect(() => {
-		showContent = open;
-	});
+	let showContent = $derived(open);
 </script>
 
 <main class="dropdown">

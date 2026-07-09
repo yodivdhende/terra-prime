@@ -1,4 +1,4 @@
-import { eventRepo, isLarpEvent, type LarpEvent } from '$lib/db/event.repo';
+import { eventRepo, isLarpEvent } from '$lib/db/event.repo';
 import { isNumberOrError } from '$lib/request.utils';
 import { ensureSpreadsheetForEvent } from '$lib/server/event-sheet.service';
 import { BadRequest, NotFoundRequest } from '$lib/types/errors';

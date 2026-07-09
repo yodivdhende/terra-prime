@@ -37,6 +37,7 @@
 				.filter((g) => g.expertise.length > 0);
 		}
 
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local scratch, discarded when the derivation returns
 		const map = new Map<
 			number,
 			{

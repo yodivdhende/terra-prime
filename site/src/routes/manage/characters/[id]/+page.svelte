@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto, invalidate } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import CharacterForm from '$lib/components/character-form.svelte';
 	import ConfirmModal from '$lib/components/confirm-modal.svelte';
 	import { type Character } from '$lib/db/character.repo';
@@ -14,10 +15,7 @@
 		character = loadCharacter ?? null;
 	});
 	const users = $derived(data.users);
-	let versions: { id: number; name: string }[] = $state([]);
-	$effect(() => {
-		versions = data.versions as { id: number; name: string }[];
-	});
+	let versions = $derived(data.versions as { id: number; name: string }[]);
 
 	async function save() {
 		const characterToSave = $state.snapshot(character);
@@ -32,10 +30,10 @@
 			if (result.ok) {
 				TOAST_MANAGER.success('Character saved');
 				await invalidate('/api/my/characters');
-				await goto('.');
+				await goto(resolve('/manage/characters'));
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 
@@ -48,10 +46,10 @@
 			const result = await fetch(`/api/characters/${id}`, { method: 'delete' });
 			if (result.ok) {
 				TOAST_MANAGER.success('Character deleted');
-				await goto('.');
+				await goto(resolve('/manage/characters'));
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 
@@ -74,8 +72,8 @@
 			} else {
 				TOAST_MANAGER.error(`Delete failed (${result.status})`);
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err?.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 
@@ -88,16 +86,16 @@
 			});
 			if (result.ok) {
 				const { id } = await result.json();
-				await goto(`/manage/versions/${id}`);
+				await goto(resolve('/manage/versions/[versionId]', { versionId: String(id) }));
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 </script>
 
 <main>
-	<a href=".">back</a>
+	<a href={resolve('/manage/characters')}>back</a>
 	{#if character != null}
 		<CharacterForm bind:character {users} />
 	{/if}
@@ -129,11 +127,11 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each versions as version}
+					{#each versions as version (version.id)}
 						<tr>
 							<td>{version.id}</td>
 							<td>{version.name}</td>
-							<td><a href="/manage/versions/{version.id}">edit</a></td>
+							<td><a href={resolve('/manage/versions/[versionId]', { versionId: String(version.id) })}>edit</a></td>
 							<td
 								><button class="btn btn-danger" onclick={() => requestDeleteVersion(version.id)}
 									>delete</button

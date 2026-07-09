@@ -181,7 +181,7 @@
 						class="form-error-link"
 						href={formSubmitError.responderUri}
 						target="_blank"
-						rel="noopener noreferrer"
+						rel="noopener noreferrer external"
 					>
 						{formSubmitError.responderUri}
 					</a>

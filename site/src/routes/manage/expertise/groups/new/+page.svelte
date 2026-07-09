@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto, invalidate } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import ExpertiseGroupForm from '$lib/components/expertise-group-form.svelte';
 	import type { ExpertiseGroup } from '$lib/db/expertise.repo';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
@@ -19,18 +20,18 @@
 			if (response.ok) {
 				TOAST_MANAGER.success('Expertise group saved');
 				await invalidate('/api/expertise/groups');
-				await goto('.');
+				await goto(resolve('/manage/expertise/groups'));
 			} else {
 				TOAST_MANAGER.error('Failed to save expertise group');
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 </script>
 
 <main>
-	<a href=".">back</a>
+	<a href={resolve('/manage/expertise/groups')}>back</a>
 	<h1>new expertise group</h1>
 	{#if group!= null}
 		<ExpertiseGroupForm bind:group={group}/>

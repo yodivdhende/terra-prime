@@ -48,7 +48,7 @@
 
 <div class="backstory">
 	{#if docUrl}
-		<a href={docUrl} target="_blank" rel="noopener noreferrer">Open Backstory</a>
+		<a href={docUrl} target="_blank" rel="noopener noreferrer external">Open Backstory</a>
 	{:else}
 		<button onclick={createDoc} disabled={loading || !canCreate}>
 			{loading ? 'Creating...' : 'Create Backstory Document'}

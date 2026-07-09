@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto, invalidate } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import CompanyForm from '$lib/components/company-form.svelte';
 	import type { Company } from '$lib/db/companies.repo';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
@@ -21,16 +22,16 @@
 			if (response.ok) {
 				TOAST_MANAGER.success('Company created');
 				await invalidate('/api/companies');
-				await goto('.');
+				await goto(resolve('/manage/companies'));
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 </script>
 
 <main>
-	<a href=".">back</a>
+	<a href={resolve('/manage/companies')}>back</a>
 	<h1>new company</h1>
 	<CompanyForm bind:company />
 	<div>

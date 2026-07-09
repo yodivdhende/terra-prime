@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { SvelteMap } from 'svelte/reactivity';
 	import SearchSelect from '$lib/components/search-select.svelte';
 	import type { Character } from '$lib/db/character.repo';
 	import type { EventCharacterBudget } from '$lib/db/event_budget.repo';
@@ -13,6 +15,7 @@
 	const charById = $derived(new Map(allCharacters.map((c) => [c.id!, c])));
 
 	const rows = $derived.by<Character[]>(() => {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local dedup scratch, discarded when the derivation returns
 		const seen = new Set<number>();
 		const out: Character[] = [];
 		for (const p of (data.participants as Character[]) ?? []) {
@@ -33,16 +36,15 @@
 		return out;
 	});
 
-	let budgetMap = $state<Map<number, number>>(new Map());
+	const budgetMap: SvelteMap<number, number> = new SvelteMap();
 
 	$effect(() => {
-		const map = new Map<number, number>();
+		budgetMap.clear();
 		for (const r of rows) {
 			if (r.id == null) continue;
 			const existing = (data.budgets as EventCharacterBudget[]).find((b) => b.characterId === r.id);
-			map.set(r.id, existing?.budget ?? 0);
+			budgetMap.set(r.id, existing?.budget ?? 0);
 		}
-		budgetMap = map;
 	});
 
 	type Draft = { key: number; characterId: number | null; budget: number };
@@ -78,8 +80,8 @@
 				headers: { 'content-type': 'application/json' }
 			});
 			TOAST_MANAGER.success('Budget saved');
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 
@@ -94,14 +96,14 @@
 			TOAST_MANAGER.success('Budget saved');
 			removeDraft(draft.key);
 			await invalidateAll();
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 </script>
 
 <main>
-	<a href="..">back</a>
+	<a href={resolve('/manage/events/[id]', { id: String(data.eventId) })}>back</a>
 	<h2>Event Budget</h2>
 
 	<button class="btn add" onclick={addDraft} aria-label="Add character budget">
@@ -146,7 +148,7 @@
 						</td>
 					</tr>
 				{/each}
-				{#each rows as row}
+				{#each rows as row (row.id)}
 					{#if row.id != null}
 						{@const cid = row.id}
 						<tr>
@@ -159,7 +161,6 @@
 									value={budgetMap.get(cid) ?? 0}
 									oninput={(e) => {
 										budgetMap.set(cid, Number((e.target as HTMLInputElement).value));
-										budgetMap = new Map(budgetMap);
 									}}
 								/>
 							</td>

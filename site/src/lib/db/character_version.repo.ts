@@ -1,4 +1,5 @@
 import { valueOrLogOfPromiseSetteld } from '$lib/utils/request';
+import type { RowDataPacket } from 'mysql2/promise';
 import { mysqlconnFn } from './mysql';
 import { eventParticipantsRepo } from './event_participants.repo';
 
@@ -15,14 +16,14 @@ class CharacterVersionRepo {
       `);
     if (Array.isArray(results) === false) return [];
     if (results.length === 0) return [];
-    const ids = (results as any[]).map(({ id }) => id).filter((id): id is number => typeof id === 'number');
+    const ids = (results as RowDataPacket[]).map(({ id }) => id).filter((id): id is number => typeof id === 'number');
     const [items, implants, expertise] = await Promise.allSettled([
       this.getItemsforCharacterVersions(ids),
       this.getImplantsforCharacterVersions(ids),
       this.getExpertiseForCharacterVersions(ids)
     ]);
     const characterVersions: CharacterVersionBare[] = [];
-    for (const characterItem of results as any[]) {
+    for (const characterItem of results as RowDataPacket[]) {
       if ('id' in characterItem === false || typeof characterItem.id != 'number') continue;
       if ('characterId' in characterItem === false || typeof characterItem.characterId != 'number')
         continue;
@@ -67,7 +68,7 @@ class CharacterVersionRepo {
       `INSERT INTO Character_Versions (\`Character\`, Name, Company) VALUES (?, ?, ?)`,
       [characterVersion.characterId, characterVersion.name, characterVersion.company]
     );
-    const versionId = (result as any).insertId as number;
+    const versionId = (result as { insertId: number }).insertId;
     await Promise.all([
       characterVersion.expertise.length > 0 ? this.saveExpertise({ versionId, expertise: characterVersion.expertise }) : Promise.resolve(),
       characterVersion.items.length > 0 ? this.saveItems({ versionId, items: characterVersion.items }) : Promise.resolve(),
@@ -204,7 +205,7 @@ class CharacterVersionRepo {
   }) {
     this.deleteExpertise(versionId);
     const connection = mysqlconnFn();
-    const [result] = await connection.query(
+    await connection.query(
       `
 				INSERT INTO Character_Version_Expertise (CharacterVersion, Expertise, Value)
 				VALUES ?
@@ -253,14 +254,14 @@ class CharacterVersionRepo {
     );
     if (Array.isArray(results) === false) return [];
     if (results.length === 0) return [];
-    const existingIds = (results as any[]).map(({ id }) => id).filter((id): id is number => typeof id === 'number');
+    const existingIds = (results as RowDataPacket[]).map(({ id }) => id).filter((id): id is number => typeof id === 'number');
     const [items, implants, expertise] = await Promise.allSettled([
       this.getItemsforCharacterVersions(existingIds),
       this.getImplantsforCharacterVersions(existingIds),
       this.getExpertiseForCharacterVersions(existingIds)
     ]);
     const characterVersions: CharacterVersionBare[] = [];
-    for (const characterItem of results as any[]) {
+    for (const characterItem of results as RowDataPacket[]) {
       if ('id' in characterItem === false || typeof characterItem.id != 'number') continue;
       if ('characterId' in characterItem === false || typeof characterItem.characterId != 'number')
         continue;
@@ -311,9 +312,9 @@ class CharacterVersionRepo {
       JOIN Characters c ON c.Id = cv.Character
     `);
     if (!Array.isArray(results)) return [];
-    return (results as any[]).filter(
+    return (results as RowDataPacket[]).filter(
       (r) => typeof r.id === 'number' && typeof r.name === 'string' && typeof r.characterId === 'number' && typeof r.characterName === 'string'
-    );
+    ) as { id: number; name: string; characterId: number; characterName: string }[];
   }
 
   public async getForCharacter(characterId: number): Promise<CharacterVersionBare[]> {
@@ -324,7 +325,7 @@ class CharacterVersionRepo {
       [characterId]
     );
     if (!Array.isArray(results) || results.length === 0) return [];
-    const versionIds = (results as any[])
+    const versionIds = (results as RowDataPacket[])
       .map(({ id }) => id)
       .filter((id): id is number => typeof id === 'number');
     const [items, implants, expertise] = await Promise.allSettled([
@@ -333,7 +334,7 @@ class CharacterVersionRepo {
       this.getExpertiseForCharacterVersions(versionIds)
     ]);
     const characterVersions: CharacterVersionBare[] = [];
-    for (const row of results as any[]) {
+    for (const row of results as RowDataPacket[]) {
       if (typeof row.id !== 'number') continue;
       if (typeof row.characterId !== 'number') continue;
       if (typeof row.name !== 'string') continue;
@@ -413,7 +414,7 @@ class CharacterVersionRepo {
     );
     if (Array.isArray(results) === false) return [];
     if (results.length === 0) return [];
-    const versionIds = (results as any[])
+    const versionIds = (results as RowDataPacket[])
       .map(({ id }) => id)
       .filter((id): id is number => typeof id === 'number');
     const [items, implants, expertise] = await Promise.allSettled([
@@ -422,7 +423,7 @@ class CharacterVersionRepo {
       this.getExpertiseForCharacterVersions(versionIds)
     ]);
     const characterVersions: CharacterVersionBare[] = [];
-    for (const row of results as any[]) {
+    for (const row of results as RowDataPacket[]) {
       if ('id' in row === false || typeof row.id != 'number') continue;
       if ('characterId' in row === false || typeof row.characterId != 'number') continue;
       if ('name' in row === false || typeof row.name != 'string') continue;

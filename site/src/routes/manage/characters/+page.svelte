@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { CirclePlus } from '@lucide/svelte';
+	import { resolve } from '$app/paths';
 	import { type PageProps } from './$types';
 	import DataTable from '$lib/components/data-table.svelte';
 
@@ -14,12 +15,12 @@
 </script>
 
 <main>
-	<a href="characters/new"><CirclePlus /></a>
+	<a href={resolve('/manage/characters/new')}><CirclePlus /></a>
 	<DataTable items={data.characters} {columns}>
 		{#snippet row(item)}
 			{@const character = item as typeof data.characters[0]}
 			<tr>
-				<td><a href="characters/{character.id}">{character.id}</a></td>
+				<td><a href={resolve('/manage/characters/[id]', { id: String(character.id) })}>{character.id}</a></td>
 				<td>{character.name}</td>
 				<td>{character.ownerName}</td>
 				<td>

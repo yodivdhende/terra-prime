@@ -31,6 +31,7 @@
 	} = $props();
 
 	const expertiseGroups = $derived.by(() => {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local scratch, discarded when the derivation returns
 		const map = new Map<number, { id: number; name: string; color: string; expertise: ShopExpertise[] }>();
 		for (const e of catalog) {
 			if (!map.has(e.groupId)) {

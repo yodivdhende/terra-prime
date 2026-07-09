@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import Dropdown from '$lib/components/dropdown.svelte';
 	import { Settings2 } from '@lucide/svelte';
 	import type {
 		ConnectionCommand,
 		StatusCommandInfo,
 		WebStatusCommandInfo
-	} from '../../../../../websocket-server/connection-socket';
+	} from '../../../../websocket-server/connection-socket';
 	import SessionRow from '$lib/components/session-row.svelte';
 	import { type PageProps } from './$types';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
@@ -53,8 +54,8 @@
 				TOAST_MANAGER.error(`Delete failed (${response.status})`);
 			}
 			await invalidateAll();
-		} catch (err: any) {
-			TOAST_MANAGER.error(err?.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 
@@ -62,7 +63,7 @@
 </script>
 
 <main>
-	<a href="sessions/new">+ add</a>
+	<a href={resolve('/manage/sessions/new')}>+ add</a>
 	<table>
 		<thead>
 			<tr>
@@ -77,7 +78,7 @@
 		</thead>
 		<tbody>
 			{#if data.sessions}
-				{#each data.sessions as session}
+				{#each data.sessions as session (session.token)}
 					<tr>
 						<SessionRow
 							{session}

@@ -26,16 +26,16 @@ function isCharacterWithVersions(value: unknown): value is CharacterWithVersions
     typeof value === 'object' &&
     value !== null &&
     'id' in value &&
-    ((value as any).id === null || typeof (value as any).id === 'number') &&
+    (value.id === null || typeof value.id === 'number') &&
     'name' in value &&
-    typeof (value as any).name === 'string' &&
+    typeof value.name === 'string' &&
     'ownerId' in value &&
-    typeof (value as any).ownerId === 'number' &&
+    typeof value.ownerId === 'number' &&
     'ownerName' in value &&
-    typeof (value as any).ownerName === 'string' &&
+    typeof value.ownerName === 'string' &&
     'versions' in value &&
-    Array.isArray((value as any).versions) &&
-    (value as any).versions.every(isCharacterVersionBare)
+    Array.isArray(value.versions) &&
+    value.versions.every(isCharacterVersionBare)
   );
 }
 

@@ -68,6 +68,7 @@
 						<div class="form-header">
 							<span class="form-title">{REGISTER_MANAGER.form.info.title}</span>
 							{#if REGISTER_MANAGER.form.info?.description}
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -- formatText() HTML-escapes the source before reinserting safe <a>/<br> markup -->
 								<p class="form-desc">{@html formatText(REGISTER_MANAGER.form.info.description)}</p>
 							{/if}
 						</div>

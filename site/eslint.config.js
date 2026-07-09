@@ -6,6 +6,7 @@ import ts from 'typescript-eslint';
 import svelteConfig from './svelte.config.js';
 
 export default ts.config(
+  { ignores: ['build/**', '.svelte-kit/**'] },
   js.configs.recommended,
   ...ts.configs.recommended,
   ...svelte.configs.recommended,
@@ -17,6 +18,12 @@ export default ts.config(
         ...globals.browser,
         ...globals.node
       }
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { ignoreRestSiblings: true, varsIgnorePattern: '^_', argsIgnorePattern: '^_' }
+      ]
     }
   },
   {

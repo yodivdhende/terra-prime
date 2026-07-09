@@ -70,15 +70,15 @@
 		animateOnce($actions['CameraAction'], { reverse });
 		cameraZoom.set(reverse ? 200 : 80);
 		Object.entries($actions)
-			.filter(([name, _action]) => name.includes('Move'))
-			.forEach(([_, action]) => animateOnce(action, { reverse }));
+			.filter(([name]) => name.includes('Move'))
+			.forEach(([, action]) => animateOnce(action, { reverse }));
 	}
 
 	export function rowAnimation(reverse = false) {
 		cameraZoom.set(reverse ? 200 : 80);
 		Object.entries($actions)
-			.filter(([name, _action]) => name.includes('Action') && !name.includes('Camera'))
-			.forEach(([_, action]) => animateOnce(action, { reverse }));
+			.filter(([name]) => name.includes('Action') && !name.includes('Camera'))
+			.forEach(([, action]) => animateOnce(action, { reverse }));
 	}
 
 	function animateOnce(
@@ -129,6 +129,7 @@
 </script>
 
 <T is={ref} dispose={false} {...props}>
+	<!-- eslint-disable-next-line svelte/require-store-reactive-access -- useGltf's AsyncWritable must be awaited unprefixed to defer to promise resolution; $gltf reads the synchronous store value instead -->
 	{#await gltf}
 		<p>Loading...</p>
 	{:then gltf}

@@ -14,7 +14,7 @@
 	});
 	let showPassword = $state(false);
 	let passwordInputType = $derived(showPassword ? 'text' : 'password');
-	let submitButton: HTMLButtonElement;
+	let submitButton = $state<HTMLButtonElement>();
 	let errorMessage = $state<string | null>(null);
 
 	function toggleShowPassword() {

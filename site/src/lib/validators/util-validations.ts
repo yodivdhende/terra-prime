@@ -14,7 +14,7 @@ export function isNotEmptyString<T>(value: T) {
 export function isEmail<T>(value: T) {
     const isNotEmptyResult = isNotEmptyString(value);
     if (isNotEmptyResult.valid === false) return isNotEmptyResult;
-    if ((isNotEmptyResult.value as string).match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g) === null)
+    if ((isNotEmptyResult.value as string).match(/^[\w.-]+@([\w-]+\.)+[\w-]{2,4}$/g) === null)
         return { valid: false, value: isNotEmptyResult.value, isEmail: false };
     return { valid: true, value: isNotEmptyResult.value};
 }

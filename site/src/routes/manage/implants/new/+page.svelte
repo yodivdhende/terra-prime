@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto, invalidate } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import ImplantForm from "$lib/components/implant-form.svelte";
 	import type { Implant } from "$lib/db/implants.repo";
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
@@ -19,19 +20,19 @@
 			if(response.ok){
 				TOAST_MANAGER.success('Implant saved');
 				await invalidate('/api/implants');
-				await goto('.');
+				await goto(resolve('/manage/implants'));
 			} else {
 				TOAST_MANAGER.error('Failed to save implant');
 			}
-		} catch(err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
     }
 
 </script>
 
 <main>
-	<a href=".">back</a>
+	<a href={resolve('/manage/implants')}>back</a>
 	<h1>new implant</h1>
 	{#if implant != null}
 		<ImplantForm bind:implant={implant} />

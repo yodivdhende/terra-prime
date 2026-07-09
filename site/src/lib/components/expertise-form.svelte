@@ -8,7 +8,7 @@
 	<label for="name">name</label>
 	<input id="name" type="text" bind:value={expertise.name} />
 	<select id="group" bind:value={expertise.groupId}>
-		{#each groups as group}
+		{#each groups as group (group.id)}
 			<option value={group.id}>{group.name}</option>
 		{/each}
 	</select>

@@ -2,137 +2,90 @@ import { mysqlconnFn } from './mysql';
 
 class ImplantRepo {
 	public async getAll(): Promise<Implant[]> {
-		try {
-			const connection = mysqlconnFn();
-			const [result] = await connection.execute(`
-        SELECT
-          i.Id as id,
-          i.Name as name,
-          i.Description as description,
-          i.Cost as cost,
-          i.CharacterAccess as characterAccess
-        FROM Implants i
-        `);
-			if (Array.isArray(result) === false) return [];
-			if (result.length === 0) return [];
-			const implants: Implant[] = [];
-			for (let implantResult of result) {
-				if (isImplants(implantResult)) implants.push({ ...implantResult, allowedCharacterIds: [] });
-				else
-					console.error(`%c sql result is not a implant`, `background:red;color:black`, {
-						implantResult
-					});
-			}
-			return implants;
-		} catch (err) {
-			throw err;
+		const connection = mysqlconnFn();
+		const [result] = await connection.execute(`
+      SELECT
+        i.Id as id,
+        i.Name as name,
+        i.Description as description,
+        i.Cost as cost,
+        i.CharacterAccess as characterAccess
+      FROM Implants i
+      `);
+		if (Array.isArray(result) === false) return [];
+		if (result.length === 0) return [];
+		const implants: Implant[] = [];
+		for (const implantResult of result) {
+			if (isImplants(implantResult)) implants.push({ ...implantResult, allowedCharacterIds: [] });
+			else
+				console.error(`%c sql result is not a implant`, `background:red;color:black`, {
+					implantResult
+				});
 		}
+		return implants;
 	}
 
 	public async getAllForCharacter(characterId: number): Promise<Implant[]> {
-		try {
-			const connection = mysqlconnFn();
-			const [result] = await connection.execute(
-				`
-        SELECT
-          i.Id as id,
-          i.Name as name,
-          i.Description as description,
-          i.Cost as cost,
-          i.CharacterAccess as characterAccess
-        FROM Implants i
-        WHERE i.CharacterAccess = 'all'
-          OR (i.CharacterAccess = 'specific' AND EXISTS (
-            SELECT 1 FROM Implant_Character_Access ica
-            WHERE ica.ImplantId = i.Id AND ica.CharacterId = ?
-          ))
-        `,
-				[characterId]
-			);
-			if (Array.isArray(result) === false) return [];
-			if (result.length === 0) return [];
-			const implants: Implant[] = [];
-			for (let implantResult of result) {
-				if (isImplants(implantResult)) implants.push({ ...implantResult, allowedCharacterIds: [] });
-				else
-					console.error(`%c sql result is not a implant`, `background:red;color:black`, {
-						implantResult
-					});
-			}
-			return implants;
-		} catch (err) {
-			throw err;
+		const connection = mysqlconnFn();
+		const [result] = await connection.execute(
+			`
+      SELECT
+        i.Id as id,
+        i.Name as name,
+        i.Description as description,
+        i.Cost as cost,
+        i.CharacterAccess as characterAccess
+      FROM Implants i
+      WHERE i.CharacterAccess = 'all'
+        OR (i.CharacterAccess = 'specific' AND EXISTS (
+          SELECT 1 FROM Implant_Character_Access ica
+          WHERE ica.ImplantId = i.Id AND ica.CharacterId = ?
+        ))
+      `,
+			[characterId]
+		);
+		if (Array.isArray(result) === false) return [];
+		if (result.length === 0) return [];
+		const implants: Implant[] = [];
+		for (const implantResult of result) {
+			if (isImplants(implantResult)) implants.push({ ...implantResult, allowedCharacterIds: [] });
+			else
+				console.error(`%c sql result is not a implant`, `background:red;color:black`, {
+					implantResult
+				});
 		}
+		return implants;
 	}
 
 	public async getAllAccessibleToAll(): Promise<Implant[]> {
-		try {
-			const connection = mysqlconnFn();
-			const [result] = await connection.execute(`
-        SELECT
-          i.Id as id,
-          i.Name as name,
-          i.Description as description,
-          i.Cost as cost,
-          i.CharacterAccess as characterAccess
-        FROM Implants i
-        WHERE i.CharacterAccess = 'all'
-        `);
-			if (Array.isArray(result) === false) return [];
-			if (result.length === 0) return [];
-			const implants: Implant[] = [];
-			for (let implantResult of result) {
-				if (isImplants(implantResult)) implants.push({ ...implantResult, allowedCharacterIds: [] });
-				else
-					console.error(`%c sql result is not a implant`, `background:red;color:black`, {
-						implantResult
-					});
-			}
-			return implants;
-		} catch (err) {
-			throw err;
+		const connection = mysqlconnFn();
+		const [result] = await connection.execute(`
+      SELECT
+        i.Id as id,
+        i.Name as name,
+        i.Description as description,
+        i.Cost as cost,
+        i.CharacterAccess as characterAccess
+      FROM Implants i
+      WHERE i.CharacterAccess = 'all'
+      `);
+		if (Array.isArray(result) === false) return [];
+		if (result.length === 0) return [];
+		const implants: Implant[] = [];
+		for (const implantResult of result) {
+			if (isImplants(implantResult)) implants.push({ ...implantResult, allowedCharacterIds: [] });
+			else
+				console.error(`%c sql result is not a implant`, `background:red;color:black`, {
+					implantResult
+				});
 		}
+		return implants;
 	}
 
 	public async getWithId(id: number) {
-		try {
-			const connection = mysqlconnFn();
-			const [[result], [accessRows]] = await Promise.all([
-				connection.execute(
-					`
-          SELECT
-            i.Id as id,
-            i.Name as name,
-            i.Description as description,
-            i.Cost as cost,
-            i.CharacterAccess as characterAccess
-          FROM Implants i
-          WHERE i.Id = ?
-          `,
-					[id]
-				),
-				connection.execute(
-					`SELECT CharacterId as characterId FROM Implant_Character_Access WHERE ImplantId = ?`,
-					[id]
-				)
-			]);
-			if (Array.isArray(result) === false) return null;
-			if (result.length === 0) return null;
-			const [implant] = result;
-			if (isImplants(implant) === false) return null;
-			const allowedCharacterIds = Array.isArray(accessRows)
-				? (accessRows as { characterId: number }[]).map((r) => r.characterId)
-				: [];
-			return { ...implant, allowedCharacterIds };
-		} catch (err) {
-			throw err;
-		}
-	}
-
-	public async getWithIds(ids: number) {
-		try {
-			const connection = mysqlconnFn();
-			const [result] = await connection.execute(
+		const connection = mysqlconnFn();
+		const [[result], [accessRows]] = await Promise.all([
+			connection.execute(
 				`
         SELECT
           i.Id as id,
@@ -141,18 +94,45 @@ class ImplantRepo {
           i.Cost as cost,
           i.CharacterAccess as characterAccess
         FROM Implants i
-				WHERE i.Id in (:ids)
+        WHERE i.Id = ?
         `,
-				{ ids }
-			);
-			if (Array.isArray(result) === false) return null;
-			if (result.length === 0) return null;
-			const [implant] = result;
-			if (isImplants(implant) === false) return null;
-			return implant;
-		} catch (err) {
-			throw err;
-		}
+				[id]
+			),
+			connection.execute(
+				`SELECT CharacterId as characterId FROM Implant_Character_Access WHERE ImplantId = ?`,
+				[id]
+			)
+		]);
+		if (Array.isArray(result) === false) return null;
+		if (result.length === 0) return null;
+		const [implant] = result;
+		if (isImplants(implant) === false) return null;
+		const allowedCharacterIds = Array.isArray(accessRows)
+			? (accessRows as { characterId: number }[]).map((r) => r.characterId)
+			: [];
+		return { ...implant, allowedCharacterIds };
+	}
+
+	public async getWithIds(ids: number) {
+		const connection = mysqlconnFn();
+		const [result] = await connection.execute(
+			`
+      SELECT
+        i.Id as id,
+        i.Name as name,
+        i.Description as description,
+        i.Cost as cost,
+        i.CharacterAccess as characterAccess
+      FROM Implants i
+			WHERE i.Id in (:ids)
+      `,
+			{ ids }
+		);
+		if (Array.isArray(result) === false) return null;
+		if (result.length === 0) return null;
+		const [implant] = result;
+		if (isImplants(implant) === false) return null;
+		return implant;
 	}
 
 	public async setCharacterAccess(
@@ -163,7 +143,10 @@ class ImplantRepo {
 		const conn = await mysqlconnFn().getConnection();
 		try {
 			await conn.beginTransaction();
-			await conn.execute(`UPDATE Implants SET CharacterAccess = ? WHERE Id = ?`, [access ?? 'all', id]);
+			await conn.execute(`UPDATE Implants SET CharacterAccess = ? WHERE Id = ?`, [
+				access ?? 'all',
+				id
+			]);
 			await conn.execute(`DELETE FROM Implant_Character_Access WHERE ImplantId = ?`, [id]);
 			if (access === 'specific' && characterIds.length > 0) {
 				const placeholders = characterIds.map(() => '(?,?)').join(',');
@@ -220,58 +203,46 @@ class ImplantRepo {
 	}
 
 	public async create({ name, description, cost }: Omit<Implant, 'id'>) {
-		try {
-			const connection = mysqlconnFn();
-			const [result] = await connection.execute(
-				`
-				INSERT INTO Implants (Name, Description, Cost)
-				Values (?,?,?)
-        `,
-				[name, description, cost ?? 0]
-			);
-			if ('serverStatus' in result && result.serverStatus !== 2) return null;
-			if ('insertId' in result === false || result.insertId == null) return null;
-			return result.insertId;
-		} catch (err) {
-			throw err;
-		}
+		const connection = mysqlconnFn();
+		const [result] = await connection.execute(
+			`
+			INSERT INTO Implants (Name, Description, Cost)
+			Values (?,?,?)
+      `,
+			[name, description, cost ?? 0]
+		);
+		if ('serverStatus' in result && result.serverStatus !== 2) return null;
+		if ('insertId' in result === false || result.insertId == null) return null;
+		return result.insertId;
 	}
 
 	public async edit({ id, name, description, cost }: Implant) {
-		try {
-			const connection = mysqlconnFn();
-			const [result] = await connection.execute(
-				`
-				UPDATE Implants
-				SET Name = ?,
-				Description = ?,
-				Cost = ?
-				WHERE Id = ?
-        `,
-				[name, description, cost ?? 0, id]
-			);
-			if ('serverStatus' in result && result.serverStatus !== 2) return null;
-			return id;
-		} catch (err) {
-			throw err;
-		}
+		const connection = mysqlconnFn();
+		const [result] = await connection.execute(
+			`
+			UPDATE Implants
+			SET Name = ?,
+			Description = ?,
+			Cost = ?
+			WHERE Id = ?
+      `,
+			[name, description, cost ?? 0, id]
+		);
+		if ('serverStatus' in result && result.serverStatus !== 2) return null;
+		return id;
 	}
 
 	public async delete({ id }: { id: number }) {
-		try {
-			const connection = mysqlconnFn();
-			await connection.execute(`DELETE FROM Implant_Character_Access WHERE ImplantId = ?`, [id]);
-			await connection.execute(
-				`
-                DELETE
-                FROM Implants
-                WHERE Id = ?
-            `,
-				[id]
-			);
-		} catch (err) {
-			throw err;
-		}
+		const connection = mysqlconnFn();
+		await connection.execute(`DELETE FROM Implant_Character_Access WHERE ImplantId = ?`, [id]);
+		await connection.execute(
+			`
+              DELETE
+              FROM Implants
+              WHERE Id = ?
+          `,
+			[id]
+		);
 	}
 }
 export const implantRepo = new ImplantRepo();

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto, invalidate } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import ItemForm from "$lib/components/item-form.svelte";
 	import type { Item } from "$lib/db/items.repo";
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
@@ -19,19 +20,19 @@
 			if(response.ok){
 				TOAST_MANAGER.success('Item saved');
 				await invalidate('/api/items');
-				await goto('.');
+				await goto(resolve('/manage/items'));
 			} else {
 				TOAST_MANAGER.error('Failed to save item');
 			}
-		} catch(err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
     }
 
 </script>
 
 <main>
-	<a href=".">back</a>
+	<a href={resolve('/manage/items')}>back</a>
 	<h1>new item</h1>
 	{#if item != null}
 		<ItemForm bind:item={item}  />

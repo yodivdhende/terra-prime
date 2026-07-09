@@ -30,37 +30,36 @@
 			: catalog
 	);
 
-	function effectiveCost(implant: ShopImplant) {
-		return Math.max(0, implant.cost - (discounts.get(implant.id) ?? 0));
-	}
 </script>
 
 <div class="slot" class:filled={selected != null}>
-	<button type="button" class="slot-header" onclick={() => (expanded = !expanded)}>
-		<span class="slot-chevron">
-			{#if expanded}
-				<ChevronDown size={14} />
-			{:else}
-				<ChevronRight size={14} />
-			{/if}
-		</span>
-		<span class="slot-title">
-			slot {slotNumber}
-			{#if selected}
-				<span class="slot-implant-name">— {selected.name}</span>
-			{/if}
-		</span>
+	<div class="slot-header">
+		<button type="button" class="slot-toggle" onclick={() => (expanded = !expanded)}>
+			<span class="slot-chevron">
+				{#if expanded}
+					<ChevronDown size={14} />
+				{:else}
+					<ChevronRight size={14} />
+				{/if}
+			</span>
+			<span class="slot-title">
+				slot {slotNumber}
+				{#if selected}
+					<span class="slot-implant-name">— {selected.name}</span>
+				{/if}
+			</span>
+		</button>
 		{#if selected}
 			<button
 				type="button"
 				class="slot-remove"
-				onclick={(e: MouseEvent) => { e.stopPropagation(); onremove(); }}
+				onclick={() => onremove()}
 				title="remove implant"
 			>
 				<X size={12} />
 			</button>
 		{/if}
-	</button>
+	</div>
 
 	{#if expanded}
 		<div class="slot-body">
@@ -126,6 +125,19 @@
 		gap: 0.5rem;
 		padding: 0.5rem 0.6rem;
 		background: transparent;
+	}
+
+	.slot.filled .slot-header {
+		background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+	}
+
+	.slot-toggle {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0;
+		background: transparent;
 		border: none;
 		cursor: pointer;
 		font-family: var(--font-mono);
@@ -134,10 +146,6 @@
 		text-transform: uppercase;
 		color: var(--color-main);
 		text-align: left;
-	}
-
-	.slot.filled .slot-header {
-		background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 	}
 
 	.slot-chevron {

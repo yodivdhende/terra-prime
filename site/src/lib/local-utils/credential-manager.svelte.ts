@@ -1,4 +1,3 @@
-import { browser } from '$app/environment';
 import { credentialStore, type Credentials } from './credential-store.svelte';
 
 class CredentialManager {

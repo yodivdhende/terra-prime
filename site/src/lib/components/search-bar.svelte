@@ -85,7 +85,7 @@
 				{:else if results.length === 0}
 					<li class="empty">no results</li>
 				{:else}
-					{#each results as file}
+					{#each results as file (file.id)}
 						<li>
 							<button class="result-item" onclick={() => selectFile(file)}>
 								<span class="result-name">{file.name}</span>

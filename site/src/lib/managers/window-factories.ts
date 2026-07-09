@@ -1,6 +1,6 @@
 export type CodexWindow = {
   id: string;
-  type: 'pdf' | 'dir' | 'doc' | 'image' | 'audio' | 'form' | 'settings' | 'login' | 'register' | 'logout' | 'characterOverview';
+  type: 'pdf' | 'dir' | 'doc' | 'image' | 'audio' | 'form' | 'settings' | 'playtest' | 'login' | 'register' | 'logout' | 'characterOverview';
   state: 'open' | 'hidden' | 'closed';
   dimension: { w: number, h: number };
   position: { x: number, y: number, z: number };
@@ -10,7 +10,7 @@ export type CodexWindow = {
 }
 
 export type Icon = {
-  type: 'file' | 'dir' | 'image' | 'audio' | 'form' | 'settings' | 'login' | 'register' | 'logout' | 'characterOverview';
+  type: 'file' | 'dir' | 'image' | 'audio' | 'form' | 'settings' | 'playtest' | 'login' | 'register' | 'logout' | 'characterOverview';
   side: 'left' | 'right';
 }
 

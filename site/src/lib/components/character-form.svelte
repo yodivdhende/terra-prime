@@ -7,7 +7,7 @@
 		<label for="owner">owner</label>
         {#if users != null}
         <select id="owner" bind:value={character.ownerId}>
-            {#each users as owner}
+            {#each users as owner (owner.id)}
                 <option value={owner.id}>{owner.name}</option>
             {/each}
         </select>

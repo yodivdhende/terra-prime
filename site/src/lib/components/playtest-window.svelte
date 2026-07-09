@@ -2,7 +2,7 @@
 	import { type CodexWindow } from '$lib/managers/window-manager.svelte';
 	import PlaytestForm from '$lib/components/playtest-form.svelte';
 
-	let { window }: { window: CodexWindow } = $props();
+	let { window: _window }: { window: CodexWindow } = $props();
 </script>
 
 <div class="playtest">

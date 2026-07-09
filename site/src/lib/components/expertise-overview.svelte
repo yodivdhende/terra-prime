@@ -15,12 +15,12 @@
 </script>
 
 <dl>
-	{#each groupedExpertise as group}
+	{#each groupedExpertise as group (group.id)}
 		<dt>
 			<h3>{group.name}</h3>
 			<ProgressBar value={group.average} color="var(--color-accent)" name={group.name} />
 		</dt>
-		{#each group.expertise as entry}
+		{#each group.expertise as entry (entry.id)}
 			<dd>
 				<span class="expertise-name">* {entry.name}</span>
 				<ProgressBar value={entry.value ?? 0} color="var(--color-accent)" name={entry.name} />

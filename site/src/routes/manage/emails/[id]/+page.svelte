@@ -1,15 +1,13 @@
 <script lang="ts">
 	import { goto, invalidate } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import EmailTemplateForm from '$lib/components/email-template-form.svelte';
 	import type { EmailTemplate } from '$lib/db/email_template.repo';
 	import type { PageProps } from './$types';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
-	let template: EmailTemplate | null = $state(null);
-	$effect(() => {
-		template = data.template;
-	});
+	let template: EmailTemplate | null | undefined = $derived(data.template);
 
 	async function save() {
 		const snap = $state.snapshot(template);
@@ -23,12 +21,12 @@
 			if (res.ok) {
 				TOAST_MANAGER.success('Email template saved');
 				await invalidate('/api/email-templates');
-				await goto('.');
+				await goto(resolve('/manage/emails'));
 			} else {
 				TOAST_MANAGER.error(`Save failed (${res.status})`);
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err?.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 
@@ -42,18 +40,18 @@
 			if (res.ok) {
 				TOAST_MANAGER.success('Email template deleted');
 				await invalidate('/api/email-templates');
-				await goto('.');
+				await goto(resolve('/manage/emails'));
 			} else {
 				TOAST_MANAGER.error(`Delete failed (${res.status})`);
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err?.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 </script>
 
 <main>
-	<a href=".">back</a>
+	<a href={resolve('/manage/emails')}>back</a>
 	{#if template != null}
 		<EmailTemplateForm bind:template={template} isExisting={true} />
 	{/if}

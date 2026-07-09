@@ -1,22 +1,18 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
-	import { TOAST_MANAGER, type ToastItem } from '$lib/managers/toast-manager.svelte';
+	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 </script>
 
-<div class="toast-container">
+<div class="toast-container" aria-live="polite">
 	{#each TOAST_MANAGER.toasts as toast (toast.id)}
-		<div
+		<button
+			type="button"
 			class="toast toast--{toast.type}"
-			role="alert"
 			transition:fly={{ x: 80, duration: 250 }}
 			onclick={() => TOAST_MANAGER.remove(toast.id)}
-			onkeydown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') TOAST_MANAGER.remove(toast.id);
-			}}
-			tabindex="0"
 		>
 			{toast.message}
-		</div>
+		</button>
 	{/each}
 </div>
 
@@ -33,6 +29,11 @@
 	}
 
 	.toast {
+		display: block;
+		width: 100%;
+		text-align: left;
+		background: none;
+		font: inherit;
 		pointer-events: all;
 		padding: 0.75rem 1.25rem;
 		font-family: var(--font-mono);

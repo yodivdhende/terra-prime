@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto, invalidate } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import ExpertiseForm from '$lib/components/expertise-form.svelte';
 	import CharacterAccessSelect from '$lib/components/character-access-select.svelte';
 	import type { Expertise } from '$lib/db/expertise.repo';
@@ -29,12 +30,12 @@
 			if (result.ok) {
 				TOAST_MANAGER.success('Expertise saved');
 				await invalidate('/api/expertise');
-				await goto('.');
+				await goto(resolve('/manage/expertise'));
 			} else {
 				TOAST_MANAGER.error('Failed to save expertise');
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 
@@ -52,19 +53,19 @@
 			});
 			if (result.ok) {
 				TOAST_MANAGER.success('Expertise deleted');
-				await goto('.');
+				await goto(resolve('/manage/expertise'));
 			} else {
 				TOAST_MANAGER.error('Failed to delete expertise');
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 
 </script>
 
 <main>
-	<a href=".">back</a>
+	<a href={resolve('/manage/expertise')}>back</a>
 	{#if expertise != null}
 		<ExpertiseForm bind:expertise groups={data.groups ?? []} />
 
@@ -85,7 +86,10 @@
 			{#if expertise.characterAccess === 'specific'}
 				<CharacterAccessSelect
 					characters={data.characters ?? []}
-					bind:selectedIds={expertise.allowedCharacterIds}
+					bind:selectedIds={
+						() => expertise!.allowedCharacterIds ?? [],
+						(v) => (expertise!.allowedCharacterIds = v)
+					}
 				/>
 			{/if}
 		</fieldset>

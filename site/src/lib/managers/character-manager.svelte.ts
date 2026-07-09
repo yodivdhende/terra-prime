@@ -4,7 +4,7 @@ import type {
   VersionImplant,
   VersionItem,
   VersionExpertise
-} from '../../../routes/api/my/characters/versions/+server';
+} from '../../routes/api/my/characters/versions/+server';
 import { createExpertiseManager } from './expertise-manager.svelte';
 import type { Expertise } from '$lib/db/expertise.repo';
 

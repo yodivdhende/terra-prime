@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto, invalidate } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import ItemForm from '$lib/components/item-form.svelte';
 	import CharacterAccessSelect from '$lib/components/character-access-select.svelte';
 	import type { Item } from '$lib/db/items.repo';
@@ -29,12 +30,12 @@
 			if(result.ok) {
 				TOAST_MANAGER.success('Item saved');
 				await invalidate('/api/my/characters');
-				await goto('.');
+				await goto(resolve('/manage/items'));
 			} else {
 				TOAST_MANAGER.error('Failed to save item');
 			}
-		} catch(err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
     }
 
@@ -52,19 +53,19 @@
 			})
 			if(result.ok) {
 				TOAST_MANAGER.success('Item deleted');
-				await goto('.');
+				await goto(resolve('/manage/items'));
 			} else {
 				TOAST_MANAGER.error('Failed to delete item');
 			}
-		} catch(err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	 }
 
 </script>
 
 <main>
-	<a href=".">back</a>
+	<a href={resolve('/manage/items')}>back</a>
 	{#if item != null}
 		<ItemForm bind:item={ item } />
 
@@ -85,7 +86,10 @@
 			{#if item.characterAccess === 'specific'}
 				<CharacterAccessSelect
 					characters={data.characters ?? []}
-					bind:selectedIds={item.allowedCharacterIds}
+					bind:selectedIds={
+						() => item!.allowedCharacterIds ?? [],
+						(v) => (item!.allowedCharacterIds = v)
+					}
 				/>
 			{/if}
 		</fieldset>

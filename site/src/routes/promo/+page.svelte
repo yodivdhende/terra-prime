@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import Promo from '$lib/components/promo.svelte';
 	import { Tween } from 'svelte/motion';
 
@@ -18,7 +19,7 @@
 	});
 
 	$effect(() => {
-		if (fadeOut.current === 2) goto('/info');
+		if (fadeOut.current === 2) goto(resolve('/info'));
 	})
 
 	function getTimeLeft(): number {

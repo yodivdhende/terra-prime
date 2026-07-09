@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { CirclePlus } from '@lucide/svelte';
 	import { type PageProps } from './$types';
 	import DataTable from '$lib/components/data-table.svelte';
@@ -8,10 +9,7 @@
 
 	let { data }: PageProps = $props();
 
-	let expertise = $state<Expertise[]>([]);
-	$effect(() => {
-		expertise = data.expertise;
-	});
+	let expertise = $derived<Expertise[]>(data.expertise);
 
 	const columns = [
 		{ label: 'Id', key: 'id' },
@@ -34,22 +32,22 @@
 			} else {
 				TOAST_MANAGER.error('Failed to update costs');
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 </script>
 
 <main>
 	<div class="actions">
-		<a href="expertise/new"><CirclePlus /></a>
+		<a href={resolve('/manage/expertise/new')}><CirclePlus /></a>
 		<button class="btn" onclick={saveCosts}>save costs</button>
 	</div>
 	<DataTable items={expertise} {columns}>
 		{#snippet row(item)}
 			{@const entry = item as (typeof expertise)[0]}
 			<tr>
-				<td><a href="expertise/{entry.id}">{entry.id}</a></td>
+				<td><a href={resolve('/manage/expertise/[id]', { id: String(entry.id) })}>{entry.id}</a></td>
 				<td>{entry.groupName}</td>
 				<td>{entry.name}</td>
 				<td>{entry.description}</td>

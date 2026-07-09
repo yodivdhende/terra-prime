@@ -1,14 +1,17 @@
 <script lang="ts">
 	import { goto, invalidate } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import BackstoryLink from '$lib/components/backstory-link.svelte';
 	import CharacterForm from '$lib/components/character-form.svelte';
+	import type { NewCharacter } from '$lib/db/character.repo';
 	import type { PageProps } from './$types';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
-	let character = $state({
+	let character = $state<NewCharacter>({
 		name: '',
-		ownerId: 1
+		ownerId: 1,
+		backstoryId: null
 	});
 	const users = $derived(data.users);
 
@@ -24,19 +27,19 @@
 			if (result.ok) {
 				TOAST_MANAGER.success('Character created');
 				await invalidate('/api/my/characters');
-				await goto('.');
+				await goto(resolve('/manage/characters'));
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 </script>
 
 <main>
-	<a href=".">back</a>
+	<a href={resolve('/manage/characters')}>back</a>
 	{#if character != null}
 		<CharacterForm bind:character={character} {users} />
-		<BackstoryLink characterId={character.id} backstoryId={character.backstoryId} />
+		<BackstoryLink characterId={null} bind:backstoryId={character.backstoryId} />
 	{/if}
 	<div>
 		<button class="btn" onclick={save}>save</button>

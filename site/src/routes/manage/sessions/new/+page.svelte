@@ -19,7 +19,7 @@
 		<input type="date" id="end" name="end" />
 		<label for="roles">roles </label>
 		<select id="roles" name="roles" multiple bind:value={selectedRoles}>
-			{#each roles as role}
+			{#each roles as role (role)}
 				<option value={role} >{role}</option>   
 			{/each}
 		</select>

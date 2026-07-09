@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto, invalidate } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import EventForm from "$lib/components/event-form.svelte";
 	import type { LarpEvent } from "$lib/db/event.repo";
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
@@ -21,17 +22,17 @@
             if(response.ok){
                 TOAST_MANAGER.success('Event created');
                 await invalidate('/api/events');
-                await goto('.');
+                await goto(resolve('/manage/events'));
             }
-        } catch (err: any) {
-            TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+        } catch (err) {
+            TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
         }
     }
 
 </script>
 
 <main>
-	<a href=".">back</a>
+	<a href={resolve('/manage/events')}>back</a>
 	<h1>new event</h1>
 	{#if event != null}
 		<EventForm bind:event={event}  />

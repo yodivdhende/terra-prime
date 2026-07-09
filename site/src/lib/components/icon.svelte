@@ -38,6 +38,7 @@
 	aria-label={tooltip || undefined}
 	data-tooltip={tooltip || undefined}
 >
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -- src is always a bundled static SVG asset (?raw import / static lookup table), never user input -->
 	{@html svg}
 </span>
 

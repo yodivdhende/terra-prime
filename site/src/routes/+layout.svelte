@@ -4,6 +4,7 @@
 	import type { LayoutProps } from './$types';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { credentialStore } from '$lib/local-utils/credential-store.svelte';
 	import { codexWindowManager } from '$lib/managers/codex-window-manager.svelte';
 
@@ -15,7 +16,7 @@
 		credentialStore.initFromStorage();
 
 		if (page.url.pathname === '/') {
-			goto('/codex');
+			goto(resolve('/codex'));
 		}
 
 		const response = await fetch('/api/my/user');
@@ -58,9 +59,9 @@
 			if (path.startsWith('/codex')) {
 				codexWindowManager.closeAll();
 			} else if (path.startsWith('/manage')) {
-				goto('/manage/login');
+				goto(resolve('/manage/login'));
 			} else if (path !== '/') {
-				goto('/codex');
+				goto(resolve('/codex'));
 			}
 		}
 	});

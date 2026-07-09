@@ -1,3 +1,4 @@
+import { SvelteMap } from 'svelte/reactivity';
 import type { Expertise } from '$lib/db/expertise.repo';
 
 export type ExpertiseGroupAverage = { id: number; name: string; average: number };
@@ -6,9 +7,10 @@ type ExpertiseEntry = { id: number; name: string; group: number; groupName: stri
 
 export function createExpertiseManager() {
   let expertise = $state<ExpertiseEntry[]>([]);
-  let pendingValues = new Map<number, number>();
+  let pendingValues = new SvelteMap<number, number>();
 
   const groups: ExpertiseGroupAverage[] = $derived.by(() => {
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- local scratch, discarded when the derivation returns
     const map = new Map<number, { name: string; total: number; count: number }>();
     for (const e of expertise) {
       if (!map.has(e.group)) map.set(e.group, { name: e.groupName, total: 0, count: 0 });
@@ -34,7 +36,7 @@ export function createExpertiseManager() {
   }
 
   function setValues(characterExpertise: { id: number; name: string; group: number; groupName: string; value: number }[]) {
-    pendingValues = new Map(characterExpertise.map((e) => [e.id, e.value]));
+    pendingValues = new SvelteMap(characterExpertise.map((e) => [e.id, e.value]));
     for (let i = 0; i < expertise.length; i++) {
       expertise[i].value = pendingValues.get(expertise[i].id) ?? 0;
     }

@@ -34,7 +34,7 @@
 		bind:value={() => endDate, (value) => (event.end = new Date(value))}
 	/>
 	<select id="status" bind:value={event.status}>
-		{#each eventStatuses as status}
+		{#each eventStatuses as status (status)}
 			<option value={status}>{status}</option>
 		{/each}
 	</select>

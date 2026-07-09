@@ -4,6 +4,10 @@
 
 	type Column = { label: string; key: string };
 
+	function focusOnMount(node: HTMLElement) {
+		node.focus();
+	}
+
 	let {
 		items,
 		columns,
@@ -40,7 +44,7 @@
 	<table>
 		<thead>
 			<tr>
-				{#each columns as col, i}
+				{#each columns as col, i (col.key)}
 					<th>
 						<div class="col-header">
 							<span class="col-label">{col.label}</span>
@@ -62,7 +66,7 @@
 									placeholder="Filter…"
 									bind:value={filters[i]}
 									aria-label="Filter by {col.label}"
-									autofocus
+									use:focusOnMount
 								/>
 								{#if filters[i]}
 									<button class="clear-btn" onclick={() => (filters[i] = '')}>✕</button>
@@ -74,7 +78,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each filteredItems as item}
+			{#each filteredItems as item (item.id)}
 				{@render row(item)}
 			{/each}
 		</tbody>

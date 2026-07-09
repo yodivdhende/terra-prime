@@ -31,7 +31,7 @@
 <main>
 	<h1>Implants shop</h1>
 	<div class="grid">
-		{#each implantItems as implant}
+		{#each implantItems as implant (implant.id)}
 			<div class="implant {implant.selected ? 'selected' : ''}">
 				<img src="https://picsum.photos/200/200" alt="random" />
 				<div class="implant-name">{implant.name}</div>

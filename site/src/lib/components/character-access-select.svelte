@@ -9,6 +9,7 @@
 		selectedIds: number[];
 	} = $props();
 
+	const listboxId = $props.id();
 	let query = $state('');
 	let isOpen = $state(false);
 	let focusedIndex = $state(-1);
@@ -87,9 +88,10 @@
 			role="combobox"
 			aria-expanded={isOpen}
 			aria-autocomplete="list"
+			aria-controls={listboxId}
 		/>
 		{#if isOpen && filtered.length > 0}
-			<ul class="dropdown scroll" role="listbox">
+			<ul id={listboxId} class="dropdown scroll" role="listbox">
 				{#each filtered as character, i (character.id)}
 					<li
 						class:focused={i === focusedIndex}

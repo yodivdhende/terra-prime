@@ -1,9 +1,10 @@
 import { WINDOW_MANAGER } from './window-manager.svelte';
+import type { Icon as WindowIcon } from './window-factories';
 
 export type Icon = {
   windowId: string;
   title: string;
-  type: 'file' | 'dir' | 'image' | 'form' | 'settings' | 'playtest' | 'login' | 'register' | 'characterOverview';
+  type: WindowIcon['type'];
   side: 'left' | 'right';
 }
 

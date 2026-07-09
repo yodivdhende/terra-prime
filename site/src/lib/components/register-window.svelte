@@ -10,7 +10,7 @@
 		type CharacterManager
 	} from '$lib/managers/character-manager.svelte';
 
-	let { window }: { window: CodexWindow } = $props();
+	let { window: _window }: { window: CodexWindow } = $props();
 
 	const CHARACTER_MANAGER: CharacterManager = createCharacterManager();
 	const REGISTER_MANAGER: RegisterManager = createRegisterManager(CHARACTER_MANAGER);

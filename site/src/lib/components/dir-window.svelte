@@ -88,7 +88,7 @@
 		{:else if failed}
 			<span class="status error">failed to load</span>
 		{:else}
-			{#each entries as entry}
+			{#each entries as entry (entry.id)}
 				{@render treeEntry(entry, 0)}
 			{/each}
 		{/if}
@@ -124,7 +124,7 @@
 		{#if children === 'loading'}
 			<span class="status" style:padding-left="{0.75 + (depth + 1) * 1}rem">loading...</span>
 		{:else if Array.isArray(children)}
-			{#each children as child}
+			{#each children as child (child.id)}
 				{@render treeEntry(child, depth + 1)}
 			{/each}
 		{/if}

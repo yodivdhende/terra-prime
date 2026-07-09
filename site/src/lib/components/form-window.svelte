@@ -128,6 +128,7 @@
 		<header>
 			<h1>{form.info?.title ?? 'untitled form'}</h1>
 			{#if form.info?.description}
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -- formatText() HTML-escapes the source before reinserting safe <a>/<br> markup -->
 				<p class="desc">{@html formatText(form.info.description)}</p>
 			{/if}
 			{#if sections.length > 1}
@@ -142,6 +143,7 @@
 				<div class="section-header">
 					<h2>{sections[currentSection].title}</h2>
 					{#if sections[currentSection].description}
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -- formatText() HTML-escapes the source before reinserting safe <a>/<br> markup -->
 						<p class="q-desc">{@html formatText(sections[currentSection].description!)}</p>
 					{/if}
 				</div>
@@ -160,7 +162,7 @@
 					<span class="status error">// {submitError}</span>
 					{#if buildResponderUrl()}
 						<p>submit directly on the Google network:</p>
-						<a href={buildResponderUrl()} target="_blank" rel="noopener noreferrer">
+						<a href={buildResponderUrl()} target="_blank" rel="noopener noreferrer external">
 							{buildResponderUrl()}
 						</a>
 					{/if}
@@ -208,145 +210,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
-	}
-
-	.item {
-		display: flex;
-		flex-direction: column;
-		gap: 0.35rem;
-		border-left: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
-		padding-left: 0.75rem;
-	}
-
-	.q-title {
-		display: block;
-		font-size: 0.8rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--color-main);
-	}
-
-	.q-desc {
-		display: block;
-		font-size: 0.7rem;
-		color: var(--color-main-dim);
-		margin: 0.15rem 0 0.35rem;
-	}
-
-	.required {
-		color: var(--color-warning);
-		margin-left: 0.25rem;
-	}
-
-	input[type='text'],
-	input[type='date'],
-	input[type='time'],
-	textarea,
-	select {
-		background: transparent;
-		border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
-		color: var(--color-main);
-		font-family: var(--font-mono);
-		font-size: 0.85rem;
-		padding: 0.3rem 0.5rem;
-		width: 100%;
-		box-sizing: border-box;
-		margin-top: 0.25rem;
-	}
-
-	textarea {
-		resize: vertical;
-	}
-
-	input[type='text']:focus,
-	input[type='date']:focus,
-	input[type='time']:focus,
-	textarea:focus,
-	select:focus {
-		outline: none;
-		border-color: var(--color-accent);
-	}
-
-	.options {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-		margin-top: 0.25rem;
-	}
-
-	.option {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		font-size: 0.8rem;
-		cursor: pointer;
-	}
-
-	.option input {
-		accent-color: var(--color-accent);
-	}
-
-	.scale {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		flex-wrap: wrap;
-		margin-top: 0.25rem;
-	}
-
-	.scale-label {
-		font-size: 0.7rem;
-		color: var(--color-main-dim);
-	}
-
-	.rating {
-		display: flex;
-		gap: 0.4rem;
-		margin-top: 0.35rem;
-	}
-
-	.rating-icon {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 1.25rem;
-		line-height: 1;
-		color: var(--color-main-dim);
-		cursor: pointer;
-		transition: color 0.15s;
-	}
-
-	.rating-icon:hover,
-	.rating-icon.active {
-		color: var(--color-accent);
-	}
-
-	.rating-icon input {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		padding: 0;
-		margin: -1px;
-		overflow: hidden;
-		clip: rect(0, 0, 0, 0);
-		white-space: nowrap;
-		border: 0;
-	}
-
-	.text-item {
-		padding: 0.25rem 0;
-	}
-
-	hr {
-		border: none;
-		border-top: 1px dashed color-mix(in srgb, var(--color-accent) 30%, transparent);
-		margin: 0.5rem 0;
-	}
-
-	img {
-		max-width: 100%;
-		display: block;
-		margin-top: 0.25rem;
 	}
 
 	button {
@@ -426,12 +289,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
-	}
-
-	.submitted a {
-		color: var(--color-accent);
-		word-break: break-all;
-		font-size: 0.75rem;
 	}
 
 	.submit-error {

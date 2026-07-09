@@ -13,6 +13,7 @@
 	let { expertise }: { expertise: ExpertiseEntry[] } = $props();
 
 	const groups = $derived.by(() => {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local scratch, discarded when the derivation returns
 		const map = new Map<number, { id: number; name: string; color: string; expertise: ExpertiseEntry[] }>();
 		for (const entry of expertise) {
 			if (!map.has(entry.group)) {

@@ -12,7 +12,7 @@
 	} = $props();
 
 	onMount(() => {
-		if (version.name == false) version.name = 'Version 1';
+		if (!version.name) version.name = 'Version 1';
 	});
 </script>
 

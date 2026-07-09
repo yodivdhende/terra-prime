@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 	import { sectionManager } from '$lib/managers/section-manager.svelte';
 
@@ -16,32 +17,32 @@
 
 <nav>
 	<div class="nav-top">
-		<a class="entry" href="/manage">Home</a>
+		<a class="entry" href={resolve('/manage')}>Home</a>
 		{#if !isAdmin}
-			<a class="entry" href="/manage/login">Login</a>
+			<a class="entry" href={resolve('/manage/login')}>Login</a>
 		{:else}
-			<a class="entry" href="/manage/users">Users</a>
-			<a class="entry" href="/manage/events">Events</a>
+			<a class="entry" href={resolve('/manage/users')}>Users</a>
+			<a class="entry" href={resolve('/manage/events')}>Events</a>
 			<button class="entry folder" onclick={() => (manageOpen = !manageOpen)}>
 				<span class="arrow">{manageOpen ? 'v' : '>'}</span>
 				<span class="name">Manage</span>
 			</button>
 			{#if manageOpen}
-				<a class="entry child" href="/manage/expertise">Expertise</a>
-				<a class="entry child" href="/manage/items">Items</a>
-				<a class="entry child" href="/manage/implants">Implants</a>
-				<a class="entry child" href="/manage/companies">Companies</a>
+				<a class="entry child" href={resolve('/manage/expertise')}>Expertise</a>
+				<a class="entry child" href={resolve('/manage/items')}>Items</a>
+				<a class="entry child" href={resolve('/manage/implants')}>Implants</a>
+				<a class="entry child" href={resolve('/manage/companies')}>Companies</a>
 			{/if}
 			<button class="entry folder" onclick={() => (characterOpen = !characterOpen)}>
 				<span class="arrow">{characterOpen ? 'v' : '>'}</span>
 				<span class="name">Characters</span>
 			</button>
 			{#if characterOpen}
-				<a class="entry child" href="/manage/characters">Character</a>
-				<a class="entry child" href="/manage/characters/versions">Versions</a>
+				<a class="entry child" href={resolve('/manage/characters')}>Character</a>
+				<a class="entry child" href={resolve('/manage/characters/versions')}>Versions</a>
 			{/if}
-			<a class="entry" href="/manage/emails">Emails Templates</a>
-			<a class="entry" href="/manage/sessions">Sessions</a>
+			<a class="entry" href={resolve('/manage/emails')}>Emails Templates</a>
+			<a class="entry" href={resolve('/manage/sessions')}>Sessions</a>
 		{/if}
 	</div>
 	{#if isAdmin}

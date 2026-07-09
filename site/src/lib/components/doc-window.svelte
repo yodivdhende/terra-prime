@@ -32,6 +32,7 @@
 	{:else if failed}
 		<span class="status error">failed to load document</span>
 	{:else}
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -- HTML exported from an organizer-authored Google Doc via the Drive API, same trust tier as other admin content -->
 		{@html html}
 	{/if}
 </div>

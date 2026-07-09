@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import CompanyForm from '$lib/components/company-form.svelte';
 	import ConfirmModal from '$lib/components/confirm-modal.svelte';
 	import type { Company } from '$lib/db/companies.repo';
@@ -42,10 +43,10 @@
 			});
 			if (result.ok) {
 				TOAST_MANAGER.success('Company saved');
-				await goto('.');
+				await goto(resolve('/manage/companies'));
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 
@@ -56,10 +57,10 @@
 			const result = await fetch(`/api/companies/${snap.id}`, { method: 'delete' });
 			if (result.ok) {
 				TOAST_MANAGER.success('Company deleted');
-				await goto('.');
+				await goto(resolve('/manage/companies'));
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 
@@ -73,8 +74,8 @@
 				headers: { 'content-type': 'application/json' }
 			});
 			TOAST_MANAGER.success('Discounts saved');
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 
@@ -101,7 +102,7 @@
 </script>
 
 <main>
-	<a href=".">back</a>
+	<a href={resolve('/manage/companies')}>back</a>
 
 	<div class="columns">
 		<section class="info">
@@ -122,11 +123,11 @@
 				<tr><th>Item</th><th>Discount</th><th></th></tr>
 			</thead>
 			<tbody>
-				{#each discounts.items as row, i}
+				{#each discounts.items as row, i (i)}
 					<tr>
 						<td>
 							<select bind:value={row.itemId}>
-								{#each items as item}
+								{#each items as item (item.id)}
 									<option value={item.id}>{item.name}</option>
 								{/each}
 							</select>
@@ -145,11 +146,11 @@
 				<tr><th>Implant</th><th>Discount</th><th></th></tr>
 			</thead>
 			<tbody>
-				{#each discounts.implants as row, i}
+				{#each discounts.implants as row, i (i)}
 					<tr>
 						<td>
 							<select bind:value={row.implantId}>
-								{#each implants as implant}
+								{#each implants as implant (implant.id)}
 									<option value={implant.id}>{implant.name}</option>
 								{/each}
 							</select>
@@ -168,11 +169,11 @@
 				<tr><th>Expertise</th><th>Discount</th><th></th></tr>
 			</thead>
 			<tbody>
-				{#each discounts.expertise as row, i}
+				{#each discounts.expertise as row, i (i)}
 					<tr>
 						<td>
 							<select bind:value={row.expertiseId}>
-								{#each expertise as entry}
+								{#each expertise as entry (entry.id)}
 									<option value={entry.id}>{entry.name}</option>
 								{/each}
 							</select>

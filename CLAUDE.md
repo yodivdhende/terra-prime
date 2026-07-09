@@ -28,10 +28,10 @@ This project uses **GitHub Issues** (via the `gh` CLI) for all task tracking. Th
 
 ### Issue title and body
 - Every issue title must be prefixed with its TP ID (see **TP ID scheme** below)
-- Every task must have a step-by-step implementation plan in its body
-- Plans are numbered steps, plain text, no markdown headers
-- Each step names the specific file(s) to create or modify and what to do
-- Keep plans under 300 words
+- Every task must have a step-by-step implementation plan in its body, written in Markdown
+- Format the plan as a numbered Markdown list (`1.`, `2.`, `3.` …)
+- Wrap file paths and code identifiers in backticks, e.g. `src/routes/login/+page.svelte`
+- Bold the file name(s) touched at the start of each step, e.g. **`src/lib/auth.ts`**: add token refresh logic
 
 ### TP ID scheme
 - Every issue gets a TP ID in its title: `[TP-NNNN] <title>` where NNNN is the GitHub issue number zero-padded to 4 digits

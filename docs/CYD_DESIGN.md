@@ -29,6 +29,14 @@ The admin-facing `manage/sessions` dashboard in the site connects to the **same*
 endpoint as every CYD device, so admins can see which devices are connected live and trigger
 screen changes (e.g. "send virus") on a specific device.
 
+> **Planned migration:** the WebSocket relay described in this document is slated to be
+> replaced by a self-hosted MQTT broker (EMQX), enabling a future fleet-wide admin
+> dashboard (live device overview, messaging, forced navigation). See
+> [`docs/MQTT_MIGRATION.md`](./MQTT_MIGRATION.md) for the target architecture and
+> [epic #108](https://github.com/yodivdhende/terra-prime/issues/108) for implementation
+> tracking. Nothing described below has changed yet — this document remains the accurate
+> reference for the *current* system until that migration ships.
+
 ---
 
 ## 2. System context
@@ -218,15 +226,32 @@ so they're visible, not silently worked around.
    does not override the command — so, as configured, the deployed container does **not**
    expose `/connections`, meaning CYD devices and the `manage/sessions` live dashboard cannot
    connect in production.
+   > **Planned resolution:** `site/websocket-server/` is planned to be retired entirely once
+   > the EMQX broker and `mqtt-worker` service are deployed, removing this failure mode rather
+   > than patching it — see `docs/MQTT_MIGRATION.md` §3.1/§3.4 and subtasks
+   > [#110](https://github.com/yodivdhende/terra-prime/issues/110) (broker),
+   > [#111](https://github.com/yodivdhende/terra-prime/issues/111) (worker), and
+   > [#114](https://github.com/yodivdhende/terra-prime/issues/114) (decommission). Not yet
+   > implemented.
 
 2. **Hardcoded local WebSocket URL.** `site/src/routes/manage/sessions/+page.svelte` connects
    to a hardcoded `ws://localhost:5173/connections`, which will not resolve against a deployed
    domain and does not use `wss://` for TLS.
+   > **Planned resolution:** the dashboard is planned to be rebuilt as `manage/devices`,
+   > connecting directly to the MQTT broker over `PUBLIC_MQTT_WS_URL` (env-driven, `wss://`
+   > via Railway's TLS-terminating HTTP proxy) instead of a hardcoded local WS URL — see
+   > `docs/MQTT_MIGRATION.md` §5 step 4 and subtask
+   > [#112](https://github.com/yodivdhende/terra-prime/issues/112). Not yet implemented.
 
 3. **Unauthenticated firmware request against a gated endpoint.** The firmware's
    `fetchCharacter()` (`cyd/src/character.cpp`) sends a plain `GET` with no auth header, but
    `GET /api/characters/[characterId]` is guarded by `authGuardForUser` (admin role). As it
    stands, this request would be rejected once auth is enforced in a deployed environment.
+   > **Planned resolution:** to be fixed in the same pass as the firmware's MQTT migration —
+   > add a `sessionToken` auth header to `fetchCharacter()` plus a matching header-based
+   > auth fallback on the SvelteKit route — see `docs/MQTT_MIGRATION.md` §5 step 5 and
+   > subtask [#113](https://github.com/yodivdhende/terra-prime/issues/113). Not yet
+   > implemented.
 
 ---
 
@@ -253,3 +278,4 @@ so they're visible, not silently worked around.
 | Site schema reference | `site/CLAUDE.md` |
 | Site API reference | `site/src/routes/api/CLAUDE.md` |
 | Deployment config | `site/dockerfile`, `site/railway.toml`, `site/package.json` |
+| Planned MQTT migration (target architecture) | [`docs/MQTT_MIGRATION.md`](./MQTT_MIGRATION.md) |

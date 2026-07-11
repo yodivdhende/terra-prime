@@ -1,15 +1,9 @@
 <script lang="ts">
 	import Icon from '$lib/components/icon.svelte';
-	import { ICON_PRESETS } from '$lib/managers/expertise-icons';
 
 	let { value = $bindable<string | null>(null) }: { value?: string | null } = $props();
 
 	let error = $state('');
-
-	function pickPreset(svg: string) {
-		error = '';
-		value = svg;
-	}
 
 	function clear() {
 		error = '';
@@ -40,21 +34,6 @@
 </script>
 
 <div class="icon-picker">
-	<div class="presets">
-		{#each ICON_PRESETS as preset (preset.name)}
-			<button
-				type="button"
-				class="preset"
-				class:selected={value === preset.svg}
-				title={preset.name}
-				aria-label={preset.name}
-				onclick={() => pickPreset(preset.svg)}
-			>
-				<Icon src={preset.svg} tooltip={preset.name} size="1.6rem" />
-			</button>
-		{/each}
-	</div>
-
 	<div class="controls">
 		<label class="upload">
 			upload svg
@@ -80,28 +59,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
-	}
-
-	.presets {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.25rem;
-	}
-
-	.preset {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0.3rem;
-		background: var(--color-bg-panel, transparent);
-		border: 1px solid var(--color-border, currentColor);
-		cursor: pointer;
-		color: inherit;
-	}
-
-	.preset.selected {
-		border-color: var(--color-accent);
-		color: var(--color-accent);
 	}
 
 	.controls {

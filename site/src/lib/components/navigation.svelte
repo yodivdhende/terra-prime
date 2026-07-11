@@ -29,6 +29,7 @@
 			</button>
 			{#if manageOpen}
 				<a class="entry child" href={resolve('/manage/expertise')}>Expertise</a>
+				<a class="entry child" href={resolve('/manage/expertise/groups')}>Expertise Groups</a>
 				<a class="entry child" href={resolve('/manage/items')}>Items</a>
 				<a class="entry child" href={resolve('/manage/implants')}>Implants</a>
 				<a class="entry child" href={resolve('/manage/companies')}>Companies</a>

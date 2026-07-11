@@ -45,10 +45,7 @@
 	<CompanySelect bind:company={version.company} />
 </label>
 {#if REGISTER_MANAGER}
-	<label class="name-field">
-		<span class="label">Coupon</span>
-		<RegisterCouponInput {REGISTER_MANAGER} />
-	</label>
+	<RegisterCouponInput {REGISTER_MANAGER} />
 {/if}
 
 <style>
@@ -57,10 +54,10 @@
 		flex-direction: column;
 		gap: 0.25rem;
 		flex: 1;
+		margin-bottom: 1em;
 	}
 
 	.label {
-		font-size: 0.6em;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		opacity: 0.55;

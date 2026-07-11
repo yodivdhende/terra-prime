@@ -18,7 +18,14 @@
 
 <label class="coupon-field">
 	<span>coupon code</span>
-	<input type="text" placeholder="optional" value={REGISTER_MANAGER.couponCode} {oninput} {onblur} />
+	<input
+		type="text"
+		placeholder="optional"
+		value={REGISTER_MANAGER.couponCode}
+		{oninput}
+		{onblur}
+	/>
+	<button class="btn"> submit </button>
 	{#if REGISTER_MANAGER.couponStatus === 'checking'}
 		<span class="status">checking…</span>
 	{:else if REGISTER_MANAGER.couponStatus === 'valid'}
@@ -31,25 +38,33 @@
 <style>
 	.coupon-field {
 		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		font-size: 0.75em;
-		padding: 0.5rem 1.25rem;
+		flex-direction: column;
+		gap: 0.25rem;
+		margin-bottom: 1em;
 	}
 
 	.coupon-field span {
-		opacity: 0.5;
+		letter-spacing: 0.1em;
 		text-transform: uppercase;
-		letter-spacing: 0.06em;
+		opacity: 0.55;
 	}
 
 	.coupon-field input {
 		font-family: var(--font-mono);
-		background: var(--color-bg);
+		font-size: 0.85em;
+		background: transparent;
 		color: var(--color-main);
 		border: none;
-		padding: 4px 8px;
+		border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
 		outline: none;
+	}
+
+	.coupon-field input:focus {
+		border-bottom-color: var(--color-accent);
+	}
+
+	button {
+		max-width: 100px;
 	}
 
 	.status.valid {

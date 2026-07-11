@@ -35,7 +35,7 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
   });
 };
 
-export const PUT: RequestHandler = async ({ cookies, params, request }) => {
+export const PUT: RequestHandler = async ({ cookies, params, request, locals }) => {
   return handleRequest(async () => {
     const { userId } = await authGuardForUser(getSessionToken(cookies), ['user']);
     const eventId = isNumberOrError(params.eventId);
@@ -73,6 +73,7 @@ export const PUT: RequestHandler = async ({ cookies, params, request }) => {
     }
 
     const couponCode = typeof body?.couponCode === 'string' ? body.couponCode.trim() : '';
+    if (couponCode && !locals.featureFlags['Coupons']) throw new BadRequest('coupon codes are disabled');
     const coupon = couponCode
       ? await eventCouponRepo.findUnredeemedByCode(eventId, userId, couponCode)
       : undefined;

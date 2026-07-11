@@ -4,6 +4,7 @@
 	import type { RegisterManager } from '$lib/managers/register-manager.svelte';
 	import CompanySelect from '$lib/components/company-select.svelte';
 	import RegisterCouponInput from './register-coupon-input.svelte';
+	import { FEATURE_MANAGER } from '$lib/managers/feature-manager.svelte';
 
 	let {
 		character = $bindable(),
@@ -44,7 +45,7 @@
 	<span class="label">Company</span>
 	<CompanySelect bind:company={version.company} />
 </label>
-{#if REGISTER_MANAGER}
+{#if REGISTER_MANAGER && FEATURE_MANAGER.couponsEnabled}
 	<RegisterCouponInput {REGISTER_MANAGER} />
 {/if}
 

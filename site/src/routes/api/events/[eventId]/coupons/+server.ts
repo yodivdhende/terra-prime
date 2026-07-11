@@ -1,6 +1,6 @@
 import { eventCouponRepo } from '$lib/db/event_coupon.repo';
 import { isNumberOrError } from '$lib/request.utils';
-import { BadRequest } from '$lib/types/errors';
+import { BadRequest, RequestError } from '$lib/types/errors';
 import { getSessionToken } from '$lib/utils/cookies';
 import { authGuard, handleRequest } from '$lib/utils/request';
 import { json, type RequestHandler } from '@sveltejs/kit';
@@ -13,9 +13,10 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 	});
 };
 
-export const POST: RequestHandler = async ({ cookies, params, request }) => {
+export const POST: RequestHandler = async ({ cookies, params, request, locals }) => {
 	return handleRequest(async () => {
 		await authGuard(getSessionToken(cookies), ['admin']);
+		if (!locals.featureFlags['Coupons']) throw new RequestError(403, 'coupons are disabled');
 		const eventId = isNumberOrError(params.eventId);
 		const body = await request.json();
 		if (typeof body?.userId !== 'number' || typeof body?.value !== 'number') throw new BadRequest();

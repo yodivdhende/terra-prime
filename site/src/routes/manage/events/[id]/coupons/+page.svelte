@@ -69,9 +69,11 @@
 	<a href="..">back</a>
 	<h2>Event Coupons</h2>
 
-	<button class="btn add" onclick={addDraft} aria-label="Add coupon">
-		<CirclePlus />
-	</button>
+	{#if data.couponsEnabled}
+		<button class="btn add" onclick={addDraft} aria-label="Add coupon">
+			<CirclePlus />
+		</button>
+	{/if}
 
 	{#if drafts.length > 0}
 		<table class="drafts">

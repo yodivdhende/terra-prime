@@ -16,7 +16,7 @@
 	$effect(() => WINDOW_MANAGER.setLogoutEnabled(CREDENTIAL_MANAGER.isLogedIn));
 	$effect(() => WINDOW_MANAGER.setCharacterOverviewEnabled(CREDENTIAL_MANAGER.isLogedIn));
 	$effect(() => {
-		FEATURE_MANAGER.setFlags({ loginEnabled: data.loginEnabled, registerEnabled: data.registerEnabled, backstoryEnabled: data.backstoryEnabled });
+		FEATURE_MANAGER.setFlags({ loginEnabled: data.loginEnabled, registerEnabled: data.registerEnabled, backstoryEnabled: data.backstoryEnabled, couponsEnabled: data.couponsEnabled });
 		WINDOW_MANAGER.setLoginEnabled(FEATURE_MANAGER.loginEnabled && !CREDENTIAL_MANAGER.isLogedIn);
 	});
 

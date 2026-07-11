@@ -4,10 +4,10 @@ import {
   isCharacterVersionBare,
   type CharacterVersionBare,
 } from '$lib/db/character_version.repo';
-import { eventBudgetRepo } from '$lib/db/event_budget.repo';
+import { eventCouponRepo } from '$lib/db/event_coupon.repo';
 import { eventParticipantsRepo } from '$lib/db/event_participants.repo';
-import { eventRepo } from '$lib/db/event.repo';
 import { itemRepo } from '$lib/db/items.repo';
+import { computeCharacterVersionCost, getAvailableBudget } from '$lib/server/budget.service';
 import { isNumberOrError } from '$lib/request.utils';
 import { BadRequest } from '$lib/types/errors';
 import { UserRole } from '$lib/types/roles';
@@ -22,6 +22,7 @@ type CharacterWithVersions = {
   ownerName: string;
   backstoryId?: string | null;
   versions: CharacterVersionBare[];
+  couponCode?: string | null;
 };
 
 export const GET: RequestHandler = async ({ cookies, params }) => {
@@ -34,7 +35,7 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
   });
 };
 
-export const PUT: RequestHandler = async ({ cookies, params, request }) => {
+export const PUT: RequestHandler = async ({ cookies, params, request, locals }) => {
   return handleRequest(async () => {
     const { userId } = await authGuardForUser(getSessionToken(cookies), ['user']);
     const eventId = isNumberOrError(params.eventId);
@@ -71,6 +72,19 @@ export const PUT: RequestHandler = async ({ cookies, params, request }) => {
       }
     }
 
+    const couponCode = typeof body?.couponCode === 'string' ? body.couponCode.trim() : '';
+    if (couponCode && !locals.featureFlags['Coupons']) throw new BadRequest('coupon codes are disabled');
+    const coupon = couponCode
+      ? await eventCouponRepo.findUnredeemedByCode(eventId, userId, couponCode)
+      : undefined;
+    if (couponCode && coupon == null) throw new BadRequest('invalid or already used coupon code');
+
+    const [availableBudget, cost] = await Promise.all([
+      getAvailableBudget({ eventId, characterId, ownerId: userId }),
+      computeCharacterVersionCost(lastVersion),
+    ]);
+    if (cost > availableBudget + (coupon?.value ?? 0)) throw new BadRequest('character exceeds available budget');
+
     const versionToSave =
       existingParticipation?.characterVersionId === lastVersion.id
         ? lastVersion
@@ -87,12 +101,7 @@ export const PUT: RequestHandler = async ({ cookies, params, request }) => {
       characterVersionId,
     });
 
-    const [event, priorReward] = await Promise.all([
-      eventRepo.getWithId(eventId),
-      eventParticipantsRepo.getSumPriorRewardBudget({ characterId, excludeEventId: eventId }),
-    ]);
-    const autoBudget = (event?.budget ?? 0) + priorReward;
-    await eventBudgetRepo.initializeBudgetIfMissing(eventId, characterId, autoBudget);
+    if (coupon != null) await eventCouponRepo.redeem(coupon.id);
 
     return json({ characterId });
   });

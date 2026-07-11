@@ -160,6 +160,25 @@ Event dates (`start`, `end`) are sent as ISO strings and converted to `Date` obj
 | DELETE | `/api/events/[eventId]/participants` | admin | empty body (200) | Remove participant; body: `EventParticipant` (`{ eventId, userId, characterVersion }`) |
 | GET | `/api/events/[eventId]/participants/characters/[characterId]` | user | `EventParticipant \| null` (JSON; null when not found) | Get participation record for a specific character |
 
+### Event Coupons
+
+A coupon is a discrete grant tied to one user and one event. Multiple coupons may exist per (event, user) pair. Only `type: 'budget'` is implemented today; a coupon's value only counts toward budget once redeemed (see `PUT /api/my/events/[eventId]/participants` below).
+
+| Method | Path | Auth | Returns | Description |
+|--------|------|------|---------|-------------|
+| GET | `/api/events/[eventId]/coupons` | admin | `EventCoupon[]` (JSON) — `{ id, userId, userName, code, type: 'budget', value, redeemed }` | List all coupons for event |
+| POST | `/api/events/[eventId]/coupons` | admin | `{ id: number, code: string }` (JSON) | Create a coupon; body: `{ userId: number, value: number }`. Server generates a short redeemable `code` |
+| DELETE | `/api/events/[eventId]/coupons/[couponId]` | admin | empty body (200) | Delete a coupon |
+
+### Event Budget
+
+| Method | Path | Auth | Returns | Description |
+|--------|------|------|---------|-------------|
+| GET | `/api/events/[eventId]/budget/characters/[characterId]` | admin/user | `{ budget: number }` (JSON) | Total available budget for a character at an event: `event.budget + priorRewardBudget + sum(redeemed 'budget' coupons for the character's owner at this event)` |
+| GET | `/api/my/events/[eventId]/coupons/[code]` | user | `{ valid: boolean, value: number }` (JSON, always 200) | Check whether `code` is an unredeemed 'budget' coupon for the current user at this event, without redeeming it. Used to preview the budget effect of a coupon before final registration submit |
+
+`PUT /api/my/events/[eventId]/participants` (see "My" section) now also accepts an optional `couponCode?: string | null` on the body. If provided, it must match an unredeemed coupon for the current user at this event or the request is rejected with 400 (`invalid or already used coupon code`). The endpoint also recomputes the submitted character version's total cost server-side and rejects with 400 (`character exceeds available budget`) if it exceeds the available budget (including the coupon being redeemed, if any). On success, a matched coupon is marked redeemed.
+
 ---
 
 ## Forms (Google Forms integration)
@@ -196,5 +215,5 @@ All endpoints under `/api/my/...` operate on the authenticated user. Auth: `user
 | GET | `/api/my/characters/with-events` | `(Character & { events: Array<{ id: number, name: string }> })[]` (JSON) | List the current user's characters, each with an `events` array |
 | GET | `/api/my/characters/versions` | `MyCharacterVersionsResponse` (JSON) — `{ characters: (Character & { versions: CharacterVersionFull[] })[] }` where each version's `expertise`/`items`/`implants` are joined with the catalog and `events` is the list of events the version is registered for: `expertise: { id, name, group, groupName, value }[]`, `items: { id, name, description, count }[]`, `implants: { id, name, description }[]`, `events: { id, name }[]` | List the current user's characters with their versions, each version's expertise/item/implant IDs resolved to full catalog entries plus the events the version is registered for |
 | GET | `/api/my/events/[eventId]/participants` | `{ characterId: number, characterVersionId: number }` (JSON, 200) or empty body (204 when not registered) | Get the current user's participation for an event |
-| POST | `/api/my/events/[eventId]/participants` | empty body (201) | Register the current user for an event; body: `{ draft: CharacterDraft }` where `CharacterDraft = { id: number \| null; name: string; version: { id: number \| null; name; expertise; items; implants } }`. Handles three flows in one call based on which ids are null: new character (`id: null`, `version.id: null`), new version on existing character (`id: number`, `version.id: null`), update existing version (`id: number`, `version.id: number`). Renames the character if `name` differs from the stored value. Ownership-checked |
+| PUT | `/api/my/events/[eventId]/participants` | `{ characterId: number }` (JSON) | Register/update the current user's character for an event; body: `CharacterWithVersions & { couponCode?: string \| null }` (`{ id: number \| null, name, ownerId, ownerName, backstoryId?, versions: CharacterVersionBare[], couponCode? }`). Creates the character when `id` is null, otherwise updates it; saves the **last** entry in `versions` and registers it for the event. Rejects with 400 if `couponCode` doesn't match an unredeemed coupon for this user+event, or if the version's total cost exceeds the available budget (base + prior reward + redeemed coupons, including the one being redeemed). Marks a matched coupon redeemed on success |
 | POST | `/api/my/events/[eventId]/form-submit` | `{ ok: true, status: 200 }` (JSON) | Append the current user's Google Form answers as a row in the event's linked spreadsheet. Body: `AnswerMap` (`Record<string, string \| string[]>` keyed by `questionId`). Returns 404 if the event has no `formId`. Row layout: `[ISO timestamp, userId, name, email, ...answers in form order]`. If the form's question titles no longer match the latest tab's header, a new `Responses <ISO>` tab is added to the same spreadsheet for the new schema |

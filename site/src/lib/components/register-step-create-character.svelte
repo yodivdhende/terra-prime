@@ -6,12 +6,6 @@
 	import type { RegisterManager } from '$lib/managers/register-manager.svelte';
 	import type { CharacterManager } from '$lib/managers/character-manager.svelte';
 
-	type EventResponse = {
-		id: number;
-		name: string;
-		budget?: number | null;
-	};
-
 	let {
 		REGISTER_MANAGER,
 		CHARACTER_MANAGER
@@ -20,7 +14,6 @@
 	let expertise = $state<ShopExpertise[]>([]);
 	let items = $state<ShopItem[]>([]);
 	let implants = $state<ShopImplant[]>([]);
-	let budget = $state<number>(0);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
@@ -34,11 +27,10 @@
 		try {
 			const characterId = CHARACTER_MANAGER.character.id;
 			const charParam = characterId != null ? `?characterId=${characterId}` : '';
-			const [expertiseRes, itemsRes, implantsRes, eventRes] = await Promise.all([
+			const [expertiseRes, itemsRes, implantsRes] = await Promise.all([
 				fetch(`/api/expertise${charParam}`),
 				fetch(`/api/items${charParam}`),
-				fetch(`/api/implants${charParam}`),
-				fetch(`/api/events/${eventId}`)
+				fetch(`/api/implants${charParam}`)
 			]);
 
 			if (expertiseRes.ok) {
@@ -47,16 +39,7 @@
 			}
 			if (itemsRes.ok) items = await itemsRes.json();
 			if (implantsRes.ok) implants = await implantsRes.json();
-			if (eventRes.ok) {
-				const event: EventResponse = await eventRes.json();
-				const base = event.budget ?? 0;
-				if (characterId != null) {
-					const extraRes = await fetch(`/api/events/${eventId}/budget/characters/${characterId}`);
-					budget = extraRes.ok ? ((await extraRes.json()) as { budget: number }).budget : 0;
-				} else {
-					budget = base;
-				}
-			}
+			await REGISTER_MANAGER.loadBudget(characterId);
 		} catch (err) {
 			error = `${err}`;
 		} finally {
@@ -81,8 +64,9 @@
 			{expertise}
 			{items}
 			{implants}
-			{budget}
+			budget={REGISTER_MANAGER.availableBudget}
 			expertiseManager={CHARACTER_MANAGER.expertiseManager}
+			{REGISTER_MANAGER}
 		/>
 	{/if}
 </div>

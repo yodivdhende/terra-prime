@@ -88,16 +88,22 @@
 				}
 			}
 
-			const body = toCharacterWithVersions({
-				character: $state.snapshot(CHARACTER_MANAGER.character),
-				version: $state.snapshot(CHARACTER_MANAGER.version)
-			});
+			const body = {
+				...toCharacterWithVersions({
+					character: $state.snapshot(CHARACTER_MANAGER.character),
+					version: $state.snapshot(CHARACTER_MANAGER.version)
+				}),
+				couponCode: REGISTER_MANAGER.couponCode.trim() || null
+			};
 			const res = await fetch(`/api/my/events/${REGISTER_MANAGER.selectedEventId}/participants`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(body)
 			});
-			if (!res.ok) throw new Error(`registration failed (${res.status})`);
+			if (!res.ok) {
+				const errBody = await res.json().catch(() => null);
+				throw new Error(errBody?.message ?? `registration failed (${res.status})`);
+			}
 			if (FEATURE_MANAGER.backstoryEnabled && REGISTER_MANAGER.isNewCharacter) {
 				const data = await res.json();
 				registeredCharacterId = data.characterId ?? null;

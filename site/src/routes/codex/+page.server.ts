@@ -14,5 +14,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		loginEnabled: locals.featureFlags['Login'] ?? false,
 		registerEnabled: locals.featureFlags['Register'] ?? false,
 		backstoryEnabled: locals.featureFlags['Backstory'] ?? false,
+		couponsEnabled: locals.featureFlags['Coupons'] ?? false,
 	};
 };

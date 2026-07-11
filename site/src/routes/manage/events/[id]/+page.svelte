@@ -79,7 +79,7 @@
 	</div>
 	<section class="event-participants">
 		{#if event?.id != null}
-			<a href={resolve('/manage/events/[id]/budget', { id: String(event.id) })}>Manage Budget →</a>
+			<a href={resolve('/manage/events/[id]/coupons', { id: String(event.id) })}>Manage Coupons →</a>
 		{/if}
 		<h2>Participants</h2>
 		{#if participants.length === 0}

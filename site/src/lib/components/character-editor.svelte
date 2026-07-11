@@ -1,14 +1,19 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { Character, CharacterVersionFull } from '$lib/managers/character-manager.svelte';
+	import type { RegisterManager } from '$lib/managers/register-manager.svelte';
 	import CompanySelect from '$lib/components/company-select.svelte';
+	import RegisterCouponInput from './register-coupon-input.svelte';
+	import { FEATURE_MANAGER } from '$lib/managers/feature-manager.svelte';
 
 	let {
 		character = $bindable(),
-		version = $bindable()
+		version = $bindable(),
+		REGISTER_MANAGER
 	}: {
 		character: Character;
 		version: CharacterVersionFull;
+		REGISTER_MANAGER?: RegisterManager;
 	} = $props();
 
 	onMount(() => {
@@ -40,6 +45,9 @@
 	<span class="label">Company</span>
 	<CompanySelect bind:company={version.company} />
 </label>
+{#if REGISTER_MANAGER && FEATURE_MANAGER.couponsEnabled}
+	<RegisterCouponInput {REGISTER_MANAGER} />
+{/if}
 
 <style>
 	.name-field {
@@ -47,10 +55,10 @@
 		flex-direction: column;
 		gap: 0.25rem;
 		flex: 1;
+		margin-bottom: 1em;
 	}
 
 	.label {
-		font-size: 0.6em;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		opacity: 0.55;

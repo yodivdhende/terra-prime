@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Expertise, ExpertiseGroup } from '$lib/db/expertise.repo';
+	import IconPicker from '$lib/components/icon-picker.svelte';
 
 	let { expertise = $bindable<Expertise>(), groups }: { expertise: Expertise; groups: ExpertiseGroup[] } = $props();
 </script>
@@ -16,6 +17,8 @@
 	<input type="textarea" bind:value={expertise.description} />
 	<label for="cost">cost</label>
 	<input id="cost" type="number" min="0" bind:value={expertise.cost} />
+	<span>icon</span>
+	<IconPicker bind:value={expertise.icon} />
 </main>
 
 <style>

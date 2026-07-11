@@ -1,9 +1,24 @@
 import { SvelteMap } from 'svelte/reactivity';
 import type { Expertise } from '$lib/db/expertise.repo';
 
-export type ExpertiseGroupAverage = { id: number; name: string; average: number };
+export type ExpertiseGroupAverage = {
+	id: number;
+	name: string;
+	average: number;
+	icon: string | null;
+	color: string | null;
+};
 
-type ExpertiseEntry = { id: number; name: string; group: number; groupName: string; value: number };
+type ExpertiseEntry = {
+	id: number;
+	name: string;
+	group: number;
+	groupName: string;
+	value: number;
+	icon: string | null;
+	groupIcon: string | null;
+	groupColor: string | null;
+};
 
 export function createExpertiseManager() {
   let expertise = $state<ExpertiseEntry[]>([]);
@@ -11,18 +26,27 @@ export function createExpertiseManager() {
 
   const groups: ExpertiseGroupAverage[] = $derived.by(() => {
     // eslint-disable-next-line svelte/prefer-svelte-reactivity -- local scratch, discarded when the derivation returns
-    const map = new Map<number, { name: string; total: number; count: number }>();
+    const map = new Map<
+      number,
+      { name: string; total: number; count: number; icon: string | null; color: string | null }
+    >();
     for (const e of expertise) {
-      if (!map.has(e.group)) map.set(e.group, { name: e.groupName, total: 0, count: 0 });
+      if (!map.has(e.group))
+        map.set(e.group, {
+          name: e.groupName,
+          total: 0,
+          count: 0,
+          icon: e.groupIcon,
+          color: e.groupColor
+        });
       const g = map.get(e.group)!;
       g.total += e.value;
       g.count += 1;
     }
     return Array.from(map.entries())
-      .map(([id, { name, total, count }]) => {
+      .map(([id, { name, total, count, icon, color }]) => {
         const average = count > 0 ? total / count : 0;
-        console.log({ name, average, count, total });
-        return { id: Number(id), name, average };
+        return { id: Number(id), name, average, icon, color };
       });
   });
 
@@ -31,7 +55,18 @@ export function createExpertiseManager() {
   function setCatalog(catalog: Expertise[]) {
     expertise = catalog.flatMap((e) => {
       if (e.id == null) return [];
-      return [{ id: e.id, name: e.name, group: e.groupId, groupName: e.groupName, value: pendingValues.get(e.id) ?? 0 }];
+      return [
+        {
+          id: e.id,
+          name: e.name,
+          group: e.groupId,
+          groupName: e.groupName,
+          value: pendingValues.get(e.id) ?? 0,
+          icon: e.icon ?? null,
+          groupIcon: e.groupIcon ?? null,
+          groupColor: e.groupColor ?? null
+        }
+      ];
     });
   }
 

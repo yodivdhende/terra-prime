@@ -75,13 +75,13 @@ Templates are `{ id, key, docUrl }` rows. `docUrl` is a Google Doc URL whose HTM
 
 | Method | Path | Auth | Returns | Description |
 |--------|------|------|---------|-------------|
-| GET | `/api/expertise` | admin/user | `Expertise[]` (JSON) — `Expertise = { id: number \| null, name: string, description: string, groupId: number, groupName: string, cost?: number }` | List all expertise |
+| GET | `/api/expertise` | admin/user | `Expertise[]` (JSON) — `Expertise = { id: number \| null, name: string, description: string, groupId: number, groupName: string, cost?: number, icon?: string \| null, groupIcon?: string \| null, groupColor?: string \| null }`. `icon` is this expertise's own SVG; `groupIcon`/`groupColor` are read-only, joined from the parent group. Icons are sanitized on write. | List all expertise |
 | PUT | `/api/expertise` | admin | empty body (200) | Create/update expertise; body: `Expertise` |
 | GET | `/api/expertise/[id]` | admin | `Expertise` (JSON) | Get expertise by ID |
 | POST | `/api/expertise/[id]` | admin | empty body (200) | Update expertise; body: `Expertise` |
 | DELETE | `/api/expertise/[id]` | admin | empty body (200) | Delete expertise |
 | POST | `/api/expertise/bulk` | admin | empty body (200) | Bulk update expertise; body: `Expertise[]` |
-| GET | `/api/expertise/groups` | admin/user | `ExpertiseGroup[]` (JSON) — `ExpertiseGroup = { id: number \| null, name: string, description: string }` | List all expertise groups |
+| GET | `/api/expertise/groups` | admin/user | `ExpertiseGroup[]` (JSON) — `ExpertiseGroup = { id: number \| null, name: string, description: string, icon?: string \| null, color?: string \| null }`. `icon` is the group's SVG (sanitized on write); `color` is a `#rrggbb` hex string (validated on write, else stored null). | List all expertise groups |
 | PUT | `/api/expertise/groups` | admin | empty body (200) | Create/update expertise group; body: `ExpertiseGroup` |
 | GET | `/api/expertise/groups/[id]` | admin | `ExpertiseGroup` (JSON) | Get expertise group by ID |
 | POST | `/api/expertise/groups/[id]` | admin | empty body (200) | Update expertise group; body: `ExpertiseGroup` |

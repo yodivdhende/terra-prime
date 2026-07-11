@@ -1,4 +1,20 @@
 import { mysqlconnFn } from './mysql';
+import { sanitizeSvg } from '$lib/utils/svg-sanitize';
+
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+
+/** Sanitize an admin-supplied icon for storage, treating empty strings as null. */
+function normalizeIcon(icon: string | null | undefined): string | null {
+	if (icon == null) return null;
+	const cleaned = sanitizeSvg(icon).trim();
+	return cleaned.length > 0 ? cleaned : null;
+}
+
+/** Accept only `#rrggbb` colours, otherwise store null. */
+function normalizeColor(color: string | null | undefined): string | null {
+	if (color == null) return null;
+	return HEX_COLOR.test(color) ? color : null;
+}
 
 class ExpertiseRepo {
 	public async getAll(): Promise<Expertise[]> {
@@ -10,8 +26,11 @@ class ExpertiseRepo {
 				e.Description as description,
 				e.Cost as cost,
 				e.CharacterAccess as characterAccess,
+				e.Icon as icon,
 				eg.Id as groupId,
-				eg.Name as groupName
+				eg.Name as groupName,
+				eg.Icon as groupIcon,
+				eg.Color as groupColor
 			FROM Expertise e
 			JOIN Expertise_Groups eg
 				on e.Group = eg.Id
@@ -40,8 +59,11 @@ class ExpertiseRepo {
 				e.Description as description,
 				e.Cost as cost,
 				e.CharacterAccess as characterAccess,
+				e.Icon as icon,
 				eg.Id as groupId,
-				eg.Name as groupName
+				eg.Name as groupName,
+				eg.Icon as groupIcon,
+				eg.Color as groupColor
 			FROM Expertise e
 			JOIN Expertise_Groups eg
 				on e.Group = eg.Id
@@ -76,8 +98,11 @@ class ExpertiseRepo {
 				e.Description as description,
 				e.Cost as cost,
 				e.CharacterAccess as characterAccess,
+				e.Icon as icon,
 				eg.Id as groupId,
-				eg.Name as groupName
+				eg.Name as groupName,
+				eg.Icon as groupIcon,
+				eg.Color as groupColor
 			FROM Expertise e
 			JOIN Expertise_Groups eg
 				on e.Group = eg.Id
@@ -108,8 +133,11 @@ class ExpertiseRepo {
 				e.Description as description,
 				e.Cost as cost,
 				e.CharacterAccess as characterAccess,
+				e.Icon as icon,
 				eg.Id as groupId,
-				eg.Name as groupName
+				eg.Name as groupName,
+				eg.Icon as groupIcon,
+				eg.Color as groupColor
 			FROM Expertise e
 			JOIN Expertise_Groups eg
 				on e.Group = eg.Id
@@ -137,12 +165,16 @@ class ExpertiseRepo {
 		const [result] = await connection.execute(
 			`
 			SELECT
-				e.Id,
-				e.Name,
-				e.Description,
+				e.Id as id,
+				e.Name as name,
+				e.Description as description,
+				e.Cost as cost,
 				e.CharacterAccess as characterAccess,
-				eg.Id,
-				eg.Name
+				e.Icon as icon,
+				eg.Id as groupId,
+				eg.Name as groupName,
+				eg.Icon as groupIcon,
+				eg.Color as groupColor
 			FROM Expertise e
 			JOIN Expertise_Groups eg
 				on e.Group = eg.Id
@@ -206,25 +238,32 @@ class ExpertiseRepo {
 		try {
 			await conn.beginTransaction();
 			if (toCreate.length > 0) {
-				const placeholders = toCreate.map(() => '(?,?,?,?)').join(',');
-				const values = toCreate.flatMap((i) => [i.name, i.description, i.groupId, i.cost ?? 0]);
+				const placeholders = toCreate.map(() => '(?,?,?,?,?)').join(',');
+				const values = toCreate.flatMap((i) => [
+					i.name,
+					i.description,
+					i.groupId,
+					i.cost ?? 0,
+					normalizeIcon(i.icon)
+				]);
 				await conn.execute(
-					`INSERT INTO Expertise (Name, Description, \`Group\`, Cost) VALUES ${placeholders}`,
+					`INSERT INTO Expertise (Name, Description, \`Group\`, Cost, Icon) VALUES ${placeholders}`,
 					values
 				);
 			}
 			if (toUpdate.length > 0) {
-				const placeholders = toUpdate.map(() => '(?,?,?,?,?)').join(',');
+				const placeholders = toUpdate.map(() => '(?,?,?,?,?,?)').join(',');
 				const values = toUpdate.flatMap((i) => [
 					i.id,
 					i.name,
 					i.description,
 					i.groupId,
-					i.cost ?? 0
+					i.cost ?? 0,
+					normalizeIcon(i.icon)
 				]);
 				await conn.execute(
-					`INSERT INTO Expertise (Id, Name, Description, \`Group\`, Cost) VALUES ${placeholders}
-					 ON DUPLICATE KEY UPDATE Name=VALUES(Name), Description=VALUES(Description), \`Group\`=VALUES(\`Group\`), Cost=VALUES(Cost)`,
+					`INSERT INTO Expertise (Id, Name, Description, \`Group\`, Cost, Icon) VALUES ${placeholders}
+					 ON DUPLICATE KEY UPDATE Name=VALUES(Name), Description=VALUES(Description), \`Group\`=VALUES(\`Group\`), Cost=VALUES(Cost), Icon=VALUES(Icon)`,
 					values
 				);
 			}
@@ -241,15 +280,16 @@ class ExpertiseRepo {
 		name,
 		description,
 		groupId,
-		cost
-	}: Pick<Expertise, 'name' | 'description' | 'groupId' | 'cost'>) {
+		cost,
+		icon
+	}: Pick<Expertise, 'name' | 'description' | 'groupId' | 'cost' | 'icon'>) {
 		const connection = mysqlconnFn();
 		const [result] = await connection.execute(
 			`
-			 INSERT INTO Expertise (Name, Description, \`Group\`, Cost)
-			Values (?,?,?,?)
+			 INSERT INTO Expertise (Name, Description, \`Group\`, Cost, Icon)
+			Values (?,?,?,?,?)
       `,
-			[name, description, groupId, cost ?? 0]
+			[name, description, groupId, cost ?? 0, normalizeIcon(icon)]
 		);
 		if (Array.isArray(result) === false) return null;
 		if (result.length === 0) return null;
@@ -263,8 +303,9 @@ class ExpertiseRepo {
 		name,
 		description,
 		groupId,
-		cost
-	}: Pick<Expertise, 'id' | 'name' | 'description' | 'groupId' | 'cost'>) {
+		cost,
+		icon
+	}: Pick<Expertise, 'id' | 'name' | 'description' | 'groupId' | 'cost' | 'icon'>) {
 		const connection = mysqlconnFn();
 		const [result] = await connection.execute(
 			`
@@ -272,10 +313,11 @@ class ExpertiseRepo {
 			SET Name = ?,
 			Description = ?,
 			\`Group\` = ?,
-			Cost = ?
+			Cost = ?,
+			Icon = ?
 			WHERE Id = ?
       `,
-			[name, description, groupId, cost ?? 0, id]
+			[name, description, groupId, cost ?? 0, normalizeIcon(icon), id]
 		);
 		if (Array.isArray(result) === false) return null;
 		if (result.length === 0) return null;
@@ -303,7 +345,9 @@ class ExpertiseRepo {
 		 SELECT
 				eg.Id as id,
 				eg.Name as name,
-				eg.Description as description
+				eg.Description as description,
+				eg.Icon as icon,
+				eg.Color as color
 			FROM Expertise_Groups eg
     `);
 		if (Array.isArray(result) === false) return [];
@@ -326,7 +370,9 @@ class ExpertiseRepo {
 		 SELECT
 				eg.Id as id,
 				eg.Name as name,
-				eg.Description as description
+				eg.Description as description,
+				eg.Icon as icon,
+				eg.Color as color
 			FROM Expertise_Groups eg
 			WHERE eg.Id = ?
     `,
@@ -345,15 +391,17 @@ class ExpertiseRepo {
 
 	private async createExpertiseGroup({
 		name,
-		description
-	}: Pick<ExpertiseGroup, 'name' | 'description'>) {
+		description,
+		icon,
+		color
+	}: Pick<ExpertiseGroup, 'name' | 'description' | 'icon' | 'color'>) {
 		const connection = mysqlconnFn();
 		const [result] = await connection.execute(
 			`
-			INSERT INTO Expertise_Groups (Name, Description)
-			VALUES (?,?)
+			INSERT INTO Expertise_Groups (Name, Description, Icon, Color)
+			VALUES (?,?,?,?)
     `,
-			[name, description]
+			[name, description, normalizeIcon(icon), normalizeColor(color)]
 		);
 		if ('serverStatus' in result && result.serverStatus !== 2) return null;
 		if ('insertId' in result === false || result.insertId == null) return null;
@@ -363,17 +411,21 @@ class ExpertiseRepo {
 	private async editExpertiseGroup({
 		id,
 		name,
-		description
-	}: Pick<ExpertiseGroup, 'id' | 'name' | 'description'>) {
+		description,
+		icon,
+		color
+	}: Pick<ExpertiseGroup, 'id' | 'name' | 'description' | 'icon' | 'color'>) {
 		const connection = mysqlconnFn();
 		const [result] = await connection.execute(
 			`
 			UPDATE Expertise_Groups
 			SET Name = ?,
-			Description = ?
+			Description = ?,
+			Icon = ?,
+			Color = ?
 			WHERE Id = ?
     `,
-			[name, description, id]
+			[name, description, normalizeIcon(icon), normalizeColor(color), id]
 		);
 		if ('serverStatus' in result && result.serverStatus !== 2) return null;
 		return id;
@@ -423,6 +475,12 @@ export type Expertise = {
 	cost?: number;
 	characterAccess?: 'all' | 'none' | 'specific';
 	allowedCharacterIds?: number[];
+	/** SVG markup for this expertise's icon (nullable, admin-supplied). */
+	icon?: string | null;
+	/** SVG markup for the parent group's icon (read-only, joined from the group). */
+	groupIcon?: string | null;
+	/** Hex colour of the parent group (read-only, joined from the group). */
+	groupColor?: string | null;
 };
 
 export function isExpertise(expertise: unknown): expertise is Expertise {
@@ -438,7 +496,8 @@ export function isExpertise(expertise: unknown): expertise is Expertise {
 		'groupName' in expertise &&
 		typeof expertise.groupName === 'string' &&
 		'id' in expertise &&
-		(typeof expertise.id === 'number' || expertise.id === null)
+		(typeof expertise.id === 'number' || expertise.id === null) &&
+		('icon' in expertise === false || typeof expertise.icon === 'string' || expertise.icon == null)
 	);
 }
 
@@ -446,6 +505,10 @@ export type ExpertiseGroup = {
 	id: number | null;
 	name: string;
 	description: string;
+	/** SVG markup for this group's icon (nullable, admin-supplied). */
+	icon?: string | null;
+	/** Hex colour (`#rrggbb`) for this group (nullable, admin-supplied). */
+	color?: string | null;
 };
 
 export function isExpertiseGroup(group: unknown): group is ExpertiseGroup {
@@ -457,6 +520,8 @@ export function isExpertiseGroup(group: unknown): group is ExpertiseGroup {
 		'description' in group &&
 		typeof group.description === 'string' &&
 		'id' in group &&
-		(typeof group.id === 'number' || group.id === null)
+		(typeof group.id === 'number' || group.id === null) &&
+		('icon' in group === false || typeof group.icon === 'string' || group.icon == null) &&
+		('color' in group === false || typeof group.color === 'string' || group.color == null)
 	);
 }

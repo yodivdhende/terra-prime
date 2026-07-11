@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Icon from '$lib/components/icon.svelte';
 	import ProgressBar from '$lib/components/progress-bar.svelte';
-	import { GROUP_COLORS, GROUP_ICONS } from '$lib/managers/expertise-icons';
 	import type {
 		VersionImplant,
 		VersionItem,
@@ -26,14 +25,15 @@
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local scratch, discarded when the derivation returns
 		const map = new Map<
 			number,
-			{ id: number; name: string; color: string; total: number; count: number }
+			{ id: number; name: string; color: string; icon: string | null; total: number; count: number }
 		>();
 		for (const entry of expertise) {
 			if (!map.has(entry.group)) {
 				map.set(entry.group, {
 					id: entry.group,
 					name: entry.groupName,
-					color: GROUP_COLORS[entry.group] ?? 'var(--color-accent)',
+					color: entry.groupColor ?? 'var(--color-accent)',
+					icon: entry.groupIcon ?? null,
 					total: 0,
 					count: 0
 				});
@@ -54,10 +54,9 @@
 <div class="preview">
 	<div class="groups">
 		{#each groups as group (group.id)}
-			{@const groupIcon = GROUP_ICONS[group.id]}
 			<div class="group">
-				{#if groupIcon}
-					<Icon src={groupIcon} color={group.color} tooltip={group.name} {size} />
+				{#if group.icon}
+					<Icon src={group.icon} color={group.color} tooltip={group.name} {size} />
 				{/if}
 				<div class="bar">
 					<ProgressBar value={group.average} color={group.color} name={group.name} />

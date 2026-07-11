@@ -46,7 +46,7 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 			expertise: bare.expertise.flatMap((e): VersionExpertise[] => {
 				const expertise = expertiseById.get(e.id);
 				if (!expertise) return [];
-				return [{ id: e.id, name: expertise.name, group: expertise.groupId, groupName: expertise.groupName, value: e.value }];
+				return [{ id: e.id, name: expertise.name, group: expertise.groupId, groupName: expertise.groupName, value: e.value, icon: expertise.icon ?? null, groupIcon: expertise.groupIcon ?? null, groupColor: expertise.groupColor ?? null }];
 			}),
 			items: bare.items.flatMap((i): VersionItem[] => {
 				const item = itemById.get(i.id);

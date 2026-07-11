@@ -12,7 +12,8 @@
 		groupId: 0,
 		groupName: '',
 		name: '',
-		description: ''
+		description: '',
+		icon: null
 	});
 
 	async function save() {

@@ -6,6 +6,9 @@
 		cost?: number;
 		groupId: number;
 		groupName: string;
+		icon?: string | null;
+		groupIcon?: string | null;
+		groupColor?: string | null;
 	};
 </script>
 
@@ -14,7 +17,6 @@
 	import ExpertiseSlider from './expertise-slider.svelte';
 	import type { VersionExpertise } from '$lib/managers/character-manager.svelte';
 	import ProgressBar from './progress-bar.svelte';
-	import { GROUP_COLORS, GROUP_ICONS, EXPERTISE_INFO } from '$lib/managers/expertise-icons';
 
 	let {
 		catalog,
@@ -32,13 +34,17 @@
 
 	const expertiseGroups = $derived.by(() => {
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local scratch, discarded when the derivation returns
-		const map = new Map<number, { id: number; name: string; color: string; expertise: ShopExpertise[] }>();
+		const map = new Map<
+			number,
+			{ id: number; name: string; color: string; icon: string | null; expertise: ShopExpertise[] }
+		>();
 		for (const e of catalog) {
 			if (!map.has(e.groupId)) {
 				map.set(e.groupId, {
 					id: e.groupId,
 					name: e.groupName,
-					color: GROUP_COLORS[e.groupId] ?? 'var(--color-accent)',
+					color: e.groupColor ?? 'var(--color-accent)',
+					icon: e.groupIcon ?? null,
 					expertise: []
 				});
 			}
@@ -68,7 +74,10 @@
 					name: expertise.name,
 					group: expertise.groupId,
 					groupName: expertise.groupName,
-					value: newValue
+					value: newValue,
+					icon: expertise.icon ?? null,
+					groupIcon: expertise.groupIcon ?? null,
+					groupColor: expertise.groupColor ?? null
 				}
 			];
 		}
@@ -97,7 +106,9 @@
 			group.expertise.reduce((sum, e) => sum + getValue(e.id), 0) / group.expertise.length}
 		<div class="group">
 			<h4 class="group-name" style="color: {group.color}">
-				<Icon src={GROUP_ICONS[group.id]} color={group.color} size={iconSize} />
+				{#if group.icon}
+					<Icon src={group.icon} color={group.color} size={iconSize} />
+				{/if}
 				{group.name}
 			</h4>
 			<div class="group-value">
@@ -105,7 +116,7 @@
 			</div>
 			<ul class="catalog">
 				{#each group.expertise as expertise (expertise.id)}
-					{@const expertiseIcon = EXPERTISE_INFO[expertise.id ?? 0]?.icon}
+					{@const expertiseIcon = expertise.icon}
 					{@const currentValue = getValue(expertise.id)}
 					{@const expertiseCost = expertise.cost ?? 0}
 					{@const expertiseDiscount = expertise.id != null ? (discounts.get(expertise.id) ?? 0) : 0}

@@ -8,7 +8,9 @@
 	let group: ExpertiseGroup = $state({
 		id: null,
 		name: '',
-		description: ''
+		description: '',
+		icon: null,
+		color: null
 	});
 
 	async function save() {

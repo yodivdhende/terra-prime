@@ -1,13 +1,16 @@
 <script lang="ts">
 	import Icon from '$lib/components/icon.svelte';
 	import ProgressBar from '$lib/components/progress-bar.svelte';
-	import { GROUP_COLORS, EXPERTISE_INFO } from '$lib/managers/expertise-icons';
 
 	type ExpertiseEntry = {
 		id: number;
+		name: string;
 		group: number;
 		groupName: string;
 		value: number;
+		icon: string | null;
+		groupIcon: string | null;
+		groupColor: string | null;
 	};
 
 	let { expertise }: { expertise: ExpertiseEntry[] } = $props();
@@ -20,7 +23,7 @@
 				map.set(entry.group, {
 					id: entry.group,
 					name: entry.groupName,
-					color: GROUP_COLORS[entry.group] ?? 'var(--color-accent)',
+					color: entry.groupColor ?? 'var(--color-accent)',
 					expertise: []
 				});
 			}
@@ -38,20 +41,13 @@
 			</div>
 			<ul class="expertise-list">
 				{#each group.expertise as entry (entry.id)}
-					{@const info = EXPERTISE_INFO[entry.id]}
 					<li class="expertise">
-						{#if info}
-							<Icon src={info.icon} color={group.color} tooltip={info.name} size="1.1rem" />
-							<span class="expertise-name">{info.name}</span>
-						{:else}
-							<span class="expertise-name expertise-name--unknown">expertise #{entry.id}</span>
+						{#if entry.icon}
+							<Icon src={entry.icon} color={group.color} tooltip={entry.name} size="1.1rem" />
 						{/if}
+						<span class="expertise-name">{entry.name}</span>
 						<div class="expertise-value">
-							<ProgressBar
-								value={entry.value}
-								color={group.color}
-								name={info?.name ?? `expertise #${entry.id}`}
-							/>
+							<ProgressBar value={entry.value} color={group.color} name={entry.name} />
 						</div>
 					</li>
 				{/each}
@@ -107,11 +103,6 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-	}
-
-	.expertise-name--unknown {
-		opacity: 0.35;
-		font-style: italic;
 	}
 
 	.expertise-value {

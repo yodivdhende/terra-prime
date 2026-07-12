@@ -303,8 +303,9 @@ Channels:
 | — | Server ⇄ database | Persistence |
 
 > **Current state vs. target.** MQTT is the **target** transport for the device
-> and the admin dashboard. Today, both the device and the `manage/sessions`
-> dashboard use a single WebSocket endpoint `/connections`
+> and the admin dashboard. The broker runs as its own Railway service — see the
+> setup guide **`docs/MQTT_SETUP.md`**. Today, both the device and the
+> `manage/sessions` dashboard use a single WebSocket endpoint `/connections`
 > (`site/websocket-server/*`, `cyd/src/web-socket.cpp`); there is **no MQTT in
 > the repo yet**. See [§7](#7-what-needs-building).
 
@@ -414,9 +415,11 @@ Real, current gaps between this target design and the code — documented so
 they're visible, not silently assumed.
 
 1. **MQTT transport.** The target device/dashboard transport is MQTT (device ⇄
-   broker, dashboard ⇄ broker over websockets). Today both use a single WebSocket
-   `/connections` endpoint (`site/websocket-server/*`, `cyd/src/web-socket.cpp`);
-   there is no MQTT broker, client, or config anywhere in the repo.
+   broker, dashboard ⇄ broker over websockets), with the broker deployed as a
+   separate Railway service (setup guide: `docs/MQTT_SETUP.md`). Today both use a
+   single WebSocket `/connections` endpoint (`site/websocket-server/*`,
+   `cyd/src/web-socket.cpp`); there is no MQTT broker, client, or config anywhere
+   in the repo yet.
 2. **Implant charges.** No charge concept exists. Needs DB (`Implants.MaxCharges`
    + `Character_Version_Implants.ChargesRemaining`, migration
    `0017_implant_charges.sql`), repo `spendCharge`/`refreshCharges` methods, a

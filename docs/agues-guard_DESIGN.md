@@ -1,22 +1,23 @@
-# CYD Design Document
+# AguesGuard Design Document
 
-> Architecture and data-flow reference for the **CYD** ("Cheap Yellow Display") LARP-prop
+> Architecture and data-flow reference for the **AguesGuard** LARP-prop
 > device and how it interacts with the terra-prime site. Diagrams are [Mermaid](https://mermaid.js.org/)
 > — edit the fenced code blocks directly and re-render (e.g. on [mermaid.live](https://mermaid.live))
 > to adjust them.
 
 ## 1. Overview
 
-**CYD** stands for "Cheap Yellow Display" — a low-cost ESP32 development board with an
-integrated 320x240 ILI9341 TFT screen and an XPT2046 resistive touch controller (named after
-the well-known RandomNerdTutorials hardware guide). In this repo, `cyd/` is a PlatformIO/Arduino
-firmware project that turns one of these boards into a **physical LARP-RPG companion prop**:
+**AguesGuard** runs on **CYD** ("Cheap Yellow Display") hardware — a low-cost ESP32 development
+board with an integrated 320x240 ILI9341 TFT screen and an XPT2046 resistive touch controller
+(named after the well-known RandomNerdTutorials hardware guide). In this repo, `cyd/` is a
+PlatformIO/Arduino firmware project that turns one of these boards into a **physical LARP-RPG
+companion prop**:
 it sits at a player's table during a live session, renders character stats and animated
 screens (loading / loot / virus / skills / implants / items / messages) built with
 **LVGL** + **SquareLine Studio**, and reacts in real time to commands pushed from the server.
 
 The device is not autonomous — it is a thin client. All game logic, session state, and
-character data live on the site (SvelteKit + MySQL). CYD talks to the site over four channels:
+character data live on the site (SvelteKit + MySQL). AguesGuard talks to the site over four channels:
 
 | Channel | Direction | Purpose |
 |---|---|---|
@@ -26,18 +27,19 @@ character data live on the site (SvelteKit + MySQL). CYD talks to the site over 
 | SD card | local | loads `/config.json` at boot (WiFi creds, API/WS URLs, `characterId`, `sessionToken`) |
 
 The admin-facing `manage/sessions` dashboard in the site connects to the **same** WebSocket
-endpoint as every CYD device, so admins can see which devices are connected live and trigger
+endpoint as every AguesGuard device, so admins can see which devices are connected live and trigger
 screen changes (e.g. "send virus") on a specific device.
 
 ---
 
-## 2. System context
+## 2. System Sturcture
+
 
 ```mermaid
 flowchart LR
     subgraph AguesGuard["LARP prop"]
         SD[(SD card\nconfig.json)]
-        CYD["CYD device\nESP32 + LVGL UI"]
+        Device["AguesGuard device\nESP32 + LVGL UI"]
     end
 
     Arduino
@@ -47,21 +49,21 @@ flowchart LR
         WS["websocket-server\n(Express + ws, path /connections)"]
         DB[(MySQL\nSessions, Characters, ...)]
         API --> DB
-        WS -.-> API
+WS -.-> API
     end
 
     Admin["Admin browser\nmanage/sessions"]
 
-    CYD <-- "UART UID TOKE" --> Arduino
-    CYD -- "HTTP GET /api/characters/:id" --> API
-    CYD <-- "WebSocket: status, link ⇄ goTo" --> WS
+    Device <-- "UART UID TOKE" --> Arduino
+    Device -- "HTTP GET /api/characters/:id" --> API
+    Device <-- "WebSocket: status, link ⇄ goTo" --> WS
     Admin <-- "WebSocket: session list ⇄ goTo" --> WS
     Admin -- "HTTP (session/char mgmt)" --> API
 ```
 
 ---
 
-## 3. CYD firmware components
+## 3. AguesGuard firmware components
 
 ```mermaid
 flowchart TB
@@ -109,7 +111,7 @@ flowchart LR
     entry --> mid
     entry --> handler
     mid -- "upgrade on /connections" --> csock
-    csock -- "status / link / goTo" --> Clients(["Connected clients\n(CYD devices + admin browsers)"])
+    csock -- "status / link / goTo" --> Clients(["Connected clients\n(AguesGuard devices + admin browsers)"])
 ```
 
 **Discriminated connection types** (`connection-socket.ts`):
@@ -127,7 +129,7 @@ an EthernetPort icon for `'Web'` connections in the admin list.
 
 ```mermaid
 sequenceDiagram
-    participant D as CYD device
+    participant D as AguesGuard device
     participant WS as websocket-server\n(/connections)
     participant A as Admin browser\n(manage/sessions)
 
@@ -143,7 +145,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant D as CYD device
+    participant D as AguesGuard device
     participant API as SvelteKit /api/characters/:id
     participant DB as MySQL
 
@@ -163,7 +165,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant P as UART peripheral (reader)
-    participant D as CYD device
+    participant D as AguesGuard device
     participant WS as websocket-server
 
     P->>D: serial token (newline-delimited)
@@ -185,7 +187,7 @@ sequenceDiagram
 sequenceDiagram
     participant A as Admin browser\n(manage/sessions)
     participant WS as websocket-server
-    participant D as CYD device
+    participant D as AguesGuard device
 
     A->>WS: click "send virus" action
     WS-->>D: {"goTo": {"screen": "virus", "targetToken": "..."}}
@@ -197,7 +199,7 @@ sequenceDiagram
 
 ## 6. Data model touchpoints
 
-| Table | CYD reads | CYD writes | Notes |
+| Table | AguesGuard reads | AguesGuard writes | Notes |
 |---|---|---|---|
 | `Sessions` / `Session_Roles` | `sessionToken` is provisioned into `/config.json` on the SD card out-of-band | — (no direct writes) | Identity on the WS channel is self-asserted via `sessionToken` in the `status` message; there is no per-message auth check on the socket itself |
 | `Characters` / `Character_Versions` | via `GET /api/characters/:id` (`currentHp`, `maxHp`, `name`) | — | Fetched once at boot (when enabled) to populate the Home screen |
@@ -208,7 +210,7 @@ Full schema reference: `site/CLAUDE.md`. Full REST endpoint reference: `site/src
 
 ## 7. Known architecture gaps
 
-These are real, current gaps found while tracing the CYD ⇄ site integration — documented here
+These are real, current gaps found while tracing the AguesGuard ⇄ site integration — documented here
 so they're visible, not silently worked around.
 
 1. **Production entrypoint skips the WebSocket server.** `site/package.json` defines two start
@@ -216,7 +218,7 @@ so they're visible, not silently worked around.
    `start:websocket` (`node ./websocket-server`, the Express+`ws` wrapper that mounts
    `/connections`). `site/dockerfile`'s final stage runs `pnpm start`, and `site/railway.toml`
    does not override the command — so, as configured, the deployed container does **not**
-   expose `/connections`, meaning CYD devices and the `manage/sessions` live dashboard cannot
+   expose `/connections`, meaning AguesGuard devices and the `manage/sessions` live dashboard cannot
    connect in production.
 
 2. **Hardcoded local WebSocket URL.** `site/src/routes/manage/sessions/+page.svelte` connects

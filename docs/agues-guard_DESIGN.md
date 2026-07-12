@@ -126,15 +126,82 @@ re-renders. This is the device-side counterpart to the admin refresh.
 ### 2.4 Receive messages — *table exists; delivery to build*
 Players are **notified when a new message arrives**. The `Messages` table already
 exists (`Id`, `Sender` → Users (nullable, for system messages), `Recipient` →
-Users, `Subject`, `Message`, `Attachment` (JSON)) in
-`site/db/migrations/0001_initial_schema.sql`, but there is **no API, no site UI,
-and no notification path** on top of it. The push channel and a
-server-requested **Notification screen** on the device need building.
+Users (NOT NULL), `Subject` varchar(512), `Message` text, `Attachment` (JSON NOT
+NULL)) in `site/db/migrations/0001_initial_schema.sql`, but there is **no API, no
+site UI, and no notification path** on top of it. Building it touches the
+database, a new repo/API, and a new admin **send-message** manage page.
+
+#### 2.4.1 Data model
+The table is missing what delivery needs — a **read flag** (to drive the
+"notify on new / unread" behaviour) and a **timestamp** (to order the list).
+New migration `site/db/migrations/0018_message_delivery.sql` (after the
+`0017` implant-charges migration):
+
+```sql
+ALTER TABLE `Messages`
+  ADD COLUMN `CreatedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  ADD COLUMN `ReadAt`    datetime NULL DEFAULT NULL;   -- NULL = unread
+```
+
+`Attachment` is `JSON NOT NULL`, so the compose path defaults it to `[]` when the
+admin sends no attachment.
+
+#### 2.4.2 Repo / type
+New `site/src/lib/db/messages.repo.ts`, following the `implants.repo.ts` shape
+(a class + singleton export + a `Message` type + an `isMessage` guard):
+
+- `getForRecipient(userId)` — a player's messages, newest first, joining
+  `Sender` → `Users` for the sender name (system messages have a null sender).
+- `getUnreadCountForRecipient(userId)` — `COUNT(*) WHERE Recipient = ? AND ReadAt
+  IS NULL`, for the notification badge.
+- `markRead(id, userId)` — `UPDATE Messages SET ReadAt = NOW() WHERE Id = ? AND
+  Recipient = ?`.
+- `send({ sender, recipient, subject, message, attachment })` — insert one row
+  (`sender` null = system message).
+- `sendBulk(recipients, { subject, message, attachment })` — one message fanned
+  out to many players, using the multi-row `INSERT ... VALUES` + transaction
+  pattern already in `implantRepo.saveBulk`/`setCharacterAccess`.
+
+#### 2.4.3 API
+- **Admin send** — `POST /api/messages` (new `site/src/routes/api/messages/+server.ts`),
+  `authGuardForUser(token, ['admin'])`, body `{ recipients: number[], subject,
+  message, attachment? }` → `send`/`sendBulk`. Mirror the auth/validation style of
+  `site/src/routes/api/implants/[id]/+server.ts`.
+- **Player read** — `GET /api/my/messages` and `POST /api/my/messages/[id]/read`
+  (new, under `site/src/routes/api/my/**`), scoped to the session user like the
+  other `api/my` endpoints; plus `GET /api/my/messages/unread-count` for the
+  badge.
+
+#### 2.4.4 Manage page — admin sends messages to players
+New route `site/src/routes/manage/messages/`, mirroring `manage/emails` /
+`manage/implants`:
+
+- `+page.svelte` + `+page.server.ts` — list of sent messages (loaded via the
+  admin `GET /api/messages`), with the "add new" `CirclePlus` link above the
+  table (per the manage UI convention in `site/CLAUDE.md`) pointing at the
+  compose page.
+- `new/+page.svelte` — compose form that POSTs to `/api/messages`: a **recipient
+  multi-select**, a subject input, a message textarea, and an optional
+  attachment. Recipients are `Users` (`Messages.Recipient` → `Users`), so feed
+  the picker from `/api/users`; reuse the searchable multi-select pattern in
+  `site/src/lib/components/character-access-select.svelte`.
+- `message-form.svelte` — a form component like `implant-form.svelte` /
+  `email-template-form.svelte`, bound to the draft message.
+
+#### 2.4.5 Notification flow (device)
+On send, the server pushes a notification to the recipient's connected device
+over the realtime channel (today WS `/connections`, target MQTT — see
+[§3](#3-data-infrastructure)); the device shows the server-requested
+**Notification screen** (per [§4](#4-ui-overview)), then fetches the new message
+via `GET /api/my/messages`. The unread badge comes from
+`getUnreadCountForRecipient`.
 
 ### 2.5 View messages — *screen exists; data path to build*
 Messages are displayed by **sender and subject**. Firmware screen:
-`cyd/src/ui/ui_Messages.c`. Reads the same `Messages` table via the (to-be-built)
-messages API.
+`cyd/src/ui/ui_Messages.c`. It consumes the same delivery layer as
+[§2.4](#24-receive-messages--table-exists-delivery-to-build): lists the player's
+messages from `GET /api/my/messages` (sender name resolved via the `Sender` →
+`Users` join), and marks one read via `POST /api/my/messages/[id]/read`.
 
 ### 2.6 View prints (lives) — *needs building (new)*
 A screen, **reachable from the Home screen**, shows the player's current number
@@ -335,7 +402,7 @@ Full schema reference: `site/CLAUDE.md`. Full REST endpoint reference:
 | Expertise | `Expertise`, `Expertise_Groups`, `Character_Version_Expertise` (`Value`) | Exists (manage-only routes) |
 | Implants | `Implants`, `Character_Version_Implants` | Exists (manage-only routes) |
 | Implant charges | `Implants.MaxCharges` (catalog) + `Character_Version_Implants.ChargesRemaining` (instance) | Needs building — see [§2.3](#23-activate-implant-charges--needs-building-refactor) |
-| Messages | `Messages` (`Sender`, `Recipient`, `Subject`, `Message`, `Attachment`) | Table exists; API + delivery to build |
+| Messages | `Messages` (`Sender`, `Recipient`, `Subject`, `Message`, `Attachment`) + new `CreatedAt` / `ReadAt` | Table exists; repo + API + admin send page + delivery to build — see [§2.4](#24-receive-messages--table-exists-delivery-to-build) |
 | Prints (lives) | *(new print count on `Character_Versions` + divider pool)* | Needs building |
 | Session identity | `Sessions` / `Session_Roles` — `sessionToken` provisioned to the SD card out-of-band | Exists |
 
@@ -356,9 +423,14 @@ they're visible, not silently assumed.
    "max charges" field on the implant manage form, a device activation endpoint
    under `api/my/**`, and an admin refresh endpoint/control. Full design in
    [§2.3](#23-activate-implant-charges--needs-building-refactor).
-3. **Messages API + notifications.** The `Messages` table exists but has no API,
-   no site UI, and no push/notification path to drive the device Notification
-   screen.
+3. **Messages API + notifications.** The `Messages` table exists but has no
+   `CreatedAt`/`ReadAt` columns (migration `0018_message_delivery.sql`), no repo
+   (`messages.repo.ts`: `getForRecipient`, `getUnreadCountForRecipient`,
+   `markRead`, `send`, `sendBulk`), no API (admin `POST /api/messages`, player
+   `GET/POST /api/my/messages`), no **admin send-message manage page**
+   (`manage/messages/**`), and no push/notification path to drive the device
+   Notification screen. Full design in
+   [§2.4](#24-receive-messages--table-exists-delivery-to-build).
 4. **Prints (lives).** Entirely new: a print count on the character version, an
    API to read/decrement, a Home-accessible view+decrement screen, and a
    server-navigated divider screen for splitting a pool between players.
@@ -410,6 +482,8 @@ Carried-over integration gaps (still valid):
 | Admin live dashboard | `site/src/routes/manage/sessions/+page.svelte`, `site/src/lib/components/session-row.svelte` |
 | Expertise (admin) | `site/src/routes/manage/expertise/**`, `site/src/routes/api/expertise/**` |
 | Implants (admin) | `site/src/routes/manage/implants/**`, `site/src/routes/api/implants/**` |
+| Messages (admin send: to build) | `site/src/routes/manage/messages/**`, `site/src/routes/api/messages/**`, `site/src/routes/api/my/messages/**`, `site/src/lib/db/messages.repo.ts` |
+| Recipient/user list (reuse) | `site/src/routes/api/users/**`, `site/src/lib/components/character-access-select.svelte` |
 | Codex (player UI) | `site/src/routes/codex/**` |
 | Character REST endpoint | `site/src/routes/api/characters/[characterId]/+server.ts` |
 | Schema (incl. `Messages`) | `site/db/migrations/0001_initial_schema.sql`, `site/CLAUDE.md` |

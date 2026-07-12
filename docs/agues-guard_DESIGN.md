@@ -56,11 +56,72 @@ and prerequisite rules live in migrations `0009`/`0010`/`0014`. Firmware screen:
 `site/src/routes/manage/implants/**`.
 
 ### 2.3 Activate implant charges — *needs building (refactor)*
-Some implants have **charges** the player can activate. There is **no charge
-concept anywhere today** — this requires a refactor of both the site and the
-database: a charges column/table on the implant relation, an API to spend a
-charge, and device UI to trigger it. **Refresh (recharging) is handled by the
-admins**, not by the player.
+Some implants have **charges** the player can activate; **refresh (recharging) is
+handled by the admins**, not by the player. There is **no charge concept anywhere
+today**, so this touches the database, the implant repo/API, and the manage UI.
+
+#### 2.3.1 Data model
+Charges live at two levels, mirroring how implants already split catalog vs.
+per-character data:
+
+- **Catalog** — how many charges an implant *type* grants when full. Add to the
+  `Implants` table, alongside the existing `Cost`:
+  `MaxCharges INT NOT NULL DEFAULT 0` (`0` = not a charged implant).
+- **Instance** — the charges left on the copy a specific player carries. Add to
+  the per-character join `Character_Version_Implants`, alongside the existing
+  `Slot`: `ChargesRemaining INT NOT NULL DEFAULT 0`.
+
+New migration `site/db/migrations/0017_implant_charges.sql` (next free number —
+`0016` is already used twice), in the same style as `0010_implant_slots.sql`:
+
+```sql
+ALTER TABLE `Implants`
+  ADD COLUMN `MaxCharges` int NOT NULL DEFAULT 0;
+
+ALTER TABLE `Character_Version_Implants`
+  ADD COLUMN `ChargesRemaining` int NOT NULL DEFAULT 0;
+
+-- Backfill: existing implant instances start full
+UPDATE `Character_Version_Implants` cvi
+  JOIN `Implants` i ON i.Id = cvi.Implant
+  SET cvi.ChargesRemaining = i.MaxCharges;
+```
+
+#### 2.3.2 Repo / type touchpoints
+In `site/src/lib/db/implants.repo.ts`:
+
+- Add `maxCharges` to the `Implant` type and to the `isImplants` guard.
+- Select `i.MaxCharges as maxCharges` in every read (`getAll`,
+  `getAllForCharacter`, `getAllAccessibleToAll`, `getWithId`, `getWithIds`).
+- Add `MaxCharges` to the column lists/values in `create`, `edit`, and
+  `saveBulk`.
+- Add instance methods (here or on `character_version.repo.ts`):
+  `spendCharge(cviId)` — `UPDATE Character_Version_Implants SET ChargesRemaining
+  = ChargesRemaining - 1 WHERE Id = ? AND ChargesRemaining > 0`; and
+  `refreshCharges(...)` — reset `ChargesRemaining` to the implant's `MaxCharges`
+  for a character version (the admin refresh; reuse the `setCharacterAccess`
+  transaction pattern).
+
+#### 2.3.3 Manage-page changes
+- **Implant form** (`site/src/lib/components/implant-form.svelte`): add a
+  "max charges" number input bound to `implant.maxCharges`, next to the existing
+  cost field. It flows through the current save path unchanged — the `[id]` page's
+  `save()` already POSTs the whole `implant` to `POST /api/implants/[id]`, which
+  calls `implantRepo.save()`; once the type and repo carry `maxCharges`, no page
+  or endpoint wiring changes are needed. The `new` form reuses the same
+  component, so it gets the field for free.
+- **Admin refresh control**: because refresh is an admin action, add a "refresh
+  charges" control where admins manage a live player — the character-version view
+  under `site/src/routes/manage/characters/[id]/**` and/or the live
+  `manage/sessions` dashboard — calling a new admin endpoint (e.g.
+  `POST /api/characters/:id/implants/refresh`) that runs `refreshCharges` to
+  reset that character's implant instances to full.
+
+#### 2.3.4 Activation flow (device)
+On the device, activating a charge calls an authenticated runtime endpoint under
+`site/src/routes/api/my/**` (scoped to the player's own session) that runs
+`spendCharge`; the server pushes the updated count back so the Implants screen
+re-renders. This is the device-side counterpart to the admin refresh.
 
 ### 2.4 Receive messages — *table exists; delivery to build*
 Players are **notified when a new message arrives**. The `Messages` table already
@@ -273,7 +334,7 @@ Full schema reference: `site/CLAUDE.md`. Full REST endpoint reference:
 |---|---|---|
 | Expertise | `Expertise`, `Expertise_Groups`, `Character_Version_Expertise` (`Value`) | Exists (manage-only routes) |
 | Implants | `Implants`, `Character_Version_Implants` | Exists (manage-only routes) |
-| Implant charges | *(new column/table on the implant relation)* | Needs building |
+| Implant charges | `Implants.MaxCharges` (catalog) + `Character_Version_Implants.ChargesRemaining` (instance) | Needs building — see [§2.3](#23-activate-implant-charges--needs-building-refactor) |
 | Messages | `Messages` (`Sender`, `Recipient`, `Subject`, `Message`, `Attachment`) | Table exists; API + delivery to build |
 | Prints (lives) | *(new print count on `Character_Versions` + divider pool)* | Needs building |
 | Session identity | `Sessions` / `Session_Roles` — `sessionToken` provisioned to the SD card out-of-band | Exists |
@@ -289,9 +350,12 @@ they're visible, not silently assumed.
    broker, dashboard ⇄ broker over websockets). Today both use a single WebSocket
    `/connections` endpoint (`site/websocket-server/*`, `cyd/src/web-socket.cpp`);
    there is no MQTT broker, client, or config anywhere in the repo.
-2. **Implant charges.** No charge concept exists. Needs DB (charge count on the
-   implant relation), an API to spend a charge, device UI to activate, and
-   admin-driven refresh.
+2. **Implant charges.** No charge concept exists. Needs DB (`Implants.MaxCharges`
+   + `Character_Version_Implants.ChargesRemaining`, migration
+   `0017_implant_charges.sql`), repo `spendCharge`/`refreshCharges` methods, a
+   "max charges" field on the implant manage form, a device activation endpoint
+   under `api/my/**`, and an admin refresh endpoint/control. Full design in
+   [§2.3](#23-activate-implant-charges--needs-building-refactor).
 3. **Messages API + notifications.** The `Messages` table exists but has no API,
    no site UI, and no push/notification path to drive the device Notification
    screen.

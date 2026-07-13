@@ -264,60 +264,29 @@ Same session-scoped pattern as the implant activation flow
 ([§2.3.4](#234-activation-flow-device)).
 
 ### 2.7 Prints divider — *needs building (new, server-navigated)*
-The server can navigate the AguesGuard to a **divider screen** where a **pool of
-prints is divided between players**. Like the Download and Notification screens,
-it is shown **only on server request**, not from the Home menu. It reuses the
-server-navigated-screen mechanism that already exists in the codebase.
+The server can navigate the AguesGuard to a **divider screen** where a player
+divides their share of a **mission's print pool**. Like the Download and
+Notification screens, it is shown **only on server request**, not from the Home
+menu, and it reuses the server-navigated-screen mechanism that already exists in
+the codebase (add `'divider'` to the `Screens` enum / `Screen` type in
+`site/websocket-server/connection-socket.ts` and to the firmware's screen
+handling, the same way `virus` / `loot` / `loading` are defined).
 
-#### 2.7.1 Data model
-The divide is a live, multi-player split, so it is backed by two tables (new
-migration `site/db/migrations/0020_print_pools.sql`), following the
-`Implant_Character_Access` shape:
+The print pool itself is **not a standalone concept** — it only ever exists as
+part of a [Mission](#214-missions--needs-building-new). There is no admin-created
+ad hoc pool independent of a mission: the pool's total and each participant's
+share live directly on `Missions` / `Mission_Participants` (see
+[§2.14](#214-missions--needs-building-new) for the full data model, repo, and
+manage-page design). The screen is reached exclusively through mission
+registration ([§2.15](#215-arduino-uid-registry--needs-building-new)), not
+through a manual "create a pool" control on the live dashboard.
 
-```sql
-CREATE TABLE `Print_Pools` (
-  `Id`        int NOT NULL AUTO_INCREMENT,
-  `Event`     int NULL DEFAULT NULL,
-  `Total`     int NOT NULL,
-  `Status`    ENUM('open','closed') NOT NULL DEFAULT 'open',
-  `CreatedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`Id`),
-  CONSTRAINT `pp_event` FOREIGN KEY (`Event`) REFERENCES `Events`(`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE `Print_Pool_Allocations` (
-  `Pool`             int NOT NULL,
-  `CharacterVersion` int NOT NULL,
-  `Amount`           int NOT NULL DEFAULT 0,
-  PRIMARY KEY (`Pool`,`CharacterVersion`),
-  CONSTRAINT `ppa_pool` FOREIGN KEY (`Pool`) REFERENCES `Print_Pools`(`Id`),
-  CONSTRAINT `ppa_cv`   FOREIGN KEY (`CharacterVersion`) REFERENCES `Character_Versions`(`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-```
-
-#### 2.7.2 Repo
-New `site/src/lib/db/print_pool.repo.ts` (or methods on the char-version repo):
-`createPool(total, participants)`, `setAllocation(pool, cv, amount)`, and
-`closePool(pool)` — a transaction that adds each allocation to the player's
-`Character_Versions.PrintsRemaining` and sets `Status = 'closed'`. Reuse the
-transaction pattern from `implantRepo.setCharacterAccess`.
-
-#### 2.7.3 Manage-page (live dashboard)
-Because the divider is server-navigated, its control lives on the live dashboard
-`site/src/routes/manage/sessions/+page.svelte`, mirroring the existing
-`sendCommand("virus", token)` → `goTo: { targetToken, screen }` flow:
-
-- Add `'divider'` to the `Screens` enum / `Screen` type in
-  `site/websocket-server/connection-socket.ts` (and to the firmware's screen
-  handling), the same way `virus` / `loot` / `loading` are defined.
-- The admin creates a pool (total + participating players), then pushes
-  `goTo: { screen: 'divider' }` to those devices. On **close**, allocations apply
-  to each player's `PrintsRemaining` via `closePool`.
-
-#### 2.7.4 Device flow
-The divider is shown only on server request (per [§4](#4-ui-overview)); players
-adjust their share on the screen, the allocations save via API/MQTT, and closing
-the pool writes each share back to `PrintsRemaining` (feeding [§2.6](#26-view-prints-lives--needs-building-new)).
+Device flow: the divider is shown only on server request (per
+[§4](#4-ui-overview)); the player adjusts their share on the screen, the
+allocation saves via API/MQTT (`missionRepo.setAllocation`), and the admin
+closing the mission writes each participant's share back to `PrintsRemaining`
+(feeding [§2.6](#26-view-prints-lives--needs-building-new)) via
+`missionRepo.closeMission`.
 
 ### 2.8 Play download animations — *screen exists*
 Playing a download animation is one of the **actions the server commands** after
@@ -335,6 +304,13 @@ already exists in firmware (`cyd/src/uart-interface.cpp` →
 (`cyd/src/ui-loot.cpp`, `cyd/src/ui-virus.cpp`, `ui_LootScreen.c`,
 `ui_VirusScreen.c`) is superseded by this generic **UID → server action** model;
 those screens remain available for reuse as server-commanded actions.
+
+This section describes the relay mechanism that already exists; what a given
+UID actually *means* — which of the two available actions it triggers, and how
+the server resolves that — is specified concretely in
+[§2.14](#214-missions--needs-building-new) (mission registration) and
+[§2.15](#215-arduino-uid-registry--needs-building-new) (the UID→action
+registry that replaces today's legacy timer heuristic in `handleLink()`).
 
 ### 2.10 View battery level — *needs building*
 The CYD is powered by **two 18650 batteries**; the Home screen shows the current
@@ -357,6 +333,202 @@ plain connect only).
 Every player has a **personal SD card** with their information: personal session
 id, WiFi configuration, and images to load such as the expertise icons. The
 firmware reads `/config.json` at boot (`cyd/src/sd-reader.cpp` → globals).
+
+### 2.14 Missions — *needs building (new)*
+During the event, players go on **missions**. A mission is created and
+administered by an admin on a manage screen, and its **participant list is
+filled automatically** as players register for it — not entered by the admin.
+
+A mission has:
+- **Name** — free text, with a **"generate name"** option on the manage form.
+- **Print pool** — the number of prints available for the mission's
+  participants to divide among themselves.
+- **Player limit** — the maximum number of players who can register.
+- **Participants** — filled out on registration (see below), read-only on the
+  manage page.
+
+The print pool is **owned by the mission**, not a separate reusable concept —
+see [§2.7](#27-prints-divider--needs-building-new-server-navigated) for how a
+mission's pool feeds the divider screen.
+
+#### 2.14.1 Data model
+New migration `site/db/migrations/0021_missions.sql` (next free number after
+this doc's existing `0017`–`0019` reservations):
+
+```sql
+CREATE TABLE `Missions` (
+  `Id`          int NOT NULL AUTO_INCREMENT,
+  `Name`        varchar(255) NOT NULL,
+  `PlayerLimit` int NOT NULL,
+  `Status`      ENUM('open','closed') NOT NULL DEFAULT 'open',
+  `PrintPool`   int NOT NULL DEFAULT 0,
+  `CreatedAt`   datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `Mission_Participants` (
+  `Mission`          int NOT NULL,
+  `CharacterVersion` int NOT NULL,
+  `AvailablePrints`  int NOT NULL DEFAULT 0,
+  `RegisterAt`       datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Mission`,`CharacterVersion`),
+  CONSTRAINT `mp_mission` FOREIGN KEY (`Mission`) REFERENCES `Missions`(`Id`),
+  CONSTRAINT `mp_cv`      FOREIGN KEY (`CharacterVersion`) REFERENCES `Character_Versions`(`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+```
+
+`Missions.PrintPool` is the total to be divided; `Mission_Participants.
+AvailablePrints` is each registered character's current share (defaults `0`,
+adjusted live on the divider screen). The roster's primary key is `(Mission,
+CharacterVersion)` — a character can only register once per mission, and a
+re-scan of the same UID by the same character is idempotent. There is
+deliberately **no `User` column** on the roster — the participant's player is
+derived when needed via `CharacterVersion → Character → Owner → Users`, the
+same path `Characters.Owner` already uses elsewhere.
+
+#### 2.14.2 Repo
+New `site/src/lib/db/mission.repo.ts` (class + singleton, following
+`implants.repo.ts`):
+
+- `getAll()` / `getWithId(id)` — mission plus its full roster (joined out to
+  `Character_Versions → Characters → Users` for each participant's
+  player/character name).
+- `create({ name, printPool, playerLimit })` — plain insert, `Status = 'open'`.
+- `edit({ id, name, printPool, playerLimit, status })` — `printPool` is
+  editable only while `Status = 'open'`.
+- `delete(id)` — delete `Mission_Participants` rows, then the `Missions` row.
+- `registerParticipant({ missionId, characterVersionId })` — the registration
+  transaction driven by an Arduino scan (see
+  [§2.15](#215-arduino-uid-registry--needs-building-new)): `SELECT ... FOR
+  UPDATE` the `Missions` row (also checks `Status = 'open'`) to close the
+  player-limit race, count existing participants against `PlayerLimit`, then
+  `INSERT ... ON DUPLICATE KEY UPDATE` into `Mission_Participants`
+  (`AvailablePrints` defaults `0`).
+- `setAllocation({ missionId, characterVersionId, amount })` — used live by
+  the divider screen as a player adjusts their share; validates
+  `SUM(AvailablePrints)` across the mission's roster (with this update
+  applied) does not exceed `PrintPool` before committing, rejecting
+  otherwise.
+- `closeMission(missionId)` — transaction: for every `Mission_Participants`
+  row, add `AvailablePrints` onto that `CharacterVersion`'s
+  `Character_Versions.PrintsRemaining` (the counterpart to
+  [§2.6](#26-view-prints-lives--needs-building-new)'s `spendPrint`/
+  `refreshPrints`), then set `Missions.Status = 'closed'`.
+
+#### 2.14.3 Manage page
+New `site/src/routes/manage/missions/**`, mirroring `manage/implants/**`
+(list + `new/` + `[id]/`, a shared `mission-form.svelte` bound via
+`$bindable`, `CirclePlus`-add-new convention, PUT-create/POST-update/DELETE,
+per `site/CLAUDE.md`):
+
+- **Name** — text input, plus a "Generate" button that calls a new small
+  `GET /api/missions/generate-name` endpoint (backed by a new
+  `site/src/lib/utils/random-name.ts` adjective+noun picker, no persistence)
+  and fills the still-editable field.
+- **Player limit** — number input.
+- **Print pool** — number input (`PrintPool`), editable only while
+  `Status = 'open'`.
+- **Participants** (edit page only, **read-only**) — a table of
+  `Mission_Participants`: character/player name, `AvailablePrints`,
+  `RegisterAt`. Filled by registration, not admin-editable.
+- **Close mission** button (edit page) — calls `closeMission`, finalizing the
+  print-pool split, the same kind of admin-triggered finalize action as the
+  existing implant-charges refresh control
+  ([§2.3.3](#233-manage-page-changes)).
+
+New API routes, following `api/implants/**`'s `handleRequest` +
+`authGuardForUser` + GET-list/PUT-create/GET+POST+DELETE-by-id shape:
+`api/missions/+server.ts`, `api/missions/[id]/+server.ts`,
+`api/missions/generate-name/+server.ts`,
+`api/missions/[id]/close/+server.ts` (POST → `closeMission`), and
+`api/my/missions/[id]/allocation/+server.ts` (POST → `setAllocation`,
+session-scoped to the player's own `CharacterVersion`, used by the divider
+screen — see [§2.7](#27-prints-divider--needs-building-new-server-navigated)).
+
+### 2.15 Arduino UID registry — *needs building (new)*
+An admin manage page for **creating and assigning Arduino UIDs**. Each UID is
+assigned exactly **one of two actions**:
+
+1. **Go to download** — plays the existing download/animation screen
+   ([§2.8](#28-play-download-animations--screen-exists)); no extra data.
+2. **Register for mission** — must reference an existing
+   [Mission](#214-missions--needs-building-new). When a CYD scans a UID
+   assigned to this action, the server registers the scanning player into
+   that mission (respecting its player limit) and sends the CYD to the
+   **divider screen** to divide its share of the mission's print pool.
+
+#### 2.15.1 Data model
+Same migration `site/db/migrations/0021_missions.sql`:
+
+```sql
+CREATE TABLE `Arduino_Uids` (
+  `Uid`       varchar(255) NOT NULL,
+  `Name`      varchar(255) NOT NULL,
+  `Action`    ENUM('download','register_mission') NOT NULL DEFAULT 'download',
+  `Mission`   int NULL DEFAULT NULL,
+  `CreatedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Uid`),
+  CONSTRAINT `au_mission` FOREIGN KEY (`Mission`) REFERENCES `Missions`(`Id`),
+  CONSTRAINT `au_action_mission_pair` CHECK (
+    (`Action` = 'register_mission' AND `Mission` IS NOT NULL) OR
+    (`Action` = 'download' AND `Mission` IS NULL)
+  )
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+```
+
+`Uid` is the primary key (not an autoincrement int) — the UID string is the
+natural key, the same way `Sessions.Token` already works. The CHECK constraint
+is a backstop; the API layer validates the action/mission pairing too.
+
+#### 2.15.2 Repo
+New `site/src/lib/db/arduino_uid.repo.ts`: `getAll`, `getWithId`, `create`,
+`edit`, `delete`, and `resolveAction(uid)` — the hot-path lookup used by the
+server dispatch below, returning `{ action, missionId } | null` (`null` =
+unregistered UID).
+
+#### 2.15.3 Server-side dispatch
+This is the concrete server-side counterpart to
+[§2.9](#29-connect-to-arduinos-for-irl-interactions--partly-exists)'s "server
+responds with the action." `handleLink()` in
+`site/websocket-server/connection-socket.ts` today keys a process-lifetime
+`Map<string, Date>` timer heuristic purely off the raw token string, with no
+DB involvement (first sighting of a token → `'loading'`; a second sighting
+within a 3–4.8s window → `'loot'`). This is **replaced, not extended**:
+
+- On each `link` message, look up `linkTarget` (the Arduino's UID) via
+  `arduinoUidRepo.resolveAction()`.
+- If `action === 'download'`, send `{goTo: {targetToken: origin, screen:
+  'loading'}}` back to the *originating* CYD (`origin`).
+- If `action === 'register_mission'`, resolve the scanning player's identity
+  via `sessionRepo.getCredentials(origin)` → `eventRepo.getWithStatus('Live')`
+  → `eventParticipantsRepo.getUserParticipation({eventId, userId})` — all
+  three already exist in the repo layer today — call
+  `missionRepo.registerParticipant(...)`, then push `{goTo: {targetToken:
+  origin, screen: 'divider', data: {missionId}}}`, the first real use of the
+  already-declared-but-never-populated `goTo.data` field.
+- An unmatched UID, or a full/closed mission, is a documented gap (see
+  [§7](#7-what-needs-building)), not silently designed away.
+
+The legacy `links: Map<string, Date>` field and its timer heuristic are
+deleted entirely, not built on — consistent with
+[§2.9](#29-connect-to-arduinos-for-irl-interactions--partly-exists)'s existing
+note that the loot/virus mini-game is superseded, not extended, by the
+generic UID → server action model.
+
+#### 2.15.4 Manage page
+New `site/src/routes/manage/arduino-uids/**` + `arduino-uid-form.svelte`,
+following the same implants-page template:
+
+- **Uid** — text input (the admin transcribes it off the physical Arduino;
+  there is no on-device capture/scan flow — out of scope here).
+- **Name** — text input (admin-facing label, e.g. "Terminal 3 — comms room").
+- **Action** — select (`download` / `register_mission`).
+- **Mission** — a `<select>` of missions (fetched from `GET /api/missions`),
+  shown only when Action is `register_mission`.
+
+New API routes: `api/arduino-uids/+server.ts`,
+`api/arduino-uids/[uid]/+server.ts` (route param is the UID string, not
+numeric — reject empty/whitespace instead of `isNumberOrError`).
 
 ---
 
@@ -452,7 +624,8 @@ flowchart TB
 - **Notification screen** — displayed **only on request of the server** (new
   message received).
 - **Prints divider screen** — displayed **only on request of the server**, for
-  dividing a pool of prints between players.
+  dividing a mission's print pool among its registered players (reached via
+  mission registration, [§2.14](#214-missions--needs-building-new)).
 
 ---
 
@@ -507,7 +680,9 @@ Full schema reference: `site/CLAUDE.md`. Full REST endpoint reference:
 | Implant charges | `Implants.MaxCharges` (catalog) + `Character_Version_Implants.ChargesRemaining` (instance) | Needs building — see [§2.3](#23-activate-implant-charges--needs-building-refactor) |
 | Messages | `Messages` (`Sender`, `Recipient`, `Subject`, `Message`, `Attachment`) + new `CreatedAt` / `ReadAt` | Table exists; repo + API + admin send page + delivery to build — see [§2.4](#24-receive-messages--table-exists-delivery-to-build) |
 | Prints (lives) | `Character_Versions.MaxPrints` + `Character_Versions.PrintsRemaining` | Needs building — see [§2.6](#26-view-prints-lives--needs-building-new) |
-| Prints divider | `Print_Pools` + `Print_Pool_Allocations` (new) | Needs building — see [§2.7](#27-prints-divider--needs-building-new-server-navigated) |
+| Prints divider | `Missions.PrintPool` + `Mission_Participants.AvailablePrints` (mission-scoped, see below) | Needs building — see [§2.7](#27-prints-divider--needs-building-new-server-navigated) / [§2.14](#214-missions--needs-building-new) |
+| Missions | `Missions`, `Mission_Participants` | Needs building — see [§2.14](#214-missions--needs-building-new) |
+| Arduino UID registry | `Arduino_Uids` | Needs building — see [§2.15](#215-arduino-uid-registry--needs-building-new) |
 | Session identity | `Sessions` / `Session_Roles` — `sessionToken` provisioned to the SD card out-of-band | Exists |
 
 ---
@@ -541,11 +716,7 @@ they're visible, not silently assumed.
    `PrintsRemaining`, migration `0019_character_prints.sql`), repo
    `spendPrint`/`refreshPrints` methods, prints inputs + a refresh control on the
    character-version manage editor, and a device `POST /api/my/prints/decrement`
-   endpoint. The **divider** adds `Print_Pools` + `Print_Pool_Allocations`
-   (migration `0020_print_pools.sql`), a `print_pool.repo.ts` with
-   `createPool`/`setAllocation`/`closePool`, a new `'divider'` entry in the
-   `connection-socket.ts` `Screens` enum, and a create-pool + push control on the
-   `manage/sessions` dashboard. Full design in
+   endpoint. The **divider** is mission-scoped — see item 13 below and
    [§2.6](#26-view-prints-lives--needs-building-new) /
    [§2.7](#27-prints-divider--needs-building-new-server-navigated).
 5. **Battery level.** No ADC voltage read for the 2× 18650 pack (only a static
@@ -574,6 +745,32 @@ Carried-over integration gaps (still valid):
     `fetchCharacter()` (`cyd/src/character.cpp`) sends a plain `GET` with no auth
     header, but the character REST route is guarded by `authGuardForUser` (admin
     role).
+13. **Missions + Arduino UID registry.** Entirely new. Needs DB (`Missions`,
+    `Mission_Participants`, `Arduino_Uids`, migration `0021_missions.sql`), two
+    new repos (`mission.repo.ts`, `arduino_uid.repo.ts`), API routes under
+    `api/missions/**`, `api/my/missions/**`, and `api/arduino-uids/**`, two new
+    manage-page trees (`manage/missions/**`, `manage/arduino-uids/**`), and a
+    rewrite of `handleLink()` in `connection-socket.ts` to look up the UID
+    registry instead of the current in-memory timer heuristic. Full design in
+    [§2.14](#214-missions--needs-building-new) /
+    [§2.15](#215-arduino-uid-registry--needs-building-new). Caveats:
+    - Unregistered UID scans are silently ignored (logged server-side, no
+      device-visible error).
+    - No dedicated "registration failed" screen exists on-device yet for a
+      full/closed mission — falls back to re-sending `'loading'` with an
+      `error` field in `data` that firmware doesn't read yet.
+    - `goTo.data` and `targetToken`-based addressing are declared server-side
+      but not yet consumed/checked by firmware's `handleMessage()` — a
+      firmware-side prerequisite for the divider screen generally, first
+      actually needed by missions.
+    - Single-`Live`-event assumption when resolving which `CharacterVersion` a
+      scanning player is playing.
+    - `handleLink()` needs its first-ever DB access from
+      `site/websocket-server/*` (plain `mysql2/promise`, no SvelteKit-specific
+      imports, so repo files are importable by relative path, not the `$lib`
+      alias) — pair with items 1 (MQTT transport) and 10 (production
+      entrypoint skipping the realtime server) as the same subsystem's rough
+      edges.
 
 ---
 
@@ -599,7 +796,9 @@ Carried-over integration gaps (still valid):
 | Messages (admin send: to build) | `site/src/routes/manage/messages/**`, `site/src/routes/api/messages/**`, `site/src/routes/api/my/messages/**`, `site/src/lib/db/messages.repo.ts` |
 | Recipient/user list (reuse) | `site/src/routes/api/users/**`, `site/src/lib/components/character-access-select.svelte` |
 | Prints (lives: to build) | `site/src/lib/db/character_version.repo.ts` (`MaxPrints`/`PrintsRemaining`, `spendPrint`/`refreshPrints`), `site/src/routes/manage/characters/[id]/**`, `site/src/routes/api/my/prints/**` |
-| Prints divider (to build) | `site/src/lib/db/print_pool.repo.ts`, `site/src/routes/manage/sessions/+page.svelte`, `site/websocket-server/connection-socket.ts` (`Screens` enum) |
+| Prints divider (to build) | `site/src/lib/db/mission.repo.ts` (`setAllocation`/`closeMission`), `site/websocket-server/connection-socket.ts` (`Screens` enum) — mission-scoped, see [§2.14](#214-missions--needs-building-new) |
+| Missions (to build) | `site/db/migrations/0021_missions.sql`, `site/src/lib/db/mission.repo.ts`, `site/src/lib/utils/random-name.ts`, `site/src/routes/manage/missions/**`, `site/src/routes/api/missions/**`, `site/src/routes/api/my/missions/**` |
+| Arduino UID registry (to build) | `site/src/lib/db/arduino_uid.repo.ts`, `site/src/routes/manage/arduino-uids/**`, `site/src/routes/api/arduino-uids/**`, `site/websocket-server/connection-socket.ts` (`handleLink()` — needs DB access, first use in this subsystem) |
 | Codex (player UI) | `site/src/routes/codex/**` |
 | Character REST endpoint | `site/src/routes/api/characters/[characterId]/+server.ts` |
 | Schema (incl. `Messages`) | `site/db/migrations/0001_initial_schema.sql`, `site/CLAUDE.md` |

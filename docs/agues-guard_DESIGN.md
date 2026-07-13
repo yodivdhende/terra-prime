@@ -163,10 +163,12 @@ New `site/src/lib/db/messages.repo.ts`, following the `implants.repo.ts` shape
   pattern already in `implantRepo.saveBulk`/`setCharacterAccess`.
 
 #### 2.4.3 API
-- **Admin send** — `POST /api/messages` (new `site/src/routes/api/messages/+server.ts`),
+- **Admin send** — `PUT /api/messages` (new `site/src/routes/api/messages/+server.ts`),
   `authGuardForUser(token, ['admin'])`, body `{ recipients: number[], subject,
   message, attachment? }` → `send`/`sendBulk`. Mirror the auth/validation style of
-  `site/src/routes/api/implants/[id]/+server.ts`.
+  `site/src/routes/api/implants/+server.ts` (PUT = create, per the
+  PUT-create/POST-update/DELETE convention in
+  [§2.14.3](#2143-manage-page)).
 - **Player read** — `GET /api/my/messages` and `POST /api/my/messages/[id]/read`
   (new, under `site/src/routes/api/my/**`), scoped to the session user like the
   other `api/my` endpoints; plus `GET /api/my/messages/unread-count` for the
@@ -180,7 +182,7 @@ New route `site/src/routes/manage/messages/`, mirroring `manage/emails` /
   admin `GET /api/messages`), with the "add new" `CirclePlus` link above the
   table (per the manage UI convention in `site/CLAUDE.md`) pointing at the
   compose page.
-- `new/+page.svelte` — compose form that POSTs to `/api/messages`: a **recipient
+- `new/+page.svelte` — compose form that PUTs to `/api/messages`: a **recipient
   multi-select**, a subject input, a message textarea, and an optional
   attachment. Recipients are `Users` (`Messages.Recipient` → `Users`), so feed
   the picker from `/api/users`; reuse the searchable multi-select pattern in
@@ -278,8 +280,10 @@ ad hoc pool independent of a mission: the pool's total and each participant's
 share live directly on `Missions` / `Mission_Participants` (see
 [§2.14](#214-missions--needs-building-new) for the full data model, repo, and
 manage-page design). The screen is reached exclusively through mission
-registration ([§2.15](#215-arduino-uid-registry--needs-building-new)), not
-through a manual "create a pool" control on the live dashboard.
+registration ([§2.14.2](#2142-repo)), triggered by an Arduino UID scan that
+resolves to the `register_mission` action
+([§2.15](#215-arduino-uid-registry--needs-building-new)), not through a
+manual "create a pool" control on the live dashboard.
 
 Device flow: the divider is shown only on server request (per
 [§4](#4-ui-overview)); the player adjusts their share on the screen, the
@@ -363,7 +367,7 @@ see [§2.7](#27-prints-divider--needs-building-new-server-navigated) for how a
 mission's pool feeds the divider screen.
 
 #### 2.14.1 Data model
-New migration `site/db/migrations/0021_missions.sql` (next free number after
+New migration `site/db/migrations/0020_missions.sql` (next free number after
 this doc's existing `0017`–`0019` reservations):
 
 ```sql
@@ -469,7 +473,7 @@ assigned exactly **one of two actions**:
    **divider screen** to divide its share of the mission's print pool.
 
 #### 2.15.1 Data model
-Same migration `site/db/migrations/0021_missions.sql`:
+Same migration `site/db/migrations/0020_missions.sql`:
 
 ```sql
 CREATE TABLE `Arduino_Uids` (
@@ -814,7 +818,7 @@ they're visible, not silently assumed.
 3. **Messages API + notifications.** The `Messages` table exists but has no
    `CreatedAt`/`ReadAt` columns (migration `0018_message_delivery.sql`), no repo
    (`messages.repo.ts`: `getForRecipient`, `getUnreadCountForRecipient`,
-   `markRead`, `send`, `sendBulk`), no API (admin `POST /api/messages`, player
+   `markRead`, `send`, `sendBulk`), no API (admin `PUT /api/messages`, player
    `GET/POST /api/my/messages`), no **admin send-message manage page**
    (`manage/messages/**`), and no push/notification path to drive the device
    Notification screen. Full design in
@@ -839,23 +843,29 @@ they're visible, not silently assumed.
 9. **Firmware "Skills" → "Expertise" rename.** The site renamed skills to
    expertise (`0013_rename_skills_to_expertise.sql`); the firmware screen is
    still `ui_Skills.c`.
+10. **Legacy `ui_Items.c` screen to remove.** Items are **physical props** at
+    the event, not something the CYD displays — there is no `Items` entry in
+    the feature list ([§2](#2-feature-list)) or the Home menu ([§4](#4-ui-overview))
+    on purpose. The firmware still carries a SquareLine-generated
+    `cyd/src/ui/ui_Items.c` screen from before that decision; it is dead
+    weight and should be deleted in the firmware rework, not wired up.
 
 Carried-over integration gaps (still valid):
 
-10. **Production entrypoint skips the realtime server.** `site/package.json`
+11. **Production entrypoint skips the realtime server.** `site/package.json`
     defines `start` (plain adapter-node) and `start:websocket` (the Express+`ws`
     wrapper that mounts `/connections`). `site/dockerfile` runs `pnpm start` and
     `site/railway.toml` does not override it — so the deployed container does not
     expose the realtime endpoint.
-11. **Hardcoded local WebSocket URL.**
+12. **Hardcoded local WebSocket URL.**
     `site/src/routes/manage/sessions/+page.svelte` connects to a hardcoded
     `ws://localhost:5173/connections` (not the deployed domain, not `wss://`).
-12. **Unauthenticated firmware request against a gated endpoint.**
+13. **Unauthenticated firmware request against a gated endpoint.**
     `fetchCharacter()` (`cyd/src/character.cpp`) sends a plain `GET` with no auth
     header, but the character REST route is guarded by `authGuardForUser` (admin
     role).
-13. **Missions + Arduino UID registry.** Entirely new. Needs DB (`Missions`,
-    `Mission_Participants`, `Arduino_Uids`, migration `0021_missions.sql`), two
+14. **Missions + Arduino UID registry.** Entirely new. Needs DB (`Missions`,
+    `Mission_Participants`, `Arduino_Uids`, migration `0020_missions.sql`), two
     new repos (`mission.repo.ts`, `arduino_uid.repo.ts`), API routes under
     `api/missions/**`, `api/my/missions/**`, and `api/arduino-uids/**`, two new
     manage-page trees (`manage/missions/**`, `manage/arduino-uids/**`), and a
@@ -877,7 +887,7 @@ Carried-over integration gaps (still valid):
     - `handleLink()` needs its first-ever DB access from
       `site/websocket-server/*` (plain `mysql2/promise`, no SvelteKit-specific
       imports, so repo files are importable by relative path, not the `$lib`
-      alias) — pair with items 1 (MQTT transport) and 10 (production
+      alias) — pair with items 1 (MQTT transport) and 11 (production
       entrypoint skipping the realtime server) as the same subsystem's rough
       edges.
 
@@ -896,7 +906,7 @@ Carried-over integration gaps (still valid):
 | Arduino UID input (UART) | `cyd/src/uart-interface.h`, `cyd/src/uart-interface.cpp` |
 | LVGL/display glue | `cyd/src/ui-implementation.h`, `cyd/src/ui-implementation.cpp` |
 | Server-action screen transitions | `cyd/src/ui-downloading.cpp`, `cyd/src/ui-loot.cpp`, `cyd/src/ui-virus.cpp` |
-| SquareLine-generated screens | `cyd/src/ui/*` (Home, Skills→Expertise, Implants, Messages, Items, DownloadScreen, LootScreen, VirusScreen) |
+| SquareLine-generated screens | `cyd/src/ui/*` (Home, Skills→Expertise, Implants, Messages, DownloadScreen, LootScreen, VirusScreen) |
 | Firmware architecture notes | `cyd/CLAUDE.md` |
 | Realtime server (current WS) | `site/websocket-server/index.ts`, `socket-server.ts`, `connection-socket.ts` |
 | Admin live dashboard | `site/src/routes/manage/sessions/+page.svelte`, `site/src/lib/components/session-row.svelte` |
@@ -906,7 +916,7 @@ Carried-over integration gaps (still valid):
 | Recipient/user list (reuse) | `site/src/routes/api/users/**`, `site/src/lib/components/character-access-select.svelte` |
 | Prints (lives: to build) | `site/src/lib/db/character_version.repo.ts` (`MaxPrints`/`PrintsRemaining`, `spendPrint`/`refreshPrints`), `site/src/routes/manage/characters/[id]/**`, `site/src/routes/api/my/prints/**` |
 | Prints divider (to build) | `site/src/lib/db/mission.repo.ts` (`setAllocation`/`closeMission`), `site/websocket-server/connection-socket.ts` (`Screens` enum) — mission-scoped, see [§2.14](#214-missions--needs-building-new) |
-| Missions (to build) | `site/db/migrations/0021_missions.sql`, `site/src/lib/db/mission.repo.ts`, `site/src/lib/utils/random-name.ts`, `site/src/routes/manage/missions/**`, `site/src/routes/api/missions/**`, `site/src/routes/api/my/missions/**` |
+| Missions (to build) | `site/db/migrations/0020_missions.sql`, `site/src/lib/db/mission.repo.ts`, `site/src/lib/utils/random-name.ts`, `site/src/routes/manage/missions/**`, `site/src/routes/api/missions/**`, `site/src/routes/api/my/missions/**` |
 | Arduino UID registry (to build) | `site/src/lib/db/arduino_uid.repo.ts`, `site/src/routes/manage/arduino-uids/**`, `site/src/routes/api/arduino-uids/**`, `site/websocket-server/connection-socket.ts` (`handleLink()` — needs DB access, first use in this subsystem) |
 | Arduino UID default sketch + provisioning (to build) | `arduino-nano-uid/arduino-nano-uid.ino` — see [§2.15.5](#2155-default-sketch-flashed-once-identical-on-every-uid-arduino), [§2.15.6](#2156-programming-flow-provision-uid-over-web-serial) |
 | Codex (player UI) | `site/src/routes/codex/**` |

@@ -206,16 +206,118 @@ messages from `GET /api/my/messages` (sender name resolved via the `Sender` →
 ### 2.6 View prints (lives) — *needs building (new)*
 A screen, **reachable from the Home screen**, shows the player's current number
 of **prints** (lives), where the player can **remove** (decrement) their own
-prints. This is an **entirely new** concept — no prints/lives data exists in the
-DB, site, or firmware today. It needs a print count on the character version, an
-API to read and decrement it, and a firmware screen. See also the
-server-navigated divider screen in [§2.7](#27-prints-divider--needs-building-new-server-navigated)
-and the [UI overview](#4-ui-overview).
+prints. This is an **entirely new** concept — no prints/lives data exists today —
+so it mirrors the implant-charges shape ([§2.3](#23-activate-implant-charges--needs-building-refactor)):
+a config value plus a running counter, an admin refresh, and a device
+decrement. The **divider** ([§2.7](#27-prints-divider--needs-building-new-server-navigated))
+builds on the same counter.
+
+#### 2.6.1 Data model
+Prints attach to the per-event snapshot `Character_Versions`, with the same
+config-vs-runtime split implants use (`MaxCharges`/`ChargesRemaining`) and the
+same precedent as `Characters.ImplantLimit`:
+
+- **Config** — `Character_Versions.MaxPrints INT NOT NULL DEFAULT 0` (starting
+  lives for this version).
+- **Runtime** — `Character_Versions.PrintsRemaining INT NOT NULL DEFAULT 0` (what
+  the player has left).
+
+New migration `site/db/migrations/0019_character_prints.sql` (after the `0018`
+messages migration):
+
+```sql
+ALTER TABLE `Character_Versions`
+  ADD COLUMN `MaxPrints`       int NOT NULL DEFAULT 0,
+  ADD COLUMN `PrintsRemaining` int NOT NULL DEFAULT 0;
+```
+
+> If prints must reset **per event** (the same character version played at two
+> events), move `PrintsRemaining` onto `Event_Participants` (`Event`, `User`,
+> `CharacterVersion`) instead; the rest of the design is unchanged.
+
+#### 2.6.2 Repo / type
+In `site/src/lib/db/character_version.repo.ts`:
+
+- Add `maxPrints` / `printsRemaining` to the `CharacterVersionBare` type; select
+  them in the version reads; write them in `create` / `update`.
+- Add `spendPrint(versionId)` — `UPDATE Character_Versions SET PrintsRemaining =
+  PrintsRemaining - 1 WHERE Id = ? AND PrintsRemaining > 0`; and
+  `refreshPrints(versionId)` — reset `PrintsRemaining` to `MaxPrints` (the admin
+  refresh). These are the prints counterparts to `spendCharge` /
+  `refreshCharges`.
+
+#### 2.6.3 Manage-page changes
+- Add **prints** inputs (max + current) to the character-version editor reached
+  from `site/src/routes/manage/characters/[id]/**` (and
+  `manage/characters/versions`), alongside the existing expertise / implants /
+  items editing, flowing through the same save path.
+- Add an admin **refresh prints** control (reset remaining → max) on the same
+  character/session management surface as the implant-charges refresh
+  ([§2.3.3](#233-manage-page-changes)).
+
+#### 2.6.4 Device flow
+The Home-accessible Prints screen reads the count via an authenticated
+`site/src/routes/api/my/**` endpoint (scoped to the player's own session);
+"remove" decrements via `POST /api/my/prints/decrement`, which runs
+`spendPrint`; the server pushes the updated count back so the screen re-renders.
+Same session-scoped pattern as the implant activation flow
+([§2.3.4](#234-activation-flow-device)).
 
 ### 2.7 Prints divider — *needs building (new, server-navigated)*
 The server can navigate the AguesGuard to a **divider screen** where a **pool of
 prints is divided between players**. Like the Download and Notification screens,
-it is shown **only on server request**, not from the Home menu.
+it is shown **only on server request**, not from the Home menu. It reuses the
+server-navigated-screen mechanism that already exists in the codebase.
+
+#### 2.7.1 Data model
+The divide is a live, multi-player split, so it is backed by two tables (new
+migration `site/db/migrations/0020_print_pools.sql`), following the
+`Implant_Character_Access` shape:
+
+```sql
+CREATE TABLE `Print_Pools` (
+  `Id`        int NOT NULL AUTO_INCREMENT,
+  `Event`     int NULL DEFAULT NULL,
+  `Total`     int NOT NULL,
+  `Status`    ENUM('open','closed') NOT NULL DEFAULT 'open',
+  `CreatedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Id`),
+  CONSTRAINT `pp_event` FOREIGN KEY (`Event`) REFERENCES `Events`(`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `Print_Pool_Allocations` (
+  `Pool`             int NOT NULL,
+  `CharacterVersion` int NOT NULL,
+  `Amount`           int NOT NULL DEFAULT 0,
+  PRIMARY KEY (`Pool`,`CharacterVersion`),
+  CONSTRAINT `ppa_pool` FOREIGN KEY (`Pool`) REFERENCES `Print_Pools`(`Id`),
+  CONSTRAINT `ppa_cv`   FOREIGN KEY (`CharacterVersion`) REFERENCES `Character_Versions`(`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+```
+
+#### 2.7.2 Repo
+New `site/src/lib/db/print_pool.repo.ts` (or methods on the char-version repo):
+`createPool(total, participants)`, `setAllocation(pool, cv, amount)`, and
+`closePool(pool)` — a transaction that adds each allocation to the player's
+`Character_Versions.PrintsRemaining` and sets `Status = 'closed'`. Reuse the
+transaction pattern from `implantRepo.setCharacterAccess`.
+
+#### 2.7.3 Manage-page (live dashboard)
+Because the divider is server-navigated, its control lives on the live dashboard
+`site/src/routes/manage/sessions/+page.svelte`, mirroring the existing
+`sendCommand("virus", token)` → `goTo: { targetToken, screen }` flow:
+
+- Add `'divider'` to the `Screens` enum / `Screen` type in
+  `site/websocket-server/connection-socket.ts` (and to the firmware's screen
+  handling), the same way `virus` / `loot` / `loading` are defined.
+- The admin creates a pool (total + participating players), then pushes
+  `goTo: { screen: 'divider' }` to those devices. On **close**, allocations apply
+  to each player's `PrintsRemaining` via `closePool`.
+
+#### 2.7.4 Device flow
+The divider is shown only on server request (per [§4](#4-ui-overview)); players
+adjust their share on the screen, the allocations save via API/MQTT, and closing
+the pool writes each share back to `PrintsRemaining` (feeding [§2.6](#26-view-prints-lives--needs-building-new)).
 
 ### 2.8 Play download animations — *screen exists*
 Playing a download animation is one of the **actions the server commands** after
@@ -404,7 +506,8 @@ Full schema reference: `site/CLAUDE.md`. Full REST endpoint reference:
 | Implants | `Implants`, `Character_Version_Implants` | Exists (manage-only routes) |
 | Implant charges | `Implants.MaxCharges` (catalog) + `Character_Version_Implants.ChargesRemaining` (instance) | Needs building — see [§2.3](#23-activate-implant-charges--needs-building-refactor) |
 | Messages | `Messages` (`Sender`, `Recipient`, `Subject`, `Message`, `Attachment`) + new `CreatedAt` / `ReadAt` | Table exists; repo + API + admin send page + delivery to build — see [§2.4](#24-receive-messages--table-exists-delivery-to-build) |
-| Prints (lives) | *(new print count on `Character_Versions` + divider pool)* | Needs building |
+| Prints (lives) | `Character_Versions.MaxPrints` + `Character_Versions.PrintsRemaining` | Needs building — see [§2.6](#26-view-prints-lives--needs-building-new) |
+| Prints divider | `Print_Pools` + `Print_Pool_Allocations` (new) | Needs building — see [§2.7](#27-prints-divider--needs-building-new-server-navigated) |
 | Session identity | `Sessions` / `Session_Roles` — `sessionToken` provisioned to the SD card out-of-band | Exists |
 
 ---
@@ -434,9 +537,17 @@ they're visible, not silently assumed.
    (`manage/messages/**`), and no push/notification path to drive the device
    Notification screen. Full design in
    [§2.4](#24-receive-messages--table-exists-delivery-to-build).
-4. **Prints (lives).** Entirely new: a print count on the character version, an
-   API to read/decrement, a Home-accessible view+decrement screen, and a
-   server-navigated divider screen for splitting a pool between players.
+4. **Prints (lives).** Entirely new. Needs DB (`Character_Versions.MaxPrints` +
+   `PrintsRemaining`, migration `0019_character_prints.sql`), repo
+   `spendPrint`/`refreshPrints` methods, prints inputs + a refresh control on the
+   character-version manage editor, and a device `POST /api/my/prints/decrement`
+   endpoint. The **divider** adds `Print_Pools` + `Print_Pool_Allocations`
+   (migration `0020_print_pools.sql`), a `print_pool.repo.ts` with
+   `createPool`/`setAllocation`/`closePool`, a new `'divider'` entry in the
+   `connection-socket.ts` `Screens` enum, and a create-pool + push control on the
+   `manage/sessions` dashboard. Full design in
+   [§2.6](#26-view-prints-lives--needs-building-new) /
+   [§2.7](#27-prints-divider--needs-building-new-server-navigated).
 5. **Battery level.** No ADC voltage read for the 2× 18650 pack (only a static
    `battery-full.png` asset).
 6. **Power-save + wake-on-touch.** No ESP deep/light-sleep handling in firmware.
@@ -487,6 +598,8 @@ Carried-over integration gaps (still valid):
 | Implants (admin) | `site/src/routes/manage/implants/**`, `site/src/routes/api/implants/**` |
 | Messages (admin send: to build) | `site/src/routes/manage/messages/**`, `site/src/routes/api/messages/**`, `site/src/routes/api/my/messages/**`, `site/src/lib/db/messages.repo.ts` |
 | Recipient/user list (reuse) | `site/src/routes/api/users/**`, `site/src/lib/components/character-access-select.svelte` |
+| Prints (lives: to build) | `site/src/lib/db/character_version.repo.ts` (`MaxPrints`/`PrintsRemaining`, `spendPrint`/`refreshPrints`), `site/src/routes/manage/characters/[id]/**`, `site/src/routes/api/my/prints/**` |
+| Prints divider (to build) | `site/src/lib/db/print_pool.repo.ts`, `site/src/routes/manage/sessions/+page.svelte`, `site/websocket-server/connection-socket.ts` (`Screens` enum) |
 | Codex (player UI) | `site/src/routes/codex/**` |
 | Character REST endpoint | `site/src/routes/api/characters/[characterId]/+server.ts` |
 | Schema (incl. `Messages`) | `site/db/migrations/0001_initial_schema.sql`, `site/CLAUDE.md` |

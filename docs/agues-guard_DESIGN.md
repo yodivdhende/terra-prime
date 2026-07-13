@@ -530,48 +530,101 @@ New API routes: `api/arduino-uids/+server.ts`,
 `api/arduino-uids/[uid]/+server.ts` (route param is the UID string, not
 numeric — reject empty/whitespace instead of `isNumberOrError`).
 
-#### 2.15.5 Programming flow: generate sketch + copy to clipboard
-The physical UID Arduino just needs to loop `Serial.println(uid)` — it has no
-other job (see [`cyd/src/uart-interface.cpp`](../cyd/src/uart-interface.cpp):
-the CYD reads a newline-delimited token over UART and calls `sendLink()`). To
-save the admin from hand-editing a `.ino` file per device, the manage page
-generates that sketch client-side and puts it on the clipboard:
+#### 2.15.5 Default sketch (flashed once, identical on every UID Arduino)
+The UID hardware is standardized on an **Arduino Nano**. Every Nano used as a
+UID tag runs the *same* sketch, flashed once via the Arduino IDE — the UID
+itself is not compile-time data, it's provisioned afterwards (see
+[§2.15.6](#2156-programming-flow-provision-uid-over-web-serial)). The sketch
+has two jobs:
 
-- Each row in `manage/arduino-uids` gets a **"Copy Arduino code"** button next
-  to the existing edit/delete actions.
-- Clicking it fills a small template — a fixed sketch body with the row's
-  `Uid` substituted into a `const char* UID = "...";` line — and writes the
-  result to the clipboard via `navigator.clipboard.writeText()`. No server
-  round-trip; the template is static and the UID is already on the page.
-- Template shape:
+1. **Normal operation** — read the UID out of EEPROM at boot and loop
+   `Serial.println(uid)`, same wire format the CYD already expects (see
+   [`cyd/src/uart-interface.cpp`](../cyd/src/uart-interface.cpp): newline-
+   delimited token over UART → `sendLink()`).
+2. **Provisioning** — listen for a `SET_UID:<uid>\n` command on the same
+   serial line and, on receipt, write `<uid>` into EEPROM and reply
+   `OK:<uid>\n`. This is how the manage page assigns a UID to a blank/
+   reprogrammed board without a re-flash.
 
-  ```cpp
-  const char* UID = "{uid}";
+```cpp
+#include <EEPROM.h>
 
-  void setup() {
-    Serial.begin(115200);
+#define UID_ADDR 0
+#define UID_MAX_LEN 64
+
+char uid[UID_MAX_LEN + 1];
+String incoming = "";
+
+void loadUid() {
+  for (int i = 0; i < UID_MAX_LEN; i++) {
+    uid[i] = EEPROM.read(UID_ADDR + i);
+    if (uid[i] == '\0') break;
+  }
+  uid[UID_MAX_LEN] = '\0';
+}
+
+void saveUid(const String &newUid) {
+  int len = min((int)newUid.length(), UID_MAX_LEN);
+  for (int i = 0; i < len; i++) EEPROM.write(UID_ADDR + i, newUid[i]);
+  EEPROM.write(UID_ADDR + len, '\0');
+  loadUid();
+}
+
+void setup() {
+  Serial.begin(115200);
+  loadUid();
+}
+
+void loop() {
+  while (Serial.available()) {
+    char c = Serial.read();
+    if (c == '\n') {
+      if (incoming.startsWith("SET_UID:")) {
+        saveUid(incoming.substring(8));
+        Serial.print("OK:");
+        Serial.println(uid);
+      }
+      incoming = "";
+    } else if (isAscii(c)) {
+      incoming += c;
+    }
   }
 
-  void loop() {
-    Serial.println(UID);
-    delay(1000);
+  if (uid[0] != '\0') {
+    Serial.println(uid);
   }
-  ```
+  delay(1000);
+}
+```
 
-- Admin flow: click **Copy Arduino code** → paste into the Arduino IDE (or
-  PlatformIO) → select the target board/port → upload. This reuses the
-  Arduino IDE the admin already has installed instead of building tooling to
-  replace it.
-- **Out of scope for this doc:** a browser-based uploader (e.g. Web Serial
-  API) that flashes the sketch directly, without going through the Arduino
-  IDE, was considered but rejected for the first pass — it needs
-  board-specific programmer/bootloader handling (avrdude protocol, baud
-  reset-to-bootloader quirks per board) that varies by which Arduino model is
-  used for the UID tags, which isn't pinned down yet. If the UID hardware is
-  standardized on one board, a "Program via USB" button using Web Serial is a
-  reasonable follow-up, replacing this section's copy-paste step with a
-  one-click flash — but it doesn't change the sketch template above, only how
-  it gets onto the device.
+An unprovisioned board (fresh EEPROM, all `0xFF`) reads back as an empty
+string and stays silent on the normal-operation line until it receives its
+first `SET_UID:` — it won't spam the CYD with garbage tokens.
+
+This sketch lives in the repo (new `arduino-nano-uid/arduino-nano-uid.ino`,
+alongside a short flashing README) so it can be re-flashed identically across
+the whole batch of UID boards; it is not generated or templated per device.
+
+#### 2.15.6 Programming flow: provision UID over Web Serial
+The manage page assigns a UID to a physically-connected Nano without leaving
+the browser, using the [Web Serial API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API)
+(Chrome/Edge desktop only — no Firefox/Safari, no mobile). This talks to the
+sketch's own serial protocol above, not the AVR bootloader — no STK500, no
+compiler, no per-UID binary.
+
+- Each row (and the create form) in `manage/arduino-uids` gets a **"Program
+  via USB"** button next to the existing edit/delete actions.
+- Clicking it calls `navigator.serial.requestPort()` (prompts the admin to
+  pick the Nano's port — first connection needs the OS's CH340/FTDI driver
+  already installed, same as any Arduino IDE upload), opens it at 115200
+  baud, writes `SET_UID:{uid}\n`, and waits for the `OK:{uid}\n` reply
+  (timeout → error toast, e.g. wrong board or driver missing).
+- No server round-trip and no new API route — the UID is already on the page,
+  and the write goes straight from the browser to the device over USB.
+- Admin flow: plug in a Nano already running the default sketch → open
+  `manage/arduino-uids` → click **Program via USB** on the UID row → pick the
+  port when prompted → done. Re-running it on the same board overwrites the
+  previously-provisioned UID.
 
 ---
 
@@ -842,6 +895,7 @@ Carried-over integration gaps (still valid):
 | Prints divider (to build) | `site/src/lib/db/mission.repo.ts` (`setAllocation`/`closeMission`), `site/websocket-server/connection-socket.ts` (`Screens` enum) — mission-scoped, see [§2.14](#214-missions--needs-building-new) |
 | Missions (to build) | `site/db/migrations/0021_missions.sql`, `site/src/lib/db/mission.repo.ts`, `site/src/lib/utils/random-name.ts`, `site/src/routes/manage/missions/**`, `site/src/routes/api/missions/**`, `site/src/routes/api/my/missions/**` |
 | Arduino UID registry (to build) | `site/src/lib/db/arduino_uid.repo.ts`, `site/src/routes/manage/arduino-uids/**`, `site/src/routes/api/arduino-uids/**`, `site/websocket-server/connection-socket.ts` (`handleLink()` — needs DB access, first use in this subsystem) |
+| Arduino UID default sketch + provisioning (to build) | `arduino-nano-uid/arduino-nano-uid.ino` — see [§2.15.5](#2155-default-sketch-flashed-once-identical-on-every-uid-arduino), [§2.15.6](#2156-programming-flow-provision-uid-over-web-serial) |
 | Codex (player UI) | `site/src/routes/codex/**` |
 | Character REST endpoint | `site/src/routes/api/characters/[characterId]/+server.ts` |
 | Schema (incl. `Messages`) | `site/db/migrations/0001_initial_schema.sql`, `site/CLAUDE.md` |

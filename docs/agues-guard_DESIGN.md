@@ -530,6 +530,49 @@ New API routes: `api/arduino-uids/+server.ts`,
 `api/arduino-uids/[uid]/+server.ts` (route param is the UID string, not
 numeric — reject empty/whitespace instead of `isNumberOrError`).
 
+#### 2.15.5 Programming flow: generate sketch + copy to clipboard
+The physical UID Arduino just needs to loop `Serial.println(uid)` — it has no
+other job (see [`cyd/src/uart-interface.cpp`](../cyd/src/uart-interface.cpp):
+the CYD reads a newline-delimited token over UART and calls `sendLink()`). To
+save the admin from hand-editing a `.ino` file per device, the manage page
+generates that sketch client-side and puts it on the clipboard:
+
+- Each row in `manage/arduino-uids` gets a **"Copy Arduino code"** button next
+  to the existing edit/delete actions.
+- Clicking it fills a small template — a fixed sketch body with the row's
+  `Uid` substituted into a `const char* UID = "...";` line — and writes the
+  result to the clipboard via `navigator.clipboard.writeText()`. No server
+  round-trip; the template is static and the UID is already on the page.
+- Template shape:
+
+  ```cpp
+  const char* UID = "{uid}";
+
+  void setup() {
+    Serial.begin(115200);
+  }
+
+  void loop() {
+    Serial.println(UID);
+    delay(1000);
+  }
+  ```
+
+- Admin flow: click **Copy Arduino code** → paste into the Arduino IDE (or
+  PlatformIO) → select the target board/port → upload. This reuses the
+  Arduino IDE the admin already has installed instead of building tooling to
+  replace it.
+- **Out of scope for this doc:** a browser-based uploader (e.g. Web Serial
+  API) that flashes the sketch directly, without going through the Arduino
+  IDE, was considered but rejected for the first pass — it needs
+  board-specific programmer/bootloader handling (avrdude protocol, baud
+  reset-to-bootloader quirks per board) that varies by which Arduino model is
+  used for the UID tags, which isn't pinned down yet. If the UID hardware is
+  standardized on one board, a "Program via USB" button using Web Serial is a
+  reasonable follow-up, replacing this section's copy-paste step with a
+  one-click flash — but it doesn't change the sketch template above, only how
+  it gets onto the device.
+
 ---
 
 ## 3. Data infrastructure

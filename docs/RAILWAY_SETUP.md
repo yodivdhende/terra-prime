@@ -83,6 +83,16 @@ The migration runner tracks applied files in a `_migrations` table in the databa
 
 ---
 
+## MQTT Broker Service
+
+The AguesGuard realtime transport (`docs/agues-guard_DESIGN.md` §3) runs on a
+separate MQTT broker service in the same Railway project. Setting it up —
+Mosquitto config, the TCP listener for devices, the WebSocket listener for the
+dashboard, auth, and how the site and firmware connect — is documented in
+**[`MQTT_SETUP.md`](./MQTT_SETUP.md)**.
+
+---
+
 ## Local Development
 
 The app connects to a local MySQL container by default (credentials fall back to the values in `compose.yml` when the `MYSQL*` env vars are not set).

@@ -313,10 +313,21 @@ the server resolves that — is specified concretely in
 registry that replaces today's legacy timer heuristic in `handleLink()`).
 
 ### 2.10 View battery level — *needs building*
-The CYD is powered by **two 18650 batteries**; the Home screen shows the current
-battery level. A `battery-full.png` asset exists
-(`cyd/src/ui/drive/assets/`), but there is **no ADC voltage read** in firmware
-yet.
+The CYD is powered by **two 18650 batteries** on a **dual 18650 "V8" shield**
+(the shield's boost/charge circuitry is kept for its 2S battery holder and
+protection even though recharging isn't required in practice — dead cells are
+simply swapped); the Home screen shows the current battery level. A
+`battery-full.png` asset exists (`cyd/src/ui/drive/assets/`), but there is
+**no battery read** in firmware yet.
+
+Level is read via an **INA219** I2C current/voltage sense IC wired across the
+shield's raw battery terminals (not the boosted 5V output, which stays flat
+until the pack is nearly empty and would tell firmware nothing useful).
+Firmware reads bus voltage and current over I2C and maps that to a percentage
+(a voltage-curve lookup, optionally refined using the current reading to
+compensate for voltage sag under load), then updates the Home screen icon. No
+ADC pin is needed for this — I2C only (SDA/SCL on a free pin pair, distinct
+from the SPI-based touch controller).
 
 ### 2.11 Power-save mode — *needs building*
 The device goes into **power-save mode** and **wakes up on touch** to preserve
@@ -736,7 +747,7 @@ flowchart TB
     net["web-socket.h/.cpp\nstatus/link out, action in\n(MQTT: to build)"]
     char["character.h/.cpp\nfetch character data (HTTP GET)"]
     uart["uart-interface.h/.cpp\nreads Arduino UID, relays to server"]
-    power["power (to build)\nADC battery read, deep/light sleep,\nwake-on-touch"]
+    power["power (to build)\nINA219 (I2C) battery read, deep/light sleep,\nwake-on-touch"]
     ui["ui-implementation.h/.cpp\nLVGL init, display flush,\ntouch read, uiSetup()/uiLoop()"]
     screens["ui/*\nHome, Expertise (Skills), Implants,\nMessages, Prints, Download,\nNotification, Divider"]
     xition["ui-downloading.cpp / ui-loot.cpp / ui-virus.cpp\nserver-action screen transitions"]
@@ -815,8 +826,10 @@ they're visible, not silently assumed.
    endpoint. The **divider** is mission-scoped — see item 13 below and
    [§2.6](#26-view-prints-lives--needs-building-new) /
    [§2.7](#27-prints-divider--needs-building-new-server-navigated).
-5. **Battery level.** No ADC voltage read for the 2× 18650 pack (only a static
-   `battery-full.png` asset).
+5. **Battery level.** No I2C battery read implemented yet for the 2× 18650 pack
+   on the dual 18650 V8 shield (only a static `battery-full.png` asset exists).
+   Needs an INA219 wired off the shield's raw battery terminals plus a
+   firmware I2C read and voltage/current-to-percentage mapping.
 6. **Power-save + wake-on-touch.** No ESP deep/light-sleep handling in firmware.
 7. **WiFi strength.** No RSSI read; `wifiStrength` is declared in the WS protocol
    (`connection-socket.ts`) but never populated by firmware.

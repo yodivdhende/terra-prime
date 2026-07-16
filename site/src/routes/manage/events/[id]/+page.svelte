@@ -87,15 +87,17 @@
 		{:else}
 			{#each participants as { character, version } (character.id)}
 				<div class="participant">
-					<h3>{character.name} <span class="owner">({character.ownerName})</span></h3>
 					{#if version != null}
-						<p class="version-name">{version.name}</p>
 						<CharacterVersionPreview
+							characterName={character.name}
+							versionName={version.name}
+							ownerName={character.ownerName}
 							expertise={version.expertise}
 							items={version.items}
 							implants={version.implants}
 						/>
 					{:else}
+						<h3>{character.name} <span class="owner">({character.ownerName})</span></h3>
 						<p class="status">version not found</p>
 					{/if}
 				</div>
@@ -146,12 +148,6 @@
 	.owner {
 		opacity: 0.6;
 		font-weight: normal;
-	}
-
-	.version-name {
-		margin: 0;
-		opacity: 0.8;
-		font-size: 0.9rem;
 	}
 
 	.status {

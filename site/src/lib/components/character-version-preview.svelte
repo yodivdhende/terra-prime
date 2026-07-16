@@ -10,11 +10,19 @@
 	import implantLogo from '$lib/assets/images/ImplantLogo.svg?raw';
 
 	let {
+		characterName,
+		versionName,
+		companyName,
+		ownerName,
 		expertise,
 		items,
 		implants,
 		size = '1.2em'
 	}: {
+		characterName?: string;
+		versionName?: string;
+		companyName?: string | null;
+		ownerName?: string;
 		expertise: VersionExpertise[];
 		items: VersionItem[];
 		implants: VersionImplant[];
@@ -51,32 +59,85 @@
 	const itemCount = $derived(items.reduce((sum, i) => sum + i.count, 0));
 </script>
 
-<div class="preview">
-	<div class="groups">
-		{#each groups as group (group.id)}
-			<div class="group">
-				{#if group.icon}
-					<Icon src={group.icon} color={group.color} tooltip={group.name} {size} />
-				{/if}
-				<div class="bar">
-					<ProgressBar value={group.average} color={group.color} name={group.name} />
+<div class="character-preview">
+	{#if characterName}
+		<div class="header">
+			<span class="character-name">{characterName}</span>
+			{#if versionName}
+				<span class="version-name">{versionName}</span>
+			{/if}
+			{#if companyName}
+				<span class="company-name">{companyName}</span>
+			{/if}
+			{#if ownerName}
+				<span class="owner-name">played by {ownerName}</span>
+			{/if}
+		</div>
+	{/if}
+	<div class="preview">
+		<div class="groups">
+			{#each groups as group (group.id)}
+				<div class="group">
+					{#if group.icon}
+						<Icon src={group.icon} color={group.color} tooltip={group.name} {size} />
+					{/if}
+					<div class="bar">
+						<ProgressBar value={group.average} color={group.color} name={group.name} />
+					</div>
 				</div>
-			</div>
-		{/each}
-	</div>
-	<div class="counts">
-		<span class="count">
-			<Icon src={itemLogo} color="var(--color-accent)" tooltip="Items" {size} />
-			{itemCount}
-		</span>
-		<span class="count">
-			<Icon src={implantLogo} color="var(--color-accent)" tooltip="Implants" {size} />
-			{implants.length}
-		</span>
+			{/each}
+		</div>
+		<div class="counts">
+			<span class="count">
+				<Icon src={itemLogo} color="var(--color-accent)" tooltip="Items" {size} />
+				{itemCount}
+			</span>
+			<span class="count">
+				<Icon src={implantLogo} color="var(--color-accent)" tooltip="Implants" {size} />
+				{implants.length}
+			</span>
+		</div>
 	</div>
 </div>
 
 <style>
+	.character-preview {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.header {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+	}
+
+	.character-name {
+		font-size: 1em;
+		letter-spacing: 0.04em;
+	}
+
+	.version-name {
+		font-size: 0.65em;
+		opacity: 0.45;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	.company-name {
+		font-size: 0.65em;
+		color: var(--color-accent);
+		opacity: 0.7;
+		letter-spacing: 0.05em;
+	}
+
+	.owner-name {
+		font-size: 0.65em;
+		opacity: 0.45;
+		letter-spacing: 0.05em;
+	}
+
 	.preview {
 		display: flex;
 		flex-wrap: wrap;

@@ -304,17 +304,23 @@ class CharacterVersionRepo {
     return (await this.getWithdIds([id]))[0];
   }
 
-  public async getAllWithCharacterName(): Promise<{ id: number; name: string; characterId: number; characterName: string }[]> {
+  public async getAllWithCharacterName(): Promise<{ id: number; name: string; characterId: number; characterName: string; ownerName: string }[]> {
     const connection = mysqlconnFn();
     const [results] = await connection.execute(`
-      SELECT cv.Id as id, cv.Name as name, cv.Character as characterId, c.Name as characterName
+      SELECT cv.Id as id, cv.Name as name, cv.Character as characterId, c.Name as characterName, u.Name as ownerName
       FROM Character_Versions cv
       JOIN Characters c ON c.Id = cv.Character
+      JOIN Users u ON u.Id = c.Owner
     `);
     if (!Array.isArray(results)) return [];
     return (results as RowDataPacket[]).filter(
-      (r) => typeof r.id === 'number' && typeof r.name === 'string' && typeof r.characterId === 'number' && typeof r.characterName === 'string'
-    ) as { id: number; name: string; characterId: number; characterName: string }[];
+      (r) =>
+        typeof r.id === 'number' &&
+        typeof r.name === 'string' &&
+        typeof r.characterId === 'number' &&
+        typeof r.characterName === 'string' &&
+        typeof r.ownerName === 'string'
+    ) as { id: number; name: string; characterId: number; characterName: string; ownerName: string }[];
   }
 
   public async getForCharacter(characterId: number): Promise<CharacterVersionBare[]> {

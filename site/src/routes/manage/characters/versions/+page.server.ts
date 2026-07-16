@@ -3,7 +3,7 @@ import type { CharacterVersionFull } from '$lib/managers/character-manager.svelt
 
 export const load: PageServerLoad = async ({ fetch }) => {
     const res = await fetch('/api/characters/versions');
-    const list: { id: number; name: string; characterId: number; characterName: string }[] = res.ok
+    const list: { id: number; name: string; characterId: number; characterName: string; ownerName: string }[] = res.ok
         ? await res.json()
         : [];
 

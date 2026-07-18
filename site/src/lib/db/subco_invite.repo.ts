@@ -124,6 +124,22 @@ class SubcoInviteRepo {
 		);
 	}
 
+	public async getPendingForEmail({ email }: { email: string }): Promise<PendingInvite[]> {
+		const connection = mysqlconnFn();
+		const [rows] = await connection.execute(
+			`
+				SELECT si.Token as token, si.Subco as subcoId, s.Name as subcoName, s.Company as company
+				FROM Subco_Invites si
+				JOIN Subco s ON s.Id = si.Subco
+				WHERE si.Email = ?
+				AND si.Status = 'invited'
+				AND (si.ExpiresAt IS NULL OR si.ExpiresAt > NOW())
+			`,
+			[email]
+		);
+		return rows as PendingInvite[];
+	}
+
 	public async deleteByToken({ token }: { token: string }): Promise<void> {
 		const connection = mysqlconnFn();
 		await connection.execute(`DELETE FROM Subco_Invites WHERE Token = ?`, [token]);
@@ -138,3 +154,5 @@ class SubcoInviteRepo {
 }
 
 export const subcoInviteRepo = new SubcoInviteRepo();
+
+export type PendingInvite = { token: string; subcoId: number; subcoName: string; company: number };

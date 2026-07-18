@@ -1,4 +1,3 @@
-import { assertCharactersMatchCompany } from '$lib/server/subco.service';
 import { mysqlconnFn } from './mysql';
 
 class SubcoRepo {
@@ -44,7 +43,6 @@ class SubcoRepo {
 	}
 
 	public async create({ name, company, backstoryId, members }: Omit<Subco, 'id'>) {
-		await assertCharactersMatchCompany({ company, members });
 		const connection = mysqlconnFn();
 		const [result] = await connection.execute(
 			`
@@ -62,7 +60,6 @@ class SubcoRepo {
 
 	public async edit({ id, name, company, backstoryId, members }: Subco) {
 		if (id == null) return null;
-		await assertCharactersMatchCompany({ company, members });
 		const connection = mysqlconnFn();
 		const [result] = await connection.execute(
 			`

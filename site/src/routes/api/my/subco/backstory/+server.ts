@@ -1,4 +1,4 @@
-import { getGoogleDocsManager } from '$lib/managers/google-docs-manager';
+import { BackstoryFolder, getGoogleDocsManager } from '$lib/managers/google-docs-manager';
 import { BadRequest } from '$lib/types/errors';
 import { getSessionToken } from '$lib/utils/cookies';
 import { authGuard, handleRequest } from '$lib/utils/request';
@@ -11,7 +11,7 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 		if (typeof body?.subcoName !== 'string' || body.subcoName.trim().length === 0) {
 			throw new BadRequest();
 		}
-		const docId = await getGoogleDocsManager().createBackstoryDoc(body.subcoName.trim());
+		const docId = await getGoogleDocsManager().createBackstoryDoc(body.subcoName.trim(), BackstoryFolder.Subco);
 		return json({ id: docId });
 	});
 };

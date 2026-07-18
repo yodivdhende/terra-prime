@@ -1,5 +1,5 @@
 import { subcoRepo } from '$lib/db/subco.repo';
-import { getGoogleDocsManager } from '$lib/managers/google-docs-manager';
+import { BackstoryFolder, getGoogleDocsManager } from '$lib/managers/google-docs-manager';
 import { isNumberOrError } from '$lib/request.utils';
 import { NotFoundRequest, RequestError } from '$lib/types/errors';
 import { getSessionToken } from '$lib/utils/cookies';
@@ -19,7 +19,7 @@ export const POST: RequestHandler = async ({ cookies, params }) => {
 			throw new RequestError(409, 'Backstory document already exists');
 		}
 
-		const docId = await getGoogleDocsManager().createBackstoryDoc(subco.name);
+		const docId = await getGoogleDocsManager().createBackstoryDoc(subco.name, BackstoryFolder.Subco);
 		await subcoRepo.saveBackstoryId(subcoId, docId);
 
 		return json({ id: docId });

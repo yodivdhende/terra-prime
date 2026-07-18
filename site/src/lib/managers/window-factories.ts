@@ -1,6 +1,6 @@
 export type CodexWindow = {
   id: string;
-  type: 'pdf' | 'dir' | 'doc' | 'image' | 'audio' | 'form' | 'settings' | 'playtest' | 'login' | 'register' | 'logout' | 'characterOverview';
+  type: 'pdf' | 'dir' | 'doc' | 'image' | 'audio' | 'form' | 'settings' | 'playtest' | 'login' | 'register' | 'logout' | 'characterOverview' | 'subco';
   state: 'open' | 'hidden' | 'closed';
   dimension: { w: number, h: number };
   position: { x: number, y: number, z: number };
@@ -10,7 +10,7 @@ export type CodexWindow = {
 }
 
 export type Icon = {
-  type: 'file' | 'dir' | 'image' | 'audio' | 'form' | 'settings' | 'playtest' | 'login' | 'register' | 'logout' | 'characterOverview';
+  type: 'file' | 'dir' | 'image' | 'audio' | 'form' | 'settings' | 'playtest' | 'login' | 'register' | 'logout' | 'characterOverview' | 'subco';
   side: 'left' | 'right';
 }
 
@@ -131,6 +131,20 @@ export function createCharacterOverviewWindow(): CodexWindow | null {
     contentData: 'character-overview',
     title: 'Character Overview',
     icon: { type: 'characterOverview', side: 'left' },
+  };
+}
+
+export function createSubcoWindow(): CodexWindow | null {
+  if (typeof window === 'undefined') return null;
+  return {
+    id: 'subco',
+    type: 'subco',
+    state: 'closed',
+    dimension: { w: Math.round(window.innerWidth * 0.5), h: Math.round(window.innerHeight * 0.6) },
+    position: { x: 440, y: 60, z: 0 },
+    contentData: 'subco',
+    title: 'Subco',
+    icon: { type: 'subco', side: 'left' },
   };
 }
 

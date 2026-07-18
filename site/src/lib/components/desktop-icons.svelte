@@ -1,11 +1,22 @@
 <script lang="ts">
 	import { ICON_MANAGER, type Icon } from '$lib/managers/icon-manager.svelte';
 	import { WINDOW_MANAGER } from '$lib/managers/window-manager.svelte';
-	import { File, Folder, Image, FileHeadphone, Settings, ClipboardPen, UserRound, ClipboardPenLine, IdCard, Building2 } from '@lucide/svelte';
+	import {
+		File,
+		Folder,
+		Image,
+		FileHeadphone,
+		Settings,
+		ClipboardPen,
+		UserRound,
+		ClipboardPenLine,
+		IdCard,
+		UsersRound
+	} from '@lucide/svelte';
 
 	let icons = $derived(ICON_MANAGER.icons);
-	let localIcons = $derived(icons.filter(i => i.side === 'left'));
-	let driveIcons = $derived(icons.filter(i => i.side === 'right'));
+	let localIcons = $derived(icons.filter((i) => i.side === 'left'));
+	let driveIcons = $derived(icons.filter((i) => i.side === 'right'));
 
 	function openWindow(icon: Icon) {
 		const { windowId } = $state.snapshot(icon);
@@ -70,7 +81,7 @@
 	{/if}
 	{#if icon.type === 'subco'}
 		<button onclick={() => openWindow(icon)}>
-			<div class="icon"><Building2 size={64} strokeWidth={1} /></div>
+			<div class="icon"><UsersRound size={64} strokeWidth={1} /></div>
 			{icon.title}
 		</button>
 	{/if}

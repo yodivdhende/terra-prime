@@ -23,8 +23,9 @@ export async function joinSubcoForUser(subcoId: number, userId: number): Promise
 
 /**
  * Invite a player to a subco by email (free-text). If the email is already
- * registered, add their character(s) directly and notify them; otherwise store
- * an invite token and email a register-to-join link.
+ * registered, add their character(s) directly and record the invite as accepted;
+ * otherwise store an invite token and email a register-to-join link.
+ * Sets Status = 'error' if the invite email cannot be sent for new users.
  */
 export async function sendSubcoInvite({
 	subcoId,
@@ -43,6 +44,7 @@ export async function sendSubcoInvite({
 
 	if (userId != null) {
 		await joinSubcoForUser(subcoId, userId);
+		await subcoInviteRepo.insertDirect({ subcoId, email });
 		// Best-effort notification — never fail the invite because the mail bounced.
 		try {
 			await sendTemplated({
@@ -58,5 +60,26 @@ export async function sendSubcoInvite({
 
 	const token = await subcoInviteRepo.createToken({ subcoId, email });
 	const link = `${PUBLIC_BASE_URL}/codex?invite=${encodeURIComponent(token)}`;
-	await sendTemplated({ to: email, templateKey: 'subco_invite', link });
+	try {
+		await sendTemplated({ to: email, templateKey: 'subco_invite', link });
+	} catch (err) {
+		await subcoInviteRepo.setStatus({ token, status: 'error' });
+		throw err;
+	}
+}
+
+/**
+ * Resend an invite by token: extends its expiry, resets status to 'invited',
+ * and re-sends the invite email. Sets Status = 'error' if sending fails.
+ */
+export async function resendSubcoInvite({ token }: { token: string }): Promise<void> {
+	const row = await subcoInviteRepo.getByToken({ token });
+	await subcoInviteRepo.extendAndReset({ token });
+	const link = `${PUBLIC_BASE_URL}/codex?invite=${encodeURIComponent(token)}`;
+	try {
+		await sendTemplated({ to: row.email, templateKey: 'subco_invite', link });
+	} catch (err) {
+		await subcoInviteRepo.setStatus({ token, status: 'error' });
+		throw err;
+	}
 }

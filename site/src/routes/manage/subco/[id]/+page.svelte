@@ -2,6 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import SubcoForm from '$lib/components/subco-form.svelte';
+	import SubcoBackstory from '$lib/components/subco-backstory.svelte';
+	import SubcoInvites from '$lib/components/subco-invites.svelte';
 	import ConfirmModal from '$lib/components/confirm-modal.svelte';
 	import type { Subco } from '$lib/db/subco.repo';
 	import type { PageProps } from './$types';
@@ -74,12 +76,52 @@
 			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
+
+	async function resendInvite(token: string) {
+		const snap = $state.snapshot(subco);
+		if (snap.id == null) return;
+		try {
+			const result = await fetch(`/api/subco/${snap.id}/invite/${token}`, { method: 'post' });
+			if (result.ok) {
+				TOAST_MANAGER.success('Invite resent');
+			} else {
+				TOAST_MANAGER.error('Could not resend invite');
+			}
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
+		}
+	}
+
+	async function deleteInvite(token: string) {
+		const snap = $state.snapshot(subco);
+		if (snap.id == null) return;
+		try {
+			const result = await fetch(`/api/subco/${snap.id}/invite/${token}`, { method: 'delete' });
+			if (!result.ok) TOAST_MANAGER.error('Could not delete invite');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
+		}
+	}
 </script>
 
 <main>
 	<a href={resolve('/manage/subco')}>back</a>
 	<h2>Subco</h2>
-	<SubcoForm bind:subco onInvite={inviteByEmail} />
+	<SubcoForm bind:subco />
+	{#if subco.id != null}
+		<SubcoBackstory
+			subcoId={subco.id}
+			subcoName={subco.name}
+			bind:backstoryId={subco.backstoryId}
+		/>
+		<SubcoInvites
+			subcoId={subco.id}
+			inviteEndpoint="/api/subco/{subco.id}/invite"
+			onInvite={inviteByEmail}
+			onResend={resendInvite}
+			onDelete={deleteInvite}
+		/>
+	{/if}
 	<div class="actions">
 		<button class="btn" onclick={saveSubco}>save</button>
 		<button class="btn btn-danger" onclick={() => modal.open()}>delete</button>

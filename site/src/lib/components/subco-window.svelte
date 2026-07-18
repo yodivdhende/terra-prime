@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { type CodexWindow } from '$lib/managers/window-manager.svelte';
 	import SubcoForm from '$lib/components/subco-form.svelte';
+	import SubcoBackstory from '$lib/components/subco-backstory.svelte';
+	import SubcoInvites from '$lib/components/subco-invites.svelte';
 	import type { Subco } from '$lib/db/subco.repo';
 
 	let { window: _window }: { window: CodexWindow } = $props();
@@ -13,7 +15,6 @@
 	let selected = $state<Subco>(emptySubco());
 	let loading = $state(true);
 	let status = $state<string | null>(null);
-	let inviteEmail = $state('');
 
 	async function reload() {
 		loading = true;
@@ -44,10 +45,6 @@
 	async function save() {
 		const snap = $state.snapshot(selected);
 		const isNew = snap.id == null;
-		if (isNew && inviteEmail.trim() === '') {
-			status = 'invite another player before creating a subco';
-			return;
-		}
 		status = null;
 		try {
 			const res = isNew
@@ -70,9 +67,6 @@
 				await reload();
 				const match = subcos.find((s) => s.id === newId);
 				if (match) selected = { ...match, members: [...match.members] };
-				const emailToInvite = inviteEmail.trim();
-				inviteEmail = '';
-				await invite(emailToInvite, newId);
 			} else {
 				status = 'saved';
 				await reload();
@@ -82,8 +76,8 @@
 		}
 	}
 
-	async function invite(email: string, subcoId?: number | null) {
-		const id = subcoId ?? $state.snapshot(selected).id;
+	async function invite(email: string) {
+		const id = $state.snapshot(selected).id;
 		if (id == null) return;
 		try {
 			const res = await fetch(`/api/my/subco/${id}/invite`, {
@@ -100,7 +94,7 @@
 
 <div class="subco-window">
 	<div class="list">
-		<button class="new" onclick={newSubco}>+ new subco</button>
+		<button class="new btn" onclick={newSubco}>+ new subco</button>
 		{#if loading}
 			<span class="status">loading...</span>
 		{:else if subcos.length === 0}
@@ -115,12 +109,20 @@
 	</div>
 
 	<div class="detail">
-		<SubcoForm
-			bind:subco={selected}
-			bind:inviteEmail
-			charactersEndpoint="/api/my/characters"
-			onInvite={invite}
-		/>
+		<SubcoForm bind:subco={selected} charactersEndpoint="/api/my/characters" />
+		{#if selected.id != null}
+			<SubcoInvites
+				subcoId={selected.id}
+				inviteEndpoint="/api/my/subco/{selected.id}/invite"
+				onInvite={invite}
+			/>
+			<SubcoBackstory
+				subcoId={selected.id}
+				subcoName={selected.name}
+				bind:backstoryId={selected.backstoryId}
+				newEndpoint="/api/my/subco/backstory"
+			/>
+		{/if}
 		<div class="actions">
 			<button class="btn" onclick={save}>save</button>
 			{#if status}<span class="status">{status}</span>{/if}
@@ -156,7 +158,6 @@
 	.new {
 		text-align: left;
 		background: none;
-		border: none;
 		color: var(--color-main);
 		cursor: pointer;
 		padding: 4px 6px;
@@ -165,6 +166,10 @@
 
 	.new {
 		color: var(--color-accent);
+	}
+
+	.entry {
+		border: none;
 	}
 
 	.entry:hover,

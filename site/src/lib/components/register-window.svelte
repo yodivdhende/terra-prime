@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { type CodexWindow } from '$lib/managers/window-manager.svelte';
-	import { createRegisterManager, type RegisterManager } from '$lib/managers/register-manager.svelte';
+	import {
+		createRegisterManager,
+		type RegisterManager
+	} from '$lib/managers/register-manager.svelte';
 	import RegisterStepEvents from './register-step-events.svelte';
 	import RegisterStepCharacters from './register-step-characters.svelte';
 	import RegisterStepCreateCharacter from './register-step-create-character.svelte';
@@ -45,10 +48,14 @@
 	</div>
 
 	<footer>
-		<button class="btn" onclick={REGISTER_MANAGER.back} disabled={REGISTER_MANAGER.currentStep === 0}
-			>back</button
+		<button
+			class="btn"
+			onclick={REGISTER_MANAGER.back}
+			disabled={REGISTER_MANAGER.currentStep === 0}>back</button
 		>
-		<button class="btn" onclick={REGISTER_MANAGER.next} disabled={!REGISTER_MANAGER.canAdvance}>next</button>
+		<button class="btn" onclick={REGISTER_MANAGER.next} disabled={!REGISTER_MANAGER.canAdvance}
+			>next</button
+		>
 	</footer>
 </div>
 
@@ -96,7 +103,7 @@
 
 	.content {
 		flex: 1;
-		overflow-y: auto;
+		overflow-y: hidden;
 		padding: 1.25rem;
 	}
 
@@ -106,6 +113,4 @@
 		padding: 0.6rem 1rem;
 		border-top: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
 	}
-
-
 </style>

@@ -66,19 +66,18 @@
 		content: attr(data-tooltip);
 		position: absolute;
 		bottom: calc(100% + 0.4rem);
-		left: 50%;
-		transform: translateX(-50%);
+		left: 0;
 		white-space: nowrap;
 		background: var(--color-bg, #000);
 		color: var(--color-main, #fff);
 		border: 1px solid currentColor;
 		font-family: var(--font-mono, monospace);
-		font-size: 0.65em;
 		letter-spacing: 0.05em;
 		padding: 0.2rem 0.45rem;
 		pointer-events: none;
 		opacity: 0;
 		transition: opacity 0.15s;
+		z-index: 1000;
 	}
 
 	.has-tooltip:hover::after {

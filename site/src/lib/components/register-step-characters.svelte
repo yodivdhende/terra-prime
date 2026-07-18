@@ -1,7 +1,4 @@
 <script lang="ts">
-	import Icon from '$lib/components/icon.svelte';
-	import itemLogo from '$lib/assets/images/ItemLogo.svg?raw';
-	import implantLogo from '$lib/assets/images/ImplantLogo.svg?raw';
 	import type {
 		CharacterVersionFull,
 		CharacterWithVersions,
@@ -9,7 +6,7 @@
 	} from '../../routes/api/my/characters/versions/+server';
 	import type { CharacterManager } from '$lib/managers/character-manager.svelte';
 	import type { RegisterManager } from '$lib/managers/register-manager.svelte';
-	import CharacterExpertiseGroups from './character-expertise-groups.svelte';
+	import CharacterVersionPreview from './character-version-preview.svelte';
 
 	let {
 		REGISTER_MANAGER,
@@ -47,10 +44,6 @@
 	function createNewCharacter(): void {
 		CHARACTER_MANAGER.reset();
 		REGISTER_MANAGER.next();
-	}
-
-	function itemCount(ver: CharacterVersionFull): number {
-		return ver.items.reduce((s, i) => s + i.count, 0);
 	}
 
 	function lastEvent(ver: CharacterVersionFull): { id: number; name: string } | undefined {
@@ -91,17 +84,12 @@
 									{/if}
 								</div>
 								<div class="version-stats">
-									<span class="stat">
-										<CharacterExpertiseGroups expertise={ver.expertise} size={iconSize} />
-									</span>
-									<span class="stat">
-										<Icon src={itemLogo} color="white" tooltip="Items" size={iconSize} />
-										{itemCount(ver)}
-									</span>
-									<span class="stat">
-										<Icon src={implantLogo} color="white" tooltip="Implants" size={iconSize} />
-										{ver.implants.length}
-									</span>
+									<CharacterVersionPreview
+										expertise={ver.expertise}
+										items={ver.items}
+										implants={ver.implants}
+										size={iconSize}
+									/>
 								</div>
 							</li>
 						{/each}
@@ -227,13 +215,6 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.25rem 0.5rem;
-	}
-
-	.stat {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.2rem;
-		font-size: 0.62em;
 	}
 
 	.create-new {

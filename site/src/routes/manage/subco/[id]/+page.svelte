@@ -105,22 +105,30 @@
 </script>
 
 <main>
-	<a href={resolve('/manage/subco')}>back</a>
-	<h2>Subco</h2>
-	<SubcoForm bind:subco />
+	<div class="header">
+		<a href={resolve('/manage/subco')}>back</a>
+		<h2>Subco</h2>
+	</div>
+	<div class="form">
+		<SubcoForm bind:subco />
+	</div>
 	{#if subco.id != null}
-		<SubcoBackstory
-			subcoId={subco.id}
-			subcoName={subco.name}
-			bind:backstoryId={subco.backstoryId}
-		/>
-		<SubcoInvites
-			subcoId={subco.id}
-			inviteEndpoint="/api/subco/{subco.id}/invite"
-			onInvite={inviteByEmail}
-			onResend={resendInvite}
-			onDelete={deleteInvite}
-		/>
+		<div class="invite">
+			<SubcoInvites
+				subcoId={subco.id}
+				inviteEndpoint="/api/subco/{subco.id}/invite"
+				onInvite={inviteByEmail}
+				onResend={resendInvite}
+				onDelete={deleteInvite}
+			/>
+		</div>
+		<div class="background">
+			<SubcoBackstory
+				subcoId={subco.id}
+				subcoName={subco.name}
+				bind:backstoryId={subco.backstoryId}
+			/>
+		</div>
 	{/if}
 	<div class="actions">
 		<button class="btn" onclick={saveSubco}>save</button>
@@ -137,13 +145,37 @@
 
 <style>
 	main {
-		display: flex;
+		display: grid;
+		grid-template:
+			'header header' min-content
+			'form invite' 1fr
+			'form background' 1fr
+			'actions actions' min-content
+			/ 1fr 1fr;
 		flex-direction: column;
 		padding: 8px;
 		gap: 16px;
 		min-width: 360px;
 	}
+	.header {
+		grid-area: header;
+		display: flex;
+	}
+
+	.form {
+		grid-area: form;
+	}
+
+	.invite {
+		grid-area: invite;
+	}
+
+	.background {
+		grid-area: background;
+	}
+
 	.actions {
+		grid-area: actions;
 		display: flex;
 		gap: 8px;
 	}

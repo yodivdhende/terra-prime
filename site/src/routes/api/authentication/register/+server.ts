@@ -1,8 +1,6 @@
 import { authenticationRepo } from '$lib/db/authentication.repo';
 import { sessionRepo } from '$lib/db/session.repo';
-import { subcoInviteRepo } from '$lib/db/subco_invite.repo';
 import { sendVerificationEmail } from '$lib/server/verification.service';
-import { joinSubcoForUser } from '$lib/server/subco-invite.service';
 import { RequestError } from '$lib/types/errors';
 import { setSessionToken as setSessionToken } from '$lib/utils/cookies';
 import { handleRequest } from '$lib/utils/request';
@@ -12,7 +10,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 export const POST: RequestHandler = async ({ request, cookies, locals }) => {
 	return handleRequest(async () => {
 		if (!locals.featureFlags['Register']) throw new RequestError(403, 'registration is disabled');
-		const { email, password, name, invite } = await request.json();
+		const { email, password, name } = await request.json();
 		if (typeof name !== 'string' && typeof email !== 'string' && typeof password !== 'string')
 			throw new RequestError(400, 'request needs: name, email and password');
 		await authenticationRepo.register({ name, email, password });
@@ -32,14 +30,6 @@ export const POST: RequestHandler = async ({ request, cookies, locals }) => {
 		sendVerificationEmail(userId, email).catch((err) => {
 			console.error('[register] failed to send verification email:', err);
 		});
-		if (typeof invite === 'string' && invite.trim().length > 0) {
-			try {
-				const { subcoId } = await subcoInviteRepo.consumeToken(invite.trim());
-				await joinSubcoForUser(subcoId, userId);
-			} catch (err) {
-				console.error('[register] failed to consume subco invite:', err);
-			}
-		}
 		return json({ userId, roles, name: storedName });
 	});
 };

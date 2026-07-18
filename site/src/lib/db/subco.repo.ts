@@ -1,7 +1,6 @@
 import { eq, inArray } from 'drizzle-orm';
-import { assertCharactersMatchCompany } from '$lib/server/subco.service';
 import { db } from './mysql';
-import { subco, subcoMembers } from './schema';
+import { characters, subco, subcoMembers } from './schema';
 
 /** Collapses the one-row-per-member join result into one `Subco` per subco id. */
 function groupSubcoLines(
@@ -61,7 +60,6 @@ class SubcoRepo {
 	}
 
 	public async create({ name, company, backstoryId, members }: Omit<Subco, 'id'>) {
-		await assertCharactersMatchCompany({ company, members });
 		return db.transaction(async (tx) => {
 			const [result] = await tx.insert(subco).values({ name, companyId: company, backstoryId });
 			if (members.length === 0) return result.insertId;
@@ -74,7 +72,6 @@ class SubcoRepo {
 
 	public async edit({ id, name, company, backstoryId, members }: Subco) {
 		if (id == null) return null;
-		await assertCharactersMatchCompany({ company, members });
 		await db.transaction(async (tx) => {
 			await tx
 				.update(subco)
@@ -100,29 +97,19 @@ class SubcoRepo {
 	}
 
 	public async getForUser(userId: number): Promise<Subco[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-              SELECT
-                  s.Id as id,
-                  s.Name as name,
-                  s.Company as company,
-                  s.BackstoryId as backstoryId,
-                  sm.Member as member
-              FROM Subco s
-              JOIN Subco_Members sm
-                  on sm.Subco = s.Id
-              WHERE s.id in (
-                  SELECT sm2.Subco
-                  FROM Subco_Members sm2
-                  JOIN Characters c
-                      on c.Id = sm2.Member
-                  WHERE c.Owner = ?
-              )
-          `,
-			[userId]
-		);
-		return collectSubcos(result);
+		const subcoIds = db
+			.select({ subcoId: subcoMembers.subcoId })
+			.from(subcoMembers)
+			.innerJoin(characters, eq(characters.id, subcoMembers.memberId))
+			.where(eq(characters.owner, userId));
+
+		const lines = await db
+			.select(subcoLineColumns)
+			.from(subco)
+			.innerJoin(subcoMembers, eq(subcoMembers.subcoId, subco.id))
+			.where(inArray(subco.id, subcoIds));
+
+		return groupSubcoLines(lines);
 	}
 
 	public async getForCharacter({

@@ -5,7 +5,10 @@
 	import SubcoBackstory from '$lib/components/subco-backstory.svelte';
 	import SubcoInvites from '$lib/components/subco-invites.svelte';
 	import ConfirmModal from '$lib/components/confirm-modal.svelte';
+	import CharacterVersionPreview from '$lib/components/character-version-preview.svelte';
+	import DataTable from '$lib/components/data-table.svelte';
 	import type { Subco } from '$lib/db/subco.repo';
+	import type { SubcoMemberEntry } from '../../../api/subco/[id]/members/+server';
 	import type { PageProps } from './$types';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
@@ -23,6 +26,27 @@
 			members: [...data.subco.members]
 		};
 	});
+
+	const memberColumns = [
+		{ label: 'Character', key: 'characterName' },
+		{ label: 'Owner', key: 'ownerName' },
+		{ label: 'Version', key: 'versionName' },
+		{ label: 'Event', key: 'eventName' },
+		{ label: 'Preview', key: '_preview' }
+	];
+
+	// Flatten nested fields so DataTable column filters work, keep full entry for the row snippet.
+	const memberItems = $derived(
+		data.members.map((m) => ({
+			id: m.characterId,
+			characterName: m.characterName,
+			ownerName: m.ownerName,
+			versionName: m.lastVersion?.name ?? '',
+			eventName: m.lastVersion?.event?.name ?? '',
+			_preview: '',
+			_entry: m as unknown
+		}))
+	);
 
 	async function saveSubco() {
 		const snap = $state.snapshot(subco);
@@ -130,6 +154,31 @@
 			/>
 		</div>
 	{/if}
+	{#if data.members.length > 0}
+		<div class="members">
+			<DataTable items={memberItems} columns={memberColumns}>
+				{#snippet row(item)}
+					{@const m = item._entry as SubcoMemberEntry}
+					<tr>
+						<td>{m.characterName}</td>
+						<td class="dim">{m.ownerName}</td>
+						<td>{m.lastVersion?.name ?? '—'}</td>
+						<td>{m.lastVersion?.event?.name ?? '—'}</td>
+						<td class="preview-cell">
+							{#if m.lastVersion}
+								<CharacterVersionPreview
+									expertise={m.lastVersion.expertise}
+									items={m.lastVersion.items}
+									implants={m.lastVersion.implants}
+									size="1em"
+								/>
+							{/if}
+						</td>
+					</tr>
+				{/snippet}
+			</DataTable>
+		</div>
+	{/if}
 	<div class="actions">
 		<button class="btn" onclick={saveSubco}>save</button>
 		<button class="btn btn-danger" onclick={() => modal.open()}>delete</button>
@@ -150,13 +199,14 @@
 			'header header' min-content
 			'form invite' 1fr
 			'form background' 1fr
+			'members members' auto
 			'actions actions' min-content
 			/ 1fr 1fr;
-		flex-direction: column;
 		padding: 8px;
 		gap: 16px;
 		min-width: 360px;
 	}
+
 	.header {
 		grid-area: header;
 		display: flex;
@@ -172,6 +222,18 @@
 
 	.background {
 		grid-area: background;
+	}
+
+	.members {
+		grid-area: members;
+	}
+
+	.dim {
+		color: var(--color-main-dim);
+	}
+
+	.preview-cell {
+		min-width: 200px;
 	}
 
 	.actions {

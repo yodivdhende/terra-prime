@@ -124,6 +124,32 @@ class SubcoRepo {
 		);
 	}
 
+	public async getForUser(userId: number): Promise<Subco[]> {
+		const connection = mysqlconnFn();
+		const [result] = await connection.execute(
+			`
+              SELECT
+                  s.Id as id,
+                  s.Name as name,
+                  s.Company as company,
+                  s.BackstoryId as backstoryId,
+                  sm.Member as member
+              FROM Subco s
+              JOIN Subco_Members sm
+                  on sm.Subco = s.Id
+              WHERE s.id in (
+                  SELECT sm2.Subco
+                  FROM Subco_Members sm2
+                  JOIN Characters c
+                      on c.Id = sm2.Member
+                  WHERE c.Owner = ?
+              )
+          `,
+			[userId]
+		);
+		return collectSubcos(result);
+	}
+
 	public async getForCharacter({
 		characterId
 	}: {

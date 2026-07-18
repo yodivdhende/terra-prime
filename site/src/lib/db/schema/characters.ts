@@ -175,27 +175,27 @@ export const expertiseCharacterAccess = mysqlTable(
 	]
 );
 
-export const party = mysqlTable('Party', {
+export const subco = mysqlTable('Subco', {
 	id: int('Id').autoincrement().primaryKey(),
 	name: varchar('Name', { length: 254 })
 });
 
-export const partyMembers = mysqlTable(
-	'Party_Members',
+export const subcoMembers = mysqlTable(
+	'Subco_Members',
 	{
-		partyId: int('Party').notNull(),
+		subcoId: int('Subco').notNull(),
 		memberId: int('Member').notNull()
 	},
 	(table) => [
-		primaryKey({ columns: [table.partyId, table.memberId] }),
+		primaryKey({ columns: [table.subcoId, table.memberId] }),
 		index('Member').on(table.memberId),
 		foreignKey({
-			name: 'Party_Members_ibfk_1',
-			columns: [table.partyId],
-			foreignColumns: [party.id]
+			name: 'Subco_Members_ibfk_1',
+			columns: [table.subcoId],
+			foreignColumns: [subco.id]
 		}),
 		foreignKey({
-			name: 'Party_Members_ibfk_2',
+			name: 'Subco_Members_ibfk_2',
 			columns: [table.memberId],
 			foreignColumns: [characters.id]
 		})

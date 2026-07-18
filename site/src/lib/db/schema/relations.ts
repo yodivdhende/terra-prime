@@ -34,8 +34,8 @@ import {
 	itemCharacterAccess,
 	implantCharacterAccess,
 	expertiseCharacterAccess,
-	party,
-	partyMembers
+	subco,
+	subcoMembers
 } from './characters';
 import { events, eventParticipants, eventCoupons } from './events';
 
@@ -56,7 +56,7 @@ export const adminsRelations = relations(admins, ({ one }) => ({
 export const charactersRelations = relations(characters, ({ one, many }) => ({
 	owner: one(users, { fields: [characters.owner], references: [users.id] }),
 	versions: many(characterVersions),
-	partyMemberships: many(partyMembers),
+	subcoMemberships: many(subcoMembers),
 	itemAccess: many(itemCharacterAccess),
 	implantAccess: many(implantCharacterAccess),
 	expertiseAccess: many(expertiseCharacterAccess)
@@ -222,13 +222,13 @@ export const expertiseCharacterAccessRelations = relations(expertiseCharacterAcc
 	})
 }));
 
-export const partyRelations = relations(party, ({ many }) => ({
-	members: many(partyMembers)
+export const subcoRelations = relations(subco, ({ many }) => ({
+	members: many(subcoMembers)
 }));
 
-export const partyMembersRelations = relations(partyMembers, ({ one }) => ({
-	party: one(party, { fields: [partyMembers.partyId], references: [party.id] }),
-	member: one(characters, { fields: [partyMembers.memberId], references: [characters.id] })
+export const subcoMembersRelations = relations(subcoMembers, ({ one }) => ({
+	subco: one(subco, { fields: [subcoMembers.subcoId], references: [subco.id] }),
+	member: one(characters, { fields: [subcoMembers.memberId], references: [characters.id] })
 }));
 
 export const sessionsRelations = relations(sessions, ({ one, many }) => ({

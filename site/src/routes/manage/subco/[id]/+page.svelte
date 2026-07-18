@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import SubcoForm from '$lib/components/subco-form.svelte';
 	import SubcoBackstory from '$lib/components/subco-backstory.svelte';
 	import SubcoInvites from '$lib/components/subco-invites.svelte';
+	import SearchSelect from '$lib/components/search-select.svelte';
 	import ConfirmModal from '$lib/components/confirm-modal.svelte';
 	import CharacterVersionPreview from '$lib/components/character-version-preview.svelte';
 	import DataTable from '$lib/components/data-table.svelte';
@@ -15,7 +16,14 @@
 	let { data }: PageProps = $props();
 
 	let modal: ConfirmModal;
-	let subco: Subco = $state({ id: null, name: '', company: 0, backstoryId: null, members: [] });
+	let subco: Subco = $state({
+		id: null,
+		name: '',
+		company: 0,
+		backstoryId: null,
+		ownerId: 0,
+		members: []
+	});
 
 	$effect(() => {
 		subco = {
@@ -23,9 +31,19 @@
 			name: data.subco.name,
 			company: data.subco.company,
 			backstoryId: data.subco.backstoryId,
+			ownerId: data.subco.ownerId,
 			members: [...data.subco.members]
 		};
 	});
+
+	let newOwnerId = $state<number | null>(data.subco.ownerId);
+
+	const ownerOptions = $derived(
+		data.allUsers.map((u) => ({ label: `${u.name} (${u.email})`, value: String(u.id) }))
+	);
+	const ownerName = $derived(
+		data.allUsers.find((u) => u.id === data.subco.ownerId)?.name ?? `user #${data.subco.ownerId}`
+	);
 
 	const memberColumns = [
 		{ label: 'Character', key: 'characterName' },
@@ -62,6 +80,25 @@
 				await goto(resolve('/manage/subco'));
 			} else {
 				TOAST_MANAGER.error('Could not save subco');
+			}
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
+		}
+	}
+
+	async function transferOwner() {
+		if (subco.id == null || newOwnerId == null) return;
+		try {
+			const result = await fetch(`/api/subco/${subco.id}/owner`, {
+				method: 'post',
+				body: JSON.stringify({ ownerId: newOwnerId }),
+				headers: { 'content-type': 'application/json' }
+			});
+			if (result.ok) {
+				TOAST_MANAGER.success('Owner transferred');
+				await invalidateAll();
+			} else {
+				TOAST_MANAGER.error('Could not transfer owner');
 			}
 		} catch (err) {
 			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
@@ -179,6 +216,21 @@
 			</DataTable>
 		</div>
 	{/if}
+	<div class="owner">
+		<span class="label">Owner: {ownerName}</span>
+		<SearchSelect
+			options={ownerOptions}
+			placeholder="Search player..."
+			onselect={(o) => (newOwnerId = Number(o.value))}
+		/>
+		<button
+			class="btn"
+			onclick={transferOwner}
+			disabled={newOwnerId == null || newOwnerId === data.subco.ownerId}
+		>
+			transfer ownership
+		</button>
+	</div>
 	<div class="actions">
 		<button class="btn" onclick={saveSubco}>save</button>
 		<button class="btn btn-danger" onclick={() => modal.open()}>delete</button>
@@ -200,6 +252,7 @@
 			'form invite' 1fr
 			'form background' 1fr
 			'members members' auto
+			'owner owner' min-content
 			'actions actions' min-content
 			/ 1fr 1fr;
 		padding: 8px;
@@ -234,6 +287,19 @@
 
 	.preview-cell {
 		min-width: 200px;
+	}
+
+	.owner {
+		grid-area: owner;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		max-width: 420px;
+	}
+
+	.owner .label {
+		white-space: nowrap;
+		color: var(--color-main-dim);
 	}
 
 	.actions {

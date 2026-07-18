@@ -22,7 +22,7 @@ export const PUT: RequestHandler = async ({ cookies, request }) => {
 		if ((await userOwnsSubcoMember(userId, subco.members)) === false) {
 			throw new BadRequest('a subco must include a character you own');
 		}
-		const id = await subcoRepo.create(subco);
+		const id = await subcoRepo.create({ ...subco, ownerId: userId });
 		return json({ id });
 	});
 };

@@ -6,10 +6,12 @@
 
 	let {
 		subco = $bindable<Subco>(),
-		charactersEndpoint = '/api/characters'
+		charactersEndpoint = '/api/characters',
+		nameEditable = true
 	}: {
 		subco: Subco;
 		charactersEndpoint?: string;
+		nameEditable?: boolean;
 	} = $props();
 
 	$inspect(subco);
@@ -25,7 +27,10 @@
 
 <div class="form">
 	<label for="subco-name">name</label>
-	<input id="subco-name" type="text" bind:value={subco.name} />
+	<input id="subco-name" type="text" bind:value={subco.name} disabled={!nameEditable} />
+	{#if !nameEditable}
+		<span class="hint">only the subco owner can rename it</span>
+	{/if}
 
 	<label for="subco-company">company</label>
 	<CompanySelect bind:company={selectedCompany} />
@@ -39,5 +44,11 @@
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
+	}
+
+	.hint {
+		font-size: 0.8em;
+		color: var(--color-main-dim);
+		margin-top: -6px;
 	}
 </style>

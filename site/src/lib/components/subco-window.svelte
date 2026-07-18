@@ -9,13 +9,15 @@
 	let { window: _window }: { window: CodexWindow } = $props();
 
 	function emptySubco(): Subco {
-		return { id: null, name: '', company: 0, backstoryId: null, members: [] };
+		return { id: null, name: '', company: 0, backstoryId: null, ownerId: 0, members: [] };
 	}
 
 	let subcos = $state<Subco[]>([]);
 	let selected = $state<Subco>(emptySubco());
 	let loading = $state(true);
 	let status = $state<string | null>(null);
+	let myUserId = $state<number | null>(null);
+	let isOwner = $derived(selected.id == null || selected.ownerId === myUserId);
 
 	let pendingInvites = $state<PendingInvite[]>([]);
 	let selectedInvite = $state<PendingInvite | null>(null);
@@ -26,14 +28,16 @@
 	async function reload() {
 		loading = true;
 		try {
-			const [subcosRes, invitesRes, charsRes] = await Promise.all([
+			const [subcosRes, invitesRes, charsRes, userRes] = await Promise.all([
 				fetch('/api/my/subco'),
 				fetch('/api/my/subco/invites'),
-				fetch('/api/my/characters')
+				fetch('/api/my/characters'),
+				fetch('/api/my/user')
 			]);
 			subcos = subcosRes.ok ? await subcosRes.json() : [];
 			pendingInvites = invitesRes.ok ? await invitesRes.json() : [];
 			myCharacters = charsRes.ok ? await charsRes.json() : [];
+			myUserId = userRes.ok ? (await userRes.json()).id : null;
 		} catch {
 			subcos = [];
 			pendingInvites = [];
@@ -197,7 +201,11 @@
 				</div>
 			</div>
 		{:else}
-			<SubcoForm bind:subco={selected} charactersEndpoint="/api/my/characters" />
+			<SubcoForm
+				bind:subco={selected}
+				charactersEndpoint="/api/my/characters"
+				nameEditable={isOwner}
+			/>
 			{#if selected.id != null}
 				<SubcoInvites
 					subcoId={selected.id}

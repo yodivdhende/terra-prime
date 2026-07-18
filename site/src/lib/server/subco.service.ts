@@ -35,3 +35,13 @@ export async function assertUserBelongsToSubco(userId: number, subcoId: number):
 		throw new NoAccesRequest('subco does not belong to you');
 	}
 }
+
+/**
+ * Throw 403 unless the user is the subco's owner (creator). Only the owner
+ * may rename a subco; an admin can transfer ownership from the manage page.
+ */
+export function assertUserIsSubcoOwner(userId: number, subco: { ownerId: number }): void {
+	if (subco.ownerId !== userId) {
+		throw new NoAccesRequest('only the subco owner can rename it');
+	}
+}

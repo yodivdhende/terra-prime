@@ -1,7 +1,11 @@
 import { subcoRepo, isSubco } from '$lib/db/subco.repo';
 import { isNumberOrError } from '$lib/request.utils';
 import { BadRequest, NotFoundRequest } from '$lib/types/errors';
-import { assertUserBelongsToSubco, userOwnsSubcoMember } from '$lib/server/subco.service';
+import {
+	assertUserBelongsToSubco,
+	assertUserIsSubcoOwner,
+	userOwnsSubcoMember
+} from '$lib/server/subco.service';
 import { getSessionToken } from '$lib/utils/cookies';
 import { authGuardForUser, handleRequest } from '$lib/utils/request';
 import { json, type RequestHandler } from '@sveltejs/kit';
@@ -29,7 +33,12 @@ export const POST: RequestHandler = async ({ cookies, params, request }) => {
 		if ((await userOwnsSubcoMember(userId, subco.members)) === false) {
 			throw new BadRequest('a subco must include a character you own');
 		}
-		await subcoRepo.save(subco);
+		const existing = await subcoRepo.getWithId(id);
+		if (existing == null) throw new NotFoundRequest();
+		// Only the owner may rename the subco; ownership itself is preserved
+		// here and only changes via the admin transfer endpoint.
+		if (subco.name !== existing.name) assertUserIsSubcoOwner(userId, existing);
+		await subcoRepo.save({ ...subco, ownerId: existing.ownerId });
 		return new Response();
 	});
 };

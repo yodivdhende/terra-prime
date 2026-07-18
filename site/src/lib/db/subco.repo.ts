@@ -9,6 +9,7 @@ class SubcoRepo {
                   s.Name as name,
                   s.Company as company,
                   s.BackstoryId as backstoryId,
+                  s.Owner as ownerId,
                   sm.Member as member
               FROM Subco s
               JOIN Subco_Members sm
@@ -26,6 +27,7 @@ class SubcoRepo {
                   s.Name as name,
                   s.Company as company,
                   s.BackstoryId as backstoryId,
+                  s.Owner as ownerId,
                   sm.Member as member
               FROM Subco s
               JOIN Subco_Members sm
@@ -42,14 +44,14 @@ class SubcoRepo {
 		return this.edit(subco);
 	}
 
-	public async create({ name, company, backstoryId, members }: Omit<Subco, 'id'>) {
+	public async create({ name, company, backstoryId, ownerId, members }: Omit<Subco, 'id'>) {
 		const connection = mysqlconnFn();
 		const [result] = await connection.execute(
 			`
-              INSERT INTO Subco (Name, Company, BackstoryId)
-              VALUES (?, ?, ?)
+              INSERT INTO Subco (Name, Company, BackstoryId, Owner)
+              VALUES (?, ?, ?, ?)
           `,
-			[name, company, backstoryId ?? null]
+			[name, company, backstoryId ?? null, ownerId]
 		);
 		if ('serverStatus' in result && result.serverStatus !== 2) return null;
 		if ('insertId' in result === false || result.insertId == null) return null;
@@ -77,6 +79,11 @@ class SubcoRepo {
 	public async saveBackstoryId(id: number, backstoryId: string) {
 		const connection = mysqlconnFn();
 		await connection.execute(`UPDATE Subco SET BackstoryId = ? WHERE Id = ?`, [backstoryId, id]);
+	}
+
+	public async transferOwner(id: number, ownerId: number) {
+		const connection = mysqlconnFn();
+		await connection.execute(`UPDATE Subco SET Owner = ? WHERE Id = ?`, [ownerId, id]);
 	}
 
 	private async replaceMembers({ subcoId, members }: { subcoId: number; members: number[] }) {
@@ -130,6 +137,7 @@ class SubcoRepo {
                   s.Name as name,
                   s.Company as company,
                   s.BackstoryId as backstoryId,
+                  s.Owner as ownerId,
                   sm.Member as member
               FROM Subco s
               JOIN Subco_Members sm
@@ -160,6 +168,7 @@ class SubcoRepo {
                   s.Name as name,
                   s.Company as company,
                   s.BackstoryId as backstoryId,
+                  s.Owner as ownerId,
                   sm.Member as member
               FROM Subco s
               JOIN Subco_Members sm
@@ -191,6 +200,7 @@ function collectSubcos(result: unknown): Subco[] {
 					name: subcoLine.name,
 					company: subcoLine.company,
 					backstoryId: subcoLine.backstoryId,
+					ownerId: subcoLine.ownerId,
 					members: [subcoLine.member]
 				});
 			}
@@ -209,6 +219,7 @@ export type Subco = {
 	name: string;
 	company: number;
 	backstoryId: string | null;
+	ownerId: number;
 	members: number[];
 };
 
@@ -223,6 +234,9 @@ export function isSubco(subco: unknown): subco is Subco {
 		isNaN(subco.company) === false &&
 		'backstoryId' in subco &&
 		(typeof subco.backstoryId === 'string' || subco.backstoryId === null) &&
+		'ownerId' in subco &&
+		typeof subco.ownerId === 'number' &&
+		isNaN(subco.ownerId) === false &&
 		'members' in subco &&
 		Array.isArray(subco.members) &&
 		subco.members.every((member) => typeof member === 'number' && isNaN(member) === false) &&
@@ -236,6 +250,7 @@ type SubcoLine = {
 	name: string;
 	company: number;
 	backstoryId: string | null;
+	ownerId: number;
 	member: number;
 };
 
@@ -250,6 +265,9 @@ export function isSubcoLine(subcoLine: unknown): subcoLine is SubcoLine {
 		isNaN(subcoLine.company) === false &&
 		'backstoryId' in subcoLine &&
 		(typeof subcoLine.backstoryId === 'string' || subcoLine.backstoryId === null) &&
+		'ownerId' in subcoLine &&
+		typeof subcoLine.ownerId === 'number' &&
+		isNaN(subcoLine.ownerId) === false &&
 		'member' in subcoLine &&
 		typeof subcoLine.member === 'number' &&
 		isNaN(subcoLine.member) === false &&

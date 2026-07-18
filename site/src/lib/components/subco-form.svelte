@@ -3,20 +3,17 @@
 	import type { Company } from '$lib/db/companies.repo';
 	import type { Character } from '$lib/db/character.repo';
 	import CompanySelect from '$lib/components/company-select.svelte';
-	import BackstoryLink from '$lib/components/backstory-link.svelte';
 	import SearchSelect from '$lib/components/search-select.svelte';
 
 	let {
 		subco = $bindable<Subco>(),
-		inviteEmail = $bindable(''),
-		charactersEndpoint = '/api/characters',
-		onInvite
+		charactersEndpoint = '/api/characters'
 	}: {
 		subco: Subco;
-		inviteEmail?: string;
 		charactersEndpoint?: string;
-		onInvite?: (email: string) => void | Promise<void>;
 	} = $props();
+
+	$inspect(subco);
 
 	let characters = $state<Character[]>([]);
 	let memberQuery = $state('');
@@ -51,13 +48,6 @@
 	function removeMember(id: number) {
 		subco.members = subco.members.filter((m) => m !== id);
 	}
-
-	async function invite() {
-		const email = inviteEmail.trim();
-		if (email.length === 0 || onInvite == null) return;
-		await onInvite(email);
-		inviteEmail = '';
-	}
 </script>
 
 <div class="form">
@@ -86,37 +76,7 @@
 		onselect={(o) => addMember(Number(o.value))}
 	/>
 
-	<span class="label">shared background</span>
-	{#if subco.id != null}
-		<BackstoryLink
-			characterId={subco.id}
-			characterName={subco.name}
-			bind:backstoryId={subco.backstoryId}
-			idEndpoint={(id) => `/api/subco/${id}/backstory`}
-			newEndpoint="/api/my/subco/backstory"
-			newPayloadKey="subcoName"
-		/>
-	{:else}
-		<span class="hint">save the subco first to create a shared background</span>
-	{/if}
 
-	{#if onInvite}
-		<label for="subco-invite"
-			>invite by email {#if subco.id == null}<span class="required">*required</span>{/if}</label
-		>
-		<div class="invite">
-			<input
-				id="subco-invite"
-				type="email"
-				bind:value={inviteEmail}
-				placeholder="player@example.com"
-			/>
-			<button class="btn" type="button" onclick={invite} disabled={subco.id == null}>invite</button>
-		</div>
-		{#if subco.id == null}
-			<span class="hint">invite another player to create this subco</span>
-		{/if}
-	{/if}
 </div>
 
 <style>
@@ -124,12 +84,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
-	}
-
-	.label {
-		font-family: var(--font-mono);
-		font-size: 0.85em;
-		color: var(--color-accent);
 	}
 
 	.member-tags {
@@ -163,24 +117,4 @@
 		color: var(--color-accent);
 	}
 
-	.invite {
-		display: flex;
-		gap: 8px;
-	}
-
-	.invite input {
-		flex: 1;
-	}
-
-	.hint {
-		font-family: var(--font-mono);
-		font-size: 0.75em;
-		color: var(--color-main-dim);
-	}
-
-	.required {
-		font-size: 0.75em;
-		color: var(--color-accent);
-		margin-left: 4px;
-	}
 </style>

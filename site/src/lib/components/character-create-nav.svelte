@@ -143,6 +143,7 @@
 		flex-direction: column;
 		border-right: 1px solid color-mix(in srgb, var(--color-accent) 15%, transparent);
 		overflow-y: auto;
+		overflow-x: hidden;
 	}
 
 	.steps {

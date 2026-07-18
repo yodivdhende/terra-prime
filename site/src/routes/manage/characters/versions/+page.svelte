@@ -42,6 +42,7 @@
 			<tr>
 				<th>Id</th>
 				<th>Character</th>
+				<th>Owner</th>
 				<th>Name</th>
 				<th>Overview</th>
 				<th></th>
@@ -53,6 +54,7 @@
 				<tr>
 					<td>{version.id}</td>
 					<td>{version.characterName}</td>
+					<td>{version.ownerName}</td>
 					<td>{version.name}</td>
 					<td class="preview-cell">
 						{#if version.full}
@@ -73,7 +75,7 @@
 			{/each}
 			{#if versions.length === 0}
 				<tr>
-					<td colspan="6" class="empty">no versions</td>
+					<td colspan="7" class="empty">no versions</td>
 				</tr>
 			{/if}
 		</tbody>

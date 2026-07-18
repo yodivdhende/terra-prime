@@ -2,8 +2,10 @@
 	import { goto, invalidate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import CharacterForm from '$lib/components/character-form.svelte';
+	import CharacterVersionPreview from '$lib/components/character-version-preview.svelte';
 	import ConfirmModal from '$lib/components/confirm-modal.svelte';
 	import { type Character } from '$lib/db/character.repo';
+	import type { CharacterVersionFull } from '$lib/managers/character-manager.svelte';
 	import { CirclePlus } from '@lucide/svelte';
 	import { type PageProps } from './$types';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
@@ -15,7 +17,9 @@
 		character = loadCharacter ?? null;
 	});
 	const users = $derived(data.users);
-	let versions = $derived(data.versions as { id: number; name: string }[]);
+	let versions = $derived(
+		data.versions as { id: number; name: string; full: CharacterVersionFull | null }[]
+	);
 
 	async function save() {
 		const characterToSave = $state.snapshot(character);
@@ -122,6 +126,7 @@
 					<tr>
 						<th>Id</th>
 						<th>Name</th>
+						<th>Overview</th>
 						<th></th>
 						<th></th>
 					</tr>
@@ -131,6 +136,16 @@
 						<tr>
 							<td>{version.id}</td>
 							<td>{version.name}</td>
+							<td class="preview-cell">
+								{#if version.full}
+									<CharacterVersionPreview
+										expertise={version.full.expertise}
+										items={version.full.items}
+										implants={version.full.implants}
+										size="1em"
+									/>
+								{/if}
+							</td>
 							<td><a href={resolve('/manage/versions/[versionId]', { versionId: String(version.id) })}>edit</a></td>
 							<td
 								><button class="btn btn-danger" onclick={() => requestDeleteVersion(version.id)}
@@ -165,6 +180,11 @@
 
 	td {
 		padding: 8px;
+	}
+
+	.preview-cell {
+		min-width: 200px;
+		max-width: 320px;
 	}
 
 	.versions {

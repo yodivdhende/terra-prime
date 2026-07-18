@@ -28,6 +28,7 @@
 		characterName,
 		versionName,
 		companyName,
+		ownerName,
 		expertise = [],
 		items = [],
 		implants = []
@@ -35,6 +36,7 @@
 		characterName: string;
 		versionName?: string;
 		companyName?: string | null;
+		ownerName?: string;
 		expertise?: CharacterVersionExpertise[];
 		items?: CharacterVersionItem[];
 		implants?: CharacterVersionImplant[];
@@ -49,6 +51,9 @@
 		{/if}
 		{#if companyName}
 			<span class="company-name">{companyName}</span>
+		{/if}
+		{#if ownerName}
+			<span class="owner-name">played by {ownerName}</span>
 		{/if}
 	</div>
 
@@ -121,6 +126,12 @@
 		font-size: 0.65em;
 		color: var(--color-accent);
 		opacity: 0.7;
+		letter-spacing: 0.05em;
+	}
+
+	.owner-name {
+		font-size: 0.65em;
+		opacity: 0.45;
 		letter-spacing: 0.05em;
 	}
 

@@ -85,21 +85,37 @@
 		{#if participants.length === 0}
 			<p class="status">No participants registered for this event.</p>
 		{:else}
-			{#each participants as { character, version } (character.id)}
-				<div class="participant">
-					<h3>{character.name} <span class="owner">({character.ownerName})</span></h3>
-					{#if version != null}
-						<p class="version-name">{version.name}</p>
-						<CharacterVersionPreview
-							expertise={version.expertise}
-							items={version.items}
-							implants={version.implants}
-						/>
-					{:else}
-						<p class="status">version not found</p>
-					{/if}
-				</div>
-			{/each}
+			<table>
+				<thead>
+					<tr>
+						<th>Character</th>
+						<th>Owner</th>
+						<th>Version</th>
+						<th>Overview</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each participants as { character, version } (character.id)}
+						<tr>
+							<td>{character.name}</td>
+							<td>{character.ownerName}</td>
+							<td>{version?.name ?? '—'}</td>
+							<td class="preview-cell">
+								{#if version != null}
+									<CharacterVersionPreview
+										expertise={version.expertise}
+										items={version.items}
+										implants={version.implants}
+										size="1em"
+									/>
+								{:else}
+									<p class="status">version not found</p>
+								{/if}
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
 		{/if}
 	</section>
 </main>
@@ -131,27 +147,30 @@
 		margin-top: 12px;
 	}
 
-	.participant {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-		padding: 0.5em;
-		border-bottom: 1px solid var(--color-border);
+	table {
+		margin-top: 8px;
+		border-collapse: collapse;
+		width: 100%;
 	}
 
-	.participant h3 {
-		margin: 0;
-	}
-
-	.owner {
+	th {
+		text-align: left;
+		padding: 8px;
+		font-size: 0.8rem;
 		opacity: 0.6;
-		font-weight: normal;
 	}
 
-	.version-name {
-		margin: 0;
-		opacity: 0.8;
-		font-size: 0.9rem;
+	tr {
+		border-bottom: 1px solid silver;
+	}
+
+	td {
+		padding: 8px;
+	}
+
+	.preview-cell {
+		min-width: 200px;
+		max-width: 320px;
 	}
 
 	.status {

@@ -103,10 +103,6 @@
 							<Icon src={entry.icon} color={group.color} tooltip={entry.name} {size} />
 						</div>
 					{/if}
-					<!-- {#if showNames} -->
-					<div class="entry-name">
-						{entry.name}
-					</div>
 					<!-- {/if} -->
 					<div class="entry-bar bar">
 						<ProgressBar value={entry.value} color={group.color} name={entry.name} />
@@ -162,7 +158,6 @@
 	.entry {
 		display: grid;
 		grid-template:
-			'icon name' 0.7em
 			'icon bar' min-content
 			/ min-content 1fr;
 		align-items: center;
@@ -175,14 +170,6 @@
 
 	.entry-icon {
 		grid-area: icon;
-	}
-
-	.entry-name {
-		grid-area: name;
-		font-size: 0.7em;
-		opacity: 0.8;
-		white-space: nowrap;
-		overflow: hidden;
 	}
 
 	.entry-bar {

@@ -13,6 +13,7 @@
 	let selected = $state<Subco>(emptySubco());
 	let loading = $state(true);
 	let status = $state<string | null>(null);
+	let inviteEmail = $state('');
 
 	async function reload() {
 		loading = true;
@@ -42,37 +43,50 @@
 
 	async function save() {
 		const snap = $state.snapshot(selected);
+		const isNew = snap.id == null;
+		if (isNew && inviteEmail.trim() === '') {
+			status = 'invite another player before creating a subco';
+			return;
+		}
 		status = null;
 		try {
-			const res =
-				snap.id == null
-					? await fetch('/api/my/subco', {
-							method: 'put',
-							headers: { 'content-type': 'application/json' },
-							body: JSON.stringify(snap)
-						})
-					: await fetch(`/api/my/subco/${snap.id}`, {
-							method: 'post',
-							headers: { 'content-type': 'application/json' },
-							body: JSON.stringify(snap)
-						});
+			const res = isNew
+				? await fetch('/api/my/subco', {
+						method: 'put',
+						headers: { 'content-type': 'application/json' },
+						body: JSON.stringify(snap)
+					})
+				: await fetch(`/api/my/subco/${snap.id}`, {
+						method: 'post',
+						headers: { 'content-type': 'application/json' },
+						body: JSON.stringify(snap)
+					});
 			if (!res.ok) {
 				status = 'could not save subco';
 				return;
 			}
-			status = 'saved';
-			await reload();
-			if (snap.id == null) selected = emptySubco();
+			if (isNew) {
+				const { id: newId }: { id: number } = await res.json();
+				await reload();
+				const match = subcos.find((s) => s.id === newId);
+				if (match) selected = { ...match, members: [...match.members] };
+				const emailToInvite = inviteEmail.trim();
+				inviteEmail = '';
+				await invite(emailToInvite, newId);
+			} else {
+				status = 'saved';
+				await reload();
+			}
 		} catch {
 			status = 'could not save subco';
 		}
 	}
 
-	async function invite(email: string) {
-		const snap = $state.snapshot(selected);
-		if (snap.id == null) return;
+	async function invite(email: string, subcoId?: number | null) {
+		const id = subcoId ?? $state.snapshot(selected).id;
+		if (id == null) return;
 		try {
-			const res = await fetch(`/api/my/subco/${snap.id}/invite`, {
+			const res = await fetch(`/api/my/subco/${id}/invite`, {
 				method: 'post',
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({ email })
@@ -101,7 +115,12 @@
 	</div>
 
 	<div class="detail">
-		<SubcoForm bind:subco={selected} charactersEndpoint="/api/my/characters" onInvite={invite} />
+		<SubcoForm
+			bind:subco={selected}
+			bind:inviteEmail
+			charactersEndpoint="/api/my/characters"
+			onInvite={invite}
+		/>
 		<div class="actions">
 			<button class="btn" onclick={save}>save</button>
 			{#if status}<span class="status">{status}</span>{/if}
@@ -142,7 +161,6 @@
 		cursor: pointer;
 		padding: 4px 6px;
 		font-family: inherit;
-		font-size: 0.9em;
 	}
 
 	.new {
@@ -162,7 +180,6 @@
 	}
 
 	.status {
-		font-size: 0.8em;
 		color: var(--color-main-dim);
 	}
 </style>

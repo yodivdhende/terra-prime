@@ -8,6 +8,7 @@
 	let manageOpen = $state(false);
 	let characterOpen = $state(false);
 	const isAdmin = $derived(roles.includes('admin'));
+	const subcoEnabled = $derived(page.data.subcoEnabled === true);
 
 	$effect(() => {
 		const pathname = page.url.pathname;
@@ -33,6 +34,9 @@
 				<a class="entry child" href={resolve('/manage/items')}>Items</a>
 				<a class="entry child" href={resolve('/manage/implants')}>Implants</a>
 				<a class="entry child" href={resolve('/manage/companies')}>Companies</a>
+				{#if subcoEnabled}
+					<a class="entry child" href={resolve('/manage/subco')}>Subco</a>
+				{/if}
 			{/if}
 			<button class="entry folder" onclick={() => (characterOpen = !characterOpen)}>
 				<span class="arrow">{characterOpen ? 'v' : '>'}</span>

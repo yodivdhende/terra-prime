@@ -175,10 +175,23 @@ export const expertiseCharacterAccess = mysqlTable(
 	]
 );
 
-export const subco = mysqlTable('Subco', {
-	id: int('Id').autoincrement().primaryKey(),
-	name: varchar('Name', { length: 254 })
-});
+export const subco = mysqlTable(
+	'Subco',
+	{
+		id: int('Id').autoincrement().primaryKey(),
+		name: varchar('Name', { length: 254 }),
+		companyId: int('Company').notNull(),
+		backstoryId: varchar('BackstoryId', { length: 128 })
+	},
+	(table) => [
+		index('subco_company_key').on(table.companyId),
+		foreignKey({
+			name: 'subco_company',
+			columns: [table.companyId],
+			foreignColumns: [companies.id]
+		})
+	]
+);
 
 export const subcoMembers = mysqlTable(
 	'Subco_Members',

@@ -222,7 +222,8 @@ export const expertiseCharacterAccessRelations = relations(expertiseCharacterAcc
 	})
 }));
 
-export const subcoRelations = relations(subco, ({ many }) => ({
+export const subcoRelations = relations(subco, ({ one, many }) => ({
+	company: one(companies, { fields: [subco.companyId], references: [companies.id] }),
 	members: many(subcoMembers)
 }));
 

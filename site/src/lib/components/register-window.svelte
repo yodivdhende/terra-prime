@@ -103,7 +103,6 @@
 
 	.content {
 		flex: 1;
-		overflow-y: hidden;
 		padding: 1.25rem;
 	}
 

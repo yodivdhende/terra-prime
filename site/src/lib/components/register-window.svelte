@@ -35,7 +35,7 @@
 		{/each}
 	</nav>
 
-	<div class="content">
+	<div class="content scroll">
 		{#if REGISTER_MANAGER.currentStep === 0}
 			<RegisterStepEvents {REGISTER_MANAGER} />
 		{:else if REGISTER_MANAGER.currentStep === 1}
@@ -67,6 +67,7 @@
 		font-family: var(--font-mono);
 		font-size: 1.2em;
 		color: var(--color-main);
+		overflow: hidden;
 	}
 
 	.steps {
@@ -104,6 +105,7 @@
 	.content {
 		flex: 1;
 		padding: 1.25rem;
+		overflow: auto;
 	}
 
 	footer {

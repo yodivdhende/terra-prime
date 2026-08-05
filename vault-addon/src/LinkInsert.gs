@@ -22,6 +22,33 @@ function insertLinkFromBrowser(targetDocId, headingId, displayText) {
 	insertLinkAtCursor_(displayText, url);
 }
 
+function findOpenTriggerRange_(cursor) {
+	var surrounding = cursor.getSurroundingText();
+	var text = surrounding.getText();
+	var offset = cursor.getSurroundingTextOffset();
+	var preceding = text.substring(0, offset);
+	var openIndex = preceding.lastIndexOf('[[');
+	if (openIndex === -1 || preceding.substring(openIndex).indexOf(']]') !== -1) {
+		return null;
+	}
+	return { textElement: surrounding.getElement().asText(), start: openIndex, end: offset };
+}
+
+function insertVaultLink(targetDocId, headingId, displayText) {
+	var doc = DocumentApp.getActiveDocument();
+	var cursor = doc.getCursor();
+	if (!cursor) {
+		throw new Error('Click into the document first, then try again.');
+	}
+	var url = buildDocLinkUrl_(targetDocId, headingId);
+	var triggerRange = findOpenTriggerRange_(cursor);
+	if (triggerRange) {
+		triggerRange.textElement.deleteText(triggerRange.start, triggerRange.end - 1);
+		doc.setCursor(doc.newPosition(triggerRange.textElement, triggerRange.start));
+	}
+	insertLinkAtCursor_(displayText, url);
+}
+
 if (typeof module !== 'undefined') {
 	module.exports = { buildDocLinkUrl_: buildDocLinkUrl_ };
 }

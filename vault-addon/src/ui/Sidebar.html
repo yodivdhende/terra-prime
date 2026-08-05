@@ -12,6 +12,9 @@
 	<h2>Vault Links</h2>
 	<p class="vl-muted" id="vl-vault-name"></p>
 
+	<p class="vl-muted">Type <code>[[</code> in the document, then a few letters of a heading, to see suggestions here.</p>
+	<div id="vl-suggest-box" class="vl-suggest-box vl-hidden"></div>
+
 	<input type="text" id="vl-search" placeholder="Search vault files..." />
 	<ul class="vl-file-list" id="vl-file-list"></ul>
 	<button id="vl-refresh">Refresh index</button>
@@ -76,6 +79,59 @@
 		loadLinkPanels();
 		loadTagList();
 		loadUnlinkedMentions();
+		startCursorPolling();
+	}
+
+	var cursorPollTimer = null;
+	var cursorPollInFlight = false;
+
+	function startCursorPolling() {
+		if (cursorPollTimer) {
+			return;
+		}
+		cursorPollTimer = setInterval(pollCursorContext, 1000);
+	}
+
+	function pollCursorContext() {
+		if (cursorPollInFlight) {
+			return;
+		}
+		cursorPollInFlight = true;
+		runServer('getCursorContext')
+			.then(renderSuggestBox)
+			.catch(function () {
+				renderSuggestBox(null);
+			})
+			.finally(function () {
+				cursorPollInFlight = false;
+			});
+	}
+
+	function renderSuggestBox(context) {
+		var box = document.getElementById('vl-suggest-box');
+		if (!context || !context.triggerFound || !context.suggestions || !context.suggestions.length) {
+			box.classList.add('vl-hidden');
+			box.innerHTML = '';
+			return;
+		}
+		box.classList.remove('vl-hidden');
+		box.innerHTML = '';
+		context.suggestions.forEach(function (heading) {
+			var item = document.createElement('div');
+			item.className = 'vl-suggest-item';
+			item.textContent = heading.docName + ' › ' + (heading.text || '(untitled heading)');
+			item.addEventListener('click', function () {
+				runServer('insertVaultLink', heading.docId, heading.headingId, heading.text || heading.docName)
+					.then(function () {
+						box.classList.add('vl-hidden');
+						box.innerHTML = '';
+					})
+					.catch(function (err) {
+						window.alert(err && err.message ? err.message : String(err));
+					});
+			});
+			box.appendChild(item);
+		});
 	}
 
 	function loadUnlinkedMentions() {

@@ -41,7 +41,28 @@ picking one inserts the link at your cursor.
      in `.clasp.json` with its script ID.
 3. `clasp push`
 4. Open any Google Doc → `Extensions` → the Apps Script project → confirm it opens,
-   then reload the Doc and confirm the **Vault Links** menu appears.
+   then reload the Doc and confirm the **Vault Links** menu appears (this works even
+   before the steps below, since a script bound to/opened from a Doc still fires
+   `onOpen`).
+
+## Installing as a real Editor Add-on
+
+The steps above are enough for the container-bound iteration style described below,
+but `Config.gs`/`VaultIndex.gs`/etc. need to read and write **other** docs in the
+vault, not just whichever Doc the script happens to be opened from — that only works
+once the project is installed as a standalone Editor Add-on for your account:
+
+1. `clasp open` (or open the project directly in
+   [script.google.com](https://script.google.com)).
+2. **Deploy → Test deployments → Install add-on** (or **Deploy → New deployment**,
+   type **Add-on**, then install it from there — the exact menu wording has moved
+   around across Apps Script editor versions).
+3. Google will show an "unverified app" warning since this isn't published to the
+   Marketplace — click through it (**Advanced → Go to Vault Links (unsafe)**) and
+   grant the `documents` and `drive.readonly` scopes declared in `appsscript.json`.
+4. Open any Google Doc, reload it, and confirm the **Vault Links** menu appears in
+   `Extensions` without needing to open the script project directly — `onInstall`
+   (which just delegates to `onOpen`) is what makes that automatic going forward.
 
 ## Development
 
@@ -52,11 +73,13 @@ clasp pull     # pull remote changes back down
 clasp open     # open the project in the Apps Script web editor
 ```
 
-Early development (through the vault-index/link-graph/heading features) happens
-against a **container-bound** script in a throwaway test Doc for fast iteration —
-`Extensions > Apps Script` from that Doc gives instant "Run" access without the
-install-flow friction of a real add-on deployment. The project migrates to a real
-standalone Editor Add-on deployment later (TP-0182.11), once the core logic is proven.
+Early development (through TP-0182.02 – .10) happened against a **container-bound**
+script in a throwaway test Doc for fast iteration — `Extensions > Apps Script` from
+that Doc gives instant "Run" access without the install-flow friction of a real add-on
+deployment. As of TP-0182.11 the manifest carries the `addOns` block needed for a real
+standalone deployment (see "Installing as a real Editor Add-on" above); prefer testing
+against that installed add-on going forward, since it's the only way to exercise
+features that read/write docs other than the one the script happens to be opened from.
 
 ## Testing
 
@@ -78,9 +101,11 @@ node --test
 
 ## Manual QA checklist
 
-To be filled in as features land (TP-0182.02 onward); see the parent issue for the
-full list of scenarios each subtask should be verified against. At minimum, before
-calling TP-0182.11 done, re-run all of the following against a real installed add-on:
+Everything below requires a real Google account and can't be run in a sandboxed
+agent environment — re-run all of it against a real **installed** add-on (see
+"Installing as a real Editor Add-on" above), not just a container-bound test script,
+since several items only make sense once the add-on can read/write docs other than
+the one it's opened from:
 
 - [ ] Add-on installs for your own account; **Vault Links** menu appears in
       `Extensions` on an arbitrary real Doc

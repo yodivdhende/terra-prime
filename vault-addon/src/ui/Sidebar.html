@@ -11,6 +11,7 @@
 <div id="vl-main" class="vl-hidden">
 	<h2>Vault Links</h2>
 	<p class="vl-muted" id="vl-vault-name"></p>
+	<button id="vl-change-folder">Change vault folder</button>
 
 	<p class="vl-muted">Type <code>[[</code> in the document, then a few letters of a heading, to see suggestions here.</p>
 	<div id="vl-suggest-box" class="vl-suggest-box vl-hidden"></div>
@@ -265,6 +266,13 @@
 			list.appendChild(li);
 		});
 	}
+
+	document.getElementById('vl-change-folder').addEventListener('click', function () {
+		runServer('resetVaultFolder').then(function () {
+			document.getElementById('vl-folder-input').value = '';
+			showView('vl-setup');
+		});
+	});
 
 	document.getElementById('vl-setup-save').addEventListener('click', function () {
 		var input = document.getElementById('vl-folder-input').value;

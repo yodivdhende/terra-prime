@@ -123,3 +123,17 @@ the one it's opened from:
       one inserts the correct link; `]]` before selecting hides suggestions
 - [ ] Graph modal shows zero external network requests (devtools Network tab) and
       stays responsive on a ~20-30 doc vault
+- [ ] "Change vault folder" clears the current vault and returns to first-run setup
+
+---
+
+## Future polish (needs real usage data)
+
+Not done yet, and deliberately not guessed at: `VaultIndex.gs`/`Headings.gs` cache
+vault-index and heading-index entries for a flat 5 minutes, which is a reasonable
+starting point but untuned — once this has run against a real vault, revisit the TTLs
+against actual vault size and edit frequency. Likewise, `VaultIndex.gs`'s recursive
+`DriveApp` folder walk is the simplest correct implementation, not the fastest one; if
+indexing feels slow on a large vault (50+ docs), that's the point to swap it for the
+Advanced Drive Service (`Drive.Files.list` with `'{id}' in parents` queries, which
+batches far better than per-folder `DriveApp` calls).

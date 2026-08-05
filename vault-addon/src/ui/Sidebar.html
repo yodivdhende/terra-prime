@@ -20,6 +20,16 @@
 		<h3>Headings in this doc</h3>
 		<ul class="vl-file-list" id="vl-heading-list"></ul>
 	</div>
+
+	<div class="vl-section">
+		<h3>Links from this doc</h3>
+		<ul class="vl-file-list" id="vl-outbound-list"></ul>
+	</div>
+
+	<div class="vl-section">
+		<h3>Links to this doc</h3>
+		<ul class="vl-file-list" id="vl-backlink-list"></ul>
+	</div>
 </div>
 
 <?!= include('ui/ClientUtil'); ?>
@@ -46,6 +56,45 @@
 		showView('vl-main');
 		loadFileList('');
 		loadHeadingList();
+		loadLinkPanels();
+	}
+
+	function loadLinkPanels() {
+		runServer('getActiveDocId').then(function (docId) {
+			runServer('getOutboundLinksForDoc', docId).then(function (links) {
+				renderLinkList('vl-outbound-list', links, function (link) {
+					return link.targetName;
+				});
+			});
+			runServer('getBacklinksForDoc', docId).then(function (links) {
+				renderLinkList('vl-backlink-list', links, function (link) {
+					return link.sourceName;
+				});
+			});
+		});
+	}
+
+	function renderLinkList(listId, links, nameOf) {
+		var list = document.getElementById(listId);
+		list.innerHTML = '';
+		if (!links.length) {
+			var empty = document.createElement('li');
+			empty.className = 'vl-muted';
+			empty.textContent = 'None yet.';
+			list.appendChild(empty);
+			return;
+		}
+		links.forEach(function (link) {
+			var li = document.createElement('li');
+			var name = document.createElement('div');
+			name.textContent = nameOf(link);
+			var meta = document.createElement('div');
+			meta.className = 'vl-path';
+			meta.textContent = link.text;
+			li.appendChild(name);
+			li.appendChild(meta);
+			list.appendChild(li);
+		});
 	}
 
 	function loadHeadingList() {

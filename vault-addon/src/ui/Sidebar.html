@@ -35,6 +35,11 @@
 		<h3>Links to this doc</h3>
 		<ul class="vl-file-list" id="vl-backlink-list"></ul>
 	</div>
+
+	<div class="vl-section">
+		<h3>Unlinked mentions</h3>
+		<ul class="vl-file-list" id="vl-unlinked-list"></ul>
+	</div>
 </div>
 
 <?!= include('ui/ClientUtil'); ?>
@@ -63,6 +68,47 @@
 		loadHeadingList();
 		loadLinkPanels();
 		loadTagList();
+		loadUnlinkedMentions();
+	}
+
+	function loadUnlinkedMentions() {
+		runServer('getActiveDocId').then(function (docId) {
+			runServer('getUnlinkedMentionsForDoc', docId).then(function (mentions) {
+				renderUnlinkedMentions(docId, mentions);
+			});
+		});
+	}
+
+	function renderUnlinkedMentions(sourceDocId, mentions) {
+		var list = document.getElementById('vl-unlinked-list');
+		list.innerHTML = '';
+		if (!mentions.length) {
+			var empty = document.createElement('li');
+			empty.className = 'vl-muted';
+			empty.textContent = 'No unlinked mentions found.';
+			list.appendChild(empty);
+			return;
+		}
+		mentions.forEach(function (mention) {
+			var li = document.createElement('li');
+			var name = document.createElement('div');
+			name.textContent = mention.docName;
+			li.appendChild(name);
+
+			var linkButton = document.createElement('button');
+			linkButton.textContent = 'Link it';
+			linkButton.addEventListener('click', function () {
+				runServer('linkifyMention', sourceDocId, mention.docId)
+					.then(function () {
+						li.remove();
+					})
+					.catch(function (err) {
+						window.alert(err && err.message ? err.message : String(err));
+					});
+			});
+			li.appendChild(linkButton);
+			list.appendChild(li);
+		});
 	}
 
 	function loadTagList() {

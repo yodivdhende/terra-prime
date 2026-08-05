@@ -164,15 +164,83 @@
 			return;
 		}
 		docs.forEach(function (doc) {
+			list.appendChild(buildFileListItem_(doc));
+		});
+	}
+
+	function buildFileListItem_(doc) {
+		var li = document.createElement('li');
+
+		var row = document.createElement('div');
+		var name = document.createElement('span');
+		name.textContent = doc.name;
+		row.appendChild(name);
+		li.appendChild(row);
+
+		var path = document.createElement('div');
+		path.className = 'vl-path';
+		path.textContent = doc.path;
+		li.appendChild(path);
+
+		var actions = document.createElement('div');
+
+		var insertWholeDocButton = document.createElement('button');
+		insertWholeDocButton.textContent = 'Insert link';
+		insertWholeDocButton.addEventListener('click', function () {
+			insertLink_(doc.id, null, doc.name);
+		});
+		actions.appendChild(insertWholeDocButton);
+
+		var expandButton = document.createElement('button');
+		expandButton.textContent = 'Headings';
+		var headingList = document.createElement('ul');
+		headingList.className = 'vl-file-list vl-hidden';
+		expandButton.addEventListener('click', function () {
+			var willShow = headingList.classList.contains('vl-hidden');
+			headingList.classList.toggle('vl-hidden', !willShow);
+			if (willShow && !headingList.dataset.loaded) {
+				headingList.dataset.loaded = '1';
+				runServer('getDocHeadingsWithAnchors', doc.id).then(function (headings) {
+					renderInsertableHeadingList_(headingList, doc, headings);
+				});
+			}
+		});
+		actions.appendChild(expandButton);
+
+		li.appendChild(actions);
+		li.appendChild(headingList);
+		return li;
+	}
+
+	function renderInsertableHeadingList_(container, doc, headings) {
+		container.innerHTML = '';
+		if (!headings.length) {
+			var empty = document.createElement('li');
+			empty.className = 'vl-muted';
+			empty.textContent = 'No headings in this file.';
+			container.appendChild(empty);
+			return;
+		}
+		headings.forEach(function (heading) {
 			var li = document.createElement('li');
-			var name = document.createElement('div');
-			name.textContent = doc.name;
-			var path = document.createElement('div');
-			path.className = 'vl-path';
-			path.textContent = doc.path;
-			li.appendChild(name);
-			li.appendChild(path);
-			list.appendChild(li);
+			li.style.paddingLeft = (heading.level - 1) * 12 + 'px';
+			var text = document.createElement('div');
+			text.textContent = heading.text || '(untitled heading)';
+			li.appendChild(text);
+
+			var insertButton = document.createElement('button');
+			insertButton.textContent = 'Insert link';
+			insertButton.addEventListener('click', function () {
+				insertLink_(doc.id, heading.headingId, heading.text || doc.name);
+			});
+			li.appendChild(insertButton);
+			container.appendChild(li);
+		});
+	}
+
+	function insertLink_(targetDocId, headingId, displayText) {
+		runServer('insertLinkFromBrowser', targetDocId, headingId, displayText).catch(function (err) {
+			window.alert(err && err.message ? err.message : String(err));
 		});
 	}
 </script>

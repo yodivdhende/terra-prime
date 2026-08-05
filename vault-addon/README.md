@@ -73,7 +73,7 @@ Run with:
 
 ```sh
 cd vault-addon
-node --test test/
+node --test
 ```
 
 ## Manual QA checklist

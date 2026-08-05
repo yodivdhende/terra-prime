@@ -1,0 +1,21 @@
+<script>
+	function runServer(name) {
+		var args = Array.prototype.slice.call(arguments, 1);
+		return new Promise(function (resolve, reject) {
+			var runner = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
+			runner[name].apply(runner, args);
+		});
+	}
+
+	function debounce(fn, waitMs) {
+		var timer = null;
+		return function () {
+			var context = this;
+			var args = arguments;
+			clearTimeout(timer);
+			timer = setTimeout(function () {
+				fn.apply(context, args);
+			}, waitMs);
+		};
+	}
+</script>

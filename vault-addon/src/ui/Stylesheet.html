@@ -1,0 +1,81 @@
+<style>
+	:root {
+		--vl-spacing-sm: 6px;
+		--vl-spacing-md: 12px;
+		--vl-spacing-lg: 20px;
+		--vl-color-text: #1f2328;
+		--vl-color-muted: #59636e;
+		--vl-color-border: #d0d7de;
+		--vl-color-accent: #0969da;
+		--vl-color-bg: #ffffff;
+		--vl-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	}
+
+	body {
+		font-family: var(--vl-font);
+		color: var(--vl-color-text);
+		background: var(--vl-color-bg);
+		margin: 0;
+		padding: var(--vl-spacing-md);
+		font-size: 13px;
+	}
+
+	h2,
+	h3 {
+		margin: 0 0 var(--vl-spacing-sm);
+	}
+
+	input[type='text'] {
+		width: 100%;
+		box-sizing: border-box;
+		padding: var(--vl-spacing-sm);
+		border: 1px solid var(--vl-color-border);
+		border-radius: 4px;
+		font-size: 13px;
+		margin-bottom: var(--vl-spacing-sm);
+	}
+
+	button {
+		padding: var(--vl-spacing-sm) var(--vl-spacing-md);
+		border: 1px solid var(--vl-color-border);
+		border-radius: 4px;
+		background: var(--vl-color-bg);
+		cursor: pointer;
+		font-size: 13px;
+	}
+
+	button.primary {
+		background: var(--vl-color-accent);
+		border-color: var(--vl-color-accent);
+		color: #fff;
+	}
+
+	ul.vl-file-list {
+		list-style: none;
+		margin: var(--vl-spacing-sm) 0;
+		padding: 0;
+	}
+
+	ul.vl-file-list li {
+		padding: var(--vl-spacing-sm) 0;
+		border-bottom: 1px solid var(--vl-color-border);
+	}
+
+	ul.vl-file-list li .vl-path {
+		color: var(--vl-color-muted);
+		font-size: 11px;
+	}
+
+	.vl-muted {
+		color: var(--vl-color-muted);
+		font-size: 12px;
+	}
+
+	.vl-hidden {
+		display: none;
+	}
+
+	.vl-section {
+		margin-top: var(--vl-spacing-lg);
+	}
+</style>

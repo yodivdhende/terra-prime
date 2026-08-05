@@ -1,0 +1,95 @@
+<?!= include('ui/Stylesheet'); ?>
+
+<div id="vl-setup" class="vl-hidden">
+	<h2>Set up your vault</h2>
+	<p class="vl-muted">Paste the Google Drive folder ID or URL you want Vault Links to index. Only Google Docs inside this folder (and its subfolders) will ever be read.</p>
+	<input type="text" id="vl-folder-input" placeholder="Folder ID or https://drive.google.com/drive/folders/..." />
+	<p id="vl-setup-error" class="vl-muted vl-hidden"></p>
+	<button class="primary" id="vl-setup-save">Save vault folder</button>
+</div>
+
+<div id="vl-main" class="vl-hidden">
+	<h2>Vault Links</h2>
+	<p class="vl-muted" id="vl-vault-name"></p>
+
+	<input type="text" id="vl-search" placeholder="Search vault files..." />
+	<ul class="vl-file-list" id="vl-file-list"></ul>
+	<button id="vl-refresh">Refresh index</button>
+</div>
+
+<?!= include('ui/ClientUtil'); ?>
+<script>
+	document.addEventListener('DOMContentLoaded', init);
+
+	function init() {
+		runServer('isVaultConfigured').then(function (configured) {
+			if (configured) {
+				showMain();
+			} else {
+				showView('vl-setup');
+			}
+		});
+	}
+
+	function showView(id) {
+		['vl-setup', 'vl-main'].forEach(function (elId) {
+			document.getElementById(elId).classList.toggle('vl-hidden', elId !== id);
+		});
+	}
+
+	function showMain() {
+		showView('vl-main');
+		loadFileList('');
+	}
+
+	document.getElementById('vl-setup-save').addEventListener('click', function () {
+		var input = document.getElementById('vl-folder-input').value;
+		var errorEl = document.getElementById('vl-setup-error');
+		errorEl.classList.add('vl-hidden');
+		runServer('setVaultFolderId', input)
+			.then(function () {
+				showMain();
+			})
+			.catch(function (err) {
+				errorEl.textContent = err && err.message ? err.message : String(err);
+				errorEl.classList.remove('vl-hidden');
+			});
+	});
+
+	document.getElementById('vl-refresh').addEventListener('click', function () {
+		runServer('refreshVaultIndex').then(renderFileList);
+	});
+
+	var onSearchInput = debounce(function () {
+		loadFileList(document.getElementById('vl-search').value);
+	}, 200);
+
+	document.getElementById('vl-search').addEventListener('input', onSearchInput);
+
+	function loadFileList(query) {
+		runServer('searchVaultDocs', query).then(renderFileList);
+	}
+
+	function renderFileList(docs) {
+		var list = document.getElementById('vl-file-list');
+		list.innerHTML = '';
+		if (!docs.length) {
+			var empty = document.createElement('li');
+			empty.className = 'vl-muted';
+			empty.textContent = 'No files found.';
+			list.appendChild(empty);
+			return;
+		}
+		docs.forEach(function (doc) {
+			var li = document.createElement('li');
+			var name = document.createElement('div');
+			name.textContent = doc.name;
+			var path = document.createElement('div');
+			path.className = 'vl-path';
+			path.textContent = doc.path;
+			li.appendChild(name);
+			li.appendChild(path);
+			list.appendChild(li);
+		});
+	}
+</script>

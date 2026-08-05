@@ -15,6 +15,11 @@
 	<input type="text" id="vl-search" placeholder="Search vault files..." />
 	<ul class="vl-file-list" id="vl-file-list"></ul>
 	<button id="vl-refresh">Refresh index</button>
+
+	<div class="vl-section">
+		<h3>Headings in this doc</h3>
+		<ul class="vl-file-list" id="vl-heading-list"></ul>
+	</div>
 </div>
 
 <?!= include('ui/ClientUtil'); ?>
@@ -40,6 +45,35 @@
 	function showMain() {
 		showView('vl-main');
 		loadFileList('');
+		loadHeadingList();
+	}
+
+	function loadHeadingList() {
+		runServer('getActiveDocHeadings').then(renderHeadingList);
+	}
+
+	function renderHeadingList(headings) {
+		var list = document.getElementById('vl-heading-list');
+		list.innerHTML = '';
+		if (!headings.length) {
+			var empty = document.createElement('li');
+			empty.className = 'vl-muted';
+			empty.textContent = 'No headings in this doc yet.';
+			list.appendChild(empty);
+			return;
+		}
+		headings.forEach(function (heading) {
+			var li = document.createElement('li');
+			li.style.paddingLeft = (heading.level - 1) * 12 + 'px';
+			var text = document.createElement('div');
+			text.textContent = heading.text || '(untitled heading)';
+			var meta = document.createElement('div');
+			meta.className = 'vl-path';
+			meta.textContent = heading.headingId ? 'H' + heading.level + ' · ' + heading.headingId : 'H' + heading.level + ' · anchor not generated yet';
+			li.appendChild(text);
+			li.appendChild(meta);
+			list.appendChild(li);
+		});
 	}
 
 	document.getElementById('vl-setup-save').addEventListener('click', function () {

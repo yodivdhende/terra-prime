@@ -40,6 +40,13 @@
 		<h3>Unlinked mentions</h3>
 		<ul class="vl-file-list" id="vl-unlinked-list"></ul>
 	</div>
+
+	<div class="vl-section">
+		<h3>Link health</h3>
+		<p class="vl-muted">Scans every link in the vault - can be slow for large vaults, so it only runs on demand.</p>
+		<button id="vl-check-links">Check links</button>
+		<ul class="vl-file-list" id="vl-broken-link-list"></ul>
+	</div>
 </div>
 
 <?!= include('ui/ClientUtil'); ?>
@@ -220,6 +227,46 @@
 	document.getElementById('vl-refresh').addEventListener('click', function () {
 		runServer('refreshVaultIndex').then(renderFileList);
 	});
+
+	var brokenLinkStatusLabels = {
+		'target-missing': 'Target document no longer in vault',
+		'heading-missing': 'Linked heading no longer exists'
+	};
+
+	document.getElementById('vl-check-links').addEventListener('click', function (evt) {
+		var button = evt.currentTarget;
+		button.disabled = true;
+		button.textContent = 'Checking...';
+		runServer('getBrokenLinksReport')
+			.then(renderBrokenLinkList)
+			.finally(function () {
+				button.disabled = false;
+				button.textContent = 'Check links';
+			});
+	});
+
+	function renderBrokenLinkList(report) {
+		var list = document.getElementById('vl-broken-link-list');
+		list.innerHTML = '';
+		if (!report.length) {
+			var empty = document.createElement('li');
+			empty.className = 'vl-muted';
+			empty.textContent = 'No broken links found.';
+			list.appendChild(empty);
+			return;
+		}
+		report.forEach(function (item) {
+			var li = document.createElement('li');
+			var summary = document.createElement('div');
+			summary.textContent = item.sourceDocName + ' → "' + item.linkText + '"';
+			var meta = document.createElement('div');
+			meta.className = 'vl-path';
+			meta.textContent = brokenLinkStatusLabels[item.status] || item.status;
+			li.appendChild(summary);
+			li.appendChild(meta);
+			list.appendChild(li);
+		});
+	}
 
 	var onSearchInput = debounce(function () {
 		loadFileList(document.getElementById('vl-search').value);

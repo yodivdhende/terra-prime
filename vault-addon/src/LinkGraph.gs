@@ -24,7 +24,7 @@ function findAllTextElements_(element) {
 	return results;
 }
 
-function extractLinksFromTextElement_(textElement, sourceDocId, vaultDocIdSet) {
+function extractLinksFromTextElement_(textElement, sourceDocId) {
 	var content = textElement.getText();
 	var indices = textElement.getTextAttributeIndices();
 	var links = [];
@@ -36,7 +36,7 @@ function extractLinksFromTextElement_(textElement, sourceDocId, vaultDocIdSet) {
 			continue;
 		}
 		var parsed = parseDocLinkUrl_(url);
-		if (!parsed || parsed.docId === sourceDocId || !vaultDocIdSet.has(parsed.docId)) {
+		if (!parsed || parsed.docId === sourceDocId) {
 			continue;
 		}
 		links.push({
@@ -50,13 +50,19 @@ function extractLinksFromTextElement_(textElement, sourceDocId, vaultDocIdSet) {
 	return links;
 }
 
-function extractOutboundLinks_(docId, vaultDocIdSet) {
+function extractAllDocLinks_(docId) {
 	var body = DocumentApp.openById(docId).getBody();
 	var links = [];
 	findAllTextElements_(body).forEach(function (textElement) {
-		links = links.concat(extractLinksFromTextElement_(textElement, docId, vaultDocIdSet));
+		links = links.concat(extractLinksFromTextElement_(textElement, docId));
 	});
 	return links;
+}
+
+function extractOutboundLinks_(docId, vaultDocIdSet) {
+	return extractAllDocLinks_(docId).filter(function (link) {
+		return vaultDocIdSet.has(link.targetDocId);
+	});
 }
 
 function computeGraphFromLinks_(docs) {

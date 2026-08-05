@@ -17,6 +17,11 @@
 	<button id="vl-refresh">Refresh index</button>
 
 	<div class="vl-section">
+		<h3>Tags</h3>
+		<ul class="vl-file-list" id="vl-tag-list"></ul>
+	</div>
+
+	<div class="vl-section">
 		<h3>Headings in this doc</h3>
 		<ul class="vl-file-list" id="vl-heading-list"></ul>
 	</div>
@@ -57,6 +62,33 @@
 		loadFileList('');
 		loadHeadingList();
 		loadLinkPanels();
+		loadTagList();
+	}
+
+	function loadTagList() {
+		runServer('buildTagIndex').then(renderTagList);
+	}
+
+	function renderTagList(tagIndex) {
+		var list = document.getElementById('vl-tag-list');
+		list.innerHTML = '';
+		if (!tagIndex.length) {
+			var empty = document.createElement('li');
+			empty.className = 'vl-muted';
+			empty.textContent = 'No #tags found in this vault yet.';
+			list.appendChild(empty);
+			return;
+		}
+		tagIndex.forEach(function (entry) {
+			var li = document.createElement('li');
+			var button = document.createElement('button');
+			button.textContent = entry.tag + ' (' + entry.docs.length + ')';
+			button.addEventListener('click', function () {
+				renderFileList(entry.docs);
+			});
+			li.appendChild(button);
+			list.appendChild(li);
+		});
 	}
 
 	function loadLinkPanels() {
@@ -179,7 +211,7 @@
 
 		var path = document.createElement('div');
 		path.className = 'vl-path';
-		path.textContent = doc.path;
+		path.textContent = doc.path || '';
 		li.appendChild(path);
 
 		var actions = document.createElement('div');

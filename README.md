@@ -223,5 +223,6 @@ terra-prime/
 │       └── migrations/      # SQL migration files
 ├── docs/                    # Additional documentation
 ├── google-sheets/           # Google Sheets integration
-└── stemtest/                # Component test project
+├── stemtest/                # Component test project
+└── vault-addon/             # Google Docs vault-linker Editor Add-on (Apps Script)
 ```

@@ -49,3 +49,10 @@ test('computeGraphFromLinks_ excludes links whose target is outside the provided
 	assert.equal(graph.edges.length, 0);
 	assert.equal(graph.nodes.length, 1);
 });
+
+test('computeGraphFromLinks_ carries a doc\'s url onto its node when provided', () => {
+	const docs = [{ id: 'a', name: 'Doc A', url: 'https://docs.google.com/document/d/a/edit', outboundLinks: [] }];
+	assert.deepEqual(computeGraphFromLinks_(docs).nodes, [
+		{ id: 'a', name: 'Doc A', type: 'doc', url: 'https://docs.google.com/document/d/a/edit' }
+	]);
+});

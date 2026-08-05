@@ -68,7 +68,11 @@ function extractOutboundLinks_(docId, vaultDocIdSet) {
 function computeGraphFromLinks_(docs) {
 	var nodesById = {};
 	docs.forEach(function (doc) {
-		nodesById[doc.id] = { id: doc.id, name: doc.name, type: 'doc' };
+		var node = { id: doc.id, name: doc.name, type: 'doc' };
+		if (doc.url) {
+			node.url = doc.url;
+		}
+		nodesById[doc.id] = node;
 	});
 	var edges = [];
 	var seenEdgeKeys = {};
@@ -109,6 +113,7 @@ function buildLinkGraph() {
 		return {
 			id: doc.id,
 			name: doc.name,
+			url: doc.url,
 			outboundLinks: links.map(function (link) {
 				return { targetId: link.targetDocId };
 			})

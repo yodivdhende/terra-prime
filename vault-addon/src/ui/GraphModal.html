@@ -1,0 +1,311 @@
+<?!= include('ui/Stylesheet'); ?>
+<style>
+	html,
+	body {
+		height: 100%;
+		margin: 0;
+	}
+
+	body {
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	#vl-graph-toolbar {
+		padding: var(--vl-spacing-sm) var(--vl-spacing-md);
+		border-bottom: 1px solid var(--vl-color-border);
+		display: flex;
+		align-items: center;
+		gap: var(--vl-spacing-md);
+		flex: 0 0 auto;
+	}
+
+	#vl-graph-canvas-wrap {
+		position: relative;
+		flex: 1 1 auto;
+		min-height: 0;
+	}
+
+	#vl-graph-canvas {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	#vl-graph-tooltip {
+		position: absolute;
+		pointer-events: none;
+		background: #1f2328;
+		color: #fff;
+		padding: 4px 8px;
+		border-radius: 4px;
+		font-size: 12px;
+		display: none;
+		z-index: 1;
+	}
+</style>
+
+<div id="vl-graph-toolbar">
+	<label><input type="checkbox" id="vl-toggle-tags" checked /> Show tags</label>
+	<span class="vl-muted" id="vl-graph-status">Loading...</span>
+</div>
+<div id="vl-graph-canvas-wrap">
+	<canvas id="vl-graph-canvas"></canvas>
+	<div id="vl-graph-tooltip"></div>
+</div>
+
+<?!= include('ui/ClientUtil'); ?>
+<script>
+	var canvas = document.getElementById('vl-graph-canvas');
+	var ctx = canvas.getContext('2d');
+	var wrap = document.getElementById('vl-graph-canvas-wrap');
+	var tooltip = document.getElementById('vl-graph-tooltip');
+	var statusEl = document.getElementById('vl-graph-status');
+
+	var allNodes = [];
+	var allEdges = [];
+	var simNodes = [];
+	var simEdges = [];
+	var showTags = true;
+	var draggingNode = null;
+	var dragStart = null;
+	var dragMoved = false;
+	var hoveredNode = null;
+
+	function resizeCanvas() {
+		canvas.width = wrap.clientWidth;
+		canvas.height = wrap.clientHeight;
+	}
+	window.addEventListener('resize', resizeCanvas);
+
+	document.addEventListener('DOMContentLoaded', function () {
+		resizeCanvas();
+		runServer('getGraphData')
+			.then(function (graph) {
+				allNodes = graph.nodes;
+				allEdges = graph.edges;
+				var linkCount = graph.edges.filter(function (e) {
+					return e.type !== 'tag';
+				}).length;
+				statusEl.textContent = graph.nodes.length + ' nodes, ' + linkCount + ' links';
+				rebuildSimulation();
+				requestAnimationFrame(tick);
+			})
+			.catch(function (err) {
+				statusEl.textContent = 'Failed to load graph: ' + (err && err.message ? err.message : String(err));
+			});
+	});
+
+	document.getElementById('vl-toggle-tags').addEventListener('change', function (evt) {
+		showTags = evt.target.checked;
+		rebuildSimulation();
+	});
+
+	function rebuildSimulation() {
+		var nodes = allNodes.filter(function (n) {
+			return showTags || n.type !== 'tag';
+		});
+		var edges = allEdges.filter(function (e) {
+			return showTags || e.type !== 'tag';
+		});
+		var existingById = {};
+		simNodes.forEach(function (n) {
+			existingById[n.id] = n;
+		});
+		simNodes = nodes.map(function (n) {
+			var prev = existingById[n.id];
+			return {
+				id: n.id,
+				name: n.name,
+				type: n.type,
+				url: n.url,
+				x: prev ? prev.x : canvas.width / 2 + (Math.random() - 0.5) * 40,
+				y: prev ? prev.y : canvas.height / 2 + (Math.random() - 0.5) * 40,
+				vx: 0,
+				vy: 0,
+				pinned: prev ? prev.pinned : false
+			};
+		});
+		var nodeById = {};
+		simNodes.forEach(function (n) {
+			nodeById[n.id] = n;
+		});
+		simEdges = edges
+			.filter(function (e) {
+				return nodeById[e.source] && nodeById[e.target];
+			})
+			.map(function (e) {
+				return { source: nodeById[e.source], target: nodeById[e.target], type: e.type };
+			});
+	}
+
+	function tick() {
+		stepSimulation();
+		draw();
+		requestAnimationFrame(tick);
+	}
+
+	function stepSimulation() {
+		var repulsion = 1800;
+		var springLength = 90;
+		var springStrength = 0.02;
+		var damping = 0.85;
+		var centerX = canvas.width / 2;
+		var centerY = canvas.height / 2;
+
+		for (var i = 0; i < simNodes.length; i++) {
+			var a = simNodes[i];
+			if (a.pinned) {
+				continue;
+			}
+			var fx = (centerX - a.x) * 0.002;
+			var fy = (centerY - a.y) * 0.002;
+			for (var j = 0; j < simNodes.length; j++) {
+				if (i === j) {
+					continue;
+				}
+				var b = simNodes[j];
+				var dx = a.x - b.x;
+				var dy = a.y - b.y;
+				var distSq = Math.max(dx * dx + dy * dy, 25);
+				var force = repulsion / distSq;
+				var dist = Math.sqrt(distSq);
+				fx += (dx / dist) * force;
+				fy += (dy / dist) * force;
+			}
+			a.vx = (a.vx + fx) * damping;
+			a.vy = (a.vy + fy) * damping;
+		}
+
+		simEdges.forEach(function (edge) {
+			var dx = edge.target.x - edge.source.x;
+			var dy = edge.target.y - edge.source.y;
+			var dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+			var diff = (dist - springLength) * springStrength;
+			var fx = (dx / dist) * diff;
+			var fy = (dy / dist) * diff;
+			if (!edge.source.pinned) {
+				edge.source.vx += fx;
+				edge.source.vy += fy;
+			}
+			if (!edge.target.pinned) {
+				edge.target.vx -= fx;
+				edge.target.vy -= fy;
+			}
+		});
+
+		simNodes.forEach(function (n) {
+			if (n.pinned) {
+				return;
+			}
+			n.x += n.vx;
+			n.y += n.vy;
+		});
+	}
+
+	function draw() {
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.lineWidth = 1;
+		simEdges.forEach(function (edge) {
+			ctx.strokeStyle = edge.type === 'tag' ? 'rgba(154,103,0,0.35)' : 'rgba(89,99,110,0.5)';
+			ctx.beginPath();
+			ctx.moveTo(edge.source.x, edge.source.y);
+			ctx.lineTo(edge.target.x, edge.target.y);
+			ctx.stroke();
+		});
+		simNodes.forEach(function (n) {
+			var radius = n.type === 'tag' ? 5 : 7;
+			ctx.beginPath();
+			ctx.arc(n.x, n.y, radius, 0, Math.PI * 2);
+			ctx.fillStyle = n === hoveredNode ? '#0969da' : n.type === 'tag' ? '#9a6700' : '#57606a';
+			ctx.fill();
+			ctx.fillStyle = '#1f2328';
+			ctx.font = '11px sans-serif';
+			ctx.fillText(n.name, n.x + radius + 4, n.y + 4);
+		});
+	}
+
+	function nodeAt(x, y) {
+		for (var i = simNodes.length - 1; i >= 0; i--) {
+			var n = simNodes[i];
+			var radius = n.type === 'tag' ? 5 : 7;
+			var dx = x - n.x;
+			var dy = y - n.y;
+			if (dx * dx + dy * dy <= (radius + 4) * (radius + 4)) {
+				return n;
+			}
+		}
+		return null;
+	}
+
+	function canvasPoint(evt) {
+		var rect = canvas.getBoundingClientRect();
+		return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
+	}
+
+	canvas.addEventListener('mousedown', function (evt) {
+		var p = canvasPoint(evt);
+		var n = nodeAt(p.x, p.y);
+		if (n) {
+			draggingNode = n;
+			n.pinned = true;
+			dragStart = p;
+			dragMoved = false;
+		}
+	});
+
+	canvas.addEventListener('mousemove', function (evt) {
+		var p = canvasPoint(evt);
+		if (draggingNode) {
+			if (dragStart && (Math.abs(p.x - dragStart.x) > 3 || Math.abs(p.y - dragStart.y) > 3)) {
+				dragMoved = true;
+			}
+			draggingNode.x = p.x;
+			draggingNode.y = p.y;
+			draggingNode.vx = 0;
+			draggingNode.vy = 0;
+			return;
+		}
+		var n = nodeAt(p.x, p.y);
+		hoveredNode = n;
+		if (n) {
+			tooltip.style.display = 'block';
+			tooltip.style.left = p.x + 12 + 'px';
+			tooltip.style.top = p.y + 12 + 'px';
+			tooltip.textContent = n.name;
+			canvas.style.cursor = 'pointer';
+		} else {
+			tooltip.style.display = 'none';
+			canvas.style.cursor = 'default';
+		}
+	});
+
+	canvas.addEventListener('mouseup', function () {
+		if (draggingNode) {
+			draggingNode.pinned = false;
+		}
+		draggingNode = null;
+	});
+
+	canvas.addEventListener('mouseleave', function () {
+		if (draggingNode) {
+			draggingNode.pinned = false;
+		}
+		draggingNode = null;
+		hoveredNode = null;
+		tooltip.style.display = 'none';
+	});
+
+	canvas.addEventListener('click', function (evt) {
+		if (dragMoved) {
+			dragMoved = false;
+			return;
+		}
+		var p = canvasPoint(evt);
+		var n = nodeAt(p.x, p.y);
+		if (n && n.type === 'doc' && n.url) {
+			window.open(n.url, '_blank');
+		}
+	});
+</script>

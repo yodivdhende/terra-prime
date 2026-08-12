@@ -14,7 +14,11 @@ export const POST: RequestHandler = async ({ request, cookies, locals }) => {
 		if (typeof name !== 'string' && typeof email !== 'string' && typeof password !== 'string')
 			throw new RequestError(400, 'request needs: name, email and password');
 		await authenticationRepo.register({ name, email, password });
-		const { userId, roles, name: storedName } = (await authenticationRepo.getCredentials({ email, password })) ?? {};
+		const {
+			userId,
+			roles,
+			name: storedName
+		} = (await authenticationRepo.getCredentials({ email, password })) ?? {};
 		if (roles == null || userId == null) throw new RequestError(400, 'credentials wrong');
 		const token = await sessionRepo.create({
 			userId: userId ?? null,
@@ -26,6 +30,6 @@ export const POST: RequestHandler = async ({ request, cookies, locals }) => {
 		sendVerificationEmail(userId, email).catch((err) => {
 			console.error('[register] failed to send verification email:', err);
 		});
-		return json({userId, roles, name: storedName});
+		return json({ userId, roles, name: storedName });
 	});
 };

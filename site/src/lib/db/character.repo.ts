@@ -159,7 +159,7 @@ class CharacterRepo {
 		}
 
 		await connection.execute(`DELETE FROM Character_Versions WHERE \`Character\` = ?`, [id]);
-		await connection.execute(`DELETE FROM Party_Members WHERE Member = ?`, [id]);
+		await connection.execute(`DELETE FROM Subco_Members WHERE Member = ?`, [id]);
 		await connection.execute(`DELETE FROM Characters WHERE Id = ?`, [id]);
 	}
 }

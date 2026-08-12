@@ -2,6 +2,7 @@ import { valueOrLogOfPromiseSetteld } from '$lib/utils/request';
 import type { RowDataPacket } from 'mysql2/promise';
 import { mysqlconnFn } from './mysql';
 import { eventParticipantsRepo } from './event_participants.repo';
+import { assertVersionCompanyMatchesSubco } from '$lib/server/subco.service';
 
 class CharacterVersionRepo {
   public async getAll(): Promise<CharacterVersionBare[]> {
@@ -63,6 +64,7 @@ class CharacterVersionRepo {
   }
 
   public async create(characterVersion: CharacterVersionBare): Promise<number> {
+    await assertVersionCompanyMatchesSubco(characterVersion);
     const connection = mysqlconnFn();
     const [result] = await connection.execute(
       `INSERT INTO Character_Versions (\`Character\`, Name, Company) VALUES (?, ?, ?)`,
@@ -79,6 +81,7 @@ class CharacterVersionRepo {
 
   public async update(characterVersion: CharacterVersionBare): Promise<number> {
     if (characterVersion.id == null) throw new Error('update requires an id');
+    await assertVersionCompanyMatchesSubco(characterVersion);
     const versionId = characterVersion.id;
     const connection = mysqlconnFn();
     await connection.execute(

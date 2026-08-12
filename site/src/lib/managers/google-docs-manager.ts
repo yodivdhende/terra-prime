@@ -6,7 +6,10 @@ const SCOPES = [
 	'https://www.googleapis.com/auth/documents'
 ];
 
-const BACKSTORY_FOLDER_ID = '1IET6eLvhyEwpYiTOaWf7Xq-DvaoTTJCh';
+export const enum BackstoryFolder {
+	Character = '1IET6eLvhyEwpYiTOaWf7Xq-DvaoTTJCh',
+	Subco = '1P6-cqLg-8byXrOr05h41m2INZeTa05ug'
+}
 
 export class GoogleDocsManager {
 	private getClient() {
@@ -18,15 +21,15 @@ export class GoogleDocsManager {
 		);
 	}
 
-	public async createBackstoryDoc(characterName: string): Promise<string> {
+	public async createBackstoryDoc(name: string, folder: BackstoryFolder = BackstoryFolder.Character): Promise<string> {
 		const auth = this.getClient();
 		const drive = google.drive({ version: 'v3', auth });
 
 		const file = await drive.files.create({
 			requestBody: {
-				name: `${characterName} - Backstory`,
+				name: `${name} - Backstory`,
 				mimeType: 'application/vnd.google-apps.document',
-				parents: [BACKSTORY_FOLDER_ID]
+				parents: [folder]
 			},
 			fields: 'id',
 			supportsAllDrives: true

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 	import { WINDOW_MANAGER, type CodexWindow } from '$lib/managers/window-manager.svelte';
 	import { FEATURE_MANAGER } from '$lib/managers/feature-manager.svelte';
@@ -8,9 +9,17 @@
 
 	let { window }: { window: CodexWindow } = $props();
 
+	const inviteToken = $derived(page.url.searchParams.get('invite') ?? '');
+
 	let mode = $state<'login' | 'register' | 'forgot'>('login');
 	$effect(() => {
 		if (!FEATURE_MANAGER.registerEnabled && mode === 'register') mode = 'login';
+	});
+	// Landing from a subco invite link (?invite=…) opens the register form.
+	$effect(() => {
+		if (inviteToken && FEATURE_MANAGER.registerEnabled && !CREDENTIAL_MANAGER.isLogedIn) {
+			mode = 'register';
+		}
 	});
 	let showPassword = $state(false);
 	let passwordInputType = $derived(showPassword ? 'text' : 'password');
@@ -46,8 +55,6 @@
 			}
 		};
 	}
-
-
 </script>
 
 <div class="login">
@@ -72,6 +79,7 @@
 		</button>
 	{:else if mode === 'register'}
 		<form method="POST" action="/manage/login/register" use:enhance={handleResult}>
+			<input type="hidden" name="invite" value={inviteToken} />
 			<label for="register-name">Name</label>
 			<input type="text" name="name" id="register-name" />
 			<label for="register-email">Email</label>

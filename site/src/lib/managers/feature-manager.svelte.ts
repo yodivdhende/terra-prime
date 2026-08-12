@@ -20,4 +20,4 @@ function createFeatureManager() {
   };
 }
 
-export const FEATURE_MANAGER = createFeatureManager();
+export const FEATURE_MANAGER = createFeatureManager()

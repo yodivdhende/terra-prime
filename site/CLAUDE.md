@@ -61,6 +61,6 @@ Schema lives in `db/migrations/0001_initial_schema.sql`. MySQL / InnoDB, utf8mb4
 |---|---|---|
 | `Events` | `Id`, `Name`, `StartTime`, `EndTime`, `Status` | Status: `Draft` / `Open` / `Live` / `Canceled` |
 | `Event_Participants` | `Event` → Events, `User` → Users, `CharacterVersion` → Character_Versions | Which character version a user plays at an event |
-| `Party` | `Id`, `Name` | A group of characters |
-| `Party_Members` | `Party` → Party, `Member` → Characters | Characters in a party |
+| `Subco` | `Id`, `Name`, `Company` → Companies, `BackstoryId` | A sub-company: a group of characters sharing one company and a background link |
+| `Subco_Members` | `Subco` → Subco, `Member` → Characters | Characters in a subco |
 | `Messages` | `Id`, `Sender` → Users, `Recipient` → Users, `Subject`, `Message`, `Attachment` (JSON) | In-game or out-of-game messages; `Sender` nullable (system messages) |

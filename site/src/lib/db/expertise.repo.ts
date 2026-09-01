@@ -24,7 +24,6 @@ class ExpertiseRepo {
 				e.Id as id,
 				e.Name as name,
 				e.Description as description,
-				e.Cost as cost,
 				e.CharacterAccess as characterAccess,
 				e.Icon as icon,
 				eg.Id as groupId,
@@ -57,7 +56,6 @@ class ExpertiseRepo {
 				e.Id as id,
 				e.Name as name,
 				e.Description as description,
-				e.Cost as cost,
 				e.CharacterAccess as characterAccess,
 				e.Icon as icon,
 				eg.Id as groupId,
@@ -96,7 +94,6 @@ class ExpertiseRepo {
 				e.Id as id,
 				e.Name as name,
 				e.Description as description,
-				e.Cost as cost,
 				e.CharacterAccess as characterAccess,
 				e.Icon as icon,
 				eg.Id as groupId,
@@ -131,7 +128,6 @@ class ExpertiseRepo {
 				e.Id as id,
 				e.Name as name,
 				e.Description as description,
-				e.Cost as cost,
 				e.CharacterAccess as characterAccess,
 				e.Icon as icon,
 				eg.Id as groupId,
@@ -168,7 +164,6 @@ class ExpertiseRepo {
 				e.Id as id,
 				e.Name as name,
 				e.Description as description,
-				e.Cost as cost,
 				e.CharacterAccess as characterAccess,
 				e.Icon as icon,
 				eg.Id as groupId,
@@ -231,65 +226,19 @@ class ExpertiseRepo {
 		return this.edit(item);
 	}
 
-	public async saveBulk(items: Expertise[]) {
-		const toCreate = items.filter((i) => i.id == null);
-		const toUpdate = items.filter((i) => i.id != null);
-		const conn = await mysqlconnFn().getConnection();
-		try {
-			await conn.beginTransaction();
-			if (toCreate.length > 0) {
-				const placeholders = toCreate.map(() => '(?,?,?,?,?)').join(',');
-				const values = toCreate.flatMap((i) => [
-					i.name,
-					i.description,
-					i.groupId,
-					i.cost ?? 0,
-					normalizeIcon(i.icon)
-				]);
-				await conn.execute(
-					`INSERT INTO Expertise (Name, Description, \`Group\`, Cost, Icon) VALUES ${placeholders}`,
-					values
-				);
-			}
-			if (toUpdate.length > 0) {
-				const placeholders = toUpdate.map(() => '(?,?,?,?,?,?)').join(',');
-				const values = toUpdate.flatMap((i) => [
-					i.id,
-					i.name,
-					i.description,
-					i.groupId,
-					i.cost ?? 0,
-					normalizeIcon(i.icon)
-				]);
-				await conn.execute(
-					`INSERT INTO Expertise (Id, Name, Description, \`Group\`, Cost, Icon) VALUES ${placeholders}
-					 ON DUPLICATE KEY UPDATE Name=VALUES(Name), Description=VALUES(Description), \`Group\`=VALUES(\`Group\`), Cost=VALUES(Cost), Icon=VALUES(Icon)`,
-					values
-				);
-			}
-			await conn.commit();
-		} catch (err) {
-			await conn.rollback();
-			throw err;
-		} finally {
-			conn.release();
-		}
-	}
-
 	public async create({
 		name,
 		description,
 		groupId,
-		cost,
 		icon
-	}: Pick<Expertise, 'name' | 'description' | 'groupId' | 'cost' | 'icon'>) {
+	}: Pick<Expertise, 'name' | 'description' | 'groupId' | 'icon'>) {
 		const connection = mysqlconnFn();
 		const [result] = await connection.execute(
 			`
-			 INSERT INTO Expertise (Name, Description, \`Group\`, Cost, Icon)
-			Values (?,?,?,?,?)
+			 INSERT INTO Expertise (Name, Description, \`Group\`, Icon)
+			Values (?,?,?,?)
       `,
-			[name, description, groupId, cost ?? 0, normalizeIcon(icon)]
+			[name, description, groupId, normalizeIcon(icon)]
 		);
 		if (Array.isArray(result) === false) return null;
 		if (result.length === 0) return null;
@@ -303,9 +252,8 @@ class ExpertiseRepo {
 		name,
 		description,
 		groupId,
-		cost,
 		icon
-	}: Pick<Expertise, 'id' | 'name' | 'description' | 'groupId' | 'cost' | 'icon'>) {
+	}: Pick<Expertise, 'id' | 'name' | 'description' | 'groupId' | 'icon'>) {
 		const connection = mysqlconnFn();
 		const [result] = await connection.execute(
 			`
@@ -313,11 +261,10 @@ class ExpertiseRepo {
 			SET Name = ?,
 			Description = ?,
 			\`Group\` = ?,
-			Cost = ?,
 			Icon = ?
 			WHERE Id = ?
       `,
-			[name, description, groupId, cost ?? 0, normalizeIcon(icon), id]
+			[name, description, groupId, normalizeIcon(icon), id]
 		);
 		if (Array.isArray(result) === false) return null;
 		if (result.length === 0) return null;
@@ -472,7 +419,6 @@ export type Expertise = {
 	description: string;
 	groupId: number;
 	groupName: string;
-	cost?: number;
 	characterAccess?: 'all' | 'none' | 'specific';
 	allowedCharacterIds?: number[];
 	/** SVG markup for this expertise's icon (nullable, admin-supplied). */

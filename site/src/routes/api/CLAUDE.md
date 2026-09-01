@@ -75,12 +75,17 @@ Templates are `{ id, key, docUrl }` rows. `docUrl` is a Google Doc URL whose HTM
 
 | Method | Path | Auth | Returns | Description |
 |--------|------|------|---------|-------------|
-| GET | `/api/expertise` | admin/user | `Expertise[]` (JSON) — `Expertise = { id: number \| null, name: string, description: string, groupId: number, groupName: string, cost?: number, icon?: string \| null, groupIcon?: string \| null, groupColor?: string \| null }`. `icon` is this expertise's own SVG; `groupIcon`/`groupColor` are read-only, joined from the parent group. Icons are sanitized on write. | List all expertise |
+Expertise has no per-entry cost. Every expertise shares the same cost curve, defined by a global point-cost table (`Expertise_Point_Costs`, points 1-20). The total cost of a character's expertise at level `N` is the sum of the per-point costs for points `1..N` (each point's cost reduced by any company discount for that expertise, floored at 0) — see `computeCharacterVersionCost` in `src/lib/server/budget.service.ts` and the shared helpers in `src/lib/utils/point-cost.ts`.
+
+| Method | Path | Auth | Returns | Description |
+|--------|------|------|---------|-------------|
+| GET | `/api/expertise` | admin/user | `Expertise[]` (JSON) — `Expertise = { id: number \| null, name: string, description: string, groupId: number, groupName: string, icon?: string \| null, groupIcon?: string \| null, groupColor?: string \| null }`. `icon` is this expertise's own SVG; `groupIcon`/`groupColor` are read-only, joined from the parent group. Icons are sanitized on write. | List all expertise |
 | PUT | `/api/expertise` | admin | empty body (200) | Create/update expertise; body: `Expertise` |
 | GET | `/api/expertise/[id]` | admin | `Expertise` (JSON) | Get expertise by ID |
 | POST | `/api/expertise/[id]` | admin | empty body (200) | Update expertise; body: `Expertise` |
 | DELETE | `/api/expertise/[id]` | admin | empty body (200) | Delete expertise |
-| POST | `/api/expertise/bulk` | admin | empty body (200) | Bulk update expertise; body: `Expertise[]` |
+| GET | `/api/expertise/point-costs` | admin/user | `ExpertisePointCost[]` (JSON) — `ExpertisePointCost = { point: number, cost: number }`, one row per point 1-20 | List the shared expertise point-cost table |
+| PUT | `/api/expertise/point-costs` | admin | empty body (200) | Update the point-cost table; body: `ExpertisePointCost[]`. Points are fixed by migration (1-20); this only updates `cost`, never creates/removes rows |
 | GET | `/api/expertise/groups` | admin/user | `ExpertiseGroup[]` (JSON) — `ExpertiseGroup = { id: number \| null, name: string, description: string, icon?: string \| null, color?: string \| null }`. `icon` is the group's SVG (sanitized on write); `color` is a `#rrggbb` hex string (validated on write, else stored null). | List all expertise groups |
 | PUT | `/api/expertise/groups` | admin | empty body (200) | Create/update expertise group; body: `ExpertiseGroup` |
 | GET | `/api/expertise/groups/[id]` | admin | `ExpertiseGroup` (JSON) | Get expertise group by ID |

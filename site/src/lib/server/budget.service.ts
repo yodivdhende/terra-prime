@@ -3,9 +3,10 @@ import type { CharacterVersionBare } from '$lib/db/character_version.repo';
 import { eventCouponRepo } from '$lib/db/event_coupon.repo';
 import { eventParticipantsRepo } from '$lib/db/event_participants.repo';
 import { eventRepo } from '$lib/db/event.repo';
-import { expertiseRepo } from '$lib/db/expertise.repo';
+import { expertisePointCostsRepo } from '$lib/db/expertise_point_costs.repo';
 import { implantRepo } from '$lib/db/implants.repo';
 import { itemRepo } from '$lib/db/items.repo';
+import { cumulativeExpertiseCost } from '$lib/utils/point-cost';
 
 export async function getAvailableBudget({
 	eventId,
@@ -25,25 +26,28 @@ export async function getAvailableBudget({
 }
 
 export async function computeCharacterVersionCost(version: CharacterVersionBare): Promise<number> {
-	const [allExpertise, allItems, allImplants, discounts] = await Promise.all([
-		expertiseRepo.getAll(),
+	const [pointCosts, allItems, allImplants, discounts] = await Promise.all([
+		expertisePointCostsRepo.getAll(),
 		itemRepo.getAll(),
 		implantRepo.getAll(),
 		version.company ? companyDiscountsRepo.getByCompany(version.company) : Promise.resolve(null)
 	]);
 
-	const expertiseCostById = new Map(allExpertise.map((e) => [e.id, e.cost ?? 0]));
+	const pointCostByPoint = new Map(pointCosts.map((p) => [p.point, p.cost]));
 	const itemCostById = new Map(allItems.map((i) => [i.id, i.cost ?? 0]));
 	const implantCostById = new Map(allImplants.map((i) => [i.id, i.cost ?? 0]));
 
-	const expertiseDiscountById = new Map((discounts?.expertise ?? []).map((d) => [d.expertiseId, d.discount]));
+	const expertiseDiscountById = new Map(
+		(discounts?.expertise ?? []).map((d) => [d.expertiseId, d.discount])
+	);
 	const itemDiscountById = new Map((discounts?.items ?? []).map((d) => [d.itemId, d.discount]));
-	const implantDiscountById = new Map((discounts?.implants ?? []).map((d) => [d.implantId, d.discount]));
+	const implantDiscountById = new Map(
+		(discounts?.implants ?? []).map((d) => [d.implantId, d.discount])
+	);
 
 	const expertiseSpent = version.expertise.reduce((sum, e) => {
-		const cost = expertiseCostById.get(e.id) ?? 0;
 		const discount = expertiseDiscountById.get(e.id) ?? 0;
-		return sum + Math.max(0, cost - discount) * e.value;
+		return sum + cumulativeExpertiseCost(e.value, pointCostByPoint, discount);
 	}, 0);
 	const itemsSpent = version.items.reduce((sum, i) => {
 		const cost = itemCostById.get(i.id) ?? 0;

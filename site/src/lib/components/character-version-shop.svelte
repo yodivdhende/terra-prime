@@ -7,6 +7,7 @@
 	import type { Character, CharacterVersionFull } from '$lib/managers/character-manager.svelte';
 	import type { ExpertiseManager } from '$lib/managers/expertise-manager.svelte';
 	import type { RegisterManager } from '$lib/managers/register-manager.svelte';
+	import { cumulativeExpertiseCost } from '$lib/utils/point-cost';
 
 	let {
 		character = $bindable(),
@@ -37,6 +38,15 @@
 
 	let activeStep = $state<Step>('details');
 	let discounts = $state<Discounts | null>(null);
+	let pointCosts = $state<Map<number, number>>(new Map());
+
+	$effect(() => {
+		fetch('/api/expertise/point-costs')
+			.then((r) => (r.ok ? r.json() : []))
+			.then((rows: { point: number; cost: number }[]) => {
+				pointCosts = new Map(rows.map(({ point, cost }) => [point, cost]));
+			});
+	});
 
 	$effect(() => {
 		const companyId = version.company?.id;
@@ -67,7 +77,6 @@
 			);
 	});
 
-	const expertiseCostById = $derived(new Map(expertise.map((e) => [e.id, e.cost ?? 0])));
 	const itemCostById = $derived(new Map(items.map((i) => [i.id, i.cost ?? 0])));
 	const implantCostById = $derived(new Map(implants.map((i) => [i.id, i.cost ?? 0])));
 
@@ -83,9 +92,8 @@
 
 	const expertiseSpent = $derived(
 		version.expertise.reduce((sum, e) => {
-			const cost = expertiseCostById.get(e.id) ?? 0;
 			const discount = expertiseDiscountById.get(e.id) ?? 0;
-			return sum + Math.max(0, cost - discount) * e.value;
+			return sum + cumulativeExpertiseCost(e.value, pointCosts, discount);
 		}, 0)
 	);
 	const itemsSpent = $derived(
@@ -159,6 +167,7 @@
 				bind:selected={version.expertise}
 				remaining={shopRemaining}
 				discounts={expertiseDiscountById}
+				{pointCosts}
 			/>
 		{:else if activeStep === 'items'}
 			<ShopItems

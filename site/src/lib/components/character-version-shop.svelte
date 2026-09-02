@@ -7,6 +7,7 @@
 	import type { Character, CharacterVersionFull } from '$lib/managers/character-manager.svelte';
 	import type { ExpertiseManager } from '$lib/managers/expertise-manager.svelte';
 	import type { RegisterManager } from '$lib/managers/register-manager.svelte';
+	import { applyDiscount } from '$lib/utils/discount';
 	import { cumulativeExpertiseCost } from '$lib/utils/point-cost';
 
 	let {
@@ -100,7 +101,7 @@
 		version.items.reduce((sum, i) => {
 			const cost = itemCostById.get(i.id) ?? 0;
 			const discount = itemDiscountById.get(i.id) ?? 0;
-			return sum + Math.max(0, cost - discount) * i.count;
+			return sum + applyDiscount(cost, discount) * i.count;
 		}, 0)
 	);
 	const itemsTotal = $derived(version.items.reduce((sum, i) => sum + i.count, 0));
@@ -108,7 +109,7 @@
 		version.implants.reduce((sum, i) => {
 			const cost = implantCostById.get(i.id) ?? 0;
 			const discount = implantDiscountById.get(i.id) ?? 0;
-			return sum + Math.max(0, cost - discount);
+			return sum + applyDiscount(cost, discount);
 		}, 0)
 	);
 	const spent = $derived(expertiseSpent + itemsSpent + implantsSpent);

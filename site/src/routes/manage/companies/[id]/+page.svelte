@@ -120,7 +120,7 @@
 		<h3>Items</h3>
 		<table>
 			<thead>
-				<tr><th>Item</th><th>Discount</th><th></th></tr>
+				<tr><th>Item</th><th>Discount %</th><th></th></tr>
 			</thead>
 			<tbody>
 				{#each discounts.items as row, i (i)}
@@ -132,7 +132,7 @@
 								{/each}
 							</select>
 						</td>
-						<td><input type="number" bind:value={row.discount} min="0" /></td>
+						<td><input type="number" bind:value={row.discount} min="0" max="100" /></td>
 						<td><button class="btn" onclick={() => removeItemDiscount(i)}>remove</button></td>
 					</tr>
 				{/each}
@@ -143,7 +143,7 @@
 		<h3>Implants</h3>
 		<table>
 			<thead>
-				<tr><th>Implant</th><th>Discount</th><th></th></tr>
+				<tr><th>Implant</th><th>Discount %</th><th></th></tr>
 			</thead>
 			<tbody>
 				{#each discounts.implants as row, i (i)}
@@ -155,7 +155,7 @@
 								{/each}
 							</select>
 						</td>
-						<td><input type="number" bind:value={row.discount} min="0" /></td>
+						<td><input type="number" bind:value={row.discount} min="0" max="100" /></td>
 						<td><button class="btn" onclick={() => removeImplantDiscount(i)}>remove</button></td>
 					</tr>
 				{/each}
@@ -166,7 +166,7 @@
 		<h3>Expertise</h3>
 		<table>
 			<thead>
-				<tr><th>Expertise</th><th>Discount</th><th></th></tr>
+				<tr><th>Expertise</th><th>Discount %</th><th></th></tr>
 			</thead>
 			<tbody>
 				{#each discounts.expertise as row, i (i)}
@@ -178,7 +178,7 @@
 								{/each}
 							</select>
 						</td>
-						<td><input type="number" bind:value={row.discount} min="0" /></td>
+						<td><input type="number" bind:value={row.discount} min="0" max="100" /></td>
 						<td><button class="btn" onclick={() => removeExpertiseDiscount(i)}>remove</button></td>
 					</tr>
 				{/each}

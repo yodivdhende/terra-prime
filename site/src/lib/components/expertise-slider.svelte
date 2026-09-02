@@ -8,7 +8,7 @@
 		pointCosts = new Map(),
 		discount = 0,
 		name = '',
-		max = 20,
+		max = 100,
 		onchange
 	}: {
 		value?: number;

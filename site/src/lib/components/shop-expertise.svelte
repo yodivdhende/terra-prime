@@ -130,7 +130,7 @@
 								<span class="entry-name">
 									{expertise.name}
 									{#if discounted}
-										<span class="discount-badge" title="company discount: -{expertiseDiscount}/pt"
+										<span class="discount-badge" title="company discount: -{expertiseDiscount}%"
 											>deal</span
 										>
 									{/if}
@@ -147,7 +147,7 @@
 							{pointCosts}
 							discount={expertiseDiscount}
 							name={expertise.name}
-							max={20}
+							max={100}
 							onchange={(v) => setExpertiseValue(expertise, v)}
 						/>
 					</li>

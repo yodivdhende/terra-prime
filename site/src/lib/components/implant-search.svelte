@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ShopImplant } from './shop-implants.svelte';
+	import { applyDiscount } from '$lib/utils/discount';
 
 	let {
 		catalog,
@@ -28,7 +29,7 @@
 <ul class="slot-list">
 	{#each filtered as implant (implant.id)}
 		{@const discount = discounts.get(implant.id) ?? 0}
-		{@const effective = Math.max(0, implant.cost - discount)}
+		{@const effective = applyDiscount(implant.cost, discount)}
 		{@const discounted = discount > 0 && implant.cost > 0}
 		{@const blocked = effective > remaining && !(current?.id === implant.id)}
 		<li class="slot-entry" class:discounted>
@@ -36,7 +37,7 @@
 				<span class="entry-name">
 					{implant.name}
 					{#if discounted}
-						<span class="discount-badge">deal</span>
+						<span class="discount-badge" title="company discount: -{discount}%">deal</span>
 					{/if}
 				</span>
 				{#if implant.description}

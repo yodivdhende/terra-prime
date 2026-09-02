@@ -7,7 +7,17 @@
 
 	let { data }: PageProps = $props();
 
-	let pointCosts = $derived<ExpertisePointCost[]>(data.pointCosts);
+	let pointCosts = $derived<ExpertisePointCost[]>(
+		[...data.pointCosts].sort((a, b) => a.point - b.point)
+	);
+
+	function addRow() {
+		pointCosts = [...pointCosts, { point: 0, cost: 0 }];
+	}
+
+	function removeRow(index: number) {
+		pointCosts = pointCosts.filter((_, i) => i !== index);
+	}
 
 	async function save() {
 		try {
@@ -32,26 +42,30 @@
 	<a href={resolve('/manage/expertise')}>back</a>
 	<h1>expertise point costs</h1>
 	<p class="hint">
-		Every expertise shares this cost curve — the cost of raising an expertise from one point to the
-		next depends only on the point being bought, not on which expertise it is.
+		Every expertise shares this cost curve, from 0 to 100. Each row is a breakpoint — an amount of
+		expertise and the total cost to reach it. The cost of amounts between breakpoints is linearly
+		interpolated (an implicit 0 -&gt; 0 breakpoint is always assumed below the lowest row).
 	</p>
 	<table>
 		<thead>
 			<tr>
-				<th>point</th>
-				<th>cost</th>
+				<th>amount of expertise</th>
+				<th>total value</th>
+				<th></th>
 			</tr>
 		</thead>
 		<tbody>
-			{#each pointCosts as entry (entry.point)}
+			{#each pointCosts as entry, i (i)}
 				<tr>
-					<td>{entry.point}</td>
+					<td><input type="number" min="0" max="100" bind:value={entry.point} /></td>
 					<td><input type="number" min="0" bind:value={entry.cost} /></td>
+					<td><button class="btn" onclick={() => removeRow(i)}>remove</button></td>
 				</tr>
 			{/each}
 		</tbody>
 	</table>
-	<div>
+	<div class="actions">
+		<button class="btn" onclick={addRow}>+ add row</button>
 		<button class="btn" onclick={save}>save</button>
 	</div>
 </main>
@@ -82,5 +96,10 @@
 
 	input[type='number'] {
 		width: 90px;
+	}
+
+	.actions {
+		display: flex;
+		gap: 8px;
 	}
 </style>

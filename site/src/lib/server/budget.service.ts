@@ -6,6 +6,7 @@ import { eventRepo } from '$lib/db/event.repo';
 import { expertisePointCostsRepo } from '$lib/db/expertise_point_costs.repo';
 import { implantRepo } from '$lib/db/implants.repo';
 import { itemRepo } from '$lib/db/items.repo';
+import { applyDiscount } from '$lib/utils/discount';
 import { cumulativeExpertiseCost } from '$lib/utils/point-cost';
 
 export async function getAvailableBudget({
@@ -52,12 +53,12 @@ export async function computeCharacterVersionCost(version: CharacterVersionBare)
 	const itemsSpent = version.items.reduce((sum, i) => {
 		const cost = itemCostById.get(i.id) ?? 0;
 		const discount = itemDiscountById.get(i.id) ?? 0;
-		return sum + Math.max(0, cost - discount) * i.count;
+		return sum + applyDiscount(cost, discount) * i.count;
 	}, 0);
 	const implantsSpent = version.implants.reduce((sum, i) => {
 		const cost = implantCostById.get(i.id) ?? 0;
 		const discount = implantDiscountById.get(i.id) ?? 0;
-		return sum + Math.max(0, cost - discount);
+		return sum + applyDiscount(cost, discount);
 	}, 0);
 
 	return expertiseSpent + itemsSpent + implantsSpent;

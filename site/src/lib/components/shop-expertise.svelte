@@ -3,7 +3,6 @@
 		id: number | null;
 		name: string;
 		description: string;
-		cost?: number;
 		groupId: number;
 		groupName: string;
 		icon?: string | null;
@@ -23,13 +22,15 @@
 		selected = $bindable<VersionExpertise[]>([]),
 		remaining,
 		budget = 0,
-		discounts = new Map()
+		discounts = new Map(),
+		pointCosts = new Map()
 	}: {
 		catalog: ShopExpertise[];
 		selected: VersionExpertise[];
 		remaining: number;
 		budget?: number;
 		discounts?: Map<number, number>;
+		pointCosts?: Map<number, number>;
 	} = $props();
 
 	const expertiseGroups = $derived.by(() => {
@@ -118,10 +119,8 @@
 				{#each group.expertise as expertise (expertise.id)}
 					{@const expertiseIcon = expertise.icon}
 					{@const currentValue = getValue(expertise.id)}
-					{@const expertiseCost = expertise.cost ?? 0}
 					{@const expertiseDiscount = expertise.id != null ? (discounts.get(expertise.id) ?? 0) : 0}
-					{@const effectiveCost = Math.max(0, expertiseCost - expertiseDiscount)}
-					{@const discounted = expertiseDiscount > 0 && expertiseCost > 0}
+					{@const discounted = expertiseDiscount > 0}
 					<li class="entry" class:owned={currentValue > 0} class:discounted>
 						<div class="entry-header">
 							{#if expertiseIcon}
@@ -131,7 +130,7 @@
 								<span class="entry-name">
 									{expertise.name}
 									{#if discounted}
-										<span class="discount-badge" title="company discount: -{expertiseDiscount}/pt"
+										<span class="discount-badge" title="company discount: -{expertiseDiscount}%"
 											>deal</span
 										>
 									{/if}
@@ -145,7 +144,8 @@
 							value={currentValue}
 							color={group.color}
 							{remaining}
-							cost={effectiveCost}
+							{pointCosts}
+							discount={expertiseDiscount}
 							name={expertise.name}
 							max={100}
 							onchange={(v) => setExpertiseValue(expertise, v)}

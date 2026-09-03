@@ -10,6 +10,7 @@
 
 <script lang="ts">
 	import type { VersionItem } from '$lib/managers/character-manager.svelte';
+	import { applyDiscount } from '$lib/utils/discount';
 
 	let {
 		catalog,
@@ -36,7 +37,7 @@
 	}
 
 	function effectiveCost(item: ShopItem) {
-		return Math.max(0, item.cost - (discounts.get(item.id) ?? 0));
+		return applyDiscount(item.cost, discounts.get(item.id) ?? 0);
 	}
 
 	function add(item: ShopItem) {
@@ -77,7 +78,7 @@
 				{@const count = countOf(item.id)}
 				{@const owned = count > 0}
 				{@const discount = discounts.get(item.id) ?? 0}
-				{@const effective = Math.max(0, item.cost - discount)}
+				{@const effective = applyDiscount(item.cost, discount)}
 				{@const discounted = discount > 0 && item.cost > 0}
 				{@const blocked = effective > remaining || (item.maxPerCharacter != null && count >= item.maxPerCharacter)}
 				<li class="entry" class:owned class:discounted>
@@ -85,7 +86,7 @@
 						<span class="entry-name">
 							{item.name}
 							{#if discounted}
-								<span class="discount-badge" title="company discount: -{discount}">deal</span>
+								<span class="discount-badge" title="company discount: -{discount}%">deal</span>
 							{/if}
 						</span>
 						{#if item.description}

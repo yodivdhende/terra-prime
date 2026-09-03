@@ -1,17 +1,21 @@
 <script lang="ts">
+	import { maxAffordableExpertiseValue } from '$lib/utils/point-cost';
+
 	let {
 		value = 0,
 		color,
 		remaining = Infinity,
-		cost = 0,
+		pointCosts = new Map(),
+		discount = 0,
 		name = '',
-		max = 10,
+		max = 100,
 		onchange
 	}: {
 		value?: number;
 		color: string;
 		remaining?: number;
-		cost?: number;
+		pointCosts?: Map<number, number>;
+		discount?: number;
 		name?: string;
 		max?: number;
 		onchange?: (newValue: number) => void;
@@ -21,12 +25,7 @@
 
 	function handleInput(e: Event & { currentTarget: HTMLInputElement }) {
 		const raw = Number(e.currentTarget.value);
-		const costDelta = (raw - value) * cost;
-		let newValue = raw;
-		if (costDelta > remaining) {
-			newValue = cost > 0 ? value + Math.floor(remaining / cost) : raw;
-			newValue = Math.max(0, Math.min(max, newValue));
-		}
+		const newValue = maxAffordableExpertiseValue(value, raw, remaining, pointCosts, discount);
 		onchange?.(newValue);
 	}
 </script>

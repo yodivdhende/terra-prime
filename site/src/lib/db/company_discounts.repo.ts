@@ -71,15 +71,31 @@ class CompanyDiscountsRepo {
 
 export const companyDiscountsRepo = new CompanyDiscountsRepo();
 
+function isDiscountRow(row: unknown, idKey: string): boolean {
+	if (typeof row !== 'object' || row === null) return false;
+	const record = row as Record<string, unknown>;
+	return (
+		idKey in record &&
+		typeof record[idKey] === 'number' &&
+		'discount' in record &&
+		typeof record.discount === 'number' &&
+		record.discount >= 0 &&
+		record.discount <= 100
+	);
+}
+
 export function isCompanyDiscounts(obj: unknown): obj is CompanyDiscounts {
 	return (
 		typeof obj === 'object' &&
 		obj !== null &&
 		'items' in obj &&
 		Array.isArray(obj.items) &&
+		obj.items.every((row) => isDiscountRow(row, 'itemId')) &&
 		'implants' in obj &&
 		Array.isArray(obj.implants) &&
+		obj.implants.every((row) => isDiscountRow(row, 'implantId')) &&
 		'expertise' in obj &&
-		Array.isArray(obj.expertise)
+		Array.isArray(obj.expertise) &&
+		obj.expertise.every((row) => isDiscountRow(row, 'expertiseId'))
 	);
 }

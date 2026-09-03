@@ -12,6 +12,7 @@
 	import Dropdown from '$lib/components/dropdown.svelte';
 	import ImplantSearch from './implant-search.svelte';
 	import { X } from '@lucide/svelte';
+	import { applyDiscount } from '$lib/utils/discount';
 
 	let {
 		catalog,
@@ -32,7 +33,7 @@
 	}
 
 	function effectiveCost(implant: ShopImplant) {
-		return Math.max(0, implant.cost - (discounts.get(implant.id) ?? 0));
+		return applyDiscount(implant.cost, discounts.get(implant.id) ?? 0);
 	}
 
 	function handleSelect(slot: number, implant: ShopImplant) {

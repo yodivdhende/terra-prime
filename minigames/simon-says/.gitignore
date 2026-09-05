@@ -3,3 +3,10 @@ __pycache__/
 .venv/
 venv/
 highscore.json
+
+# Holds a live session token -- never commit it.
+.env
+# The root .gitignore ignores `*.env.*`, and its intended `*!.env.example`
+# negation is malformed (a negation must start with `!`), so re-include the
+# example explicitly.
+!.env.example

@@ -129,6 +129,7 @@ Expertise has no per-entry cost. Every expertise shares the same cost curve, def
 | GET | `/api/characters/[characterId]` | admin/user | `Character` (JSON) | Get character by ID |
 | POST | `/api/characters/[characterId]` | admin/user | empty body (200) | Update character; body: `Character \| NewCharacter` |
 | GET | `/api/characters/[characterId]/events/[eventId]` | user | `{ characterVersion: CharacterVersionBare \| undefined }` (JSON) | Get the character version used for a specific event |
+| POST | `/api/characters/experience` | admin/user/device | `CharacterExperienceResponse` (JSON) — `{ characterId, characterName, ownerName, eventId, eventName, versionId, versionName, expertise: VersionExpertise[] }` | Resolve a character by name to its expertise for the version registered to the **latest event with status `Live`** (most recent `start`, ties broken by highest `id`). Body: `{ name: string }`. 404 if there is no live event, no character named `name`, or the character is not registered for the live event; 400 if multiple characters share that name |
 
 ### Character Versions
 
@@ -138,7 +139,7 @@ Expertise has no per-entry cost. Every expertise shares the same cost curve, def
 | GET | `/api/characters/versions/[versionId]` | user | `CharacterVersionBare \| null` (JSON; null when not found) | Get character version by ID |
 | PUT | `/api/characters/versions/[versionId]` | user | `number` (JSON-encoded id) | Update character version; body: `CharacterVersionBare` |
 | DELETE | `/api/characters/versions/[versionId]` | admin | empty body (200) | Delete character version and its expertise/items/implants |
-| GET | `/api/characters/versions/[versionId]/full` | user | `{}` (JSON) | Get full version detail — **not yet implemented** |
+| GET | `/api/characters/versions/[versionId]/full` | user | `CharacterVersionFull` (JSON) | Get full version detail, with expertise/items/implants resolved to catalog entries |
 | PUT | `/api/characters/versions/[versionId]/expertise` | user | empty body (200) | Replace version expertise; body: `CharacterVersionExpertise[]` |
 
 ---

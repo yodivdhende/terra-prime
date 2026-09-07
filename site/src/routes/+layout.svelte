@@ -8,7 +8,13 @@
 	import { credentialStore } from '$lib/local-utils/credential-store.svelte';
 	import { codexWindowManager } from '$lib/managers/codex-window-manager.svelte';
 
-	const PUBLIC_PATHS = ['/promo', '/manage/login', '/info'];
+	// Paths this effect leaves alone entirely, because their own server-side load
+	// function is the real access gate rather than the client-only `credentialStore`
+	// (backed by localStorage) checked below — e.g. `/games/*` routes are guarded by
+	// their own `+page.server.ts` against the actual session cookie, so bouncing them
+	// to `/codex` here would fight that guard for any session not established through
+	// the `/manage/login` form (a directly-minted session token, for instance).
+	const PUBLIC_PATHS = ['/promo', '/manage/login', '/info', '/games'];
 
 	let initialized = $state(false);
 

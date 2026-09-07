@@ -31,6 +31,16 @@ class CharacterRepo {
 		}
 	}
 
+	public async getByName(name: string): Promise<Character[]> {
+		const connection = mysqlconnFn();
+		const [result] = await connection.execute(
+			`${this.characterSelector} WHERE LOWER(TRIM(c.Name)) = LOWER(TRIM(?))`,
+			[name]
+		);
+		if (!Array.isArray(result)) return [];
+		return (result as unknown[]).filter(isCharacter);
+	}
+
 	public async getByOwner(ownerId: number): Promise<Character[]> {
 		const connection = mysqlconnFn();
 		const [result] = await connection.execute(

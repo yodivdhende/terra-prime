@@ -90,6 +90,35 @@ class EventRepo {
 		return events;
 	}
 
+	/** The event with `status`, most recently started (ties broken by highest id); `undefined` if none. */
+	public async getLatestWithStatus(status: EventStatus): Promise<LarpEvent | undefined> {
+		const connection = mysqlconnFn();
+		const [result] = await connection.execute(
+			`
+              SELECT
+                  Id as id,
+                  Name as name,
+                  StartTime as start,
+                  EndTime as end,
+                  Status as status,
+                  Budget as budget,
+                  RewardBudget as rewardBudget,
+                  FormId as formId,
+                  SheetId as sheetId
+              FROM Events
+              WHERE Status = ?
+              ORDER BY StartTime DESC, Id DESC
+              LIMIT 1
+          `,
+			[status]
+		);
+		if (Array.isArray(result) === false) return;
+		if (result.length === 0) return;
+		const [eventResult] = result;
+		if (isLarpEvent(eventResult)) return eventResult;
+		return;
+	}
+
 	public save({ id, name, start, end, status, budget, rewardBudget, formId, sheetId }: LarpEvent) {
 		if (id == null)
 			return this.create({ name, start, end, status, budget, rewardBudget, formId, sheetId });

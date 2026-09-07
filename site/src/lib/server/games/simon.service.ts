@@ -4,12 +4,11 @@
  * registered to the most recent `Live` event.
  *
  * This runs in-process, inside the same server that owns the database — unlike
- * the standalone `minigames/simon-says` pygame client, it calls the repos
- * directly rather than going through the admin-gated `/api/events` and
- * `/api/characters` HTTP routes, so no privileged session token is needed here.
- *
- * Ported from `minigames/simon-says/simon/api.py` — keep the two in sync if the
- * lookup rules ever change.
+ * an HTTP client, it calls the repos directly rather than going through the
+ * admin-gated `/api/events` and `/api/characters` routes, so no privileged
+ * session token is needed here. The live-event and name-lookup steps mirror
+ * `/api/characters/experience` — keep the two in sync if the lookup rules
+ * ever change.
  */
 
 import { characterRepo, type Character } from '$lib/db/character.repo';
@@ -43,31 +42,14 @@ export class AmbiguousCharacterError extends SimonLookupError {
 	}
 }
 
-/** The most recent event with status `Live`. There is no dedicated endpoint for
- * this — `/api/events/open` hardcodes `Open` — so the filtering happens here.
- * "Most recent" is the latest start time, tie-broken by the highest id. */
 async function findLiveEvent() {
-	const events = await eventRepo.getWithStatus(EventStatus.Live);
-	if (events.length === 0) throw new NoLiveEventError('no event currently has status Live');
-
-	return events.reduce((latest, event) => {
-		if (event.start.getTime() !== latest.start.getTime()) {
-			return event.start.getTime() > latest.start.getTime() ? event : latest;
-		}
-		return (event.id ?? 0) > (latest.id ?? 0) ? event : latest;
-	});
+	const event = await eventRepo.getLatestWithStatus(EventStatus.Live);
+	if (!event) throw new NoLiveEventError('no event currently has status Live');
+	return event;
 }
 
 function toCandidate(character: Character): AmbiguousCandidate {
 	return { id: character.id, name: character.name, ownerName: character.ownerName };
-}
-
-/** Every character whose name matches `name`, case-insensitively. `Characters.Name`
- * has no uniqueness constraint, so this can legitimately return more than one. */
-async function findCharactersByName(name: string): Promise<Character[]> {
-	const characters = await characterRepo.getAll();
-	const wanted = name.trim().toLowerCase();
-	return characters.filter((c) => c.name.trim().toLowerCase() === wanted);
 }
 
 /** Pulls the hacking value out of a version's `{id, value}` expertise rows.
@@ -99,7 +81,7 @@ export async function resolveActiveCharacter(
 	characterId?: number
 ): Promise<ActiveCharacterInfo> {
 	const event = await findLiveEvent();
-	const matches = await findCharactersByName(name);
+	const matches = await characterRepo.getByName(name);
 
 	if (matches.length === 0) throw new CharacterNotFoundError(`no character named "${name}"`);
 

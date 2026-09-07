@@ -2,6 +2,7 @@ export const PublicUserRole = {
     user : 'user',
     player : 'player',
     extra : 'extra',
+    device : 'device',
 } as const;
 export type PublicUserRole = typeof PublicUserRole[keyof typeof PublicUserRole];
 export function isPublicUserRole(role: unknown): role is PublicUserRole{

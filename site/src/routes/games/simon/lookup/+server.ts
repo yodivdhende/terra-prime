@@ -1,8 +1,4 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { getSessionToken } from '$lib/utils/cookies';
-import { authGuardForUser } from '$lib/utils/request';
-import { RequestError } from '$lib/types/errors';
-import { UserRole } from '$lib/types/roles';
 import {
 	resolveActiveCharacter,
 	AmbiguousCharacterError,
@@ -14,22 +10,15 @@ import { sequenceLengthFor } from '$lib/games/simon/difficulty';
 import type { LookupError, LookupSuccess } from '$lib/games/simon/types';
 
 /**
- * Looks up a character by name and returns the difficulty for the hack.
+ * Looks up a character by name and returns the difficulty for the hack. No
+ * auth gate: this is a walk-up terminal, open to whoever can reach it.
  *
  * The error shapes here carry structured data (e.g. the candidate list on an
  * ambiguous name) that the generic `RequestError`/`error()` helper used
  * elsewhere in the app can't express, so this handles its own error mapping
- * rather than routing through `handleRequest`. Auth still uses the same
- * `RequestError` convention as every other route.
+ * rather than routing through `handleRequest`.
  */
-export const POST: RequestHandler = async ({ request, cookies }) => {
-	try {
-		await authGuardForUser(getSessionToken(cookies), [UserRole.user]);
-	} catch (err) {
-		if (err instanceof RequestError) return err.getError();
-		throw err;
-	}
-
+export const POST: RequestHandler = async ({ request }) => {
 	const body = await request.json().catch(() => null);
 	const name = typeof body?.name === 'string' ? body.name.trim() : '';
 	const characterId = typeof body?.characterId === 'number' ? body.characterId : undefined;

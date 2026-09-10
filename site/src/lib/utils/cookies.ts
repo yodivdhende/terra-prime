@@ -1,6 +1,5 @@
 import { UnAutherizedRequestError } from "$lib/types/errors";
 import type { Cookies } from "@sveltejs/kit";
-import { getTommorow } from "./time";
 
 export function setSessionToken(cookies: Cookies, token: string) {
   cookies.set('session-token', token, {

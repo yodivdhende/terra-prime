@@ -1,0 +1,185 @@
+<script lang="ts" module>
+	export type CharacterVersionExpertise = {
+		id: number;
+		name: string;
+		group: number;
+		groupName: string;
+		value: number;
+	};
+
+	export type CharacterVersionItem = {
+		id: number;
+		name: string;
+		description?: string;
+	};
+
+	export type CharacterVersionImplant = {
+		id: number;
+		name: string;
+		description?: string;
+		slot?: number;
+	};
+</script>
+
+<script lang="ts">
+	import CharacterExpertiseGroups from './character-expertise-groups.svelte';
+
+	let {
+		characterName,
+		versionName,
+		companyName,
+		ownerName,
+		expertise = [],
+		items = [],
+		implants = []
+	}: {
+		characterName: string;
+		versionName?: string;
+		companyName?: string | null;
+		ownerName?: string;
+		expertise?: CharacterVersionExpertise[];
+		items?: CharacterVersionItem[];
+		implants?: CharacterVersionImplant[];
+	} = $props();
+</script>
+
+<div class="character-version">
+	<div class="header">
+		<span class="character-name">{characterName}</span>
+		{#if versionName}
+			<span class="version-name">{versionName}</span>
+		{/if}
+		{#if companyName}
+			<span class="company-name">{companyName}</span>
+		{/if}
+		{#if ownerName}
+			<span class="owner-name">played by {ownerName}</span>
+		{/if}
+	</div>
+
+	{#if expertise.length > 0}
+		<section class="section">
+			<h4 class="section-label">expertise</h4>
+			<CharacterExpertiseGroups {expertise} showNames={true} size="2em" />
+		</section>
+	{/if}
+
+	{#if items.length > 0}
+		<section class="section">
+			<h4 class="section-label">items</h4>
+			<ul class="entry-list">
+				{#each items as item (item.id)}
+					<li class="entry">
+						<span class="entry-name">{item.name}</span>
+						{#if item.description}
+							<span class="entry-desc">{item.description}</span>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+
+	{#if implants.length > 0}
+		<section class="section">
+			<h4 class="section-label">implants</h4>
+			<ul class="entry-list">
+				{#each implants as implant (implant.id)}
+					<li class="entry">
+						<span class="entry-name">{implant.name}</span>
+						{#if implant.description}
+							<span class="entry-desc">{implant.description}</span>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+</div>
+
+<style>
+	.character-version {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.header {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+	}
+
+	.character-name {
+		font-size: 1em;
+		letter-spacing: 0.04em;
+	}
+
+	.version-name {
+		font-size: 0.65em;
+		opacity: 0.45;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	.company-name {
+		font-size: 0.65em;
+		color: var(--color-accent);
+		opacity: 0.7;
+		letter-spacing: 0.05em;
+	}
+
+	.owner-name {
+		font-size: 0.65em;
+		opacity: 0.45;
+		letter-spacing: 0.05em;
+	}
+
+	.section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.section-label {
+		font-size: 0.6em;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		opacity: 0.4;
+		margin: 0;
+		font-weight: normal;
+	}
+
+	.entry-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.entry {
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+		padding: 0.35rem 0.5rem;
+		border: 1px solid color-mix(in srgb, var(--color-accent) 15%, transparent);
+	}
+
+	.entry-name {
+		font-size: 0.75em;
+		letter-spacing: 0.03em;
+	}
+
+	.entry-desc {
+		font-size: 0.62em;
+		opacity: 0.45;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+	}
+</style>

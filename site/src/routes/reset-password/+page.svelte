@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 
 	type Status = 'idle' | 'submitting' | 'success' | 'error' | 'missing-token';
 	const token = $derived(page.url.searchParams.get('token') ?? '');
-	let status: Status = $state(token ? 'idle' : 'missing-token');
+	let status: Status = $state(untrack(() => (token ? 'idle' : 'missing-token')));
 	let message = $state('');
 
 	let password = $state('');
@@ -57,10 +59,10 @@
 		<h1>password reset</h1>
 		{#if status === 'missing-token'}
 			<p class="line err">missing or invalid reset link</p>
-			<a href="/codex">back ›</a>
+			<a href={resolve('/codex')}>back ›</a>
 		{:else if status === 'success'}
 			<p class="line ok">your password has been reset.</p>
-			<a href="/codex">continue ›</a>
+			<a href={resolve('/codex')}>continue ›</a>
 		{:else}
 			<form onsubmit={submit}>
 				<label for="password">new password</label>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { type PageProps } from './$types';
+	import { resolve } from '$app/paths';
 	import DataTable from '$lib/components/data-table.svelte';
 
 	let { data }: PageProps = $props();
@@ -17,7 +18,7 @@
 		{#snippet row(item)}
 			{@const user = item as typeof data.users[0]}
 			<tr>
-				<td><a href="./users/{user.id}">{user.id}</a></td>
+				<td><a href={resolve('/manage/users/[id]', { id: String(user.id) })}>{user.id}</a></td>
 				<td>{user.name}</td>
 				<td>{user.email}</td>
 				<td class="verified" class:no={!user.verified}>{user.verified ? 'yes' : 'no'}</td>

@@ -26,7 +26,7 @@
 	let inputErrorMessages = $derived.by(() => {
 		const errors = [] as string[];
 		if (emailErrors.valid === false) {
-			if ((emailErrors as any).isEmail === false) errors.push(`email: is geen heldig email adres`);
+			if ('isEmail' in emailErrors && emailErrors.isEmail === false) errors.push(`email: is geen heldig email adres`);
 		}
 		return errors;
 	});
@@ -73,7 +73,7 @@
 			</div>
 			{#if inputValid === false}
 				<div class="input-error">
-					{#each inputErrorMessages as error}
+					{#each inputErrorMessages as error, i (i)}
 						{error} <br />
 					{/each}
 				</div>

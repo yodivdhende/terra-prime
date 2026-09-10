@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { goto, invalidate } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import CharacterForm from '$lib/components/character-form.svelte';
+	import CharacterVersionPreview from '$lib/components/character-version-preview.svelte';
+	import ConfirmModal from '$lib/components/confirm-modal.svelte';
 	import { type Character } from '$lib/db/character.repo';
+	import type { CharacterVersionFull } from '$lib/managers/character-manager.svelte';
 	import { CirclePlus } from '@lucide/svelte';
 	import { type PageProps } from './$types';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
@@ -13,7 +17,9 @@
 		character = loadCharacter ?? null;
 	});
 	const users = $derived(data.users);
-	const versions = $derived(data.versions as { id: number; name: string }[]);
+	let versions = $derived(
+		data.versions as { id: number; name: string; full: CharacterVersionFull | null }[]
+	);
 
 	async function save() {
 		const characterToSave = $state.snapshot(character);
@@ -28,10 +34,50 @@
 			if (result.ok) {
 				TOAST_MANAGER.success('Character saved');
 				await invalidate('/api/my/characters');
-				await goto('.');
+				await goto(resolve('/manage/characters'));
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
+		}
+	}
+
+	let modal: ConfirmModal;
+
+	async function deleteCharacter() {
+		const id = $state.snapshot(character)?.id;
+		if (id == null) return;
+		try {
+			const result = await fetch(`/api/characters/${id}`, { method: 'delete' });
+			if (result.ok) {
+				TOAST_MANAGER.success('Character deleted');
+				await goto(resolve('/manage/characters'));
+			}
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
+		}
+	}
+
+	let versionModal: ConfirmModal;
+	let pendingDeleteVersionId: number | null = $state(null);
+
+	function requestDeleteVersion(id: number) {
+		pendingDeleteVersionId = id;
+		versionModal.open();
+	}
+
+	async function deleteVersion() {
+		const id = pendingDeleteVersionId;
+		if (id == null) return;
+		try {
+			const result = await fetch(`/api/characters/versions/${id}`, { method: 'delete' });
+			if (result.ok) {
+				versions = versions.filter((version) => version.id !== id);
+				TOAST_MANAGER.success('Version deleted');
+			} else {
+				TOAST_MANAGER.error(`Delete failed (${result.status})`);
+			}
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 
@@ -44,49 +90,81 @@
 			});
 			if (result.ok) {
 				const { id } = await result.json();
-				await goto(`/manage/versions/${id}`);
+				await goto(resolve('/manage/versions/[versionId]', { versionId: String(id) }));
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 </script>
 
 <main>
-	<a href=".">back</a>
+	<a href={resolve('/manage/characters')}>back</a>
 	{#if character != null}
 		<CharacterForm bind:character {users} />
 	{/if}
 	<div>
-		<button onclick={save}>save</button>
+		<button class="btn" onclick={save}>save</button>
+		<button class="btn btn-danger" onclick={() => modal.open()}>delete</button>
 	</div>
+
+	<ConfirmModal
+		bind:this={modal}
+		message="Delete this character?"
+		onconfirm={deleteCharacter}
+		oncancel={() => modal.close()}
+	/>
 
 	<section class="versions">
 		<h3>Versions</h3>
 		{#if versions.length === 0}
 			<p class="empty">no versions yet</p>
 		{:else}
-			<button class="add-version" onclick={addVersion}><CirclePlus size={14} /></button>
+			<button class="btn add-version" onclick={addVersion}><CirclePlus size={14} /></button>
 			<table>
 				<thead>
 					<tr>
 						<th>Id</th>
 						<th>Name</th>
+						<th>Overview</th>
+						<th></th>
 						<th></th>
 					</tr>
 				</thead>
 				<tbody>
-					{#each versions as version}
+					{#each versions as version (version.id)}
 						<tr>
 							<td>{version.id}</td>
 							<td>{version.name}</td>
-							<td><a href="/manage/versions/{version.id}">edit</a></td>
+							<td class="preview-cell">
+								{#if version.full}
+									<CharacterVersionPreview
+										expertise={version.full.expertise}
+										items={version.full.items}
+										implants={version.full.implants}
+										size="1em"
+									/>
+								{/if}
+							</td>
+							<td><a href={resolve('/manage/versions/[versionId]', { versionId: String(version.id) })}>edit</a></td>
+							<td
+								><button class="btn btn-danger" onclick={() => requestDeleteVersion(version.id)}
+									>delete</button
+								></td
+							>
 						</tr>
 					{/each}
 				</tbody>
 			</table>
 		{/if}
 	</section>
+
+	<ConfirmModal
+		bind:this={versionModal}
+		message="Delete this character version?"
+		onconfirm={deleteVersion}
+		oncancel={() => versionModal.close()}
+	/>
 </main>
 
 <style>
@@ -102,6 +180,11 @@
 
 	td {
 		padding: 8px;
+	}
+
+	.preview-cell {
+		min-width: 200px;
+		max-width: 320px;
 	}
 
 	.versions {

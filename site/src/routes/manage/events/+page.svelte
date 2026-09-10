@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { CirclePlus } from '@lucide/svelte';
+	import { resolve } from '$app/paths';
 	import { type PageProps } from './$types';
 	import { dateToHTMLDateTime } from '$lib/utils/time';
 	import type { LarpEvent } from '$lib/db/event.repo';
@@ -39,11 +40,11 @@
 </script>
 
 <main>
-	<a href="events/new"><CirclePlus /></a>
+	<a href={resolve('/manage/events/new')}><CirclePlus /></a>
 	<DataTable items={displayEvents} {columns}>
 		{#snippet row(item)}
 			<tr>
-				<td><a href="events/{item.id}">{item.id}</a></td>
+				<td><a href={resolve('/manage/events/[id]', { id: String(item.id) })}>{item.id}</a></td>
 				<td>{item.name}</td>
 				<td>{item.start}</td>
 				<td>{item.end}</td>

@@ -9,7 +9,6 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
   return handleRequest(async () => {
     await authGuardForUser(getSessionToken(cookies), ['admin']);
     const { characterId } = params;
-    console.log('get character', { characterId, params });
     const numberId = isNumberOrError(characterId);
     const character = await characterRepo.getById(numberId);
     return json(character);
@@ -26,6 +25,16 @@ export const POST: RequestHandler = async ({ cookies, params, request }) => {
       throw new RequestError(400, 'body was not of type character');
     }
     await characterRepo.save(character);
+    return new Response();
+  });
+};
+
+export const DELETE: RequestHandler = async ({ cookies, params }) => {
+  return handleRequest(async () => {
+    await authGuardForUser(getSessionToken(cookies), ['admin']);
+    const { characterId } = params;
+    const numberId = isNumberOrError(characterId);
+    await characterRepo.delete(numberId);
     return new Response();
   });
 };

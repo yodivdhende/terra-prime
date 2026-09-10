@@ -1,16 +1,14 @@
-import type { Implant } from '$lib/db/implants.repo';
 import type { PageServerLoad } from './$types';
 import { handleRequest } from '$lib/utils/request';
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
 	return handleRequest(async () => {
 		const { id } = params;
-		if (id == null || typeof id != 'string') return { implant: undefined, allImplants: [] };
-		const [implant, allImplants] = await Promise.all([
-			fetch(`/api/implants/${id}`, { method: 'GET' }).then((r) => r.json()),
-			fetch('/api/implants', { method: 'GET' }).then((r) => r.json() as Promise<Implant[]>)
+		if (id == null || typeof id != 'string') return { implant: undefined, characters: [] };
+		const [implant, characters] = await Promise.all([
+			fetch(`/api/implants/${id}`, { method: 'GET' }).then((r) => r.ok ? r.json() : undefined),
+			fetch('/api/characters').then((r) => r.ok ? r.json() : [])
 		]);
-		if (implant == null) return { implant: undefined, allImplants: [] };
-		return { implant, allImplants };
+		return { implant: implant ?? undefined, characters };
 	});
 };

@@ -28,7 +28,7 @@
 </script>
 
 <select bind:value={selectedId} required>
-	{#each companies as c}
+	{#each companies as c (c.id)}
 		<option value={c.id}>{c.name}</option>
 	{/each}
 </select>

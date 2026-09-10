@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { CirclePlus } from '@lucide/svelte';
+	import { resolve } from '$app/paths';
 	import { type PageProps } from './$types';
 	import DataTable from '$lib/components/data-table.svelte';
 
@@ -13,15 +14,15 @@
 </script>
 
 <main>
-	<a href="emails/new"><CirclePlus /></a>
+	<a href={resolve('/manage/emails/new')}><CirclePlus /></a>
 	<DataTable items={data.templates} {columns}>
 		{#snippet row(item)}
 			{@const template = item as typeof data.templates[0]}
 			<tr>
-				<td><a href="emails/{template.id}">{template.id}</a></td>
+				<td><a href={resolve('/manage/emails/[id]', { id: String(template.id) })}>{template.id}</a></td>
 				<td>{template.key}</td>
 				<td class="url">
-					<a href={template.docUrl} target="_blank" rel="noopener noreferrer">{template.docUrl}</a>
+					<a href={template.docUrl} target="_blank" rel="noopener noreferrer external">{template.docUrl}</a>
 				</td>
 			</tr>
 		{/snippet}

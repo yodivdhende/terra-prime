@@ -11,7 +11,7 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 		if (typeof body?.characterName !== 'string' || body.characterName.trim().length === 0) {
 			throw new BadRequest();
 		}
-		const url = await getGoogleDocsManager().createBackstoryDoc(body.characterName.trim());
-		return json({ url });
+		const docId = await getGoogleDocsManager().createBackstoryDoc(body.characterName.trim());
+		return json({ id: docId });
 	});
 };

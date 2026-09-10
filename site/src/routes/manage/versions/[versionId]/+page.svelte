@@ -1,23 +1,21 @@
 <script lang="ts">
-	import CharacterVersionShop from '$lib/codex/components/character-version-shop.svelte';
-	import type { Character } from '$lib/db/character.repo';
-	import type { CharacterVersionFull } from '$lib/codex/managers/character-manager.svelte';
+	import CharacterVersionShop from '$lib/components/character-version-shop.svelte';
+	import { resolve } from '$app/paths';
+	import { createCharacterManager } from '$lib/managers/character-manager.svelte';
 	import { type PageProps } from './$types';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
 
-	let character = $state<Character | null>(null);
-	let version = $state<CharacterVersionFull | null>(null);
-
-	$inspect(data);
+	const manager = createCharacterManager();
 
 	$effect(() => {
-		character = data.character ?? null;
-		version = data.version ?? null;
+		if (data.character) manager.character = data.character;
+		if (data.version) manager.version = data.version;
+		manager.setCatalog(data.expertise ?? []);
 	});
 
-	const skills = $derived(data.skills);
+	const expertise = $derived(data.expertise);
 	const items = $derived(data.items);
 	const implants = $derived(data.implants);
 
@@ -26,16 +24,19 @@
 	let saved = $state(false);
 
 	async function save() {
-		if (character == null || version == null) return;
+		if (manager.character.id == null || manager.version.id == null) return;
 		saving = true;
 		saveError = null;
 		saved = false;
 		try {
-			const result = await fetch(`/api/characters/${character.id}/versions/${version.id}`, {
-				method: 'post',
-				body: JSON.stringify($state.snapshot(version)),
-				headers: { 'content-type': 'application/json' }
-			});
+			const result = await fetch(
+				`/api/characters/${manager.character.id}/versions/${manager.version.id}`,
+				{
+					method: 'post',
+					body: JSON.stringify($state.snapshot(manager.version)),
+					headers: { 'content-type': 'application/json' }
+				}
+			);
 			if (result.ok) {
 				saved = true;
 				TOAST_MANAGER.success('Version saved');
@@ -43,9 +44,9 @@
 				saveError = `save failed (${result.status})`;
 				TOAST_MANAGER.error(`Save failed (${result.status})`);
 			}
-		} catch (err: any) {
+		} catch (err) {
 			saveError = `${err}`;
-			TOAST_MANAGER.error(err?.message ?? 'Something went wrong');
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		} finally {
 			saving = false;
 		}
@@ -53,14 +54,21 @@
 </script>
 
 <main>
-	{#if character == null || version == null}
-		<a href="/manage/characters">back</a>
+	{#if manager.character.id == null || manager.version.id == null}
+		<a href={resolve('/manage/characters')}>back</a>
 		<p class="status">not found</p>
 	{:else}
-		<a href="/manage/characters/{character.id}">back</a>
+		<a href={resolve('/manage/characters/[id]', { id: String(manager.character.id) })}>back</a>
 
 		<div class="shop-wrapper">
-			<CharacterVersionShop bind:character bind:version {skills} {items} {implants} />
+			<CharacterVersionShop
+				bind:character={manager.character}
+				bind:version={manager.version}
+				{expertise}
+				{items}
+				{implants}
+				expertiseManager={manager.expertiseManager}
+			/>
 		</div>
 
 		<div class="actions">
@@ -69,7 +77,7 @@
 			{:else if saved}
 				<span class="success">saved</span>
 			{/if}
-			<button onclick={save} disabled={saving}>
+			<button class="btn" onclick={save} disabled={saving}>
 				{saving ? 'saving…' : 'save'}
 			</button>
 		</div>
@@ -81,14 +89,20 @@
 		display: flex;
 		flex-direction: column;
 		padding: 8px;
-		height: 100%;
+		height: 90vh;
 		box-sizing: border-box;
 	}
 
 	.shop-wrapper {
 		flex: 1;
 		min-height: 0;
+		overflow: hidden;
 		margin-top: 8px;
+	}
+
+	:global(.overview) {
+		margin-top: 8px;
+		flex-shrink: 0;
 	}
 
 	.actions {

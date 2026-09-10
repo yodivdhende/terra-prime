@@ -28,7 +28,7 @@ export const PUT: RequestHandler = async ({ cookies, params }) => {
 			characterId,
 			name: 'New Version',
 			company: firstCompany.id,
-			skills: [],
+			expertise: [],
 			items: [],
 			implants: []
 		});

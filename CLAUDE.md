@@ -1,29 +1,57 @@
+# Claude Instructions
 
-<!-- BACKLOG.MD MCP GUIDELINES START -->
+## Branch Policy
+
+Always use the `staging` branch for development when no specific branch is specified. Never default to `main` for development work.
+
+### Branch naming
+
+When creating a branch from a GitHub issue, use one of these prefixes followed by `TP-NNNN-` and the issue title (lowercase, hyphenated):
+
+- `feature/TP-NNNN-title` — new functionality
+- `fix/TP-NNNN-title` — bug fixes
+- `chore/TP-NNNN-title` — maintenance, config, tooling
+
+Example: `feature/TP-0042-add-login-page`
+
+### Commit messages
+
+Every commit message must start with the TP ID: `TP-NNNN: <description>`
+
+Example: `TP-0042: add login page component`
 
 <CRITICAL_INSTRUCTION>
 
-## BACKLOG WORKFLOW INSTRUCTIONS
+## TASK MANAGEMENT
 
-This project uses Backlog.md MCP for all task and project management activities.
+This project uses **GitHub Issues** (via the `gh` CLI) for all task tracking. The repo is `yodivdhende/terra-prime`.
 
-**CRITICAL GUIDANCE**
+### Issue title and body
+- Every issue title must be prefixed with its TP ID (see **TP ID scheme** below)
+- Every task must have a step-by-step implementation plan in its body, written in Markdown
+- Format the plan as a numbered Markdown list (`1.`, `2.`, `3.` …)
+- Wrap file paths and code identifiers in backticks, e.g. `src/routes/login/+page.svelte`
+- Bold the file name(s) touched at the start of each step, e.g. **`src/lib/auth.ts`**: add token refresh logic
 
-- If your client supports MCP resources, read `backlog://workflow/overview` to understand when and how to use Backlog for this project.
-- If your client only supports tools or the above request fails, call `backlog.get_backlog_instructions()` to load the tool-oriented overview. Use the `instruction` selector when you need `task-creation`, `task-execution`, or `task-finalization`.
+### TP ID scheme
+- Every issue gets a TP ID in its title: `[TP-NNNN] <title>` where NNNN is the GitHub issue number zero-padded to 4 digits
+- After creating an issue, read back its number with `gh issue create ... | tail -1` (the URL contains the number), then immediately rename it: `gh issue edit <N> --title "[TP-NNNN] <title>"`
+- Subtasks use their **parent's** TP number plus a two-digit sequence: `[TP-NNNN.SS] <title>` (SS = 01, 02, 03…)
+- To find the next SS for a parent, count existing subtasks listed in the parent body and increment
 
-- **First time working here?** Read the overview resource IMMEDIATELY to learn the workflow
-- **Already familiar?** You should have the overview cached ("## Backlog.md Overview (MCP)")
-- **When to read it**: BEFORE creating tasks, or when you're unsure whether to track work
+### Parent / subtask relationships
+- Parent issues get the `epic` label
+- Parent body ends with a `### Subtasks` section containing a checklist of `- [ ] #N [TP-NNNN.SS] <title>` lines
+- Subtask body starts with `Parent: #N` so the link is bidirectional
+- Tick the checkbox in the parent when a subtask is closed
 
-These guides cover:
-- Decision framework for when to create tasks
-- Search-first workflow to avoid duplicates
-- Links to detailed guides for task creation, execution, and finalization
-- MCP tools reference
-
-You MUST read the overview resource to understand the complete workflow. The information is NOT summarized here.
+### Rules
+- Use `gh issue list` before creating new tasks (avoid duplicates)
+- Use `gh issue list --search "<keyword>"` to find a specific task
+- Use `gh issue create --title "[TP-NNNN] <title>" --body "<plan>"` (add `--label epic` for parents); apply the TP ID immediately after creation once the issue number is known
+- Mark work-in-progress by assigning yourself: `gh issue edit <N> --add-assignee @me`
+- Close with `gh issue close <N>` when complete — don't batch updates
+- Use `gh issue edit <N> --body "<new>"` to update; pass the full new body (it replaces, not appends)
+- Use `gh issue delete <N>` to remove a task
 
 </CRITICAL_INSTRUCTION>
-
-<!-- BACKLOG.MD MCP GUIDELINES END -->

@@ -4,12 +4,15 @@ import {
   isCharacterVersionBare,
   type CharacterVersionBare,
 } from '$lib/db/character_version.repo';
+import { eventCouponRepo } from '$lib/db/event_coupon.repo';
 import { eventParticipantsRepo } from '$lib/db/event_participants.repo';
+import { itemRepo } from '$lib/db/items.repo';
+import { computeCharacterVersionCost, getAvailableBudget } from '$lib/server/budget.service';
 import { isNumberOrError } from '$lib/request.utils';
 import { BadRequest } from '$lib/types/errors';
 import { UserRole } from '$lib/types/roles';
 import { getSessionToken } from '$lib/utils/cookies';
-import { authGuard, authGuardForUser, handleRequest } from '$lib/utils/request';
+import { authGuardForUser, handleRequest } from '$lib/utils/request';
 import { json, type RequestHandler } from '@sveltejs/kit';
 
 type CharacterWithVersions = {
@@ -17,8 +20,9 @@ type CharacterWithVersions = {
   name: string;
   ownerId: number;
   ownerName: string;
-  backstoryUrl?: string | null;
+  backstoryId?: string | null;
   versions: CharacterVersionBare[];
+  couponCode?: string | null;
 };
 
 export const GET: RequestHandler = async ({ cookies, params }) => {
@@ -31,7 +35,7 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
   });
 };
 
-export const PUT: RequestHandler = async ({ cookies, params, request }) => {
+export const PUT: RequestHandler = async ({ cookies, params, request, locals }) => {
   return handleRequest(async () => {
     const { userId } = await authGuardForUser(getSessionToken(cookies), ['user']);
     const eventId = isNumberOrError(params.eventId);
@@ -41,13 +45,13 @@ export const PUT: RequestHandler = async ({ cookies, params, request }) => {
     const [characterId, existingParticipation] = await Promise.all([
       characterRepo.save(
         body.id == null
-          ? { name: body.name, ownerId: body.ownerId, backstoryUrl: body.backstoryUrl ?? null }
+          ? { name: body.name, ownerId: body.ownerId, backstoryId: body.backstoryId ?? null }
           : {
             id: body.id,
             name: body.name,
             ownerId: body.ownerId,
             ownerName: body.ownerName,
-            backstoryUrl: body.backstoryUrl ?? null,
+            backstoryId: body.backstoryId ?? null,
           }
       ),
       eventParticipantsRepo.getUserParticipation({ eventId, userId }),
@@ -56,6 +60,30 @@ export const PUT: RequestHandler = async ({ cookies, params, request }) => {
 
     const lastVersion = body.versions.at(-1);
     if (lastVersion == null) throw new BadRequest();
+
+    if (lastVersion.items.length > 0) {
+      const allItems = await itemRepo.getAll();
+      const itemMap = new Map(allItems.map((i) => [i.id, i]));
+      for (const versionItem of lastVersion.items) {
+        const catalogItem = itemMap.get(versionItem.id);
+        if (catalogItem?.maxPerCharacter != null && versionItem.count > catalogItem.maxPerCharacter) {
+          throw new BadRequest();
+        }
+      }
+    }
+
+    const couponCode = typeof body?.couponCode === 'string' ? body.couponCode.trim() : '';
+    if (couponCode && !locals.featureFlags['Coupons']) throw new BadRequest('coupon codes are disabled');
+    const coupon = couponCode
+      ? await eventCouponRepo.findUnredeemedByCode(eventId, userId, couponCode)
+      : undefined;
+    if (couponCode && coupon == null) throw new BadRequest('invalid or already used coupon code');
+
+    const [availableBudget, cost] = await Promise.all([
+      getAvailableBudget({ eventId, characterId, ownerId: userId }),
+      computeCharacterVersionCost(lastVersion),
+    ]);
+    if (cost > availableBudget + (coupon?.value ?? 0)) throw new BadRequest('character exceeds available budget');
 
     const versionToSave =
       existingParticipation?.characterVersionId === lastVersion.id
@@ -72,7 +100,10 @@ export const PUT: RequestHandler = async ({ cookies, params, request }) => {
       userId: body.ownerId,
       characterVersionId,
     });
-    return new Response();
+
+    if (coupon != null) await eventCouponRepo.redeem(coupon.id);
+
+    return json({ characterId });
   });
 };
 
@@ -82,15 +113,15 @@ function isCharacterWithVersions(value: unknown): value is CharacterWithVersions
     typeof value === 'object' &&
     value !== null &&
     'id' in value &&
-    ((value as any).id === null || typeof (value as any).id === 'number') &&
+    (value.id === null || typeof value.id === 'number') &&
     'name' in value &&
-    typeof (value as any).name === 'string' &&
+    typeof value.name === 'string' &&
     'ownerId' in value &&
-    typeof (value as any).ownerId === 'number' &&
+    typeof value.ownerId === 'number' &&
     'ownerName' in value &&
-    typeof (value as any).ownerName === 'string' &&
+    typeof value.ownerName === 'string' &&
     'versions' in value &&
-    Array.isArray((value as any).versions) &&
-    (value as any).versions.every(isCharacterVersionBare)
+    Array.isArray(value.versions) &&
+    value.versions.every(isCharacterVersionBare)
   );
 }

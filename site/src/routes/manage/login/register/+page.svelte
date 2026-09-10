@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
+	import { resolve } from '$app/paths';
 	import type { PageProps } from './$types';
 
 	let showPassword = $state(false);
@@ -39,9 +40,9 @@
 			<div class="password">
 				<input type={passwordInputType} name="password" id="password" value={password} />
 				{#if showPassword}
-					<button onclick={toggleShowPassword}>◎</button>
+					<button class="btn" onclick={toggleShowPassword}>◎</button>
 				{:else}
-					<button onclick={toggleShowPassword}>◉</button>
+					<button class="btn" onclick={toggleShowPassword}>◉</button>
 				{/if}
 			</div>
 			<div class="password">
@@ -52,14 +53,14 @@
 					value={password}
 				/>
 				{#if showPassword}
-					<button onclick={toggleShowPassword}>◎</button>
+					<button class="btn" onclick={toggleShowPassword}>◎</button>
 				{:else}
-					<button onclick={toggleShowPassword}>◉</button>
+					<button class="btn" onclick={toggleShowPassword}>◉</button>
 				{/if}
 			</div>
-			<button> Register </button>
+			<button class="btn"> Register </button>
 		</form>
-		<a href="/login">Login</a>
+		<a href={resolve('/manage/login')}>Login</a>
 	</div>
 </main>
 

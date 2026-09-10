@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
 	import type { PageProps } from './$types';
 
@@ -33,7 +34,7 @@
 		}
 	});
 	$effect(() => {
-		if (CREDENTIAL_MANAGER.isLogedIn) goto('/manage');
+		if (CREDENTIAL_MANAGER.isLogedIn) goto(resolve('/manage'));
 	});
 </script>
 
@@ -53,15 +54,15 @@
 					onkeydown={login}
 				/>
 				{#if showPassword}
-					<button onclick={toggleShowPassword}>◎</button>
+					<button class="btn" onclick={toggleShowPassword}>◎</button>
 				{:else}
-					<button onclick={toggleShowPassword}>◉</button>
+					<button class="btn" onclick={toggleShowPassword}>◉</button>
 				{/if}
 			</div>
-			<button bind:this={submitButton}> Login </button>
+			<button class="btn" bind:this={submitButton}> Login </button>
 		</form>
 		{#if data.registerEnabled}
-			<a href="/manage/login/register">Register</a>
+			<a href={resolve('/manage/login/register')}>Register</a>
 		{/if}
 	</div>
 </main>

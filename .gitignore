@@ -30,3 +30,6 @@ cyd/.vscode
 #google credentials
 *google-api-credentials.json
 *google-service-account-key.json
+
+*.pnpm-store
+

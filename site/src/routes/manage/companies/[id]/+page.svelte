@@ -1,32 +1,35 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import CompanyForm from '$lib/components/company-form.svelte';
+	import ConfirmModal from '$lib/components/confirm-modal.svelte';
 	import type { Company } from '$lib/db/companies.repo';
 	import type { CompanyDiscounts } from '$lib/db/company_discounts.repo';
 	import type { Item } from '$lib/db/items.repo';
 	import type { Implant } from '$lib/db/implants.repo';
-	import type { Skill } from '$lib/db/skills.repo';
+	import type { Expertise } from '$lib/db/expertise.repo';
 	import type { PageProps } from './$types';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
 
+	let modal: ConfirmModal;
 	let company: Company = $state({ id: null, name: '', description: '', link: null });
-	let discounts: CompanyDiscounts = $state({ items: [], implants: [], skills: [] });
+	let discounts: CompanyDiscounts = $state({ items: [], implants: [], expertise: [] });
 	let items: Item[] = $state([]);
 	let implants: Implant[] = $state([]);
-	let skills: Skill[] = $state([]);
+	let expertise: Expertise[] = $state([]);
 
 	$effect(() => {
 		company = { ...data.company };
 		discounts = {
 			items: data.discounts?.items ?? [],
 			implants: data.discounts?.implants ?? [],
-			skills: data.discounts?.skills ?? []
+			expertise: data.discounts?.expertise ?? []
 		};
 		items = data.items ?? [];
 		implants = data.implants ?? [];
-		skills = data.skills ?? [];
+		expertise = data.expertise ?? [];
 	});
 
 	async function saveCompany() {
@@ -40,10 +43,10 @@
 			});
 			if (result.ok) {
 				TOAST_MANAGER.success('Company saved');
-				await goto('.');
+				await goto(resolve('/manage/companies'));
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 
@@ -54,10 +57,10 @@
 			const result = await fetch(`/api/companies/${snap.id}`, { method: 'delete' });
 			if (result.ok) {
 				TOAST_MANAGER.success('Company deleted');
-				await goto('.');
+				await goto(resolve('/manage/companies'));
 			}
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 
@@ -71,8 +74,8 @@
 				headers: { 'content-type': 'application/json' }
 			});
 			TOAST_MANAGER.success('Discounts saved');
-		} catch (err: any) {
-			TOAST_MANAGER.error(err.message ?? 'Something went wrong');
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
 
@@ -90,24 +93,24 @@
 		discounts.implants = discounts.implants.filter((_, i) => i !== index);
 	}
 
-	function addSkillDiscount() {
-		discounts.skills = [...discounts.skills, { skillId: skills[0]?.id ?? 0, discount: 0 }];
+	function addExpertiseDiscount() {
+		discounts.expertise = [...discounts.expertise, { expertiseId: expertise[0]?.id ?? 0, discount: 0 }];
 	}
-	function removeSkillDiscount(index: number) {
-		discounts.skills = discounts.skills.filter((_, i) => i !== index);
+	function removeExpertiseDiscount(index: number) {
+		discounts.expertise = discounts.expertise.filter((_, i) => i !== index);
 	}
 </script>
 
 <main>
-	<a href=".">back</a>
+	<a href={resolve('/manage/companies')}>back</a>
 
 	<div class="columns">
 		<section class="info">
 			<h2>Company</h2>
 			<CompanyForm bind:company />
 			<div class="actions">
-				<button onclick={saveCompany}>save</button>
-				<button onclick={removeCompany}>delete</button>
+				<button class="btn" onclick={saveCompany}>save</button>
+				<button class="btn btn-danger" onclick={() => modal.open()}>delete</button>
 			</div>
 		</section>
 
@@ -117,78 +120,80 @@
 		<h3>Items</h3>
 		<table>
 			<thead>
-				<tr><th>Item</th><th>Discount</th><th></th></tr>
+				<tr><th>Item</th><th>Discount %</th><th></th></tr>
 			</thead>
 			<tbody>
-				{#each discounts.items as row, i}
+				{#each discounts.items as row, i (i)}
 					<tr>
 						<td>
 							<select bind:value={row.itemId}>
-								{#each items as item}
+								{#each items as item (item.id)}
 									<option value={item.id}>{item.name}</option>
 								{/each}
 							</select>
 						</td>
-						<td><input type="number" bind:value={row.discount} min="0" /></td>
-						<td><button onclick={() => removeItemDiscount(i)}>remove</button></td>
+						<td><input type="number" bind:value={row.discount} min="0" max="100" /></td>
+						<td><button class="btn" onclick={() => removeItemDiscount(i)}>remove</button></td>
 					</tr>
 				{/each}
 			</tbody>
 		</table>
-		<button onclick={addItemDiscount}>+ add item discount</button>
+		<button class="btn" onclick={addItemDiscount}>+ add item discount</button>
 
 		<h3>Implants</h3>
 		<table>
 			<thead>
-				<tr><th>Implant</th><th>Discount</th><th></th></tr>
+				<tr><th>Implant</th><th>Discount %</th><th></th></tr>
 			</thead>
 			<tbody>
-				{#each discounts.implants as row, i}
+				{#each discounts.implants as row, i (i)}
 					<tr>
 						<td>
 							<select bind:value={row.implantId}>
-								{#each implants as implant}
+								{#each implants as implant (implant.id)}
 									<option value={implant.id}>{implant.name}</option>
 								{/each}
 							</select>
 						</td>
-						<td><input type="number" bind:value={row.discount} min="0" /></td>
-						<td><button onclick={() => removeImplantDiscount(i)}>remove</button></td>
+						<td><input type="number" bind:value={row.discount} min="0" max="100" /></td>
+						<td><button class="btn" onclick={() => removeImplantDiscount(i)}>remove</button></td>
 					</tr>
 				{/each}
 			</tbody>
 		</table>
-		<button onclick={addImplantDiscount}>+ add implant discount</button>
+		<button class="btn" onclick={addImplantDiscount}>+ add implant discount</button>
 
-		<h3>Skills</h3>
+		<h3>Expertise</h3>
 		<table>
 			<thead>
-				<tr><th>Skill</th><th>Discount</th><th></th></tr>
+				<tr><th>Expertise</th><th>Discount %</th><th></th></tr>
 			</thead>
 			<tbody>
-				{#each discounts.skills as row, i}
+				{#each discounts.expertise as row, i (i)}
 					<tr>
 						<td>
-							<select bind:value={row.skillId}>
-								{#each skills as skill}
-									<option value={skill.id}>{skill.name}</option>
+							<select bind:value={row.expertiseId}>
+								{#each expertise as entry (entry.id)}
+									<option value={entry.id}>{entry.name}</option>
 								{/each}
 							</select>
 						</td>
-						<td><input type="number" bind:value={row.discount} min="0" /></td>
-						<td><button onclick={() => removeSkillDiscount(i)}>remove</button></td>
+						<td><input type="number" bind:value={row.discount} min="0" max="100" /></td>
+						<td><button class="btn" onclick={() => removeExpertiseDiscount(i)}>remove</button></td>
 					</tr>
 				{/each}
 			</tbody>
 		</table>
-		<button onclick={addSkillDiscount}>+ add skill discount</button>
+		<button class="btn" onclick={addExpertiseDiscount}>+ add expertise discount</button>
 
 		<div class="actions">
-			<button onclick={saveDiscounts}>save discounts</button>
+			<button class="btn" onclick={saveDiscounts}>save discounts</button>
 		</div>
 	</section>
 	</div>
 </main>
+
+<ConfirmModal bind:this={modal} message="Delete this company?" onconfirm={removeCompany} oncancel={() => modal.close()} />
 
 <style>
 	main {

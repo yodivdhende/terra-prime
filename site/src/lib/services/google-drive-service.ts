@@ -3,15 +3,23 @@ import { VITE_GOOGLE_CLIENT_EMAIL, VITE_GOOGLE_PRIVATE_KEY } from '$env/static/p
 
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
-export class GoogleDriveService {
-  private getService() {
-    const auth = new google.auth.JWT(
+let cachedAuth: InstanceType<typeof google.auth.JWT> | null = null;
+
+function getAuth() {
+  if (!cachedAuth) {
+    cachedAuth = new google.auth.JWT(
       VITE_GOOGLE_CLIENT_EMAIL,
       undefined,
       VITE_GOOGLE_PRIVATE_KEY.replace(/\\\n/gm, '\n'),
       SCOPES,
-    )
-    return google.drive({ version: 'v3', auth })
+    );
+  }
+  return cachedAuth;
+}
+
+export class GoogleDriveService {
+  private getService() {
+    return google.drive({ version: 'v3', auth: getAuth() });
   }
 
   public async getHomeFiles() {
@@ -30,6 +38,7 @@ export class GoogleDriveService {
       q: `'${folderId}' in parents and trashed = false`,
       fields: 'nextPageToken, files(id, name, mimeType)',
       spaces: 'drive',
+      corpora: 'allDrives',
       supportsAllDrives: true,
       includeItemsFromAllDrives: true,
     });
@@ -46,23 +55,65 @@ export class GoogleDriveService {
     return html.replace(/_[^_]*_/g, '');
   }
 
-  public async searchFiles(query: string) {
-    const escaped = query.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  public async findBackgroundFolder(): Promise<string | null> {
+    return '1IET6eLvhyEwpYiTOaWf7Xq-DvaoTTJCh';
+  }
+
+  private async getExcludedFolderIds(): Promise<Set<string>> {
     const result = await this.getService().files.list({
-      q: `name contains '${escaped}' and trashed = false`,
-      fields: 'files(id, name, mimeType)',
+      q: `mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+      fields: 'files(id, name)',
       spaces: 'drive',
       supportsAllDrives: true,
       includeItemsFromAllDrives: true,
-      pageSize: 20,
     });
-    return result.data.files?.filter(file => file.name != null && file.name[0] !== '_') ?? [];
+    const ids = new Set<string>();
+    for (const folder of result.data.files ?? []) {
+      if (folder.name && folder.name.startsWith('_') && folder.id) {
+        ids.add(folder.id);
+      }
+    }
+    return ids;
   }
 
-  public async getFileStream(fileId: string): Promise<ReadableStream> {
+  public async searchFiles(query: string) {
+    const escaped = query.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const [result, excludedFolderIds] = await Promise.all([
+      this.getService().files.list({
+        q: `name contains '${escaped}' and trashed = false`,
+        fields: 'files(id, name, mimeType, parents)',
+        spaces: 'drive',
+        supportsAllDrives: true,
+        includeItemsFromAllDrives: true,
+        pageSize: 20,
+      }),
+      this.getExcludedFolderIds(),
+    ]);
+    return result.data.files?.filter(file => {
+      if (!file.name || file.name.startsWith('_')) return false;
+      if (file.parents?.some(parentId => excludedFolderIds.has(parentId))) return false;
+      return true;
+    }) ?? [];
+  }
+
+  public async getFileMetadata(fileId: string): Promise<{ mimeType: string; size: number }> {
+    const res = await this.getService().files.get({
+      fileId,
+      fields: 'mimeType,size',
+      supportsAllDrives: true,
+    });
+    return {
+      mimeType: res.data.mimeType ?? 'application/octet-stream',
+      size: Number(res.data.size ?? 0),
+    };
+  }
+
+  public async getFileStream(fileId: string, rangeHeader?: string): Promise<ReadableStream> {
+    const headers: Record<string, string> = {};
+    if (rangeHeader) headers['Range'] = rangeHeader;
     const response = await this.getService().files.get(
-      { fileId, alt: 'media' },
-      { responseType: 'stream' },
+      { fileId, alt: 'media', supportsAllDrives: true },
+      { responseType: 'stream', headers },
     );
     const nodeStream = response.data as unknown as NodeJS.ReadableStream;
     return new ReadableStream({

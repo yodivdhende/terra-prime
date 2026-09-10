@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 
 	type Status = 'pending' | 'success' | 'error';
 	let status: Status = $state('pending');
@@ -40,10 +41,10 @@
 			<p class="line">verifying token…</p>
 		{:else if status === 'success'}
 			<p class="line ok">your email has been verified.</p>
-			<a href="/codex">continue ›</a>
+			<a href={resolve('/codex')}>continue ›</a>
 		{:else}
 			<p class="line err">{message}</p>
-			<a href="/codex">back ›</a>
+			<a href={resolve('/codex')}>back ›</a>
 		{/if}
 	</section>
 </main>

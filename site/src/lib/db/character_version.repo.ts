@@ -1,5 +1,7 @@
 import { valueOrLogOfPromiseSetteld } from '$lib/utils/request';
+import type { RowDataPacket } from 'mysql2/promise';
 import { mysqlconnFn } from './mysql';
+import { eventParticipantsRepo } from './event_participants.repo';
 
 class CharacterVersionRepo {
   public async getAll(): Promise<CharacterVersionBare[]> {
@@ -14,14 +16,14 @@ class CharacterVersionRepo {
       `);
     if (Array.isArray(results) === false) return [];
     if (results.length === 0) return [];
-    const ids = (results as any[]).map(({ id }) => id).filter((id): id is number => typeof id === 'number');
-    const [items, implants, skills] = await Promise.allSettled([
+    const ids = (results as RowDataPacket[]).map(({ id }) => id).filter((id): id is number => typeof id === 'number');
+    const [items, implants, expertise] = await Promise.allSettled([
       this.getItemsforCharacterVersions(ids),
       this.getImplantsforCharacterVersions(ids),
-      this.getSkillsForCharacterVerions(ids)
+      this.getExpertiseForCharacterVersions(ids)
     ]);
     const characterVersions: CharacterVersionBare[] = [];
-    for (const characterItem of results as any[]) {
+    for (const characterItem of results as RowDataPacket[]) {
       if ('id' in characterItem === false || typeof characterItem.id != 'number') continue;
       if ('characterId' in characterItem === false || typeof characterItem.characterId != 'number')
         continue;
@@ -29,26 +31,26 @@ class CharacterVersionRepo {
       if (typeof characterItem.company !== 'number') continue;
       characterVersions.push({
         id: characterItem.id,
-        characterId: characterItem.charaacterId,
+        characterId: characterItem.characterId,
         name: characterItem.name,
         company: characterItem.company,
-        skills:
-          skills.status === 'fulfilled'
-            ? skills.value
-              .filter(({ characterVersionId }) => characterVersionId, characterItem.characterId)
-              .map(({ skillId, value }) => ({ id: skillId, value }))
+        expertise:
+          expertise.status === 'fulfilled'
+            ? expertise.value
+              .filter(({ characterVersionId }) => characterVersionId === characterItem.id)
+              .map(({ expertiseId, value }) => ({ id: expertiseId, value }))
             : [],
         items:
           items.status === 'fulfilled'
             ? items.value
-              .filter(({ characterVersionId }) => characterVersionId, characterItem.characterId)
+              .filter(({ characterVersionId }) => characterVersionId === characterItem.id)
               .map(({ itemId, count }) => ({ id: itemId, count }))
             : [],
         implants:
           implants.status === 'fulfilled'
             ? implants.value
-              .filter(({ characterVersionId }) => characterVersionId, characterItem.characterId)
-              .map(({ implantId }) => implantId)
+              .filter(({ characterVersionId }) => characterVersionId === characterItem.id)
+              .map(({ implantId, slot }) => ({ id: implantId, slot }))
             : []
       });
     }
@@ -66,9 +68,9 @@ class CharacterVersionRepo {
       `INSERT INTO Character_Versions (\`Character\`, Name, Company) VALUES (?, ?, ?)`,
       [characterVersion.characterId, characterVersion.name, characterVersion.company]
     );
-    const versionId = (result as any).insertId as number;
+    const versionId = (result as { insertId: number }).insertId;
     await Promise.all([
-      characterVersion.skills.length > 0 ? this.saveSkills({ versionId, skills: characterVersion.skills }) : Promise.resolve(),
+      characterVersion.expertise.length > 0 ? this.saveExpertise({ versionId, expertise: characterVersion.expertise }) : Promise.resolve(),
       characterVersion.items.length > 0 ? this.saveItems({ versionId, items: characterVersion.items }) : Promise.resolve(),
       characterVersion.implants.length > 0 ? this.saveImplants({ versionId, implants: characterVersion.implants }) : Promise.resolve(),
     ]);
@@ -86,10 +88,10 @@ class CharacterVersionRepo {
     await Promise.all([
       this.deleteItems(versionId),
       this.deleteImplants(versionId),
-      this.deleteSkills(versionId)
+      this.deleteExpertise(versionId)
     ]);
     await Promise.all([
-      characterVersion.skills.length > 0 ? this.saveSkills({ versionId, skills: characterVersion.skills }) : Promise.resolve(),
+      characterVersion.expertise.length > 0 ? this.saveExpertise({ versionId, expertise: characterVersion.expertise }) : Promise.resolve(),
       characterVersion.items.length > 0 ? this.saveItems({ versionId, items: characterVersion.items }) : Promise.resolve(),
       characterVersion.implants.length > 0 ? this.saveImplants({ versionId, implants: characterVersion.implants }) : Promise.resolve(),
     ]);
@@ -98,9 +100,10 @@ class CharacterVersionRepo {
 
   public async delete(characterVersionId: number): Promise<void> {
     await Promise.all([
-      await this.deleteItems(characterVersionId),
-      await this.deleteImplants(characterVersionId),
-      await this.deleteSkills(characterVersionId)
+      this.deleteItems(characterVersionId),
+      this.deleteImplants(characterVersionId),
+      this.deleteExpertise(characterVersionId),
+      eventParticipantsRepo.deleteForCharacterVersion(characterVersionId),
     ]);
     await this.deleteCharacterVerion(characterVersionId);
   }
@@ -111,7 +114,7 @@ class CharacterVersionRepo {
     const connection = mysqlconnFn();
     const [result] = await connection.query(
       `
-      SELECT 
+      SELECT
         cvit.CharacterVersion as characterVersionId,
         cvit.Item as itemId,
 				cvit.Count as count
@@ -135,13 +138,14 @@ class CharacterVersionRepo {
 
   public async getImplantsforCharacterVersions(
     ids: number[]
-  ): Promise<{ characterVersionId: number; implantId: number }[]> {
+  ): Promise<{ characterVersionId: number; implantId: number; slot: number }[]> {
     const connection = mysqlconnFn();
     const [result] = await connection.query(
       `
-      SELECT 
+      SELECT
         cvim.CharacterVersion as characterVersionId,
-        cvim.Implant as implantId
+        cvim.Implant as implantId,
+        cvim.Slot as slot
       FROM Character_Version_Implants cvim
       WHERE cvim.CharacterVersion in (:ids)
       `,
@@ -149,63 +153,64 @@ class CharacterVersionRepo {
     );
     if (Array.isArray(result) === false) return [];
     if (result.length === 0) return [];
-    const implants: { characterVersionId: number; implantId: number }[] = [];
+    const implants: { characterVersionId: number; implantId: number; slot: number }[] = [];
     for (const item of result) {
       if ('characterVersionId' in item === false || typeof item.characterVersionId !== 'number')
         continue;
       if ('implantId' in item === false || typeof item.implantId != 'number') continue;
-      implants.push({ characterVersionId: item.characterVersionId, implantId: item.implantId });
+      if ('slot' in item === false || typeof item.slot != 'number') continue;
+      implants.push({ characterVersionId: item.characterVersionId, implantId: item.implantId, slot: item.slot });
     }
     return implants;
   }
 
-  public async getSkillsForCharacterVerions(
+  public async getExpertiseForCharacterVersions(
     ids: number[]
-  ): Promise<{ characterVersionId: number; skillId: number; value: number }[]> {
+  ): Promise<{ characterVersionId: number; expertiseId: number; value: number }[]> {
     const connection = mysqlconnFn();
     const [result] = await connection.query(
       `
       SELECT
-        cvs.CharacterVersion as characterVersionId,
-        cvs.Skill as skillId,
-        cvs.Value as value
-      FROM Character_Version_Skills cvs
-      WHERE cvs.CharacterVersion in (:ids)
+        cve.CharacterVersion as characterVersionId,
+        cve.Expertise as expertiseId,
+        cve.Value as value
+      FROM Character_Version_Expertise cve
+      WHERE cve.CharacterVersion in (:ids)
       `,
       { ids }
     );
     if (Array.isArray(result) === false) return [];
     if (result.length === 0) return [];
-    const skills: { characterVersionId: number; skillId: number; value: number }[] = [];
+    const expertise: { characterVersionId: number; expertiseId: number; value: number }[] = [];
     for (const item of result) {
       if ('characterVersionId' in item === false || typeof item.characterVersionId !== 'number')
         continue;
-      if ('skillId' in item === false || typeof item.skillId != 'number') continue;
+      if ('expertiseId' in item === false || typeof item.expertiseId != 'number') continue;
       if ('value' in item === false || typeof item.value != 'number') continue;
-      skills.push({
+      expertise.push({
         characterVersionId: item.characterVersionId,
-        skillId: item.skillId,
+        expertiseId: item.expertiseId,
         value: item.value
       });
     }
-    return skills;
+    return expertise;
   }
 
-  public async saveSkills({
+  public async saveExpertise({
     versionId,
-    skills
+    expertise
   }: {
     versionId: number;
-    skills: CharacterVerionSkill[];
+    expertise: CharacterVersionExpertise[];
   }) {
-    this.deleteSkills(versionId);
+    this.deleteExpertise(versionId);
     const connection = mysqlconnFn();
-    const [result] = await connection.query(
+    await connection.query(
       `
-				INSERT INTO Character_Version_Skills (CharacterVersion, Skill, Value)
+				INSERT INTO Character_Version_Expertise (CharacterVersion, Expertise, Value)
 				VALUES ?
 			`,
-      [skills.map((skill) => [versionId, skill.id, skill.value])]
+      [expertise.map((e) => [versionId, e.id, e.value])]
     );
   }
 
@@ -217,18 +222,18 @@ class CharacterVersionRepo {
     );
   }
 
-  public async saveImplants({ versionId, implants }: { versionId: number; implants: number[] }) {
+  public async saveImplants({ versionId, implants }: { versionId: number; implants: CharacterVersionImplant[] }) {
     const connection = mysqlconnFn();
     await connection.query(
-      `INSERT INTO Character_Version_Implants (CharacterVersion, Implant) VALUES ?`,
-      [implants.map((id) => [versionId, id])]
+      `INSERT INTO Character_Version_Implants (CharacterVersion, Implant, Slot) VALUES ?`,
+      [implants.map((i) => [versionId, i.id, i.slot])]
     );
   }
 
-  private async deleteSkills(versionId: number): Promise<void> {
+  private async deleteExpertise(versionId: number): Promise<void> {
     const connection = mysqlconnFn();
     await connection.query(
-      `DELETE FROM Character_Version_Skills cvs WHERE cvs.CharacterVersion = ?`,
+      `DELETE FROM Character_Version_Expertise cve WHERE cve.CharacterVersion = ?`,
       [versionId]
     );
   }
@@ -249,14 +254,14 @@ class CharacterVersionRepo {
     );
     if (Array.isArray(results) === false) return [];
     if (results.length === 0) return [];
-    const existingIds = (results as any[]).map(({ id }) => id).filter((id): id is number => typeof id === 'number');
-    const [items, implants, skills] = await Promise.allSettled([
+    const existingIds = (results as RowDataPacket[]).map(({ id }) => id).filter((id): id is number => typeof id === 'number');
+    const [items, implants, expertise] = await Promise.allSettled([
       this.getItemsforCharacterVersions(existingIds),
       this.getImplantsforCharacterVersions(existingIds),
-      this.getSkillsForCharacterVerions(existingIds)
+      this.getExpertiseForCharacterVersions(existingIds)
     ]);
     const characterVersions: CharacterVersionBare[] = [];
-    for (const characterItem of results as any[]) {
+    for (const characterItem of results as RowDataPacket[]) {
       if ('id' in characterItem === false || typeof characterItem.id != 'number') continue;
       if ('characterId' in characterItem === false || typeof characterItem.characterId != 'number')
         continue;
@@ -267,18 +272,29 @@ class CharacterVersionRepo {
         characterId: characterItem.characterId,
         name: characterItem.name,
         company: characterItem.company,
-        skills:
-          valueOrLogOfPromiseSetteld(skills)
+        expertise:
+          valueOrLogOfPromiseSetteld(expertise)
             ?.filter(({ characterVersionId }) => characterVersionId === characterItem.id)
-            .map(({ skillId, value }) => ({ id: skillId, value })) ?? [],
+            .reduce((acc, { expertiseId, value }) => {
+              if (!acc.some((e) => e.id === expertiseId)) acc.push({ id: expertiseId, value });
+              return acc;
+            }, [] as CharacterVersionExpertise[]) ?? [],
         items:
           valueOrLogOfPromiseSetteld(items)
             ?.filter(({ characterVersionId }) => characterVersionId === characterItem.id)
-            .map(({ itemId, count }) => ({ id: itemId, count })) ?? [],
+            .reduce((acc, { itemId, count }) => {
+              const existing = acc.find((i) => i.id === itemId);
+              if (existing) existing.count += count;
+              else acc.push({ id: itemId, count });
+              return acc;
+            }, [] as CharacterVersionItem[]) ?? [],
         implants:
           valueOrLogOfPromiseSetteld(implants)
             ?.filter(({ characterVersionId }) => characterVersionId === characterItem.id)
-            .map(({ implantId }) => implantId) ?? []
+            .reduce((acc, { implantId, slot }) => {
+              if (!acc.some((i) => i.id === implantId)) acc.push({ id: implantId, slot });
+              return acc;
+            }, [] as CharacterVersionImplant[]) ?? []
       });
     }
     return characterVersions;
@@ -288,17 +304,23 @@ class CharacterVersionRepo {
     return (await this.getWithdIds([id]))[0];
   }
 
-  public async getAllWithCharacterName(): Promise<{ id: number; name: string; characterId: number; characterName: string }[]> {
+  public async getAllWithCharacterName(): Promise<{ id: number; name: string; characterId: number; characterName: string; ownerName: string }[]> {
     const connection = mysqlconnFn();
     const [results] = await connection.execute(`
-      SELECT cv.Id as id, cv.Name as name, cv.Character as characterId, c.Name as characterName
+      SELECT cv.Id as id, cv.Name as name, cv.Character as characterId, c.Name as characterName, u.Name as ownerName
       FROM Character_Versions cv
       JOIN Characters c ON c.Id = cv.Character
+      JOIN Users u ON u.Id = c.Owner
     `);
     if (!Array.isArray(results)) return [];
-    return (results as any[]).filter(
-      (r) => typeof r.id === 'number' && typeof r.name === 'string' && typeof r.characterId === 'number' && typeof r.characterName === 'string'
-    );
+    return (results as RowDataPacket[]).filter(
+      (r) =>
+        typeof r.id === 'number' &&
+        typeof r.name === 'string' &&
+        typeof r.characterId === 'number' &&
+        typeof r.characterName === 'string' &&
+        typeof r.ownerName === 'string'
+    ) as { id: number; name: string; characterId: number; characterName: string; ownerName: string }[];
   }
 
   public async getForCharacter(characterId: number): Promise<CharacterVersionBare[]> {
@@ -309,16 +331,16 @@ class CharacterVersionRepo {
       [characterId]
     );
     if (!Array.isArray(results) || results.length === 0) return [];
-    const versionIds = (results as any[])
+    const versionIds = (results as RowDataPacket[])
       .map(({ id }) => id)
       .filter((id): id is number => typeof id === 'number');
-    const [items, implants, skills] = await Promise.allSettled([
+    const [items, implants, expertise] = await Promise.allSettled([
       this.getItemsforCharacterVersions(versionIds),
       this.getImplantsforCharacterVersions(versionIds),
-      this.getSkillsForCharacterVerions(versionIds)
+      this.getExpertiseForCharacterVersions(versionIds)
     ]);
     const characterVersions: CharacterVersionBare[] = [];
-    for (const row of results as any[]) {
+    for (const row of results as RowDataPacket[]) {
       if (typeof row.id !== 'number') continue;
       if (typeof row.characterId !== 'number') continue;
       if (typeof row.name !== 'string') continue;
@@ -328,10 +350,10 @@ class CharacterVersionRepo {
         characterId: row.characterId,
         name: row.name,
         company: row.company,
-        skills:
-          valueOrLogOfPromiseSetteld(skills)
+        expertise:
+          valueOrLogOfPromiseSetteld(expertise)
             ?.filter(({ characterVersionId }) => characterVersionId === row.id)
-            .map(({ skillId, value }) => ({ id: skillId, value })) ?? [],
+            .map(({ expertiseId, value }) => ({ id: expertiseId, value })) ?? [],
         items:
           valueOrLogOfPromiseSetteld(items)
             ?.filter(({ characterVersionId }) => characterVersionId === row.id)
@@ -339,7 +361,7 @@ class CharacterVersionRepo {
         implants:
           valueOrLogOfPromiseSetteld(implants)
             ?.filter(({ characterVersionId }) => characterVersionId === row.id)
-            .map(({ implantId }) => implantId) ?? []
+            .map(({ implantId, slot }) => ({ id: implantId, slot })) ?? []
       });
     }
     return characterVersions;
@@ -350,8 +372,8 @@ class CharacterVersionRepo {
     await connection.query(
       `
 			DELETE
-      FROM Character_Version cv
-      WHERE cv.CharacterVersion in (:characterVersionId)
+      FROM Character_Versions
+      WHERE Id = :characterVersionId
       `,
       { characterVersionId }
     );
@@ -398,16 +420,16 @@ class CharacterVersionRepo {
     );
     if (Array.isArray(results) === false) return [];
     if (results.length === 0) return [];
-    const versionIds = (results as any[])
+    const versionIds = (results as RowDataPacket[])
       .map(({ id }) => id)
       .filter((id): id is number => typeof id === 'number');
-    const [items, implants, skills] = await Promise.allSettled([
+    const [items, implants, expertise] = await Promise.allSettled([
       this.getItemsforCharacterVersions(versionIds),
       this.getImplantsforCharacterVersions(versionIds),
-      this.getSkillsForCharacterVerions(versionIds)
+      this.getExpertiseForCharacterVersions(versionIds)
     ]);
     const characterVersions: CharacterVersionBare[] = [];
-    for (const row of results as any[]) {
+    for (const row of results as RowDataPacket[]) {
       if ('id' in row === false || typeof row.id != 'number') continue;
       if ('characterId' in row === false || typeof row.characterId != 'number') continue;
       if ('name' in row === false || typeof row.name != 'string') continue;
@@ -417,10 +439,10 @@ class CharacterVersionRepo {
         characterId: row.characterId,
         name: row.name,
         company: row.company,
-        skills:
-          valueOrLogOfPromiseSetteld(skills)
+        expertise:
+          valueOrLogOfPromiseSetteld(expertise)
             ?.filter(({ characterVersionId }) => characterVersionId === row.id)
-            .map(({ skillId, value }) => ({ id: skillId, value })) ?? [],
+            .map(({ expertiseId, value }) => ({ id: expertiseId, value })) ?? [],
         items:
           valueOrLogOfPromiseSetteld(items)
             ?.filter(({ characterVersionId }) => characterVersionId === row.id)
@@ -428,7 +450,7 @@ class CharacterVersionRepo {
         implants:
           valueOrLogOfPromiseSetteld(implants)
             ?.filter(({ characterVersionId }) => characterVersionId === row.id)
-            .map(({ implantId }) => implantId) ?? []
+            .map(({ implantId, slot }) => ({ id: implantId, slot })) ?? []
       });
     }
     return characterVersions;
@@ -436,19 +458,19 @@ class CharacterVersionRepo {
 }
 export const characterVersionRepo = new CharacterVersionRepo();
 
-export type CharacterVerionSkill = {
+export type CharacterVersionExpertise = {
   id: number;
   value: number;
 };
 
-export function isCharacterVersionSkill(skill: unknown): skill is CharacterVerionSkill {
+export function isCharacterVersionExpertise(expertise: unknown): expertise is CharacterVersionExpertise {
   return (
-    typeof skill === 'object' &&
-    skill != null &&
-    'id' in skill &&
-    typeof skill.id === 'number' &&
-    'value' in skill &&
-    typeof skill.value === 'number'
+    typeof expertise === 'object' &&
+    expertise != null &&
+    'id' in expertise &&
+    typeof expertise.id === 'number' &&
+    'value' in expertise &&
+    typeof expertise.value === 'number'
   );
 }
 
@@ -468,13 +490,29 @@ export function isCharacterVersionItem(item: unknown): item is CharacterVersionI
 
 
 
+export type CharacterVersionImplant = {
+  id: number;
+  slot: number;
+};
+
+export function isCharacterVersionImplant(value: unknown): value is CharacterVersionImplant {
+  return (
+    typeof value === 'object' &&
+    value != null &&
+    'id' in value &&
+    typeof value.id === 'number' &&
+    'slot' in value &&
+    typeof value.slot === 'number'
+  );
+}
+
 export type CharacterVersionBare = {
   id: number | null;
   characterId: number;
   name: string;
-  skills: CharacterVerionSkill[];
+  expertise: CharacterVersionExpertise[];
   items: CharacterVersionItem[];
-  implants: number[];
+  implants: CharacterVersionImplant[];
   company: number;
 };
 
@@ -488,17 +526,16 @@ export function isCharacterVersionBare(value: unknown): value is CharacterVersio
     typeof value.name === 'string' &&
     'characterId' in value &&
     typeof value.characterId === 'number' &&
-    'skills' in value &&
-    Array.isArray(value.skills) &&
-    value.skills.every(isCharacterVersionSkill) &&
+    'expertise' in value &&
+    Array.isArray(value.expertise) &&
+    value.expertise.every(isCharacterVersionExpertise) &&
     'items' in value &&
     Array.isArray(value.items) &&
     value.items.every(isCharacterVersionItem) &&
     'implants' in value &&
     Array.isArray(value.implants) &&
-    value.implants.every((implant) => typeof implant === 'number') &&
+    value.implants.every(isCharacterVersionImplant) &&
     'company' in value &&
     typeof value.company === 'number'
   );
 }
-

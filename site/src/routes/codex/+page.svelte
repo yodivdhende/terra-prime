@@ -1,24 +1,29 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import Desktop from '$lib/codex/components/desktop.svelte';
-	import Taskbar from '$lib/codex/components/taskbar.svelte';
+	import Desktop from '$lib/components/desktop.svelte';
+	import Taskbar from '$lib/components/taskbar.svelte';
 	import { type PageProps } from './$types';
-	import { WINDOW_MANAGER } from '$lib/codex/managers/window-manager.svelte';
-	import { EFFECTS_MANAGER } from '$lib/codex/managers/effects-manager.svelte';
-	import { FEATURE_MANAGER } from '$lib/codex/managers/feature-manager.svelte';
+	import { WINDOW_MANAGER } from '$lib/managers/window-manager.svelte';
+	import { EFFECTS_MANAGER } from '$lib/managers/effects-manager.svelte';
+	import { FEATURE_MANAGER } from '$lib/managers/feature-manager.svelte';
 	import { CREDENTIAL_MANAGER } from '$lib/local-utils/credential-manager.svelte';
-	import { SCHRODINGER_MANAGER } from '$lib/codex/managers/schrodinger-manager.svelte';
+	import { SCHRODINGER_MANAGER } from '$lib/managers/schrodinger-manager.svelte';
 
 	let { data }: PageProps = $props();
 	let feImageEl: SVGFEImageElement;
 
-	$effect(() => FEATURE_MANAGER.setFlags({ loginEnabled: data.loginEnabled, registerEnabled: data.registerEnabled }));
 	$effect(() => WINDOW_MANAGER.addWindows(data.files));
 	$effect(() => WINDOW_MANAGER.setRegisterEnabled(CREDENTIAL_MANAGER.isLogedIn));
-	$effect(() => WINDOW_MANAGER.setLoginEnabled(FEATURE_MANAGER.loginEnabled && !CREDENTIAL_MANAGER.isLogedIn));
 	$effect(() => WINDOW_MANAGER.setLogoutEnabled(CREDENTIAL_MANAGER.isLogedIn));
+	$effect(() => WINDOW_MANAGER.setCharacterOverviewEnabled(CREDENTIAL_MANAGER.isLogedIn));
+	$effect(() => {
+		FEATURE_MANAGER.setFlags({ loginEnabled: data.loginEnabled, registerEnabled: data.registerEnabled, backstoryEnabled: data.backstoryEnabled, couponsEnabled: data.couponsEnabled });
+		WINDOW_MANAGER.setLoginEnabled(FEATURE_MANAGER.loginEnabled && !CREDENTIAL_MANAGER.isLogedIn);
+	});
 
 	onMount(() => {
+		CREDENTIAL_MANAGER.initFromStorage();
+
 		setTimeout(() => {
 			if (!SCHRODINGER_MANAGER.visible) {
 				SCHRODINGER_MANAGER.show(

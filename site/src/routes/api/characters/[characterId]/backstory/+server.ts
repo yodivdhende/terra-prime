@@ -12,13 +12,13 @@ export const POST: RequestHandler = async ({ cookies, params }) => {
 		const characterId = isNumberOrError(params.characterId);
 		const character = await characterRepo.getById(characterId);
 
-		if (character.backstoryUrl) {
+		if (character.backstoryId) {
 			throw new RequestError(409, 'Backstory document already exists');
 		}
 
-		const url = await getGoogleDocsManager().createBackstoryDoc(character.name);
-		await characterRepo.saveBackstoryUrl(characterId, url);
+		const docId = await getGoogleDocsManager().createBackstoryDoc(character.name);
+		await characterRepo.saveBackstoryId(characterId, docId);
 
-		return json({ url });
+		return json({ id: docId });
 	});
 };

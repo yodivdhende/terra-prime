@@ -5,7 +5,7 @@ export class WebSocketMidiator{
 
 	private dashboardServer = dashboardSocketServer;
 
-	constructor(server: http.Server, port: number) {
+	constructor(server: http.Server) {
 
 		server.on('upgrade', (request, socket, head) => {
 			const {pathname} = new URL(request.url ??'', `ws://localhost/`);

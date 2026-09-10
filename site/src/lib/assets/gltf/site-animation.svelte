@@ -14,10 +14,10 @@ Command: npx @threlte/gltf@3.0.1 site-animation.glb
 		MeshBasicMaterial,
 		MeshStandardMaterial,
 		MirroredRepeatWrapping,
-		RepeatWrapping,
 		TextureLoader,
 		Vector2
 	} from 'three';
+	import type { Snippet } from 'svelte';
 	import { T, useTask } from '@threlte/core';
 	import { interactivity, Text, useCursor, useGltf, useGltfAnimations } from '@threlte/extras';
 	import SiteAnimation from '$lib/assets/gltf/site-animation.glb';
@@ -32,11 +32,11 @@ Command: npx @threlte/gltf@3.0.1 site-animation.glb
 		ref = $bindable(),
 		...props
 	}: {
-		fallback?: any;
-		error?: any;
-		children?: any;
-		ref?: any;
-		[key: string]: any;
+		fallback?: Snippet;
+		error?: Snippet<[{ error: unknown }]>;
+		children?: Snippet<[{ ref: Group }]>;
+		ref?: Group;
+		[key: string]: unknown;
 	} = $props();
 
 	ref = new Group();
@@ -104,8 +104,8 @@ Command: npx @threlte/gltf@3.0.1 site-animation.glb
 		cameraZoom.set(80);
     enterTextOpacity.set(0);
 		Object.entries($actions)
-			.filter(([name, _action]) => name.includes('Move'))
-			.forEach(([_, action]) => animateOnce(action));
+			.filter(([name]) => name.includes('Move'))
+			.forEach(([, action]) => animateOnce(action));
 	}
 
 	function animateOnce(action: AnimationAction | undefined) {
@@ -144,6 +144,7 @@ Command: npx @threlte/gltf@3.0.1 site-animation.glb
 </script>
 
 <T is={ref} dispose={false} {...props}>
+	<!-- eslint-disable-next-line svelte/require-store-reactive-access -- useGltf's AsyncWritable must be awaited unprefixed to defer to promise resolution; $gltf reads the synchronous store value instead -->
 	{#await gltf}
 		{@render fallback?.()}
 	{:then gltf}

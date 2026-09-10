@@ -103,7 +103,7 @@ class SessionRepo {
 			if (Array.isArray(dbResult) === false) return null;
 			if (dbResult.length === 0) return null;
 			let userRoleResult: { userId: number; roles: UserRole[] } | undefined;
-			for (let { userId, role } of dbResult as any[]) {
+			for (const { userId, role } of dbResult as { userId: number; role: UserRole }[]) {
 				if(userRoleResult === undefined) userRoleResult = {userId, roles: []};
 				userRoleResult.roles.push(role);
 			}
@@ -142,7 +142,15 @@ class SessionRepo {
 					on s.Token = sr.Token 
 				`);
 		const sessions: Session[] = [];
-		for (let sessionRole of sessionRoles as any[]) {
+		type SessionRoleRow = {
+			token: string;
+			userId: number | null;
+			start: Date;
+			end: Date | null;
+			description: string;
+			role: UserRole;
+		};
+		for (const sessionRole of sessionRoles as SessionRoleRow[]) {
 			let existingSessions = sessions.find(
 				(connection) => connection.token === sessionRole.token
 			);
@@ -172,16 +180,17 @@ export type NewSession = {
 	description: string;
 	roles: UserRole[];
 }
-export function isNewSession(session: any): session is NewSession {
+export function isNewSession(session: unknown): session is NewSession {
+	if (typeof session !== 'object' || session === null) return false;
 	return 'userId' in session
-	&& (typeof session.userId === 'number' || session.userId === null) 
+	&& (typeof session.userId === 'number' || session.userId === null)
 	&& 'end' in session
-	&& (session.end instanceof Date || session.end === null) 
+	&& (session.end instanceof Date || session.end === null)
 	&& 'description' in session
-	&& typeof  session.description === 'string' 
+	&& typeof  session.description === 'string'
 	&& 'roles' in session
 	&& Array.isArray(session.roles)
-	&& session.roles.every((role: any) => isPublicUserRole(role))
+	&& session.roles.every((role: unknown) => isPublicUserRole(role))
 }
 
 export type Session = NewSession & {
@@ -189,7 +198,8 @@ export type Session = NewSession & {
 	start: Date;
 };
 
-export function isSession(session: any): session is Session {
+export function isSession(session: unknown): session is Session {
+	if (typeof session !== 'object' || session === null) return false;
 	return isNewSession(session)
 	&& 'token' in session
 	&& typeof session.token === 'string'

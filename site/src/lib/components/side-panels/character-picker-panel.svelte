@@ -48,7 +48,7 @@
 		</div>
 		<input type="text" placeholder="search by name or owner" bind:value={searchQuery} />
 		<ul class="results">
-			{#each searchResults as c}
+			{#each searchResults as c (c.id)}
 				{#if c.id != null}
 					<li>
 						<button onclick={() => select(c)}>

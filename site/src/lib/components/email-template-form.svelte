@@ -29,7 +29,7 @@
 	<div class="row">
 		<input id="docUrl" type="url" bind:value={template.docUrl} placeholder="https://docs.google.com/document/d/..." />
 		{#if template.docUrl}
-			<a href={template.docUrl} target="_blank" rel="noopener noreferrer" title="open doc in new tab">
+			<a href={template.docUrl} target="_blank" rel="noopener noreferrer external" title="open doc in new tab">
 				<ExternalLink size={16} />
 			</a>
 		{/if}

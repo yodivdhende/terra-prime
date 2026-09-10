@@ -13,6 +13,6 @@
   }
 
 </script>
-{#each snippets as snippet}
+{#each snippets as snippet (snippet)}
   {@render snippet()}
 {/each}

@@ -8,7 +8,7 @@ class UserRepo {
 		const [results] = await (
 			mysqlconnFn()
 		).execute(`${this.userSelector} WHERE email = ?  `, [email]);
-		const [firstUser] = results as any;
+		const [firstUser] = results as unknown[];
 		if (isUserRow(firstUser)) {
 			return {
 				id: firstUser.id,
@@ -24,7 +24,7 @@ class UserRepo {
 	public async getById({ id }: { id: number }): Promise<User> {
 		const connection = mysqlconnFn();
 		const [results] = await connection.execute(`${this.userSelector} WHERE id = ?  `, [id]);
-		const [firstUser] = results as any;
+		const [firstUser] = results as unknown[];
 		if (isUserRow(firstUser)) {
 			return {
 				id: firstUser.id,
@@ -39,7 +39,7 @@ class UserRepo {
 
 	public async getAll(): Promise<User[]> {
 		const [results] = await (mysqlconnFn()).execute(this.userSelector);
-		return (results as any[])
+		return (results as unknown[])
 			.filter(isUserRow)
 			.map((row) => ({
 				id: row.id,
@@ -64,27 +64,31 @@ class UserRepo {
 }
 
 export type User = {
-	id: string;
+	id: number;
 	email: string;
 	name: string;
 	verified: boolean;
 };
 
-function isUserRow(row: any): row is { id: number; email: string; name: string; verified: number | boolean } {
+function isUserRow(row: unknown): row is { id: number; email: string; name: string; verified: number | boolean } {
+	if (typeof row !== 'object' || row === null) return false;
+	const r = row as Record<string, unknown>;
 	return (
-		typeof row?.id === 'number' &&
-		typeof row?.email === 'string' &&
-		typeof row?.name === 'string' &&
-		(typeof row?.verified === 'number' || typeof row?.verified === 'boolean')
+		typeof r.id === 'number' &&
+		typeof r.email === 'string' &&
+		typeof r.name === 'string' &&
+		(typeof r.verified === 'number' || typeof r.verified === 'boolean')
 	);
 }
 
-export function isUser(user: any): user is User {
+export function isUser(user: unknown): user is User {
+	if (typeof user !== 'object' || user === null) return false;
+	const u = user as Record<string, unknown>;
 	return (
-		typeof user?.id === 'number' &&
-		typeof user?.email === 'string' &&
-		typeof user?.name === 'string' &&
-		typeof user?.verified === 'boolean'
+		typeof u.id === 'number' &&
+		typeof u.email === 'string' &&
+		typeof u.name === 'string' &&
+		typeof u.verified === 'boolean'
 	);
 }
 

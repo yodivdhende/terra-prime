@@ -32,7 +32,7 @@ class ConnectionSocketServer {
 	private browdCastSessionInfo(isBinary: boolean = false) {
 		this.server.clients.forEach((client) => {
 			if (client.readyState !== WebSocket.OPEN) return;
-			let sessionInfostring: string = JSON.stringify([...this.connectionInfo.values()]);
+			const sessionInfostring: string = JSON.stringify([...this.connectionInfo.values()]);
 			client.send(sessionInfostring, { binary: isBinary });
 		});
 	}
@@ -50,7 +50,7 @@ class ConnectionSocketServer {
 	}
 
 	private sendGoTo(command: NonNullable<ConnectionCommand['goTo']>) {
-		const ws = this.connectionInfo.entries().forEach(([webSocket, info]) => {
+		this.connectionInfo.entries().forEach(([webSocket, info]) => {
 			if (info.sessionToken === command?.targetToken) {
 				webSocket.send(JSON.stringify({ goTo: command }));
 			}

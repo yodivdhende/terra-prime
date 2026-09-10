@@ -1,4 +1,3 @@
-import { sessionRepo } from "$lib/db/session.repo";
 import { RequestError } from "$lib/types/errors";
 import { setSessionToken } from "$lib/utils/cookies";
 import { handleRequest } from "$lib/utils/request";

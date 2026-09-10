@@ -30,10 +30,15 @@ export const POST: RequestHandler = async ({cookies, params, request}) => {
 	return handleRequest(async ()=> {
 		await authGuard(getSessionToken(cookies), ['admin']);
 		const {id} = params;
-		isNumberOrError(id);
-		const implant= await request.json();
+		const numberId = isNumberOrError(id);
+		const implant = await request.json();
 		if(isImplant(implant) === false) throw new BadRequest();
-		implantRepo.save(implant);
+		await implantRepo.save(implant);
+		await implantRepo.setCharacterAccess(
+			numberId,
+			implant.characterAccess ?? 'all',
+			implant.allowedCharacterIds ?? []
+		);
 		return new Response();
 	})
 }

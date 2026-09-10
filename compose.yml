@@ -24,6 +24,8 @@ services:
     image: mysql/mysql-server:latest
     ports:
       - 3307:3306
+    volumes:
+      - db-data:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=testaliceDB
@@ -68,6 +70,9 @@ services:
   #   environment:
   #     - TUNNEL_TOKEN=eyJhIjoiMjliYTJlMmJiMmM1NjUwNTJiZGZlZjMwOTczYjY0NmYiLCJ0IjoiN2ZkZGIwODUtOTBkOS00ZjcwLWJhNjQtNzFiODU3ODQxYTM2IiwicyI6Ik1UTmtNelZtTmpNdFpUQmlPQzAwTkdSakxXSXdOalV0TW1Fd01HUmlPV1k1TWpkbCJ9
   #
+volumes:
+  db-data:
+
 networks:
   default:
     name: terra-prime

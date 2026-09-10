@@ -5,7 +5,7 @@ export const actions = {
     default: async ({request, fetch}) => {
         try {
             const formData = await request.formData();
-            const end = formData.get('end'); //TODO: add check to see if we have a date
+            //TODO: end date is collected in the form but not yet wired through (see session.repo.ts NewSession.end)
             const description = formData.get('description');
             const roles = formData.getAll('roles');
 

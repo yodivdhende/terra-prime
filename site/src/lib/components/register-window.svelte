@@ -12,11 +12,16 @@
 		createCharacterManager,
 		type CharacterManager
 	} from '$lib/managers/character-manager.svelte';
+	import { SCHRODINGER_MANAGER } from '$lib/managers/schrodinger-manager.svelte';
 
 	let { window: _window }: { window: CodexWindow } = $props();
 
 	const CHARACTER_MANAGER: CharacterManager = createCharacterManager();
 	const REGISTER_MANAGER: RegisterManager = createRegisterManager(CHARACTER_MANAGER);
+
+	$effect(() => {
+		SCHRODINGER_MANAGER.setRegistrationStep(REGISTER_MANAGER.currentStep);
+	});
 </script>
 
 <div class="register">

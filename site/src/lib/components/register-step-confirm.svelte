@@ -8,6 +8,7 @@
 	import CharacterVersion from './character-version.svelte';
 	import { FEATURE_MANAGER } from '$lib/managers/feature-manager.svelte';
 	import BackstoryLink from '$lib/components/backstory-link.svelte';
+	import { SCHRODINGER_MANAGER } from '$lib/managers/schrodinger-manager.svelte';
 
 	let {
 		REGISTER_MANAGER,
@@ -109,6 +110,8 @@
 				registeredCharacterId = data.characterId ?? null;
 			}
 			success = true;
+			SCHRODINGER_MANAGER.show("You're registered! See you at the event.", 'idle');
+			setTimeout(() => SCHRODINGER_MANAGER.dismiss(), 4000);
 		} catch (err) {
 			error = `${err instanceof Error ? err.message : err}`;
 		} finally {

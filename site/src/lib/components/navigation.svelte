@@ -36,6 +36,7 @@
 				<a class="entry child" href={resolve('/manage/items')}>Items</a>
 				<a class="entry child" href={resolve('/manage/implants')}>Implants</a>
 				<a class="entry child" href={resolve('/manage/companies')}>Companies</a>
+				<a class="entry child" href={resolve('/manage/missions')}>Missions</a>
 			{/if}
 			<button class="entry folder" onclick={() => (characterOpen = !characterOpen)}>
 				<span class="arrow">{characterOpen ? 'v' : '>'}</span>

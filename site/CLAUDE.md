@@ -25,7 +25,9 @@ Terra Prime is a LARP / tabletop event management system. Players have character
 
 ## Database
 
-Schema lives in `src/lib/db/schema.ts` (Drizzle ORM). MySQL / InnoDB, utf8mb4.
+Schema lives in `src/lib/db/schema/` (Drizzle ORM), split by domain — `auth`, `catalog`,
+`companies`, `characters`, `events`, plus `relations`. Import from `$lib/db/schema`, which
+re-exports all of them. MySQL / InnoDB, utf8mb4.
 Migrations are generated into `drizzle/`; see `docs/database-migrations.md`.
 Tables and columns are PascalCase, so each column names its database column explicitly and
 exposes a camelCase TypeScript property. Repositories in `src/lib/db/*.repo.ts` query through

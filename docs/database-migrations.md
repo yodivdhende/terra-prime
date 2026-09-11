@@ -1,8 +1,31 @@
 # Database Migrations
 
-The schema is defined in TypeScript at `site/src/lib/db/schema.ts` using [Drizzle ORM](https://orm.drizzle.team/). Migrations are generated from that file by `drizzle-kit` into `site/drizzle/`, and applied by `site/db/migrate.ts`.
+The schema is defined in TypeScript under `site/src/lib/db/schema/` using [Drizzle ORM](https://orm.drizzle.team/). Migrations are generated from it by `drizzle-kit` into `site/drizzle/`, and applied by `site/db/migrate.ts`.
 
 Drizzle is also the data layer: every repository in `site/src/lib/db/*.repo.ts` builds its queries from the same schema, so a column rename shows up as a type error rather than a runtime surprise.
+
+### Schema modules
+
+`site/src/lib/db/schema/` is split by domain, with `index.ts` re-exporting everything — import from
+`$lib/db/schema` and you get the whole schema regardless of which module a table lives in.
+
+| module          | contents                                                     |
+|-----------------|--------------------------------------------------------------|
+| `enums.ts`      | column enum values shared between modules                    |
+| `auth.ts`       | users, admins, sessions, messages, e-mail tokens             |
+| `catalog.ts`    | expertise (+groups, point costs), items, implants            |
+| `companies.ts`  | companies and their discount tables                          |
+| `characters.ts` | characters, versions, version contents, access grants, party |
+| `events.ts`     | events, participants, coupons                                |
+| `relations.ts`  | relations for the relational query API                       |
+
+Modules import in one direction only — `auth`/`catalog` → `companies` → `characters` → `events` —
+which matches the foreign-key graph and keeps the module graph acyclic. `relations.ts` is the one
+exception and is deliberately last: the relation graph *is* cyclic, but `relations()` takes a
+callback, so those cross-references resolve lazily and never form a module-load cycle.
+
+When adding a table, put it in the module that owns it and check the import direction still flows
+one way. `drizzle.config.ts` points at `schema/index.ts`, so nothing else needs updating.
 
 ## How It Works
 
@@ -13,7 +36,7 @@ Drizzle is also the data layer: every repository in `site/src/lib/db/*.repo.ts` 
 3. Reads `site/drizzle/meta/_journal.json` and applies every migration newer than the last recorded one, in journal order
 4. Records each applied migration by content hash and timestamp
 
-Migrations are **append-only** — never edit a migration file that has been applied anywhere. Change `schema.ts` and generate a new one instead.
+Migrations are **append-only** — never edit a migration file that has been applied anywhere. Change the schema and generate a new one instead.
 
 ### The baseline migration
 
@@ -103,33 +126,36 @@ docker compose up
 
 ## Creating a New Migration
 
-1. Edit `site/src/lib/db/schema.ts` — add the table, column, or index
+1. Edit the relevant module under `site/src/lib/db/schema/` — add the table, column, or index
 2. Generate the migration:
 
 ```bash
 pnpm exec drizzle-kit generate --name add_user_avatar
 ```
 
-   This diffs `schema.ts` against `site/drizzle/meta/` and writes a numbered `.sql` file plus an updated snapshot and journal entry. It does not need a database connection.
+   This diffs the schema against `site/drizzle/meta/` and writes a numbered `.sql` file plus an updated snapshot and journal entry. It does not need a database connection.
 
 3. Read the generated SQL before committing it. `drizzle-kit` is conservative but a rename it cannot infer comes out as a drop plus an add, which loses data — edit the file to an `ALTER TABLE ... CHANGE COLUMN` in that case.
 4. Apply it with `pnpm migrate` (or `docker compose run --rm migrate`)
-5. Commit `schema.ts`, the new `.sql` file, and everything under `site/drizzle/meta/` together — the journal and snapshot are what make the next `generate` correct
+5. Commit the schema change, the new `.sql` file, and everything under `site/drizzle/meta/` together — the journal and snapshot are what make the next `generate` correct
 
 For a data-only change (a backfill, a lookup row), write the `.sql` by hand in `site/drizzle/`, add a matching journal entry, and keep it idempotent.
 
 ### Inspecting a live database
 
 ```bash
-pnpm exec drizzle-kit pull    # regenerate schema.ts from the database
+pnpm exec drizzle-kit pull    # write a flat schema read back from the database
 pnpm exec drizzle-kit check   # look for collisions in the journal
 ```
 
-`pull` overwrites `schema.ts`, including its comments and the hand-pinned index and constraint names — diff the result rather than committing it blind.
+`pull` writes `site/drizzle/schema.ts` and `site/drizzle/relations.ts` — it does **not** touch
+`site/src/lib/db/schema/`. Treat its output as a scratch file to diff against, not as a
+replacement: it is one flat file, and it does not carry the comments or the hand-pinned index and
+constraint names that the real schema depends on.
 
 ### Column naming
 
-Tables and columns are PascalCase (`Character_Versions`, `BackstoryId`); the TypeScript properties are camelCase. Every column in `schema.ts` therefore names its database column explicitly:
+Tables and columns are PascalCase (`Character_Versions`, `BackstoryId`); the TypeScript properties are camelCase. Every column therefore names its database column explicitly:
 
 ```ts
 export const characters = mysqlTable('Characters', {

@@ -127,7 +127,8 @@ migration service.
 
 ## Database Migrations
 
-The schema is defined in TypeScript at `site/src/lib/db/schema.ts` with [Drizzle ORM](https://orm.drizzle.team/).
+The schema is defined in TypeScript under `site/src/lib/db/schema/` with [Drizzle ORM](https://orm.drizzle.team/),
+split by domain (`auth`, `catalog`, `companies`, `characters`, `events`, `relations`).
 Migrations are generated from it into `site/drizzle/`; the `__drizzle_migrations` table tracks which
 have been applied, so re-running is safe. See [docs/database-migrations.md](docs/database-migrations.md).
 
@@ -146,14 +147,14 @@ docker compose run --rm migrate
 
 ### Adding a new migration
 
-Edit `site/src/lib/db/schema.ts`, then generate the migration:
+Edit the relevant module under `site/src/lib/db/schema/`, then generate the migration:
 
 ```bash
 cd site
 pnpm exec drizzle-kit generate --name your_description
 ```
 
-Review the generated SQL, then commit it together with `schema.ts` and `site/drizzle/meta/`.
+Review the generated SQL, then commit it together with the schema change and `site/drizzle/meta/`.
 It is applied automatically on the next `docker compose up` or `pnpm migrate` run.
 
 ### Seed the database

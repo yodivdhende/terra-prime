@@ -77,12 +77,12 @@ Migrations complete. 1 applied.
 
 To make a schema change:
 
-1. Edit the schema in `site/src/lib/db/schema.ts`
+1. Edit the relevant schema module under `site/src/lib/db/schema/`
 2. Generate the migration:
    ```sh
    pnpm exec drizzle-kit generate --name your_description_here
    ```
-3. Review the generated SQL in `site/drizzle/`, then commit it together with `schema.ts` and the updated `site/drizzle/meta/` — the next Railway deploy will apply it automatically
+3. Review the generated SQL in `site/drizzle/`, then commit it together with the schema change and the updated `site/drizzle/meta/` — the next Railway deploy will apply it automatically
 
 The migration runner tracks applied migrations in a `__drizzle_migrations` table in the database, so each one is only ever executed once. See [database-migrations.md](database-migrations.md) for the full workflow.
 

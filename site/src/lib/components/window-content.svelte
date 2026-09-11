@@ -10,6 +10,7 @@
 	import RegisterWindow from '$lib/components/register-window.svelte';
 	import FormWindow from '$lib/components/form-window.svelte';
 	import AudioWindow from '$lib/components/audio-window.svelte';
+	import SubcoWindow from '$lib/components/subco-window.svelte';
 
 	let { window }: { window: CodexWindow } = $props();
 </script>
@@ -34,4 +35,6 @@
 	<FormWindow formId={window.contentData} />
 {:else if window.type === 'audio'}
 	<AudioWindow {window} />
+{:else if window.type === 'subco'}
+	<SubcoWindow {window} />
 {/if}

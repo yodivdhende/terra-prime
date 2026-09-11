@@ -4,6 +4,7 @@ import {
   createLogoutWindow,
   createRegisterWindow,
   createCharacterOverviewWindow,
+  createSubcoWindow,
   createFolderWindow,
   createPdfWindow,
   createDocWindow,
@@ -36,6 +37,13 @@ function createWindowManager() {
     const index = windows.findIndex(w => w.id === 'character-overview');
     if (isLoggedIn && created && index < 0) windows.push(created);
     else if (!isLoggedIn && index >= 0) windows.splice(index, 1);
+  }
+
+  function setSubcoEnabled(enabled: boolean) {
+    const created = createSubcoWindow();
+    const index = windows.findIndex(w => w.id === 'subco');
+    if (enabled && created && index < 0) windows.push(created);
+    else if (!enabled && index >= 0) windows.splice(index, 1);
   }
 
   function setRegisterEnabled(isLoggedIn: boolean) {
@@ -121,6 +129,7 @@ function createWindowManager() {
     setLogoutEnabled,
     setRegisterEnabled,
     setCharacterOverviewEnabled,
+    setSubcoEnabled,
   }
 }
 

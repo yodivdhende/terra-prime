@@ -6,7 +6,7 @@
  * | `auth.ts`       | users, admins, sessions, messages, e-mail tokens             |
  * | `catalog.ts`    | expertise (+groups, point costs), items, implants            |
  * | `companies.ts`  | companies and their discount tables                          |
- * | `characters.ts` | characters, versions, version contents, access grants, party |
+ * | `characters.ts` | characters, versions, version contents, access grants, subco |
  * | `events.ts`     | events, participants, coupons                                |
  * | `relations.ts`  | relations for the relational query API                       |
  *

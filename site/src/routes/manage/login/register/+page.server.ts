@@ -7,9 +7,10 @@ export const actions = {
 			const name = formData.get('name');
 			const email = formData.get('email');
 			const password = formData.get('password');
+			const invite = formData.get('invite');
 			const response = await fetch('/api/authentication/register', {
 				method: 'POST',
-				body: JSON.stringify({ name, email, password })
+				body: JSON.stringify({ name, email, password, invite })
 			});
 			if (response.ok) {
 				const { roles, userId, name } = await response.json();

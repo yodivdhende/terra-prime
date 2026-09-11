@@ -12,7 +12,7 @@ const migrationsFolder = join(__dirname, '..', 'drizzle');
 /**
  * Destructive by design, unchanged from the pre-Drizzle seeder: every table is dropped, the
  * migrations are replayed against the empty database, then the dev dataset is inserted. Foreign-key
- * checks stay off for the whole run because `Characters`, `Character_Versions`, and `Party`
+ * checks stay off for the whole run because `Characters`, `Character_Versions`, and `Subco`
  * reference each other in a cycle no single insert ordering satisfies.
  */
 async function seed() {

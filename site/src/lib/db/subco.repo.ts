@@ -73,13 +73,12 @@ class SubcoRepo {
 	public async edit({ id, name, company, backstoryId, members }: Subco) {
 		if (id == null) return null;
 		await db.transaction(async (tx) => {
-			await tx
-				.update(subco)
-				.set({ name, companyId: company, backstoryId })
-				.where(eq(subco.id, id));
+			await tx.update(subco).set({ name, companyId: company, backstoryId }).where(eq(subco.id, id));
 			await tx.delete(subcoMembers).where(eq(subcoMembers.subcoId, id));
 			if (members.length > 0) {
-				await tx.insert(subcoMembers).values(members.map((memberId) => ({ subcoId: id, memberId })));
+				await tx
+					.insert(subcoMembers)
+					.values(members.map((memberId) => ({ subcoId: id, memberId })));
 			}
 		});
 		return id;

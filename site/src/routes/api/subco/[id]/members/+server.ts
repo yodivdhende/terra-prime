@@ -1,16 +1,17 @@
+import { desc, eq, inArray } from 'drizzle-orm';
 import { subcoRepo } from '$lib/db/subco.repo';
 import { characterRepo } from '$lib/db/character.repo';
 import { characterVersionRepo } from '$lib/db/character_version.repo';
 import { expertiseRepo } from '$lib/db/expertise.repo';
 import { itemRepo } from '$lib/db/items.repo';
 import { implantRepo } from '$lib/db/implants.repo';
-import { mysqlconnFn } from '$lib/db/mysql';
+import { db } from '$lib/db/mysql';
+import { characterVersions, eventParticipants, events } from '$lib/db/schema';
 import { isNumberOrError } from '$lib/request.utils';
 import { NotFoundRequest } from '$lib/types/errors';
 import { getSessionToken } from '$lib/utils/cookies';
 import { authGuard, handleRequest } from '$lib/utils/request';
 import { json, type RequestHandler } from '@sveltejs/kit';
-import type { RowDataPacket } from 'mysql2/promise';
 
 export type SubcoMemberVersionExpertise = {
 	id: number;
@@ -62,34 +63,31 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 		const characters = await Promise.all(subco.members.map((cid) => characterRepo.getById(cid)));
 
 		// Get the latest version per character, preferring the one used in the most recent event
-		const connection = mysqlconnFn();
-		const [rows] = await connection.query(
-			`SELECT
-				cv.Character as characterId,
-				cv.Id as versionId,
-				e.Id as eventId,
-				e.Name as eventName,
-				e.StartTime as startTime
-			FROM Character_Versions cv
-			LEFT JOIN Event_Participants ep ON ep.CharacterVersion = cv.Id
-			LEFT JOIN Events e ON e.Id = ep.Event
-			WHERE cv.Character IN (?)
-			ORDER BY cv.Character, e.StartTime DESC, cv.Id DESC`,
-			[subco.members]
-		);
+		const rows = await db
+			.select({
+				characterId: characterVersions.characterId,
+				versionId: characterVersions.id,
+				eventId: events.id,
+				eventName: events.name,
+				startTime: events.startTime
+			})
+			.from(characterVersions)
+			.leftJoin(eventParticipants, eq(eventParticipants.characterVersionId, characterVersions.id))
+			.leftJoin(events, eq(events.id, eventParticipants.eventId))
+			.where(inArray(characterVersions.characterId, subco.members))
+			.orderBy(characterVersions.characterId, desc(events.startTime), desc(characterVersions.id));
 
 		// First row per character is the latest (due to ORDER BY)
 		const latestPerCharacter = new Map<
 			number,
 			{ versionId: number; eventId: number | null; eventName: string | null }
 		>();
-		for (const row of rows as RowDataPacket[]) {
-			if (typeof row.characterId !== 'number' || typeof row.versionId !== 'number') continue;
+		for (const row of rows) {
 			if (!latestPerCharacter.has(row.characterId)) {
 				latestPerCharacter.set(row.characterId, {
 					versionId: row.versionId,
-					eventId: typeof row.eventId === 'number' ? row.eventId : null,
-					eventName: typeof row.eventName === 'string' ? row.eventName : null
+					eventId: row.eventId ?? null,
+					eventName: row.eventName ?? null
 				});
 			}
 		}
@@ -102,19 +100,33 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 			implantRepo.getAll()
 		]);
 
-		const expertiseById = new Map(expertise.flatMap((e) => (e.id == null ? [] : [[e.id, e] as const])));
+		const expertiseById = new Map(
+			expertise.flatMap((e) => (e.id == null ? [] : [[e.id, e] as const]))
+		);
 		const itemById = new Map(items.flatMap((i) => (i.id == null ? [] : [[i.id, i] as const])));
-		const implantById = new Map(implants.flatMap((i) => (i.id == null ? [] : [[i.id, i] as const])));
+		const implantById = new Map(
+			implants.flatMap((i) => (i.id == null ? [] : [[i.id, i] as const]))
+		);
 
 		const result: SubcoMemberEntry[] = characters.map((character) => {
 			const latest = latestPerCharacter.get(character.id);
 			if (!latest) {
-				return { characterId: character.id, characterName: character.name, ownerName: character.ownerName, lastVersion: null };
+				return {
+					characterId: character.id,
+					characterName: character.name,
+					ownerName: character.ownerName,
+					lastVersion: null
+				};
 			}
 
 			const version = versions.find((v) => v.id === latest.versionId);
 			if (!version) {
-				return { characterId: character.id, characterName: character.name, ownerName: character.ownerName, lastVersion: null };
+				return {
+					characterId: character.id,
+					characterName: character.name,
+					ownerName: character.ownerName,
+					lastVersion: null
+				};
 			}
 
 			return {
@@ -127,16 +139,18 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 					expertise: version.expertise.flatMap((e): SubcoMemberVersionExpertise[] => {
 						const exp = expertiseById.get(e.id);
 						if (!exp) return [];
-						return [{
-							id: e.id,
-							name: exp.name,
-							group: exp.groupId,
-							groupName: exp.groupName,
-							value: e.value,
-							icon: exp.icon ?? null,
-							groupIcon: exp.groupIcon ?? null,
-							groupColor: exp.groupColor ?? null
-						}];
+						return [
+							{
+								id: e.id,
+								name: exp.name,
+								group: exp.groupId,
+								groupName: exp.groupName,
+								value: e.value,
+								icon: exp.icon ?? null,
+								groupIcon: exp.groupIcon ?? null,
+								groupColor: exp.groupColor ?? null
+							}
+						];
 					}),
 					items: version.items.flatMap((i): SubcoMemberVersionItem[] => {
 						const item = itemById.get(i.id);
@@ -146,11 +160,14 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 					implants: version.implants.flatMap((vi): SubcoMemberVersionImplant[] => {
 						const implant = implantById.get(vi.id);
 						if (!implant) return [];
-						return [{ id: vi.id, name: implant.name, description: implant.description, slot: vi.slot }];
+						return [
+							{ id: vi.id, name: implant.name, description: implant.description, slot: vi.slot }
+						];
 					}),
-					event: latest.eventId != null && latest.eventName != null
-						? { id: latest.eventId, name: latest.eventName }
-						: null
+					event:
+						latest.eventId != null && latest.eventName != null
+							? { id: latest.eventId, name: latest.eventName }
+							: null
 				}
 			};
 		});

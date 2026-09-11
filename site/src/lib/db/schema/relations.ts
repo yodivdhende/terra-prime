@@ -35,7 +35,8 @@ import {
 	implantCharacterAccess,
 	expertiseCharacterAccess,
 	subco,
-	subcoMembers
+	subcoMembers,
+	subcoInvites
 } from './characters';
 import { events, eventParticipants, eventCoupons } from './events';
 
@@ -224,12 +225,18 @@ export const expertiseCharacterAccessRelations = relations(expertiseCharacterAcc
 
 export const subcoRelations = relations(subco, ({ one, many }) => ({
 	company: one(companies, { fields: [subco.companyId], references: [companies.id] }),
-	members: many(subcoMembers)
+	members: many(subcoMembers),
+	invites: many(subcoInvites)
 }));
 
 export const subcoMembersRelations = relations(subcoMembers, ({ one }) => ({
 	subco: one(subco, { fields: [subcoMembers.subcoId], references: [subco.id] }),
 	member: one(characters, { fields: [subcoMembers.memberId], references: [characters.id] })
+}));
+
+export const subcoInvitesRelations = relations(subcoInvites, ({ one }) => ({
+	subco: one(subco, { fields: [subcoInvites.subcoId], references: [subco.id] }),
+	character: one(characters, { fields: [subcoInvites.characterId], references: [characters.id] })
 }));
 
 export const sessionsRelations = relations(sessions, ({ one, many }) => ({

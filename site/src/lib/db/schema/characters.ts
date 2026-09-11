@@ -4,7 +4,16 @@
  * Part of the schema described in `./index.ts` — see that file for the naming and
  * constraint-pinning rules that apply to every table here.
  */
-import { foreignKey, index, int, mysqlTable, primaryKey, varchar } from 'drizzle-orm/mysql-core';
+import {
+	datetime,
+	foreignKey,
+	index,
+	int,
+	mysqlTable,
+	primaryKey,
+	varchar
+} from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
 import { users } from './auth';
 import { expertise, implants, items } from './catalog';
 import { companies } from './companies';
@@ -212,5 +221,38 @@ export const subcoMembers = mysqlTable(
 			columns: [table.memberId],
 			foreignColumns: [characters.id]
 		})
+	]
+);
+
+/**
+ * Email-based invites to join a subco. The token stores the invited *email* because the invitee
+ * may not be a `Users` row yet (mirror `Password_Reset_Tokens`).
+ */
+export const subcoInvites = mysqlTable(
+	'Subco_Invites',
+	{
+		token: varchar('Token', { length: 36 }).primaryKey(),
+		subcoId: int('Subco').notNull(),
+		email: varchar('Email', { length: 255 }).notNull(),
+		characterId: int('CharacterId'),
+		createdAt: datetime('CreatedAt')
+			.notNull()
+			.default(sql`CURRENT_TIMESTAMP`),
+		expiresAt: datetime('ExpiresAt'),
+		status: varchar('Status', { length: 10 }).notNull().default('invited')
+	},
+	(table) => [
+		index('si_subco_key').on(table.subcoId),
+		index('si_character_key').on(table.characterId),
+		foreignKey({
+			name: 'si_subco_fk',
+			columns: [table.subcoId],
+			foreignColumns: [subco.id]
+		}).onDelete('cascade'),
+		foreignKey({
+			name: 'si_character_fk',
+			columns: [table.characterId],
+			foreignColumns: [characters.id]
+		}).onDelete('set null')
 	]
 );

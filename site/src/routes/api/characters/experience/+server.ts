@@ -5,9 +5,7 @@ import { eventParticipantsRepo } from '$lib/db/event_participants.repo';
 import { expertiseRepo } from '$lib/db/expertise.repo';
 import { EventStatus } from '$lib/types/event-status';
 import { BadRequest, NotFoundRequest } from '$lib/types/errors';
-import { UserRole } from '$lib/types/roles';
-import { getSessionToken } from '$lib/utils/cookies';
-import { authGuard, handleRequest } from '$lib/utils/request';
+import { handleRequest } from '$lib/utils/request';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import type { VersionExpertise } from '../../my/characters/versions/+server';
 
@@ -22,10 +20,13 @@ export type CharacterExperienceResponse = {
 	expertise: VersionExpertise[];
 };
 
-export const POST: RequestHandler = async ({ cookies, request }) => {
+/**
+ * No auth gate: this is meant to be called by devices (e.g. the CYD tabletop
+ * prop) and the /games/simon terminal alike, neither of which should need a
+ * session token just to look up a character's experience by name.
+ */
+export const POST: RequestHandler = async ({ request }) => {
 	return handleRequest(async () => {
-		await authGuard(getSessionToken(cookies), [UserRole.admin, UserRole.user, UserRole.device]);
-
 		const body = await request.json();
 		const name = typeof body?.name === 'string' ? body.name.trim() : '';
 		if (name.length === 0) throw new BadRequest('name is required');

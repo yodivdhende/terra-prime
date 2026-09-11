@@ -11,18 +11,22 @@ A Simon Says minigame styled after the `/codex` terminal. Superseded the standal
 game runs on a shared walk-up terminal rather than each player's own device — see
 TP-0205 for the discussion.
 
-## Why this needs no admin token
+## Why this needs no auth at all
 
 The pygame version had to authenticate as an admin over HTTP to look up an arbitrary
 player's character by name, because `/api/events` and `/api/characters` are admin-gated
-routes. This route doesn't have that problem: `+page.server.ts` and `+server.ts` run
-*inside* the same server process as those routes, so `$lib/server/games/simon.service.ts`
-calls `characterRepo` / `eventRepo` / `characterVersionRepo` / `expertiseRepo` /
+routes. This route doesn't have that problem: `lookup/+server.ts` runs *inside* the same
+server process as those routes, so `$lib/server/games/simon.service.ts` calls
+`characterRepo` / `eventRepo` / `characterVersionRepo` / `expertiseRepo` /
 `eventParticipantsRepo` directly — the same functions the admin-gated HTTP routes call
-internally — with no HTTP hop and no privileged session token. The page itself only
-requires *any* valid session (role `user`, which every account has); once past that gate,
-the lookup can resolve any character by name, by design, since this is meant to be walked
-up to.
+internally — with no HTTP hop and no privileged session token.
+
+The page and the lookup endpoint carry no session check of their own either (TP-0206) —
+this is a walk-up terminal, not a per-player login, so anyone who can reach the route can
+resolve any character by name. `/games` stays in `+layout.svelte`'s `PUBLIC_PATHS` for the
+same reason it needed to be there when the route *did* check a session: the global
+"bounce to `/codex` if not logged in" effect shouldn't apply to a page that was never
+gated on login in the first place.
 
 ## Lookup chain
 

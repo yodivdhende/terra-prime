@@ -1,112 +1,64 @@
-import type { RowDataPacket } from 'mysql2/promise';
-import { mysqlconnFn } from './mysql';
+import { and, eq, inArray, sql, sum } from 'drizzle-orm';
+import { db } from './mysql';
+import {
+	characterVersions,
+	characters,
+	devicePrinter,
+	devices,
+	missionParticipants,
+	missionPrinter,
+	missions,
+	users
+} from './schema';
 
 class MissionRepo {
 	public async getAll(): Promise<Mission[]> {
-		const connection = mysqlconnFn();
-		const [rows] = await connection.execute(
-			`
-      SELECT
-        m.Id as id,
-        m.Name as name,
-        m.PlayerLimit as playerLimit,
-        m.Status as status,
-        m.CreatedAt as createdAt
-      FROM Missions m
-      ORDER BY m.Id
-      `
-		);
-		if (Array.isArray(rows) === false || rows.length === 0) return [];
-		const ids = (rows as RowDataPacket[])
-			.map(({ id }) => id)
-			.filter((id): id is number => typeof id === 'number');
+		const rows = await db.select().from(missions).orderBy(missions.id);
+		if (rows.length === 0) return [];
+		const ids = rows.map(({ id }) => id);
 		const [participants, printers] = await Promise.all([
 			this.getParticipantsForMissions(ids),
 			this.getPrintersForMissions(ids)
 		]);
-		const missions: Mission[] = [];
-		for (const row of rows as RowDataPacket[]) {
-			const mission = toMissionRow(row);
-			if (mission == null) continue;
-			missions.push(
-				withDerivedTotals(
-					mission,
-					participants.filter(({ missionId }) => missionId === mission.id),
-					printers.filter(({ missionId }) => missionId === mission.id)
-				)
-			);
-		}
-		return missions;
+		return rows.map((row) =>
+			withDerivedTotals(
+				toMissionRow(row),
+				participants.filter(({ missionId }) => missionId === row.id),
+				printers.filter(({ missionId }) => missionId === row.id)
+			)
+		);
 	}
 
 	public async getWithId(id: number): Promise<Mission | null> {
-		const connection = mysqlconnFn();
-		const [rows] = await connection.execute(
-			`
-      SELECT
-        m.Id as id,
-        m.Name as name,
-        m.PlayerLimit as playerLimit,
-        m.Status as status,
-        m.CreatedAt as createdAt
-      FROM Missions m
-      WHERE m.Id = ?
-      `,
-			[id]
-		);
-		if (Array.isArray(rows) === false || rows.length === 0) return null;
-		const mission = toMissionRow(rows[0] as RowDataPacket);
-		if (mission == null) return null;
+		const [row] = await db.select().from(missions).where(eq(missions.id, id));
+		if (row == null) return null;
 		const [participants, printers] = await Promise.all([
 			this.getParticipantsForMissions([id]),
 			this.getPrintersForMissions([id])
 		]);
-		return withDerivedTotals(mission, participants, printers);
+		return withDerivedTotals(toMissionRow(row), participants, printers);
 	}
 
 	public async create({ name, playerLimit }: NewMission): Promise<number | null> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-      INSERT INTO Missions (Name, PlayerLimit)
-      VALUES (?, ?)
-      `,
-			[name, playerLimit ?? 0]
-		);
-		if ('insertId' in result === false || result.insertId == null) return null;
-		return result.insertId;
+		const [result] = await db.insert(missions).values({ name, playerLimit: playerLimit ?? 0 });
+		return result.insertId ?? null;
 	}
 
 	/** Omitting `status` leaves the mission's current status alone. */
 	public async edit({ id, name, playerLimit, status }: EditMission): Promise<number> {
-		const connection = mysqlconnFn();
-		await connection.execute(
-			`
-      UPDATE Missions
-      SET Name = ?,
-          PlayerLimit = ?,
-          Status = COALESCE(?, Status)
-      WHERE Id = ?
-      `,
-			[name, playerLimit ?? 0, status ?? null, id]
-		);
+		await db
+			.update(missions)
+			.set({ name, playerLimit: playerLimit ?? 0, status: status ?? undefined })
+			.where(eq(missions.id, id));
 		return id;
 	}
 
 	public async delete(id: number): Promise<void> {
-		const conn = await mysqlconnFn().getConnection();
-		try {
-			await conn.beginTransaction();
-			await conn.execute(`DELETE FROM Mission_Participants WHERE Mission = ?`, [id]);
-			await conn.execute(`DELETE FROM Mission_Printer WHERE Mission = ?`, [id]);
-			await conn.execute(`DELETE FROM Missions WHERE Id = ?`, [id]);
-			await conn.commit();
-		} catch (err) {
-			await conn.rollback();
-			throw err;
-		} finally {
-			conn.release();
-		}
+		await db.transaction(async (tx) => {
+			await tx.delete(missionParticipants).where(eq(missionParticipants.missionId, id));
+			await tx.delete(missionPrinter).where(eq(missionPrinter.missionId, id));
+			await tx.delete(missions).where(eq(missions.id, id));
+		});
 	}
 
 	/**
@@ -115,18 +67,12 @@ class MissionRepo {
 	 * printer in or out and this number changes with no Missions row edited.
 	 */
 	public async getAvailablePrints(missionId: number): Promise<number> {
-		const connection = mysqlconnFn();
-		const [rows] = await connection.execute(
-			`
-      SELECT COALESCE(SUM(dp.PrintsAvailable), 0) as total
-      FROM Mission_Printer mp
-      JOIN Device_Printer dp ON dp.Device = mp.Device
-      WHERE mp.Mission = ?
-      `,
-			[missionId]
-		);
-		if (Array.isArray(rows) === false || rows.length === 0) return 0;
-		return Number((rows[0] as { total: number }).total) || 0;
+		const [row] = await db
+			.select({ total: sum(devicePrinter.printsAvailable) })
+			.from(missionPrinter)
+			.innerJoin(devicePrinter, eq(devicePrinter.deviceId, missionPrinter.deviceId))
+			.where(eq(missionPrinter.missionId, missionId));
+		return Number(row?.total ?? 0) || 0;
 	}
 
 	public async attachPrinter({
@@ -136,26 +82,20 @@ class MissionRepo {
 		missionId: number;
 		deviceId: number;
 	}): Promise<AttachPrinterResult> {
-		const connection = mysqlconnFn();
-		const [missionRows] = await connection.execute(`SELECT Id FROM Missions WHERE Id = ?`, [
-			missionId
-		]);
-		if (Array.isArray(missionRows) === false || missionRows.length === 0)
-			return { ok: false, reason: 'mission-not-found' };
-		const [printerRows] = await connection.execute(
-			`SELECT Device FROM Device_Printer WHERE Device = ?`,
-			[deviceId]
-		);
-		if (Array.isArray(printerRows) === false || printerRows.length === 0)
-			return { ok: false, reason: 'not-a-printer' };
-		await connection.execute(
-			`
-      INSERT INTO Mission_Printer (Mission, Device)
-      VALUES (?, ?)
-      ON DUPLICATE KEY UPDATE Mission = Mission
-      `,
-			[missionId, deviceId]
-		);
+		const [mission] = await db
+			.select({ id: missions.id })
+			.from(missions)
+			.where(eq(missions.id, missionId));
+		if (mission == null) return { ok: false, reason: 'mission-not-found' };
+		const [printer] = await db
+			.select({ deviceId: devicePrinter.deviceId })
+			.from(devicePrinter)
+			.where(eq(devicePrinter.deviceId, deviceId));
+		if (printer == null) return { ok: false, reason: 'not-a-printer' };
+		await db
+			.insert(missionPrinter)
+			.values({ missionId, deviceId })
+			.onDuplicateKeyUpdate({ set: { missionId } });
 		return { ok: true };
 	}
 
@@ -166,30 +106,24 @@ class MissionRepo {
 		missionId: number;
 		deviceId: number;
 	}): Promise<void> {
-		const connection = mysqlconnFn();
-		await connection.execute(`DELETE FROM Mission_Printer WHERE Mission = ? AND Device = ?`, [
-			missionId,
-			deviceId
-		]);
+		await db
+			.delete(missionPrinter)
+			.where(and(eq(missionPrinter.missionId, missionId), eq(missionPrinter.deviceId, deviceId)));
 	}
 
 	/** Every printer device in the registry, attached to a mission or not. */
 	public async getAllPrinters(): Promise<MissionPrinter[]> {
-		const connection = mysqlconnFn();
-		const [rows] = await connection.execute(
-			`
-      SELECT
-        d.Id as deviceId,
-        d.Name as name,
-        d.Uid as uid,
-        dp.PrintsAvailable as printsAvailable
-      FROM Device_Printer dp
-      JOIN Devices d ON d.Id = dp.Device
-      ORDER BY d.Name
-      `
-		);
-		if (Array.isArray(rows) === false) return [];
-		return (rows as RowDataPacket[]).map(toPrinter);
+		const rows = await db
+			.select({
+				deviceId: devices.id,
+				name: devices.name,
+				uid: devices.uid,
+				printsAvailable: devicePrinter.printsAvailable
+			})
+			.from(devicePrinter)
+			.innerJoin(devices, eq(devices.id, devicePrinter.deviceId))
+			.orderBy(devices.name);
+		return rows.map(toPrinter);
 	}
 
 	/**
@@ -204,58 +138,35 @@ class MissionRepo {
 		missionId: number;
 		characterVersionId: number;
 	}): Promise<RegisterResult> {
-		const conn = await mysqlconnFn().getConnection();
-		try {
-			await conn.beginTransaction();
-			const [missionRows] = await conn.execute(
-				`SELECT Id, PlayerLimit, Status FROM Missions WHERE Id = ? FOR UPDATE`,
-				[missionId]
-			);
-			if (Array.isArray(missionRows) === false || missionRows.length === 0) {
-				await conn.rollback();
-				return { ok: false, reason: 'mission-not-found' };
-			}
-			const mission = missionRows[0] as { PlayerLimit: number; Status: MissionStatus };
-			if (mission.Status !== 'open') {
-				await conn.rollback();
-				return { ok: false, reason: 'mission-closed' };
-			}
-			const [countRows] = await conn.execute(
-				`
-        SELECT
-          COUNT(*) as total,
-          COALESCE(SUM(CharacterVersion = ?), 0) as alreadyRegistered
-        FROM Mission_Participants
-        WHERE Mission = ?
-        `,
-				[characterVersionId, missionId]
-			);
-			const counts = (countRows as RowDataPacket[])[0] as {
-				total: number;
-				alreadyRegistered: number;
-			};
-			const playerLimit = Number(mission.PlayerLimit);
+		return db.transaction(async (tx) => {
+			const [mission] = await tx
+				.select({ playerLimit: missions.playerLimit, status: missions.status })
+				.from(missions)
+				.where(eq(missions.id, missionId))
+				.for('update');
+			if (mission == null) return { ok: false, reason: 'mission-not-found' };
+			if (mission.status !== 'open') return { ok: false, reason: 'mission-closed' };
+
+			const [counts] = await tx
+				.select({
+					total: sql<number>`count(*)`,
+					alreadyRegistered: sql<number>`coalesce(sum(${missionParticipants.characterVersionId} = ${characterVersionId}), 0)`
+				})
+				.from(missionParticipants)
+				.where(eq(missionParticipants.missionId, missionId));
+
+			const playerLimit = Number(mission.playerLimit);
 			const alreadyRegistered = Number(counts.alreadyRegistered) > 0;
 			if (alreadyRegistered === false && playerLimit > 0 && Number(counts.total) >= playerLimit) {
-				await conn.rollback();
 				return { ok: false, reason: 'mission-full' };
 			}
-			await conn.execute(
-				`
-        INSERT INTO Mission_Participants (Mission, CharacterVersion)
-        VALUES (?, ?)
-        ON DUPLICATE KEY UPDATE Mission = Mission
-        `,
-				[missionId, characterVersionId]
-			);
-			await conn.commit();
+
+			await tx
+				.insert(missionParticipants)
+				.values({ missionId, characterVersionId })
+				.onDuplicateKeyUpdate({ set: { missionId } });
 			return { ok: true, alreadyRegistered };
-		} catch (err) {
-			await conn.rollback();
-			throw err;
-		} finally {
-			conn.release();
-		}
+		});
 	}
 
 	public async unregisterParticipant({
@@ -265,61 +176,59 @@ class MissionRepo {
 		missionId: number;
 		characterVersionId: number;
 	}): Promise<void> {
-		const connection = mysqlconnFn();
-		await connection.execute(
-			`DELETE FROM Mission_Participants WHERE Mission = ? AND CharacterVersion = ?`,
-			[missionId, characterVersionId]
-		);
+		await db
+			.delete(missionParticipants)
+			.where(
+				and(
+					eq(missionParticipants.missionId, missionId),
+					eq(missionParticipants.characterVersionId, characterVersionId)
+				)
+			);
 	}
 
 	/** Closing a mission finalizes it: no further registrations are accepted. */
 	public async closeMission(missionId: number): Promise<boolean> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`UPDATE Missions SET Status = 'closed' WHERE Id = ?`,
-			[missionId]
-		);
-		if ('affectedRows' in result === false) return false;
-		return Number(result.affectedRows) > 0;
+		const [result] = await db
+			.update(missions)
+			.set({ status: 'closed' })
+			.where(eq(missions.id, missionId));
+		return result.affectedRows > 0;
 	}
 
 	private async getParticipantsForMissions(
 		missionIds: number[]
 	): Promise<(MissionParticipant & { missionId: number })[]> {
 		if (missionIds.length === 0) return [];
-		const connection = mysqlconnFn();
-		const placeholders = missionIds.map(() => '?').join(',');
-		const [rows] = await connection.execute(
-			`
-      SELECT
-        mp.Mission as missionId,
-        mp.CharacterVersion as characterVersionId,
-        mp.AvailablePrints as availablePrints,
-        mp.RegisterAt as registerAt,
-        cv.Name as characterVersionName,
-        c.Id as characterId,
-        c.Name as characterName,
-        u.Id as playerId,
-        u.Name as playerName
-      FROM Mission_Participants mp
-      JOIN Character_Versions cv ON cv.Id = mp.CharacterVersion
-      JOIN Characters c ON c.Id = cv.\`Character\`
-      JOIN Users u ON u.Id = c.Owner
-      WHERE mp.Mission IN (${placeholders})
-      ORDER BY mp.RegisterAt
-      `,
-			missionIds
-		);
-		if (Array.isArray(rows) === false) return [];
-		return (rows as RowDataPacket[]).map((row) => ({
-			missionId: Number(row.missionId),
-			characterVersionId: Number(row.characterVersionId),
+		const rows = await db
+			.select({
+				missionId: missionParticipants.missionId,
+				characterVersionId: missionParticipants.characterVersionId,
+				availablePrints: missionParticipants.availablePrints,
+				registerAt: missionParticipants.registerAt,
+				characterVersionName: characterVersions.name,
+				characterId: characters.id,
+				characterName: characters.name,
+				playerId: users.id,
+				playerName: users.name
+			})
+			.from(missionParticipants)
+			.innerJoin(
+				characterVersions,
+				eq(characterVersions.id, missionParticipants.characterVersionId)
+			)
+			.innerJoin(characters, eq(characters.id, characterVersions.characterId))
+			.innerJoin(users, eq(users.id, characters.owner))
+			.where(inArray(missionParticipants.missionId, missionIds))
+			.orderBy(missionParticipants.registerAt);
+		return rows.map((row) => ({
+			missionId: row.missionId,
+			characterVersionId: row.characterVersionId,
 			characterVersionName: row.characterVersionName ?? null,
-			characterId: Number(row.characterId),
+			characterId: row.characterId,
 			characterName: row.characterName ?? null,
-			playerId: Number(row.playerId),
+			playerId: row.playerId,
 			playerName: row.playerName ?? '',
-			availablePrints: Number(row.availablePrints) || 0,
+			availablePrints: row.availablePrints,
 			registerAt: toIsoString(row.registerAt)
 		}));
 	}
@@ -328,27 +237,21 @@ class MissionRepo {
 		missionIds: number[]
 	): Promise<(MissionPrinter & { missionId: number })[]> {
 		if (missionIds.length === 0) return [];
-		const connection = mysqlconnFn();
-		const placeholders = missionIds.map(() => '?').join(',');
-		const [rows] = await connection.execute(
-			`
-      SELECT
-        mp.Mission as missionId,
-        d.Id as deviceId,
-        d.Name as name,
-        d.Uid as uid,
-        dp.PrintsAvailable as printsAvailable
-      FROM Mission_Printer mp
-      JOIN Devices d ON d.Id = mp.Device
-      JOIN Device_Printer dp ON dp.Device = mp.Device
-      WHERE mp.Mission IN (${placeholders})
-      ORDER BY d.Name
-      `,
-			missionIds
-		);
-		if (Array.isArray(rows) === false) return [];
-		return (rows as RowDataPacket[]).map((row) => ({
-			missionId: Number(row.missionId),
+		const rows = await db
+			.select({
+				missionId: missionPrinter.missionId,
+				deviceId: devices.id,
+				name: devices.name,
+				uid: devices.uid,
+				printsAvailable: devicePrinter.printsAvailable
+			})
+			.from(missionPrinter)
+			.innerJoin(devices, eq(devices.id, missionPrinter.deviceId))
+			.innerJoin(devicePrinter, eq(devicePrinter.deviceId, missionPrinter.deviceId))
+			.where(inArray(missionPrinter.missionId, missionIds))
+			.orderBy(devices.name);
+		return rows.map((row) => ({
+			missionId: row.missionId,
 			...toPrinter(row)
 		}));
 	}
@@ -442,14 +345,17 @@ export function isEditMission(mission: unknown): mission is EditMission {
 
 type MissionRow = Omit<Mission, 'participants' | 'printers' | 'availablePrints'>;
 
-function toMissionRow(row: RowDataPacket): MissionRow | null {
-	if (typeof row.id !== 'number') return null;
-	if (typeof row.name !== 'string') return null;
-	if (row.status !== 'open' && row.status !== 'closed') return null;
+function toMissionRow(row: {
+	id: number;
+	name: string;
+	playerLimit: number;
+	status: MissionStatus;
+	createdAt: Date;
+}): MissionRow {
 	return {
 		id: row.id,
 		name: row.name,
-		playerLimit: Number(row.playerLimit) || 0,
+		playerLimit: row.playerLimit,
 		status: row.status,
 		createdAt: toIsoString(row.createdAt)
 	};
@@ -468,12 +374,17 @@ function withDerivedTotals(
 	};
 }
 
-function toPrinter(row: RowDataPacket): MissionPrinter {
+function toPrinter(row: {
+	deviceId: number;
+	name: string | null;
+	uid: string | null;
+	printsAvailable: number;
+}): MissionPrinter {
 	return {
-		deviceId: Number(row.deviceId),
-		name: typeof row.name === 'string' ? row.name : '',
-		uid: typeof row.uid === 'string' ? row.uid : '',
-		printsAvailable: Number(row.printsAvailable) || 0
+		deviceId: row.deviceId,
+		name: row.name ?? '',
+		uid: row.uid ?? '',
+		printsAvailable: row.printsAvailable
 	};
 }
 

@@ -1,38 +1,31 @@
-import { mysqlconnFn } from './mysql';
+import { eq, inArray } from 'drizzle-orm';
+import { db } from './mysql';
+import { party, partyMembers } from './schema';
+
+/** Collapses the one-row-per-member join result into one `Party` per party id. */
+function groupPartyLines(lines: { id: number; name: string | null; member: number }[]): Party[] {
+	const parties: Party[] = [];
+	for (const line of lines) {
+		const existing = parties.find((p) => p.id === line.id);
+		if (existing) existing.members.push(line.member);
+		else parties.push({ id: line.id, name: line.name ?? '', members: [line.member] });
+	}
+	return parties;
+}
+
+const partyLineColumns = {
+	id: party.id,
+	name: party.name,
+	member: partyMembers.memberId
+};
 
 class PartyRepo {
 	public async getAll(): Promise<Party[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(`
-              SELECT
-                  p.Id as id,
-                  p.Name as name,
-                  pm.Member as member
-              FROM Party p
-              JOIN Party_Members pm 
-                  on pm.Party = p.Id
-          `);
-		if (Array.isArray(result) === false) return [];
-		if (result.length === 0) return [];
-		const parties: Party[] = [];
-		for (const partyResult of result) {
-			if (isPartyLine(partyResult)) {
-				const existingParty = parties.find((party) => party.id === partyResult.id);
-				if (existingParty) {
-					existingParty.members.push(partyResult.member);
-				} else {
-					parties.push({
-						id: partyResult.id,
-						name: partyResult.name,
-						members: [partyResult.member]
-					});
-				}
-			} else
-				console.error(`%c sql result is not party line`, `background:red;color:black`, {
-					eventResult: partyResult
-				});
-		}
-		return parties;
+		const lines = await db
+			.select(partyLineColumns)
+			.from(party)
+			.innerJoin(partyMembers, eq(partyMembers.partyId, party.id));
+		return groupPartyLines(lines);
 	}
 
 	public save({ id, name, members }: Party) {
@@ -41,20 +34,13 @@ class PartyRepo {
 	}
 
 	public async create({ name, members }: Omit<Party, 'id'>) {
-		const connection = mysqlconnFn();
-		const partyId = await connection.execute(
-			`
-              INSERT INTO Party (Name)
-              VALUES (?)
-          `,
-			[name]
-		);
-		if (typeof partyId !== 'number') return;
-		const valueString = members.map((member) => `(${partyId}, ${member})`).join(',');
-		await connection.execute(`
-              INSERT INTO PARTY_Members (Party, Member)
-              VALUES ${valueString}
-              `);
+		await db.transaction(async (tx) => {
+			const [result] = await tx.insert(party).values({ name });
+			if (members.length === 0) return;
+			await tx
+				.insert(partyMembers)
+				.values(members.map((memberId) => ({ partyId: result.insertId, memberId })));
+		});
 	}
 
 	public async edit(_party: Party) {
@@ -62,23 +48,10 @@ class PartyRepo {
 	}
 
 	public async delete({ id }: { id: number }) {
-		const connection = mysqlconnFn();
-		await connection.execute(
-			`
-              DELETE 
-              FROM Party_Members  
-              WHERE Party = ?
-          `,
-			[id]
-		);
-		await connection.execute(
-			`
-              DELETE 
-              FROM Party
-              WHERE Id = ?
-          `,
-			[id]
-		);
+		await db.transaction(async (tx) => {
+			await tx.delete(partyMembers).where(eq(partyMembers.partyId, id));
+			await tx.delete(party).where(eq(party.id, id));
+		});
 	}
 
 	public async getForCharacter({
@@ -86,44 +59,18 @@ class PartyRepo {
 	}: {
 		characterId: number;
 	}): Promise<Party | undefined> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-              SELECT
-                  p.Id as id,
-                  p.Name as name,
-                  pm.Member as member
-              FROM Party p
-              JOIN Party_Members pm 
-                  on pm.Party = p.Id
-              WHERE p.id in (
-                  SELECT pm2.party
-                  FROM Party_Members pm2
-                  WHERE pm2.Member = ?
-              )                
-          `,
-			[characterId]
-		);
-		if (Array.isArray(result) === false) return;
-		if (result.length === 0) return;
-		let partyResult: Party | undefined;
-		for (const partyLine of result) {
-			if (isPartyLine(partyLine)) {
-				if (partyResult != null) {
-					partyResult.members.push(partyLine.member);
-				} else {
-					partyResult = {
-						id: partyLine.id,
-						name: partyLine.name,
-						members: [partyLine.member]
-					};
-				}
-			} else
-				console.error(`%c sql result is not party line`, `background:red;color:black`, {
-					eventResult: partyLine
-				});
-		}
-		return partyResult;
+		const partyIds = db
+			.select({ partyId: partyMembers.partyId })
+			.from(partyMembers)
+			.where(eq(partyMembers.memberId, characterId));
+
+		const lines = await db
+			.select(partyLineColumns)
+			.from(party)
+			.innerJoin(partyMembers, eq(partyMembers.partyId, party.id))
+			.where(inArray(party.id, partyIds));
+
+		return groupPartyLines(lines)[0];
 	}
 }
 
@@ -146,25 +93,5 @@ export function isParty(party: unknown): party is Party {
 		party.members.every((member) => typeof member === 'number' && isNaN(member) === false) &&
 		'id' in party &&
 		(typeof party.id === 'number' || party.id === null)
-	);
-}
-
-type PartyLine = {
-	id: number;
-	name: string;
-	member: number;
-};
-
-export function isPartyLine(partyLine: unknown): partyLine is PartyLine {
-	return (
-		typeof partyLine === 'object' &&
-		partyLine != null &&
-		'name' in partyLine &&
-		typeof partyLine.name === 'string' &&
-		'member' in partyLine &&
-		typeof partyLine.member === 'number' &&
-		isNaN(partyLine.member) === false &&
-		'id' in partyLine &&
-		typeof partyLine.id === 'number'
 	);
 }

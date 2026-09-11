@@ -1,196 +1,145 @@
 import { isPublicUserRole, type UserRole } from '$lib/types/roles';
 import { v4 as uuidv4 } from 'uuid';
-import { mysqlconnFn } from './mysql';
-import { type Connection as MySqlConnection } from 'mysql2/promise';
+import { and, eq, inArray, isNotNull, lt, sql } from 'drizzle-orm';
+import { db } from './mysql';
+import { sessionRoles, sessions } from './schema';
 
 class SessionRepo {
-	public async create({
-		userId,
-		roles,
-		end,
-		description
-	}: NewSession): Promise<string> {
+	public async create({ userId, roles, end, description }: NewSession): Promise<string> {
 		await this.removeExpiredSessions();
 		if (userId != null) await this.deleteByUserId(userId);
-		const connection = mysqlconnFn();
-		const token = await this.addSessions(connection, { userId, end: end ?? undefined, description: description ?? undefined });
-		await this.addSessionRoles(connection, { roles, token });
+		const token = await this.addSession({ userId, end, description });
+		await this.addSessionRoles({ roles, token });
 		return token;
 	}
 
-	private async addSessions(
-		connection: MySqlConnection,
-		{ userId, end, description }: { userId: number | null; end?: Date; description?: string }
-	): Promise<string> {
-		const sessionToken = uuidv4();
-		await connection.execute(
-			`
-            INSERT INTO \`Sessions\`(Token, UserId,Start, End, Description)
-            VALUES (?, ?,NOW(), ?, ?)
-            `,
-			[sessionToken, userId, this.convertDateToDateTimeString(end), description ?? null]
-		);
-		return sessionToken;
+	private async addSession({
+		userId,
+		end,
+		description
+	}: {
+		userId: number | null;
+		end: Date | null;
+		description: string | null;
+	}): Promise<string> {
+		const token = uuidv4();
+		await db.insert(sessions).values({
+			token,
+			userId,
+			start: sql`NOW()`,
+			end,
+			description
+		});
+		return token;
 	}
 
-	private convertDateToDateTimeString(date?: Date) {
-		return date?.toJSON().slice(0, 19).replace('T', ' ') ?? null;
-	}
-
-	private async addSessionRoles(
-		connection: MySqlConnection,
-		{ roles, token }: { roles: UserRole[]; token: string }
-	): Promise<void> {
-		const queryValues: string[] = roles.map(() => '(?, ?)');
-		const values = roles.flatMap((role) => [token, role]);
-		await connection.execute(
-			`
-            INSERT INTO \`Session_Roles\` (Token, Role)
-            VALUES ${queryValues.join(',')}
-            `,
-			values
-		);
+	private async addSessionRoles({
+		roles,
+		token
+	}: {
+		roles: UserRole[];
+		token: string;
+	}): Promise<void> {
+		if (roles.length === 0) return;
+		await db.insert(sessionRoles).values(roles.map((role) => ({ token, role })));
 	}
 
 	private async deleteByUserId(userId: number) {
-		const connection = mysqlconnFn();
-		await connection.execute(
-			`DELETE FROM \`Session_Roles\` WHERE Token IN (SELECT Token FROM \`Sessions\` WHERE UserId = ?)`,
-			[userId]
-		);
-		await connection.execute(`DELETE FROM \`Sessions\` WHERE UserId = ?`, [userId]);
+		const tokens = db
+			.select({ token: sessions.token })
+			.from(sessions)
+			.where(eq(sessions.userId, userId));
+		await db.delete(sessionRoles).where(inArray(sessionRoles.token, tokens));
+		await db.delete(sessions).where(eq(sessions.userId, userId));
 	}
 
 	public async delete(token: string) {
 		await this.removeExpiredSessions();
-		const connection = mysqlconnFn();
-		await this.deleteSessionRoles(connection, token);
-		await this.deleteSessions(connection, token);
+		await db.delete(sessionRoles).where(eq(sessionRoles.token, token));
+		await db.delete(sessions).where(eq(sessions.token, token));
 	}
 
-	private async deleteSessions(connection: MySqlConnection, token: string) {
-		await connection.execute(
-			`
-                DELETE FROM \`Sessions\` 
-                WHERE Token = ?
-                `,
-			[token]
-		);
-	}
-
-	private async deleteSessionRoles(connection: MySqlConnection, token: string) {
-		await connection.execute(
-			`
-                DELETE FROM \`Session_Roles\` 
-                WHERE Token = ?
-                `,
-			[token]
-		);
-	}
-
-	public async getCredentials(token: string): Promise<{ userId: number | null; roles: UserRole[] } | null> {
-			await this.removeExpiredSessions();
-			const connection = mysqlconnFn();
-			const [dbResult] = await connection.execute(`
-                SELECT
-					s.UserId as userId,
-					sr.Role as role
-				FROM \`Session_Roles\` sr
-				JOIN \`Sessions\` s
-					ON sr.Token = s.Token
-                WHERE s.Token = ?
-            `,[token]);
-			if (Array.isArray(dbResult) === false) return null;
-			if (dbResult.length === 0) return null;
-			let userRoleResult: { userId: number; roles: UserRole[] } | undefined;
-			for (const { userId, role } of dbResult as { userId: number; role: UserRole }[]) {
-				if(userRoleResult === undefined) userRoleResult = {userId, roles: []};
-				userRoleResult.roles.push(role);
-			}
-			return userRoleResult ?? null;
+	public async getCredentials(
+		token: string
+	): Promise<{ userId: number | null; roles: UserRole[] } | null> {
+		await this.removeExpiredSessions();
+		const rows = await db
+			.select({ userId: sessions.userId, role: sessionRoles.role })
+			.from(sessionRoles)
+			.innerJoin(sessions, eq(sessionRoles.token, sessions.token))
+			.where(eq(sessions.token, token));
+		if (rows.length === 0) return null;
+		return {
+			userId: rows[0].userId,
+			roles: rows.map((row) => row.role as UserRole)
+		};
 	}
 
 	private async removeExpiredSessions() {
-		const connection = mysqlconnFn();
-		await connection.execute(`
-                DELETE FROM \`Session_Roles\` 
-                WHERE Token in (
-                    SELECT Token
-                    FROM \`Sessions\` s  
-                    WHERE  s.End IS NOT NULL
-                    AND s.End < NOW()
-                )
-            `);
-		await connection.execute(`
-                DELETE FROM  \`Sessions\`
-                WHERE End IS NOT NULL
-                AND End < NOW()
-				`);
+		const expired = db
+			.select({ token: sessions.token })
+			.from(sessions)
+			.where(and(isNotNull(sessions.end), lt(sessions.end, sql`NOW()`)));
+		await db.delete(sessionRoles).where(inArray(sessionRoles.token, expired));
+		await db.delete(sessions).where(and(isNotNull(sessions.end), lt(sessions.end, sql`NOW()`)));
 	}
 
-	public async getAll() {
-		const connection = mysqlconnFn();
-		const [sessionRoles] = await connection.execute(`
-				SELECT
-					s.Token as token,
-					s.Start as start,
-					s.End as end,
-					s.Description as description,
-					sr.Role as role
-				FROM \`Sessions\` s
-				join \`Session_Roles\` sr
-					on s.Token = sr.Token 
-				`);
-		const sessions: Session[] = [];
-		type SessionRoleRow = {
-			token: string;
-			userId: number | null;
-			start: Date;
-			end: Date | null;
-			description: string;
-			role: UserRole;
-		};
-		for (const sessionRole of sessionRoles as SessionRoleRow[]) {
-			let existingSessions = sessions.find(
-				(connection) => connection.token === sessionRole.token
-			);
-			if (existingSessions === undefined) {
-				existingSessions = {
-					token: sessionRole.token,
-					userId: sessionRole.userId,
-					start: sessionRole.start,
-					end: sessionRole.end,
-					description: sessionRole.description,
+	public async getAll(): Promise<Session[]> {
+		const rows = await db
+			.select({
+				token: sessions.token,
+				userId: sessions.userId,
+				start: sessions.start,
+				end: sessions.end,
+				description: sessions.description,
+				role: sessionRoles.role
+			})
+			.from(sessions)
+			.innerJoin(sessionRoles, eq(sessions.token, sessionRoles.token));
+
+		const result: Session[] = [];
+		for (const row of rows) {
+			let session = result.find((s) => s.token === row.token);
+			if (session === undefined) {
+				session = {
+					token: row.token,
+					userId: row.userId,
+					start: row.start,
+					end: row.end,
+					description: row.description ?? '',
 					roles: []
 				};
-				sessions.push(existingSessions);
+				result.push(session);
 			}
-			if (existingSessions.roles.includes(sessionRole.role) === false) {
-				existingSessions.roles.push(sessionRole.role);
-			}
+			const role = row.role as UserRole;
+			if (session.roles.includes(role) === false) session.roles.push(role);
 		}
-		return sessions;
+		return result;
 	}
 }
 
 export const sessionRepo = new SessionRepo();
+
 export type NewSession = {
 	userId: number | null;
 	end: Date | null;
 	description: string;
 	roles: UserRole[];
-}
+};
+
 export function isNewSession(session: unknown): session is NewSession {
 	if (typeof session !== 'object' || session === null) return false;
-	return 'userId' in session
-	&& (typeof session.userId === 'number' || session.userId === null)
-	&& 'end' in session
-	&& (session.end instanceof Date || session.end === null)
-	&& 'description' in session
-	&& typeof  session.description === 'string'
-	&& 'roles' in session
-	&& Array.isArray(session.roles)
-	&& session.roles.every((role: unknown) => isPublicUserRole(role))
+	return (
+		'userId' in session &&
+		(typeof session.userId === 'number' || session.userId === null) &&
+		'end' in session &&
+		(session.end instanceof Date || session.end === null) &&
+		'description' in session &&
+		typeof session.description === 'string' &&
+		'roles' in session &&
+		Array.isArray(session.roles) &&
+		session.roles.every((role: unknown) => isPublicUserRole(role))
+	);
 }
 
 export type Session = NewSession & {
@@ -200,11 +149,11 @@ export type Session = NewSession & {
 
 export function isSession(session: unknown): session is Session {
 	if (typeof session !== 'object' || session === null) return false;
-	return isNewSession(session)
-	&& 'token' in session
-	&& typeof session.token === 'string'
-	&& 'start' in session
-	&& session.start instanceof Date
+	return (
+		isNewSession(session) &&
+		'token' in session &&
+		typeof session.token === 'string' &&
+		'start' in session &&
+		session.start instanceof Date
+	);
 }
-
-

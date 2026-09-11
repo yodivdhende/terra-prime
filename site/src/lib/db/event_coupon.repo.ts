@@ -1,5 +1,7 @@
 import { randomBytes } from 'crypto';
-import { mysqlconnFn } from './mysql';
+import { and, eq, isNull, isNotNull, sql, sum } from 'drizzle-orm';
+import { db } from './mysql';
+import { eventCoupons, users } from './schema';
 
 export type EventCoupon = {
 	id: number;
@@ -22,50 +24,56 @@ function generateCode(): string {
 
 class EventCouponRepo {
 	public async getAllByEvent(eventId: number): Promise<EventCoupon[]> {
-		const connection = await mysqlconnFn();
-		const [result] = await connection.execute(
-			`SELECT ec.Id as id, ec.User as userId, u.Name as userName, ec.Code as code, ec.Type as type, ec.Value as value, ec.RedeemedAt as redeemedAt
-       FROM Event_Coupons ec
-       JOIN Users u ON u.Id = ec.User
-       WHERE ec.Event = ?`,
-			[eventId]
-		);
-		if (!Array.isArray(result)) return [];
-		return (result as any[]).map((r) => ({
-			id: r.id,
-			userId: r.userId,
-			userName: r.userName,
-			code: r.code,
-			type: r.type,
-			value: r.value,
-			redeemed: r.redeemedAt != null
+		const rows = await db
+			.select({
+				id: eventCoupons.id,
+				userId: eventCoupons.userId,
+				userName: users.name,
+				code: eventCoupons.code,
+				type: eventCoupons.type,
+				value: eventCoupons.value,
+				redeemedAt: eventCoupons.redeemedAt
+			})
+			.from(eventCoupons)
+			.innerJoin(users, eq(users.id, eventCoupons.userId))
+			.where(eq(eventCoupons.eventId, eventId));
+
+		return rows.map(({ redeemedAt, userName, ...rest }) => ({
+			...rest,
+			userName: userName ?? '',
+			redeemed: redeemedAt != null
 		}));
 	}
 
 	public async getRedeemedBudgetSumForUser(eventId: number, userId: number): Promise<number> {
-		const connection = await mysqlconnFn();
-		const [result] = await connection.execute(
-			`SELECT COALESCE(SUM(Value), 0) as total FROM Event_Coupons
-       WHERE Event = ? AND User = ? AND Type = 'budget' AND RedeemedAt IS NOT NULL`,
-			[eventId, userId]
-		);
-		if (!Array.isArray(result) || result.length === 0) return 0;
-		return Number((result[0] as { total: number }).total);
+		const [row] = await db
+			.select({ total: sum(eventCoupons.value) })
+			.from(eventCoupons)
+			.where(
+				and(
+					eq(eventCoupons.eventId, eventId),
+					eq(eventCoupons.userId, userId),
+					eq(eventCoupons.type, 'budget'),
+					isNotNull(eventCoupons.redeemedAt)
+				)
+			);
+		return Number(row?.total ?? 0);
 	}
 
-	public async create(eventId: number, userId: number, value: number): Promise<{ id: number; code: string }> {
-		const connection = await mysqlconnFn();
+	public async create(
+		eventId: number,
+		userId: number,
+		value: number
+	): Promise<{ id: number; code: string }> {
 		const code = generateCode();
-		const [result] = await connection.execute(
-			`INSERT INTO Event_Coupons (Event, User, Code, Type, Value) VALUES (?, ?, ?, 'budget', ?)`,
-			[eventId, userId, code, value]
-		);
-		return { id: (result as any).insertId as number, code };
+		const [result] = await db
+			.insert(eventCoupons)
+			.values({ eventId, userId, code, type: 'budget', value });
+		return { id: result.insertId, code };
 	}
 
 	public async delete(couponId: number): Promise<void> {
-		const connection = await mysqlconnFn();
-		await connection.execute(`DELETE FROM Event_Coupons WHERE Id = ?`, [couponId]);
+		await db.delete(eventCoupons).where(eq(eventCoupons.id, couponId));
 	}
 
 	public async findUnredeemedByCode(
@@ -73,19 +81,25 @@ class EventCouponRepo {
 		userId: number,
 		code: string
 	): Promise<{ id: number; value: number } | undefined> {
-		const connection = await mysqlconnFn();
-		const [result] = await connection.execute(
-			`SELECT Id as id, Value as value FROM Event_Coupons
-       WHERE Event = ? AND User = ? AND Code = ? AND RedeemedAt IS NULL`,
-			[eventId, userId, code]
-		);
-		if (!Array.isArray(result) || result.length === 0) return undefined;
-		return result[0] as { id: number; value: number };
+		const [row] = await db
+			.select({ id: eventCoupons.id, value: eventCoupons.value })
+			.from(eventCoupons)
+			.where(
+				and(
+					eq(eventCoupons.eventId, eventId),
+					eq(eventCoupons.userId, userId),
+					eq(eventCoupons.code, code),
+					isNull(eventCoupons.redeemedAt)
+				)
+			);
+		return row;
 	}
 
 	public async redeem(couponId: number): Promise<void> {
-		const connection = await mysqlconnFn();
-		await connection.execute(`UPDATE Event_Coupons SET RedeemedAt = NOW() WHERE Id = ?`, [couponId]);
+		await db
+			.update(eventCoupons)
+			.set({ redeemedAt: sql`NOW()` })
+			.where(eq(eventCoupons.id, couponId));
 	}
 }
 

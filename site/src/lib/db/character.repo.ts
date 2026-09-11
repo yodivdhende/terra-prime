@@ -1,93 +1,80 @@
-import { mysqlconnFn } from './mysql';
+import { eq, inArray, sql } from 'drizzle-orm';
+import { db } from './mysql';
+import {
+	characterVersionExpertise,
+	characterVersionImplants,
+	characterVersionItems,
+	characterVersions,
+	characters,
+	eventParticipants,
+	partyMembers,
+	users
+} from './schema';
+
+const characterColumns = {
+	id: characters.id,
+	name: characters.name,
+	ownerId: characters.owner,
+	ownerName: users.name,
+	backstoryId: characters.backstoryId,
+	implantLimit: characters.implantLimit
+};
+
+type CharacterRow = {
+	id: number;
+	name: string | null;
+	ownerId: number | null;
+	ownerName: string | null;
+	backstoryId: string | null;
+	implantLimit: number;
+};
+
+function toCharacter(row: CharacterRow): Character {
+	return {
+		id: row.id,
+		name: row.name ?? '',
+		// `Owner` is nullable, but the join to Users means only owned rows come back.
+		ownerId: row.ownerId as number,
+		ownerName: row.ownerName ?? '',
+		backstoryId: row.backstoryId,
+		implantLimit: row.implantLimit
+	};
+}
 
 class CharacterRepo {
-	private characterSelector = `
-	SELECT
-		c.Id as id,
-		c.Name as name,
-		c.Owner as ownerId,
-		u.Name as ownerName,
-		c.BackstoryId as backstoryId,
-		c.ImplantLimit as implantLimit
-	FROM Characters c
-	JOIN Users u
-		on u.id = c.Owner
-	`;
+	private selectCharacters() {
+		return db
+			.select(characterColumns)
+			.from(characters)
+			.innerJoin(users, eq(users.id, characters.owner));
+	}
 
 	public async getById(id: number): Promise<Character> {
-		const [result] = await mysqlconnFn().execute(`${this.characterSelector} WHERE c.id = ?`, [id]);
-		const [firstCharacter] = result as unknown[];
-		if (isCharacter(firstCharacter)) {
-			return {
-				id: firstCharacter.id,
-				name: firstCharacter.name,
-				ownerId: firstCharacter.ownerId,
-				ownerName: firstCharacter.ownerName,
-				backstoryId: firstCharacter.backstoryId ?? null,
-				implantLimit: firstCharacter.implantLimit ?? 2
-			};
-		} else {
-			throw new Error(`character not found with id: ${id}`);
-		}
+		const [row] = await this.selectCharacters().where(eq(characters.id, id));
+		if (row == null) throw new Error(`character not found with id: ${id}`);
+		return toCharacter(row);
 	}
 
 	public async getByName(name: string): Promise<Character[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`${this.characterSelector} WHERE LOWER(TRIM(c.Name)) = LOWER(TRIM(?))`,
-			[name]
+		const rows = await this.selectCharacters().where(
+			sql`LOWER(TRIM(${characters.name})) = LOWER(TRIM(${name}))`
 		);
-		if (!Array.isArray(result)) return [];
-		return (result as unknown[]).filter(isCharacter);
+		return rows.map(toCharacter);
 	}
 
 	public async getByOwner(ownerId: number): Promise<Character[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`SELECT c.Id as id, c.Name as name, c.Owner as ownerId, u.Name as ownerName, c.BackstoryId as backstoryId, c.ImplantLimit as implantLimit
-			 FROM Characters c
-			 JOIN Users u ON u.Id = c.Owner
-			 WHERE c.Owner = ?`,
-			[ownerId]
-		);
-		if (!Array.isArray(result)) return [];
-		return (result as unknown[]).filter(isCharacter);
+		const rows = await this.selectCharacters().where(eq(characters.owner, ownerId));
+		return rows.map(toCharacter);
 	}
 
-	public async getForUser(userId: number) {
-		const connection = mysqlconnFn();
-		const [queryResults] = await connection.execute(`${this.characterSelector} WHERE u.id = ?`, [
-			userId
-		]);
-		const results = (queryResults as [])
-			.map((queryResult) => {
-				if (isCharacter(queryResult) === false) return null;
-				return queryResult;
-			})
-			.filter((value) => value != null);
-		return results;
+	public async getForUser(userId: number): Promise<Character[]> {
+		const rows = await this.selectCharacters().where(eq(users.id, userId));
+		return rows.map(toCharacter);
 	}
 
 	public async getAll(): Promise<Character[]> {
-		const [result] = await mysqlconnFn().execute(this.characterSelector);
-		const characters = result as unknown[];
-		return characters
-			.map((character) => {
-				if (isCharacter(character)) {
-					return {
-						id: character.id,
-						name: character.name,
-						ownerId: character.ownerId,
-						ownerName: character.ownerName,
-						backstoryId: character.backstoryId ?? null,
-						implantLimit: character.implantLimit ?? 2
-					};
-				} else {
-					console.error(`can't convert to character: `, { character });
-					return undefined;
-				}
-			})
-			.filter((value) => value != null);
+		const rows = await this.selectCharacters();
+		return rows.map(toCharacter);
 	}
 
 	public async save(character: NewCharacter | Character): Promise<number | undefined> {
@@ -99,78 +86,58 @@ class CharacterRepo {
 	}
 
 	private async create(character: NewCharacter): Promise<number> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`INSERT INTO Characters (Name, Owner, BackstoryId, ImplantLimit) VALUES (?, ?, ?, ?)`,
-			[
-				character.name,
-				character.ownerId,
-				character.backstoryId ?? null,
-				character.implantLimit ?? 2
-			]
-		);
-		return (result as { insertId: number }).insertId;
+		const [result] = await db.insert(characters).values({
+			name: character.name,
+			owner: character.ownerId,
+			backstoryId: character.backstoryId ?? null,
+			implantLimit: character.implantLimit ?? 2
+		});
+		return result.insertId;
 	}
 
 	private async edit(character: Character) {
-		mysqlconnFn().execute(
-			`
-			UPDATE Characters
-			SET Name = ?,
-				Owner = ?,
-				BackstoryId = COALESCE(?, BackstoryId),
-				ImplantLimit = ?
-			WHERE id = ?
-		`,
-			[
-				character.name,
-				character.ownerId,
-				character.backstoryId ?? null,
-				character.implantLimit ?? 2,
-				character.id
-			]
-		);
+		await db
+			.update(characters)
+			.set({
+				name: character.name,
+				owner: character.ownerId,
+				// Keep the stored id when the caller does not supply one.
+				backstoryId: sql`COALESCE(${character.backstoryId ?? null}, ${characters.backstoryId})`,
+				implantLimit: character.implantLimit ?? 2
+			})
+			.where(eq(characters.id, character.id));
 	}
 
 	public async saveBackstoryId(id: number, backstoryId: string) {
-		(await mysqlconnFn()).execute('UPDATE Characters SET BackstoryId = ? WHERE Id = ?', [
-			backstoryId,
-			id
-		]);
+		await db.update(characters).set({ backstoryId }).where(eq(characters.id, id));
 	}
 
 	public async delete(id: number): Promise<void> {
-		const connection = mysqlconnFn();
-
-		const [versionRows] = await connection.execute(
-			`SELECT Id FROM Character_Versions WHERE \`Character\` = ?`,
-			[id]
-		);
-		const versionIds = (versionRows as { Id: number }[]).map((r) => r.Id);
+		const versionIds = (
+			await db
+				.select({ id: characterVersions.id })
+				.from(characterVersions)
+				.where(eq(characterVersions.characterId, id))
+		).map((row) => row.id);
 
 		if (versionIds.length > 0) {
-			const placeholders = versionIds.map(() => '?').join(', ');
-			await connection.execute(
-				`DELETE FROM Character_Version_Expertise WHERE CharacterVersion IN (${placeholders})`,
-				versionIds
-			);
-			await connection.execute(
-				`DELETE FROM Character_Version_Items WHERE CharacterVersion IN (${placeholders})`,
-				versionIds
-			);
-			await connection.execute(
-				`DELETE FROM Character_Version_Implants WHERE CharacterVersion IN (${placeholders})`,
-				versionIds
-			);
-			await connection.execute(
-				`DELETE FROM Event_Participants WHERE CharacterVersion IN (${placeholders})`,
-				versionIds
-			);
+			await db
+				.delete(characterVersionExpertise)
+				.where(inArray(characterVersionExpertise.characterVersionId, versionIds));
+			await db
+				.delete(characterVersionItems)
+				.where(inArray(characterVersionItems.characterVersionId, versionIds));
+			await db
+				.delete(characterVersionImplants)
+				.where(inArray(characterVersionImplants.characterVersionId, versionIds));
+			await db
+				.delete(eventParticipants)
+				.where(inArray(eventParticipants.characterVersionId, versionIds));
 		}
 
-		await connection.execute(`DELETE FROM Character_Versions WHERE \`Character\` = ?`, [id]);
-		await connection.execute(`DELETE FROM Party_Members WHERE Member = ?`, [id]);
-		await connection.execute(`DELETE FROM Characters WHERE Id = ?`, [id]);
+		await db.delete(characterVersions).where(eq(characterVersions.characterId, id));
+		await db.delete(partyMembers).where(eq(partyMembers.memberId, id));
+		await db.delete(characters).where(eq(characters.id, id));
 	}
 }
 

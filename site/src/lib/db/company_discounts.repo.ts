@@ -1,4 +1,10 @@
-import { mysqlconnFn } from './mysql';
+import { eq } from 'drizzle-orm';
+import { db } from './mysql';
+import {
+	companyDiscountsExpertise,
+	companyDiscountsImplants,
+	companyDiscountsItems
+} from './schema';
 
 export type CompanyDiscounts = {
 	items: { itemId: number; discount: number }[];
@@ -8,64 +14,53 @@ export type CompanyDiscounts = {
 
 class CompanyDiscountsRepo {
 	public async getByCompany(companyId: number): Promise<CompanyDiscounts> {
-		const connection = await mysqlconnFn();
+		const [items, implants, expertise] = await Promise.all([
+			db
+				.select({ itemId: companyDiscountsItems.itemId, discount: companyDiscountsItems.discount })
+				.from(companyDiscountsItems)
+				.where(eq(companyDiscountsItems.companyId, companyId)),
+			db
+				.select({
+					implantId: companyDiscountsImplants.implantId,
+					discount: companyDiscountsImplants.discount
+				})
+				.from(companyDiscountsImplants)
+				.where(eq(companyDiscountsImplants.companyId, companyId)),
+			db
+				.select({
+					expertiseId: companyDiscountsExpertise.expertiseId,
+					discount: companyDiscountsExpertise.discount
+				})
+				.from(companyDiscountsExpertise)
+				.where(eq(companyDiscountsExpertise.companyId, companyId))
+		]);
 
-		const [items] = await connection.execute(
-			`SELECT Item as itemId, Discount as discount FROM Company_Discounts_Items WHERE Company = ?`,
-			[companyId]
-		);
-		const [implants] = await connection.execute(
-			`SELECT Implant as implantId, Discount as discount FROM Company_Discounts_Implants WHERE Company = ?`,
-			[companyId]
-		);
-		const [expertise] = await connection.execute(
-			`SELECT Expertise as expertiseId, Discount as discount FROM Company_Discounts_Expertise WHERE Company = ?`,
-			[companyId]
-		);
-
-		return {
-			items: Array.isArray(items) ? (items as { itemId: number; discount: number }[]) : [],
-			implants: Array.isArray(implants)
-				? (implants as { implantId: number; discount: number }[])
-				: [],
-			expertise: Array.isArray(expertise) ? (expertise as { expertiseId: number; discount: number }[]) : []
-		};
+		return { items, implants, expertise };
 	}
 
 	public async setDiscounts(companyId: number, discounts: CompanyDiscounts): Promise<void> {
-		const connection = await mysqlconnFn().getConnection();
-		await connection.beginTransaction();
-		try {
-			await connection.execute(`DELETE FROM Company_Discounts_Items WHERE Company = ?`, [companyId]);
-			await connection.execute(`DELETE FROM Company_Discounts_Implants WHERE Company = ?`, [companyId]);
-			await connection.execute(`DELETE FROM Company_Discounts_Expertise WHERE Company = ?`, [companyId]);
+		await db.transaction(async (tx) => {
+			await tx.delete(companyDiscountsItems).where(eq(companyDiscountsItems.companyId, companyId));
+			await tx
+				.delete(companyDiscountsImplants)
+				.where(eq(companyDiscountsImplants.companyId, companyId));
+			await tx
+				.delete(companyDiscountsExpertise)
+				.where(eq(companyDiscountsExpertise.companyId, companyId));
 
-			for (const { itemId, discount } of discounts.items) {
-				await connection.execute(
-					`INSERT INTO Company_Discounts_Items (Company, Item, Discount) VALUES (?, ?, ?)`,
-					[companyId, itemId, discount]
-				);
-			}
-			for (const { implantId, discount } of discounts.implants) {
-				await connection.execute(
-					`INSERT INTO Company_Discounts_Implants (Company, Implant, Discount) VALUES (?, ?, ?)`,
-					[companyId, implantId, discount]
-				);
-			}
-			for (const { expertiseId, discount } of discounts.expertise) {
-				await connection.execute(
-					`INSERT INTO Company_Discounts_Expertise (Company, Expertise, Discount) VALUES (?, ?, ?)`,
-					[companyId, expertiseId, discount]
-				);
-			}
-
-			await connection.commit();
-		} catch (err) {
-			await connection.rollback();
-			throw err;
-		} finally {
-			connection.release();
-		}
+			if (discounts.items.length > 0)
+				await tx
+					.insert(companyDiscountsItems)
+					.values(discounts.items.map((row) => ({ companyId, ...row })));
+			if (discounts.implants.length > 0)
+				await tx
+					.insert(companyDiscountsImplants)
+					.values(discounts.implants.map((row) => ({ companyId, ...row })));
+			if (discounts.expertise.length > 0)
+				await tx
+					.insert(companyDiscountsExpertise)
+					.values(discounts.expertise.map((row) => ({ companyId, ...row })));
+		});
 	}
 }
 

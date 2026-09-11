@@ -1,65 +1,48 @@
-import { mysqlconnFn } from './mysql';
+import { eq } from 'drizzle-orm';
+import { db } from './mysql';
+import { users } from './schema';
+
+const userColumns = {
+	id: users.id,
+	email: users.email,
+	name: users.name,
+	verified: users.verified
+};
+
+/** `Email` and `Name` are nullable in the schema; the domain type is not, so empty-string them. */
+function toUser(row: {
+	id: number;
+	email: string | null;
+	name: string | null;
+	verified: boolean;
+}): User {
+	return { id: row.id, email: row.email ?? '', name: row.name ?? '', verified: row.verified };
+}
 
 class UserRepo {
-	private userSelector =
-		' SELECT Id as id, Email as email, Name as name, Verified as verified FROM Users';
-
 	public async getByEmail({ email }: { email: string }): Promise<User> {
-		const [results] = await (
-			mysqlconnFn()
-		).execute(`${this.userSelector} WHERE email = ?  `, [email]);
-		const [firstUser] = results as unknown[];
-		if (isUserRow(firstUser)) {
-			return {
-				id: firstUser.id,
-				email: firstUser.email,
-				name: firstUser.name,
-				verified: Boolean(firstUser.verified)
-			};
-		} else {
-			throw new Error(`user not found with email: ${email}`);
-		}
+		const [row] = await db.select(userColumns).from(users).where(eq(users.email, email));
+		if (row == null) throw new Error(`user not found with email: ${email}`);
+		return toUser(row);
 	}
 
 	public async getById({ id }: { id: number }): Promise<User> {
-		const connection = mysqlconnFn();
-		const [results] = await connection.execute(`${this.userSelector} WHERE id = ?  `, [id]);
-		const [firstUser] = results as unknown[];
-		if (isUserRow(firstUser)) {
-			return {
-				id: firstUser.id,
-				email: firstUser.email,
-				name: firstUser.name,
-				verified: Boolean(firstUser.verified)
-			};
-		} else {
-			throw new Error(`user not found with id: ${id}`);
-		}
+		const [row] = await db.select(userColumns).from(users).where(eq(users.id, id));
+		if (row == null) throw new Error(`user not found with id: ${id}`);
+		return toUser(row);
 	}
 
 	public async getAll(): Promise<User[]> {
-		const [results] = await (mysqlconnFn()).execute(this.userSelector);
-		return (results as unknown[])
-			.filter(isUserRow)
-			.map((row) => ({
-				id: row.id,
-				email: row.email,
-				name: row.name,
-				verified: Boolean(row.verified)
-			}));
+		const rows = await db.select(userColumns).from(users);
+		return rows.map(toUser);
 	}
 
 	public async update(user: User) {
-		(mysqlconnFn()).execute(
-			`
-					UPDATE Users
-					SET Name = ?,
-						Email = ?,
-						Password = ''
-					WHERE id = ?
-					`,
-			[user.name, user.email, user.id]
-		);
+		// Blanking `Password` is pre-existing behaviour, carried over unchanged by the Drizzle port.
+		await db
+			.update(users)
+			.set({ name: user.name, email: user.email, password: '' })
+			.where(eq(users.id, user.id));
 	}
 }
 
@@ -69,17 +52,6 @@ export type User = {
 	name: string;
 	verified: boolean;
 };
-
-function isUserRow(row: unknown): row is { id: number; email: string; name: string; verified: number | boolean } {
-	if (typeof row !== 'object' || row === null) return false;
-	const r = row as Record<string, unknown>;
-	return (
-		typeof r.id === 'number' &&
-		typeof r.email === 'string' &&
-		typeof r.name === 'string' &&
-		(typeof r.verified === 'number' || typeof r.verified === 'boolean')
-	);
-}
 
 export function isUser(user: unknown): user is User {
 	if (typeof user !== 'object' || user === null) return false;

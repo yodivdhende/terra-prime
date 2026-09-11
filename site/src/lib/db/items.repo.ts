@@ -1,149 +1,70 @@
-import { mysqlconnFn } from './mysql';
+import { and, eq, exists, inArray, or, sql } from 'drizzle-orm';
+import { db } from './mysql';
+import { itemCharacterAccess, items } from './schema';
+
+const itemColumns = {
+	id: items.id,
+	name: items.name,
+	description: items.description,
+	cost: items.cost,
+	maxPerCharacter: items.maxPerCharacter,
+	characterAccess: items.characterAccess
+};
 
 class ItemRepo {
 	public async getAll(): Promise<Item[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(`
-      SELECT
-        i.Id as id,
-        i.Name as name,
-        i.Description as description,
-        i.Cost as cost,
-        i.MaxPerCharacter as maxPerCharacter,
-        i.CharacterAccess as characterAccess
-      FROM Items i
-      `);
-		if (Array.isArray(result) === false) return [];
-		if (result.length === 0) return [];
-		const items: Item[] = [];
-		for (const itemResult of result) {
-			if (isItem(itemResult)) items.push({ ...itemResult, allowedCharacterIds: [] });
-			else
-				console.error(`%c sql result is not a item`, `background:red;color:black`, {
-					itemResult
-				});
-		}
-		return items;
+		const rows = await db.select(itemColumns).from(items);
+		return rows.map((row) => ({ ...row, allowedCharacterIds: [] }));
 	}
 
 	public async getAllForCharacter(characterId: number): Promise<Item[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-      SELECT
-        i.Id as id,
-        i.Name as name,
-        i.Description as description,
-        i.Cost as cost,
-        i.MaxPerCharacter as maxPerCharacter,
-        i.CharacterAccess as characterAccess
-      FROM Items i
-      WHERE i.CharacterAccess = 'all'
-        OR (i.CharacterAccess = 'specific' AND EXISTS (
-          SELECT 1 FROM Item_Character_Access ica
-          WHERE ica.ItemId = i.Id AND ica.CharacterId = ?
-        ))
-      `,
-			[characterId]
-		);
-		if (Array.isArray(result) === false) return [];
-		if (result.length === 0) return [];
-		const items: Item[] = [];
-		for (const itemResult of result) {
-			if (isItem(itemResult)) items.push({ ...itemResult, allowedCharacterIds: [] });
-			else
-				console.error(`%c sql result is not a item`, `background:red;color:black`, {
-					itemResult
-				});
-		}
-		return items;
+		const rows = await db
+			.select(itemColumns)
+			.from(items)
+			.where(
+				or(
+					eq(items.characterAccess, 'all'),
+					and(
+						eq(items.characterAccess, 'specific'),
+						exists(
+							db
+								.select({ one: sql`1` })
+								.from(itemCharacterAccess)
+								.where(
+									and(
+										eq(itemCharacterAccess.itemId, items.id),
+										eq(itemCharacterAccess.characterId, characterId)
+									)
+								)
+						)
+					)
+				)
+			);
+		return rows.map((row) => ({ ...row, allowedCharacterIds: [] }));
 	}
 
 	public async getAllAccessibleToAll(): Promise<Item[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(`
-      SELECT
-        i.Id as id,
-        i.Name as name,
-        i.Description as description,
-        i.Cost as cost,
-        i.MaxPerCharacter as maxPerCharacter,
-        i.CharacterAccess as characterAccess
-      FROM Items i
-      WHERE i.CharacterAccess = 'all'
-      `);
-		if (Array.isArray(result) === false) return [];
-		if (result.length === 0) return [];
-		const items: Item[] = [];
-		for (const itemResult of result) {
-			if (isItem(itemResult)) items.push({ ...itemResult, allowedCharacterIds: [] });
-			else
-				console.error(`%c sql result is not a item`, `background:red;color:black`, {
-					itemResult
-				});
-		}
-		return items;
+		const rows = await db.select(itemColumns).from(items).where(eq(items.characterAccess, 'all'));
+		return rows.map((row) => ({ ...row, allowedCharacterIds: [] }));
 	}
 
 	public async getWithId(id: number) {
-		const connection = mysqlconnFn();
-		const [[result], [accessRows]] = await Promise.all([
-			connection.execute(
-				`
-        SELECT
-          i.Id as id,
-          i.Name as name,
-          i.Description as description,
-          i.Cost as cost,
-          i.MaxPerCharacter as maxPerCharacter,
-          i.CharacterAccess as characterAccess
-        FROM Items i
-        WHERE i.Id = ?
-        `,
-				[id]
-			),
-			connection.execute(
-				`SELECT CharacterId as characterId FROM Item_Character_Access WHERE ItemId = ?`,
-				[id]
-			)
+		const [rows, accessRows] = await Promise.all([
+			db.select(itemColumns).from(items).where(eq(items.id, id)),
+			db
+				.select({ characterId: itemCharacterAccess.characterId })
+				.from(itemCharacterAccess)
+				.where(eq(itemCharacterAccess.itemId, id))
 		]);
-		if (Array.isArray(result) === false) return null;
-		if (result.length === 0) return null;
-		const [item] = result;
-		if (isItem(item) === false) return null;
-		const allowedCharacterIds = Array.isArray(accessRows)
-			? (accessRows as { characterId: number }[]).map((r) => r.characterId)
-			: [];
-		return { ...item, allowedCharacterIds };
+		const [item] = rows;
+		if (item == null) return null;
+		return { ...item, allowedCharacterIds: accessRows.map((row) => row.characterId) };
 	}
 
 	public async getWithIds(ids: number[]): Promise<Item[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-      SELECT
-        i.Id as id,
-        i.Name as name,
-        i.Description as description,
-        i.Cost as cost,
-        i.MaxPerCharacter as maxPerCharacter,
-        i.CharacterAccess as characterAccess
-      FROM Items i
-      WHERE I.id in (:ids)
-      `,
-			{ ids }
-		);
-		if (Array.isArray(result) === false) return [];
-		if (result.length === 0) return [];
-		const items: Item[] = [];
-		for (const itemResult of result) {
-			if (isItem(itemResult)) items.push({ ...itemResult, allowedCharacterIds: [] });
-			else
-				console.error(`%c sql result is not a item`, `background:red;color:black`, {
-					itemResult
-				});
-		}
-		return items;
+		if (ids.length === 0) return [];
+		const rows = await db.select(itemColumns).from(items).where(inArray(items.id, ids));
+		return rows.map((row) => ({ ...row, allowedCharacterIds: [] }));
 	}
 
 	public async setCharacterAccess(
@@ -151,29 +72,18 @@ class ItemRepo {
 		access: Item['characterAccess'],
 		characterIds: number[]
 	) {
-		const conn = await mysqlconnFn().getConnection();
-		try {
-			await conn.beginTransaction();
-			await conn.execute(`UPDATE Items SET CharacterAccess = ? WHERE Id = ?`, [
-				access ?? 'all',
-				id
-			]);
-			await conn.execute(`DELETE FROM Item_Character_Access WHERE ItemId = ?`, [id]);
+		await db.transaction(async (tx) => {
+			await tx
+				.update(items)
+				.set({ characterAccess: access ?? 'all' })
+				.where(eq(items.id, id));
+			await tx.delete(itemCharacterAccess).where(eq(itemCharacterAccess.itemId, id));
 			if (access === 'specific' && characterIds.length > 0) {
-				const placeholders = characterIds.map(() => '(?,?)').join(',');
-				const values = characterIds.flatMap((cid) => [id, cid]);
-				await conn.execute(
-					`INSERT INTO Item_Character_Access (ItemId, CharacterId) VALUES ${placeholders}`,
-					values
-				);
+				await tx
+					.insert(itemCharacterAccess)
+					.values(characterIds.map((characterId) => ({ itemId: id, characterId })));
 			}
-			await conn.commit();
-		} catch (err) {
-			await conn.rollback();
-			throw err;
-		} finally {
-			conn.release();
-		}
+		});
 	}
 
 	public save(item: Item) {
@@ -181,91 +91,70 @@ class ItemRepo {
 		return this.edit(item);
 	}
 
-	public async saveBulk(items: Item[]) {
-		const toCreate = items.filter((i) => i.id == null);
-		const toUpdate = items.filter((i) => i.id != null);
-		const conn = await mysqlconnFn().getConnection();
-		try {
-			await conn.beginTransaction();
+	public async saveBulk(rows: Item[]) {
+		const toCreate = rows.filter((i) => i.id == null);
+		const toUpdate = rows.filter((i) => i.id != null);
+		await db.transaction(async (tx) => {
 			if (toCreate.length > 0) {
-				const placeholders = toCreate.map(() => '(?,?,?,?)').join(',');
-				const values = toCreate.flatMap((i) => [
-					i.name,
-					i.description,
-					i.cost ?? 0,
-					i.maxPerCharacter ?? null
-				]);
-				await conn.execute(
-					`INSERT INTO Items (Name, Description, Cost, MaxPerCharacter) VALUES ${placeholders}`,
-					values
+				await tx.insert(items).values(
+					toCreate.map((i) => ({
+						name: i.name,
+						description: i.description,
+						cost: i.cost ?? 0,
+						maxPerCharacter: i.maxPerCharacter ?? null
+					}))
 				);
 			}
 			if (toUpdate.length > 0) {
-				const placeholders = toUpdate.map(() => '(?,?,?,?,?)').join(',');
-				const values = toUpdate.flatMap((i) => [
-					i.id,
-					i.name,
-					i.description,
-					i.cost ?? 0,
-					i.maxPerCharacter ?? null
-				]);
-				await conn.execute(
-					`INSERT INTO Items (Id, Name, Description, Cost, MaxPerCharacter) VALUES ${placeholders}
-					 ON DUPLICATE KEY UPDATE Name=VALUES(Name), Description=VALUES(Description), Cost=VALUES(Cost), MaxPerCharacter=VALUES(MaxPerCharacter)`,
-					values
-				);
+				await tx
+					.insert(items)
+					.values(
+						toUpdate.map((i) => ({
+							id: i.id as number,
+							name: i.name,
+							description: i.description,
+							cost: i.cost ?? 0,
+							maxPerCharacter: i.maxPerCharacter ?? null
+						}))
+					)
+					.onDuplicateKeyUpdate({
+						set: {
+							name: sql`VALUES(\`Name\`)`,
+							description: sql`VALUES(\`Description\`)`,
+							cost: sql`VALUES(\`Cost\`)`,
+							maxPerCharacter: sql`VALUES(\`MaxPerCharacter\`)`
+						}
+					});
 			}
-			await conn.commit();
-		} catch (err) {
-			await conn.rollback();
-			throw err;
-		} finally {
-			conn.release();
-		}
+		});
 	}
 
 	public async create({ name, description, cost, maxPerCharacter }: Omit<Item, 'id'>) {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-			INSERT INTO Items (Name, Description, Cost, MaxPerCharacter)
-			Values (?,?,?,?)
-      `,
-			[name, description, cost ?? 0, maxPerCharacter ?? null]
-		);
-		if ('serverStatus' in result && result.serverStatus !== 2) return null;
-		if ('insertId' in result === false || result.insertId == null) return null;
-		return result.insertId;
+		const [result] = await db.insert(items).values({
+			name,
+			description,
+			cost: cost ?? 0,
+			maxPerCharacter: maxPerCharacter ?? null
+		});
+		return result.insertId ?? null;
 	}
 
 	public async edit({ id, name, description, cost, maxPerCharacter }: Item) {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-			UPDATE Items
-			SET Name = ?,
-			Description = ?,
-			Cost = ?,
-			MaxPerCharacter = ?
-			WHERE Id = ?
-      `,
-			[name, description, cost ?? 0, maxPerCharacter ?? null, id]
-		);
-		if ('serverStatus' in result && result.serverStatus !== 2) return null;
+		await db
+			.update(items)
+			.set({
+				name,
+				description,
+				cost: cost ?? 0,
+				maxPerCharacter: maxPerCharacter ?? null
+			})
+			.where(eq(items.id, id as number));
 		return id;
 	}
 
 	public async delete({ id }: { id: number }) {
-		const connection = mysqlconnFn();
-		await connection.execute(`DELETE FROM Item_Character_Access WHERE ItemId = ?`, [id]);
-		await connection.execute(
-			`
-              DELETE
-              FROM Items
-              WHERE Id = ?
-          `,
-			[id]
-		);
+		await db.delete(itemCharacterAccess).where(eq(itemCharacterAccess.itemId, id));
+		await db.delete(items).where(eq(items.id, id));
 	}
 }
 export const itemRepo = new ItemRepo();

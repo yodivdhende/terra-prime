@@ -1,6 +1,7 @@
-import { isCharacter, type Character } from './character.repo';
-import { mysqlconnFn } from './mysql';
-import type { RowDataPacket } from 'mysql2/promise';
+import { and, eq, inArray, ne, sum } from 'drizzle-orm';
+import { type Character } from './character.repo';
+import { db } from './mysql';
+import { characterVersions, characters, eventParticipants, events, users } from './schema';
 
 class EventParticipatnsRepo {
 	public async participate({
@@ -12,12 +13,10 @@ class EventParticipatnsRepo {
 		userId: number;
 		characterVersionId: number;
 	}) {
-		const connection = mysqlconnFn();
-		await connection.execute(
-			`INSERT INTO Event_Participants (Event, User, CharacterVersion) VALUES (?, ?, ?)
-			 ON DUPLICATE KEY UPDATE CharacterVersion = VALUES(CharacterVersion)`,
-			[eventId, userId, characterVersionId]
-		);
+		await db
+			.insert(eventParticipants)
+			.values({ eventId, userId, characterVersionId })
+			.onDuplicateKeyUpdate({ set: { characterVersionId } });
 	}
 
 	public async withdraw({
@@ -27,15 +26,14 @@ class EventParticipatnsRepo {
 		eventId: number;
 		characterVersionId: number;
 	}) {
-		const connection = mysqlconnFn();
-		await connection.execute(
-			`
-              DELETE Event_Participants
-              WHERE EventId = :eventId
-              AND CharacterId = :characterVersionId
-          `,
-			{ eventId, characterVersionId }
-		);
+		await db
+			.delete(eventParticipants)
+			.where(
+				and(
+					eq(eventParticipants.eventId, eventId),
+					eq(eventParticipants.characterVersionId, characterVersionId)
+				)
+			);
 	}
 
 	public async getPerticipants({
@@ -43,39 +41,27 @@ class EventParticipatnsRepo {
 	}: {
 		eventId: number;
 	}): Promise<EventParticipantCharacter[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-				SELECT
-					c.Id as id,
-					c.Name as name,
-					u.Id as ownerId,
-					u.Name as ownerName,
-					cv.Id as characterVersionId
-				FROM Event_Participants ep
-				JOIN Character_Versions cv
-					on cv.Id = ep.CharacterVersion
-				JOIN Characters c
-					on c.id = cv.Character
-				JOIN Users u
-					on u.Id = ep.User
-				WHERE ep.Event = ?
-      `,
-			[eventId]
-		);
-		if (Array.isArray(result) === false) return [];
-		if (result.length === 0) return [];
-		const characters: EventParticipantCharacter[] = [];
-		for (const row of result as RowDataPacket[]) {
-			const characterVersionId = row.characterVersionId;
-			if (isCharacter(row) && typeof characterVersionId === 'number') {
-				characters.push({ ...row, characterVersionId });
-			} else
-				console.error(`%c sql result is not a character`, `background:red;color:black`, {
-					characterResult: row
-				});
-		}
-		return characters;
+		const rows = await db
+			.select({
+				id: characters.id,
+				name: characters.name,
+				ownerId: users.id,
+				ownerName: users.name,
+				characterVersionId: characterVersions.id
+			})
+			.from(eventParticipants)
+			.innerJoin(characterVersions, eq(characterVersions.id, eventParticipants.characterVersionId))
+			.innerJoin(characters, eq(characters.id, characterVersions.characterId))
+			.innerJoin(users, eq(users.id, eventParticipants.userId))
+			.where(eq(eventParticipants.eventId, eventId));
+
+		return rows.map((row) => ({
+			id: row.id,
+			name: row.name ?? '',
+			ownerId: row.ownerId,
+			ownerName: row.ownerName ?? '',
+			characterVersionId: row.characterVersionId
+		}));
 	}
 
 	public async getSumPriorRewardBudget({
@@ -85,26 +71,24 @@ class EventParticipatnsRepo {
 		characterId: number;
 		excludeEventId: number;
 	}): Promise<number> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`SELECT COALESCE(SUM(e.RewardBudget), 0) AS totalReward
-       FROM Event_Participants ep
-       JOIN Character_Versions cv ON cv.Id = ep.CharacterVersion
-       JOIN Events e
-        ON e.Id = ep.Event
-        AND e.Status = 'Done'
-       WHERE cv.Character = ? AND ep.Event != ?`,
-			[characterId, excludeEventId]
-		);
-		if (!Array.isArray(result) || result.length === 0) return 0;
-		return Number((result[0] as { totalReward: number }).totalReward);
+		const [row] = await db
+			.select({ totalReward: sum(events.rewardBudget) })
+			.from(eventParticipants)
+			.innerJoin(characterVersions, eq(characterVersions.id, eventParticipants.characterVersionId))
+			.innerJoin(events, and(eq(events.id, eventParticipants.eventId), eq(events.status, 'Done')))
+			.where(
+				and(
+					eq(characterVersions.characterId, characterId),
+					ne(eventParticipants.eventId, excludeEventId)
+				)
+			);
+		return Number(row?.totalReward ?? 0);
 	}
 
 	public async deleteForCharacterVersion(characterVersionId: number): Promise<void> {
-		const connection = mysqlconnFn();
-		await connection.execute(`DELETE FROM Event_Participants WHERE CharacterVersion = ?`, [
-			characterVersionId
-		]);
+		await db
+			.delete(eventParticipants)
+			.where(eq(eventParticipants.characterVersionId, characterVersionId));
 	}
 
 	public async getEventsForCharacters(
@@ -113,42 +97,19 @@ class EventParticipatnsRepo {
 		{ characterId: number; characterVersionId: number; eventId: number; eventName: string }[]
 	> {
 		if (characterIds.length === 0) return [];
-		const connection = mysqlconnFn();
-		const [result] = await connection.query(
-			`SELECT
-				cv.Character as characterId,
-				cv.Id as characterVersionId,
-				e.Id as eventId,
-				e.Name as eventName
-			FROM Event_Participants ep
-			JOIN Character_Versions cv ON cv.Id = ep.CharacterVersion
-			JOIN Events e ON e.Id = ep.Event
-			WHERE cv.Character IN (?)`,
-			[characterIds]
-		);
-		if (!Array.isArray(result) || result.length === 0) return [];
-		const rows: {
-			characterId: number;
-			characterVersionId: number;
-			eventId: number;
-			eventName: string;
-		}[] = [];
-		for (const row of result as RowDataPacket[]) {
-			if (
-				typeof row.characterId !== 'number' ||
-				typeof row.characterVersionId !== 'number' ||
-				typeof row.eventId !== 'number' ||
-				typeof row.eventName !== 'string'
-			)
-				continue;
-			rows.push({
-				characterId: row.characterId,
-				characterVersionId: row.characterVersionId,
-				eventId: row.eventId,
-				eventName: row.eventName
-			});
-		}
-		return rows;
+		const rows = await db
+			.select({
+				characterId: characterVersions.characterId,
+				characterVersionId: characterVersions.id,
+				eventId: events.id,
+				eventName: events.name
+			})
+			.from(eventParticipants)
+			.innerJoin(characterVersions, eq(characterVersions.id, eventParticipants.characterVersionId))
+			.innerJoin(events, eq(events.id, eventParticipants.eventId))
+			.where(inArray(characterVersions.characterId, characterIds));
+
+		return rows.map((row) => ({ ...row, eventName: row.eventName ?? '' }));
 	}
 
 	public async getUserParticipation({
@@ -158,20 +119,15 @@ class EventParticipatnsRepo {
 		eventId: number;
 		userId: number;
 	}): Promise<{ characterId: number; characterVersionId: number } | undefined> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`SELECT
-				cv.Character as characterId,
-				ep.CharacterVersion as characterVersionId
-			FROM Event_Participants ep
-			JOIN Character_Versions cv ON cv.Id = ep.CharacterVersion
-			WHERE ep.Event = ? AND ep.User = ?`,
-			[eventId, userId]
-		);
-		if (!Array.isArray(result) || result.length === 0) return undefined;
-		const [row] = result as RowDataPacket[];
-		if (typeof row.characterId !== 'number' || typeof row.characterVersionId !== 'number')
-			return undefined;
+		const [row] = await db
+			.select({
+				characterId: characterVersions.characterId,
+				characterVersionId: eventParticipants.characterVersionId
+			})
+			.from(eventParticipants)
+			.innerJoin(characterVersions, eq(characterVersions.id, eventParticipants.characterVersionId))
+			.where(and(eq(eventParticipants.eventId, eventId), eq(eventParticipants.userId, userId)));
+		if (row?.characterVersionId == null) return undefined;
 		return { characterId: row.characterId, characterVersionId: row.characterVersionId };
 	}
 
@@ -182,28 +138,19 @@ class EventParticipatnsRepo {
 		eventId: number;
 		characterId: number;
 	}): Promise<EventParticapant | undefined> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-        SELECT
-					ep.Event as eventId,
-					ep.User as userId,
-					ep.CharacterVersion as characterVersion
-        FROM Event_Participants  ep
-				JOIN Character_Versions cv
-					ON cv.Id = ep.CharacterVersion
-        WHERE ep.Event = :eventId
-					AND cv.Character = :characterId
-      `,
-			{ eventId, characterId }
-		);
-		if (Array.isArray(result) === false) return undefined;
-		if (result.length === 0) return undefined;
-		const [participantResult] = result;
-		if (isEventParticapant(participantResult)) return participantResult;
-		console.error(`%c sql result is not an participant`, `background:red;color:black`, {
-			character: participantResult
-		});
+		const [row] = await db
+			.select({
+				eventId: eventParticipants.eventId,
+				userId: eventParticipants.userId,
+				characterVersion: eventParticipants.characterVersionId
+			})
+			.from(eventParticipants)
+			.innerJoin(characterVersions, eq(characterVersions.id, eventParticipants.characterVersionId))
+			.where(
+				and(eq(eventParticipants.eventId, eventId), eq(characterVersions.characterId, characterId))
+			);
+		if (row?.characterVersion == null) return undefined;
+		return { eventId: row.eventId, userId: row.userId, characterVersion: row.characterVersion };
 	}
 }
 

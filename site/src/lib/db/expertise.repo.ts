@@ -1,4 +1,6 @@
-import { mysqlconnFn } from './mysql';
+import { and, eq, exists, inArray, or, sql } from 'drizzle-orm';
+import { db } from './mysql';
+import { expertise as expertiseTable, expertiseCharacterAccess, expertiseGroups } from './schema';
 import { sanitizeSvg } from '$lib/utils/svg-sanitize';
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
@@ -16,179 +18,111 @@ function normalizeColor(color: string | null | undefined): string | null {
 	return HEX_COLOR.test(color) ? color : null;
 }
 
+const expertiseColumns = {
+	id: expertiseTable.id,
+	name: expertiseTable.name,
+	description: expertiseTable.description,
+	characterAccess: expertiseTable.characterAccess,
+	icon: expertiseTable.icon,
+	groupId: expertiseGroups.id,
+	groupName: expertiseGroups.name,
+	groupIcon: expertiseGroups.icon,
+	groupColor: expertiseGroups.color
+};
+
+type ExpertiseRow = {
+	id: number;
+	name: string | null;
+	description: string | null;
+	characterAccess: 'all' | 'none' | 'specific';
+	icon: string | null;
+	groupId: number;
+	groupName: string;
+	groupIcon: string | null;
+	groupColor: string | null;
+};
+
+/** `Name` and `Description` are nullable in the schema but required by the domain type. */
+function toExpertise(row: ExpertiseRow): Expertise {
+	return {
+		id: row.id,
+		name: row.name ?? '',
+		description: row.description ?? '',
+		characterAccess: row.characterAccess,
+		icon: row.icon,
+		groupId: row.groupId,
+		groupName: row.groupName,
+		groupIcon: row.groupIcon,
+		groupColor: row.groupColor,
+		allowedCharacterIds: []
+	};
+}
+
+const groupColumns = {
+	id: expertiseGroups.id,
+	name: expertiseGroups.name,
+	description: expertiseGroups.description,
+	icon: expertiseGroups.icon,
+	color: expertiseGroups.color
+};
+
 class ExpertiseRepo {
+	private selectExpertise() {
+		return db
+			.select(expertiseColumns)
+			.from(expertiseTable)
+			.innerJoin(expertiseGroups, eq(expertiseTable.groupId, expertiseGroups.id));
+	}
+
 	public async getAll(): Promise<Expertise[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(`
-		 SELECT
-				e.Id as id,
-				e.Name as name,
-				e.Description as description,
-				e.CharacterAccess as characterAccess,
-				e.Icon as icon,
-				eg.Id as groupId,
-				eg.Name as groupName,
-				eg.Icon as groupIcon,
-				eg.Color as groupColor
-			FROM Expertise e
-			JOIN Expertise_Groups eg
-				on e.Group = eg.Id
-    `);
-		if (Array.isArray(result) === false) return [];
-		if (result.length === 0) return [];
-		const expertise: Expertise[] = [];
-		for (const expertiseResult of result) {
-			if (isExpertise(expertiseResult))
-				expertise.push({ ...expertiseResult, allowedCharacterIds: [] });
-			else
-				console.error(`%c sql result is not an expertise`, `background:red;color:black`, {
-					expertiseResult
-				});
-		}
-		return expertise;
+		return (await this.selectExpertise()).map(toExpertise);
 	}
 
 	public async getAllForCharacter(characterId: number): Promise<Expertise[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-		 SELECT
-				e.Id as id,
-				e.Name as name,
-				e.Description as description,
-				e.CharacterAccess as characterAccess,
-				e.Icon as icon,
-				eg.Id as groupId,
-				eg.Name as groupName,
-				eg.Icon as groupIcon,
-				eg.Color as groupColor
-			FROM Expertise e
-			JOIN Expertise_Groups eg
-				on e.Group = eg.Id
-			WHERE e.CharacterAccess = 'all'
-			  OR (e.CharacterAccess = 'specific' AND EXISTS (
-			    SELECT 1 FROM Expertise_Character_Access eca
-			    WHERE eca.ExpertiseId = e.Id AND eca.CharacterId = ?
-			  ))
-      `,
-			[characterId]
+		const rows = await this.selectExpertise().where(
+			or(
+				eq(expertiseTable.characterAccess, 'all'),
+				and(
+					eq(expertiseTable.characterAccess, 'specific'),
+					exists(
+						db
+							.select({ one: sql`1` })
+							.from(expertiseCharacterAccess)
+							.where(
+								and(
+									eq(expertiseCharacterAccess.expertiseId, expertiseTable.id),
+									eq(expertiseCharacterAccess.characterId, characterId)
+								)
+							)
+					)
+				)
+			)
 		);
-		if (Array.isArray(result) === false) return [];
-		if (result.length === 0) return [];
-		const expertise: Expertise[] = [];
-		for (const expertiseResult of result) {
-			if (isExpertise(expertiseResult))
-				expertise.push({ ...expertiseResult, allowedCharacterIds: [] });
-			else
-				console.error(`%c sql result is not an expertise`, `background:red;color:black`, {
-					expertiseResult
-				});
-		}
-		return expertise;
+		return rows.map(toExpertise);
 	}
 
 	public async getAllAccessibleToAll(): Promise<Expertise[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(`
-		 SELECT
-				e.Id as id,
-				e.Name as name,
-				e.Description as description,
-				e.CharacterAccess as characterAccess,
-				e.Icon as icon,
-				eg.Id as groupId,
-				eg.Name as groupName,
-				eg.Icon as groupIcon,
-				eg.Color as groupColor
-			FROM Expertise e
-			JOIN Expertise_Groups eg
-				on e.Group = eg.Id
-			WHERE e.CharacterAccess = 'all'
-    `);
-		if (Array.isArray(result) === false) return [];
-		if (result.length === 0) return [];
-		const expertise: Expertise[] = [];
-		for (const expertiseResult of result) {
-			if (isExpertise(expertiseResult))
-				expertise.push({ ...expertiseResult, allowedCharacterIds: [] });
-			else
-				console.error(`%c sql result is not an expertise`, `background:red;color:black`, {
-					expertiseResult
-				});
-		}
-		return expertise;
+		const rows = await this.selectExpertise().where(eq(expertiseTable.characterAccess, 'all'));
+		return rows.map(toExpertise);
 	}
 
 	public async getWithId(id: number) {
-		const connection = mysqlconnFn();
-		const [[result], [accessRows]] = await Promise.all([
-			connection.execute(
-				`
-		 SELECT
-				e.Id as id,
-				e.Name as name,
-				e.Description as description,
-				e.CharacterAccess as characterAccess,
-				e.Icon as icon,
-				eg.Id as groupId,
-				eg.Name as groupName,
-				eg.Icon as groupIcon,
-				eg.Color as groupColor
-			FROM Expertise e
-			JOIN Expertise_Groups eg
-				on e.Group = eg.Id
-			WHERE e.id = ?
-      `,
-				[id]
-			),
-			connection.execute(
-				`SELECT CharacterId as characterId FROM Expertise_Character_Access WHERE ExpertiseId = ?`,
-				[id]
-			)
+		const [rows, accessRows] = await Promise.all([
+			this.selectExpertise().where(eq(expertiseTable.id, id)),
+			db
+				.select({ characterId: expertiseCharacterAccess.characterId })
+				.from(expertiseCharacterAccess)
+				.where(eq(expertiseCharacterAccess.expertiseId, id))
 		]);
-		if (Array.isArray(result) === false) return null;
-		if (result.length === 0) return null;
-		const [expertise] = result;
-		if (isExpertise(expertise) === false) return null;
-		const allowedCharacterIds = Array.isArray(accessRows)
-			? (accessRows as { characterId: number }[]).map((r) => r.characterId)
-			: [];
-		return { ...expertise, allowedCharacterIds };
+		const [row] = rows;
+		if (row == null) return null;
+		return { ...toExpertise(row), allowedCharacterIds: accessRows.map((r) => r.characterId) };
 	}
 
 	public async getWithIds(ids: number[]): Promise<Expertise[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-			SELECT
-				e.Id as id,
-				e.Name as name,
-				e.Description as description,
-				e.CharacterAccess as characterAccess,
-				e.Icon as icon,
-				eg.Id as groupId,
-				eg.Name as groupName,
-				eg.Icon as groupIcon,
-				eg.Color as groupColor
-			FROM Expertise e
-			JOIN Expertise_Groups eg
-				on e.Group = eg.Id
-			WHERE e.Id in :ids
-      `,
-			{ ids }
-		);
-		if (Array.isArray(result) === false) return [];
-		if (result.length === 0) return [];
-		const expertise: Expertise[] = [];
-		for (const expertiseResult of result) {
-			if (isExpertise(expertiseResult))
-				expertise.push({ ...expertiseResult, allowedCharacterIds: [] });
-			else
-				console.error(`%c sql result is not an expertise`, `background:red;color:black`, {
-					expertiseResult
-				});
-		}
-		return expertise;
+		if (ids.length === 0) return [];
+		const rows = await this.selectExpertise().where(inArray(expertiseTable.id, ids));
+		return rows.map(toExpertise);
 	}
 
 	public async setCharacterAccess(
@@ -196,29 +130,18 @@ class ExpertiseRepo {
 		access: Expertise['characterAccess'],
 		characterIds: number[]
 	) {
-		const conn = await mysqlconnFn().getConnection();
-		try {
-			await conn.beginTransaction();
-			await conn.execute(`UPDATE Expertise SET CharacterAccess = ? WHERE Id = ?`, [
-				access ?? 'all',
-				id
-			]);
-			await conn.execute(`DELETE FROM Expertise_Character_Access WHERE ExpertiseId = ?`, [id]);
+		await db.transaction(async (tx) => {
+			await tx
+				.update(expertiseTable)
+				.set({ characterAccess: access ?? 'all' })
+				.where(eq(expertiseTable.id, id));
+			await tx.delete(expertiseCharacterAccess).where(eq(expertiseCharacterAccess.expertiseId, id));
 			if (access === 'specific' && characterIds.length > 0) {
-				const placeholders = characterIds.map(() => '(?,?)').join(',');
-				const values = characterIds.flatMap((cid) => [id, cid]);
-				await conn.execute(
-					`INSERT INTO Expertise_Character_Access (ExpertiseId, CharacterId) VALUES ${placeholders}`,
-					values
-				);
+				await tx
+					.insert(expertiseCharacterAccess)
+					.values(characterIds.map((characterId) => ({ expertiseId: id, characterId })));
 			}
-			await conn.commit();
-		} catch (err) {
-			await conn.rollback();
-			throw err;
-		} finally {
-			conn.release();
-		}
+		});
 	}
 
 	public save(item: Expertise) {
@@ -232,19 +155,10 @@ class ExpertiseRepo {
 		groupId,
 		icon
 	}: Pick<Expertise, 'name' | 'description' | 'groupId' | 'icon'>) {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-			 INSERT INTO Expertise (Name, Description, \`Group\`, Icon)
-			Values (?,?,?,?)
-      `,
-			[name, description, groupId, normalizeIcon(icon)]
-		);
-		if (Array.isArray(result) === false) return null;
-		if (result.length === 0) return null;
-		const [expertise] = result;
-		if (isExpertise(expertise) === false) return null;
-		return expertise;
+		const [result] = await db
+			.insert(expertiseTable)
+			.values({ name, description, groupId, icon: normalizeIcon(icon) });
+		return result.insertId ?? null;
 	}
 
 	public async edit({
@@ -254,81 +168,28 @@ class ExpertiseRepo {
 		groupId,
 		icon
 	}: Pick<Expertise, 'id' | 'name' | 'description' | 'groupId' | 'icon'>) {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-			UPDATE Expertise
-			SET Name = ?,
-			Description = ?,
-			\`Group\` = ?,
-			Icon = ?
-			WHERE Id = ?
-      `,
-			[name, description, groupId, normalizeIcon(icon), id]
-		);
-		if (Array.isArray(result) === false) return null;
-		if (result.length === 0) return null;
-		const [expertise] = result;
-		if (isExpertise(expertise) === false) return null;
-		return expertise;
+		await db
+			.update(expertiseTable)
+			.set({ name, description, groupId, icon: normalizeIcon(icon) })
+			.where(eq(expertiseTable.id, id as number));
+		return id;
 	}
 
 	public async delete({ id }: { id: number }) {
-		const connection = mysqlconnFn();
-		await connection.execute(`DELETE FROM Expertise_Character_Access WHERE ExpertiseId = ?`, [id]);
-		await connection.execute(
-			`
-              DELETE
-              FROM Expertise
-              WHERE Id = ?
-          `,
-			[id]
-		);
+		await db.delete(expertiseCharacterAccess).where(eq(expertiseCharacterAccess.expertiseId, id));
+		await db.delete(expertiseTable).where(eq(expertiseTable.id, id));
 	}
 
-	public async getAllGroups() {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(`
-		 SELECT
-				eg.Id as id,
-				eg.Name as name,
-				eg.Description as description,
-				eg.Icon as icon,
-				eg.Color as color
-			FROM Expertise_Groups eg
-    `);
-		if (Array.isArray(result) === false) return [];
-		if (result.length === 0) return [];
-		const expertiseGroups: ExpertiseGroup[] = [];
-		for (const expertiseGroupResult of result) {
-			if (isExpertiseGroup(expertiseGroupResult)) expertiseGroups.push(expertiseGroupResult);
-			else
-				console.error(`%c sql result is not an expertiseGroup`, `background:red;color:black`, {
-					expertiseGroupResult
-				});
-		}
-		return expertiseGroups;
+	public async getAllGroups(): Promise<ExpertiseGroup[]> {
+		return db.select(groupColumns).from(expertiseGroups);
 	}
 
-	public async getGroupWithId(id: number) {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-		 SELECT
-				eg.Id as id,
-				eg.Name as name,
-				eg.Description as description,
-				eg.Icon as icon,
-				eg.Color as color
-			FROM Expertise_Groups eg
-			WHERE eg.Id = ?
-    `,
-			[id]
-		);
-		if (Array.isArray(result) === false) return [];
-		const [expertiseGroupResult] = result;
-		if (isExpertiseGroup(expertiseGroupResult) === false) return null;
-		return expertiseGroupResult;
+	public async getGroupWithId(id: number): Promise<ExpertiseGroup | null> {
+		const [group] = await db
+			.select(groupColumns)
+			.from(expertiseGroups)
+			.where(eq(expertiseGroups.id, id));
+		return group ?? null;
 	}
 
 	public saveExpertiseGroup(expertiseGroup: ExpertiseGroup) {
@@ -342,17 +203,13 @@ class ExpertiseRepo {
 		icon,
 		color
 	}: Pick<ExpertiseGroup, 'name' | 'description' | 'icon' | 'color'>) {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-			INSERT INTO Expertise_Groups (Name, Description, Icon, Color)
-			VALUES (?,?,?,?)
-    `,
-			[name, description, normalizeIcon(icon), normalizeColor(color)]
-		);
-		if ('serverStatus' in result && result.serverStatus !== 2) return null;
-		if ('insertId' in result === false || result.insertId == null) return null;
-		return result.insertId;
+		const [result] = await db.insert(expertiseGroups).values({
+			name,
+			description,
+			icon: normalizeIcon(icon),
+			color: normalizeColor(color)
+		});
+		return result.insertId ?? null;
 	}
 
 	private async editExpertiseGroup({
@@ -362,52 +219,36 @@ class ExpertiseRepo {
 		icon,
 		color
 	}: Pick<ExpertiseGroup, 'id' | 'name' | 'description' | 'icon' | 'color'>) {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-			UPDATE Expertise_Groups
-			SET Name = ?,
-			Description = ?,
-			Icon = ?,
-			Color = ?
-			WHERE Id = ?
-    `,
-			[name, description, normalizeIcon(icon), normalizeColor(color), id]
-		);
-		if ('serverStatus' in result && result.serverStatus !== 2) return null;
+		await db
+			.update(expertiseGroups)
+			.set({ name, description, icon: normalizeIcon(icon), color: normalizeColor(color) })
+			.where(eq(expertiseGroups.id, id as number));
 		return id;
 	}
 
 	public async deleteExpertiseGroup(groupId: number) {
-		const expertiseDeleted = (await this.deleteAllExpertiseWithGroup(groupId)) !== null;
-		if (expertiseDeleted) await this.deleteExpertiseGroupWithId(groupId);
+		await this.deleteAllExpertiseWithGroup(groupId);
+		await this.deleteExpertiseGroupWithId(groupId);
 	}
 
 	private async deleteAllExpertiseWithGroup(groupId: number) {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-			DELETE
-			FROM Expertise
-			WHERE \`Group\` = ?
-    `,
-			[groupId]
-		);
-		if ('serverStatus' in result && result.serverStatus !== 2) return null;
+		const ids = (
+			await db
+				.select({ id: expertiseTable.id })
+				.from(expertiseTable)
+				.where(eq(expertiseTable.groupId, groupId))
+		).map((row) => row.id);
+		if (ids.length > 0) {
+			await db
+				.delete(expertiseCharacterAccess)
+				.where(inArray(expertiseCharacterAccess.expertiseId, ids));
+		}
+		await db.delete(expertiseTable).where(eq(expertiseTable.groupId, groupId));
 		return groupId;
 	}
 
 	private async deleteExpertiseGroupWithId(groupId: number) {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-			DELETE
-			FROM Expertise_Groups
-			WHERE Id = ?
-    `,
-			[groupId]
-		);
-		if ('serverStatus' in result && result.serverStatus !== 2) return null;
+		await db.delete(expertiseGroups).where(eq(expertiseGroups.id, groupId));
 		return groupId;
 	}
 }

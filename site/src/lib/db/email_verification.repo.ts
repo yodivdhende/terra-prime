@@ -1,47 +1,42 @@
 import { v4 as uuidv4 } from 'uuid';
+import { eq, lt, sql } from 'drizzle-orm';
 import { RequestError } from '$lib/types/errors';
-import { mysqlconnFn } from './mysql';
+import { db } from './mysql';
+import { emailVerificationTokens, users } from './schema';
 
 class EmailVerificationRepo {
 	public async createToken(userId: number): Promise<string> {
 		await this.removeExpired();
-		const connection = mysqlconnFn();
-		await connection.execute(`DELETE FROM Email_Verification_Tokens WHERE UserId = ?`, [userId]);
+		await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, userId));
 		const token = uuidv4();
-		await connection.execute(
-			`
-			INSERT INTO Email_Verification_Tokens (Token, UserId, ExpiresAt)
-			VALUES (?, ?, NOW() + INTERVAL 24 HOUR)
-		`,
-			[token, userId]
-		);
+		await db.insert(emailVerificationTokens).values({
+			token,
+			userId,
+			expiresAt: sql`NOW() + INTERVAL 24 HOUR`
+		});
 		return token;
 	}
 
 	public async consumeToken(token: string): Promise<number> {
-		const connection = mysqlconnFn();
-		const [rows] = await connection.execute(
-			`
-			SELECT UserId as userId, ExpiresAt as expiresAt
-			FROM Email_Verification_Tokens
-			WHERE Token = ?
-		`,
-			[token]
-		);
-		if (Array.isArray(rows) === false || rows.length === 0)
-			throw new RequestError(400, 'invalid or expired verification token');
-		const row = rows[0] as { userId: number; expiresAt: Date };
-		if (new Date(row.expiresAt).getTime() < Date.now())
+		const [row] = await db
+			.select({
+				userId: emailVerificationTokens.userId,
+				expiresAt: emailVerificationTokens.expiresAt
+			})
+			.from(emailVerificationTokens)
+			.where(eq(emailVerificationTokens.token, token));
+		if (row == null || row.expiresAt.getTime() < Date.now())
 			throw new RequestError(400, 'invalid or expired verification token');
 
-		await connection.execute(`UPDATE Users SET Verified = 1 WHERE Id = ?`, [row.userId]);
-		await connection.execute(`DELETE FROM Email_Verification_Tokens WHERE Token = ?`, [token]);
+		await db.update(users).set({ verified: true }).where(eq(users.id, row.userId));
+		await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.token, token));
 		return row.userId;
 	}
 
 	private async removeExpired(): Promise<void> {
-		const connection = mysqlconnFn();
-		await connection.execute(`DELETE FROM Email_Verification_Tokens WHERE ExpiresAt < NOW()`);
+		await db
+			.delete(emailVerificationTokens)
+			.where(lt(emailVerificationTokens.expiresAt, sql`NOW()`));
 	}
 }
 

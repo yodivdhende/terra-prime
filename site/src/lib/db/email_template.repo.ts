@@ -1,65 +1,32 @@
-import { mysqlconnFn } from './mysql';
+import { eq } from 'drizzle-orm';
+import { db } from './mysql';
+import { emailTemplates } from './schema';
+
+const templateColumns = {
+	id: emailTemplates.id,
+	key: emailTemplates.key,
+	docUrl: emailTemplates.docUrl
+};
 
 class EmailTemplateRepo {
 	public async getAll(): Promise<EmailTemplate[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(`
-			SELECT
-				t.Id as id,
-				t.\`Key\` as \`key\`,
-				t.DocUrl as docUrl
-			FROM Email_Templates t
-		`);
-		if (Array.isArray(result) === false) return [];
-		const templates: EmailTemplate[] = [];
-		for (const row of result) {
-			if (isEmailTemplate(row)) templates.push(row);
-			else
-				console.error(`%c sql result is not an email template`, `background:red;color:black`, {
-					row
-				});
-		}
-		return templates;
+		return db.select(templateColumns).from(emailTemplates);
 	}
 
 	public async getById(id: number): Promise<EmailTemplate | null> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-			SELECT
-				t.Id as id,
-				t.\`Key\` as \`key\`,
-				t.DocUrl as docUrl
-			FROM Email_Templates t
-			WHERE t.Id = ?
-		`,
-			[id]
-		);
-		if (Array.isArray(result) === false) return null;
-		if (result.length === 0) return null;
-		const [row] = result;
-		if (isEmailTemplate(row) === false) return null;
-		return row;
+		const [row] = await db
+			.select(templateColumns)
+			.from(emailTemplates)
+			.where(eq(emailTemplates.id, id));
+		return row ?? null;
 	}
 
 	public async getByKey(key: string): Promise<EmailTemplate | null> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-			SELECT
-				t.Id as id,
-				t.\`Key\` as \`key\`,
-				t.DocUrl as docUrl
-			FROM Email_Templates t
-			WHERE t.\`Key\` = ?
-		`,
-			[key]
-		);
-		if (Array.isArray(result) === false) return null;
-		if (result.length === 0) return null;
-		const [row] = result;
-		if (isEmailTemplate(row) === false) return null;
-		return row;
+		const [row] = await db
+			.select(templateColumns)
+			.from(emailTemplates)
+			.where(eq(emailTemplates.key, key));
+		return row ?? null;
 	}
 
 	public save(template: EmailTemplate) {
@@ -68,43 +35,20 @@ class EmailTemplateRepo {
 	}
 
 	public async create({ key, docUrl }: Omit<EmailTemplate, 'id'>) {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-			INSERT INTO Email_Templates (\`Key\`, DocUrl)
-			VALUES (?, ?)
-		`,
-			[key, docUrl]
-		);
-		if ('serverStatus' in result && result.serverStatus !== 2) return null;
-		if ('insertId' in result === false || result.insertId == null) return null;
-		return result.insertId;
+		const [result] = await db.insert(emailTemplates).values({ key, docUrl });
+		return result.insertId ?? null;
 	}
 
 	public async edit({ id, key, docUrl }: EmailTemplate) {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-			UPDATE Email_Templates
-			SET \`Key\` = ?,
-			    DocUrl = ?
-			WHERE Id = ?
-		`,
-			[key, docUrl, id]
-		);
-		if ('serverStatus' in result && result.serverStatus !== 2) return null;
+		await db
+			.update(emailTemplates)
+			.set({ key, docUrl })
+			.where(eq(emailTemplates.id, id as number));
 		return id;
 	}
 
 	public async delete({ id }: { id: number }) {
-		const connection = mysqlconnFn();
-		await connection.execute(
-			`
-			DELETE FROM Email_Templates
-			WHERE Id = ?
-		`,
-			[id]
-		);
+		await db.delete(emailTemplates).where(eq(emailTemplates.id, id));
 	}
 }
 

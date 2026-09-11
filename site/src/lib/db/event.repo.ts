@@ -1,122 +1,80 @@
 import { EventStatus } from '$lib/types/event-status';
-import { dateToSqlstring } from '$lib/utils/time';
-import { mysqlconnFn } from './mysql';
+import { desc, eq } from 'drizzle-orm';
+import { db } from './mysql';
+import { characterVersions, eventParticipants, events } from './schema';
+
+const eventColumns = {
+	id: events.id,
+	name: events.name,
+	start: events.startTime,
+	end: events.endTime,
+	status: events.status,
+	budget: events.budget,
+	rewardBudget: events.rewardBudget,
+	formId: events.formId,
+	sheetId: events.sheetId
+};
+
+type EventRow = {
+	id: number;
+	name: string | null;
+	start: Date | null;
+	end: Date | null;
+	status: EventStatus | null;
+	budget: number | null;
+	rewardBudget: number | null;
+	formId?: string | null;
+	sheetId?: string | null;
+};
+
+/**
+ * `Name`, `StartTime`, `EndTime`, and `Status` are all nullable in the schema but required by the
+ * domain type. Rows that are missing one are dropped, which is what the old row guard did.
+ */
+function toLarpEvent(row: EventRow): LarpEvent | null {
+	if (row.name == null || row.start == null || row.end == null || row.status == null) return null;
+	return {
+		id: row.id,
+		name: row.name,
+		start: row.start,
+		end: row.end,
+		status: row.status,
+		budget: row.budget ?? undefined,
+		rewardBudget: row.rewardBudget ?? undefined,
+		formId: row.formId ?? null,
+		sheetId: row.sheetId ?? null
+	};
+}
+
+function toLarpEvents(rows: EventRow[]): LarpEvent[] {
+	return rows.map(toLarpEvent).filter((event) => event != null);
+}
 
 class EventRepo {
 	public async getAll(): Promise<LarpEvent[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(`
-              SELECT
-                  Id as id,
-                  Name as name,
-                  StartTime as start,
-                  EndTime as end,
-                  Status as status,
-                  Budget as budget,
-                  RewardBudget as rewardBudget,
-                  FormId as formId,
-                  SheetId as sheetId
-              FROM Events
-          `);
-		if (Array.isArray(result) === false) return [];
-		if (result.length === 0) return [];
-		const events: LarpEvent[] = [];
-		for (const eventResult of result) {
-			if (isLarpEvent(eventResult)) events.push(eventResult);
-			else
-				console.error(`%c sql result is not event`, `background:red;color:black`, {
-					eventResult
-				});
-		}
-		return events;
+		return toLarpEvents(await db.select(eventColumns).from(events));
 	}
 
 	public async getWithId(id: number): Promise<LarpEvent | undefined> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-              SELECT
-                  Id as id,
-                  Name as name,
-                  StartTime as start,
-                  EndTime as end,
-                  Status as status,
-                  Budget as budget,
-                  RewardBudget as rewardBudget,
-                  FormId as formId,
-                  SheetId as sheetId
-              FROM Events
-			WHERE id = ?
-          `,
-			[id]
-		);
-		if (Array.isArray(result) === false) return;
-		if (result.length === 0) return;
-		for (const eventResult of result) {
-			if (isLarpEvent(eventResult)) return eventResult;
-		}
-		return;
+		const rows = await db.select(eventColumns).from(events).where(eq(events.id, id));
+		return toLarpEvents(rows)[0];
 	}
 
 	public async getWithStatus(status: EventStatus): Promise<LarpEvent[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-              SELECT
-                  Id as id,
-                  Name as name,
-                  StartTime as start,
-                  EndTime as end,
-                  Status as status,
-                  Budget as budget,
-                  RewardBudget as rewardBudget,
-                  FormId as formId,
-                  SheetId as sheetId
-              FROM Events
-							WHERE Status = ?
-          `,
-			[status]
+		return toLarpEvents(
+			await db.select(eventColumns).from(events).where(eq(events.status, status))
 		);
-		if (Array.isArray(result) === false) return [];
-		if (result.length === 0) return [];
-		const events: LarpEvent[] = [];
-		for (const eventResult of result) {
-			if (isLarpEvent(eventResult)) events.push(eventResult);
-			else
-				console.error(`%c sql result is not event`, `background:red;color:black`, {
-					eventResult
-				});
-		}
-		return events;
 	}
 
 	/** The event with `status`, most recently started (ties broken by highest id); `undefined` if none. */
 	public async getLatestWithStatus(status: EventStatus): Promise<LarpEvent | undefined> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-              SELECT
-                  Id as id,
-                  Name as name,
-                  StartTime as start,
-                  EndTime as end,
-                  Status as status,
-                  Budget as budget,
-                  RewardBudget as rewardBudget,
-                  FormId as formId,
-                  SheetId as sheetId
-              FROM Events
-              WHERE Status = ?
-              ORDER BY StartTime DESC, Id DESC
-              LIMIT 1
-          `,
-			[status]
-		);
-		if (Array.isArray(result) === false) return;
-		if (result.length === 0) return;
-		const [eventResult] = result;
-		if (isLarpEvent(eventResult)) return eventResult;
-		return;
+		const rows = await db
+			.select(eventColumns)
+			.from(events)
+			.where(eq(events.status, status))
+			.orderBy(desc(events.startTime), desc(events.id))
+			.limit(1);
+		return toLarpEvents(rows)[0];
 	}
 
 	public save({ id, name, start, end, status, budget, rewardBudget, formId, sheetId }: LarpEvent) {
@@ -135,26 +93,17 @@ class EventRepo {
 		formId,
 		sheetId
 	}: Omit<LarpEvent, 'id'>) {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-              INSERT Events (Name, StartTime, EndTime, Status, Budget, RewardBudget, FormId, SheetId)
-              VALUES (?,?,?,?,?,?,?,?)
-          `,
-			[
-				name,
-				dateToSqlstring(start),
-				dateToSqlstring(end),
-				status,
-				budget ?? null,
-				rewardBudget ?? null,
-				formId ?? null,
-				sheetId ?? null
-			]
-		);
-		if ('serverStatus' in result && result.serverStatus !== 2) return null;
-		if ('insertId' in result === false || result.insertId == null) return null;
-		return result.insertId;
+		const [result] = await db.insert(events).values({
+			name,
+			startTime: start,
+			endTime: end,
+			status,
+			budget: budget ?? null,
+			rewardBudget: rewardBudget ?? null,
+			formId: formId ?? null,
+			sheetId: sheetId ?? null
+		});
+		return result.insertId ?? null;
 	}
 
 	public async edit({
@@ -168,83 +117,38 @@ class EventRepo {
 		formId,
 		sheetId
 	}: LarpEvent) {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-              UPDATE Events
-              SET name = ?,
-              StartTime = ?,
-              EndTime = ?,
-			Status = ?,
-			Budget = ?,
-			RewardBudget = ?,
-			FormId = ?,
-			SheetId = ?
-              WHERE id = ?
-          `,
-			[
+		await db
+			.update(events)
+			.set({
 				name,
-				dateToSqlstring(start),
-				dateToSqlstring(end),
+				startTime: start,
+				endTime: end,
 				status,
-				budget ?? null,
-				rewardBudget ?? null,
-				formId ?? null,
-				sheetId ?? null,
-				id
-			]
-		);
-		if ('serverStatus' in result && result.serverStatus !== 2) return null;
+				budget: budget ?? null,
+				rewardBudget: rewardBudget ?? null,
+				formId: formId ?? null,
+				sheetId: sheetId ?? null
+			})
+			.where(eq(events.id, id as number));
 		return id;
 	}
 
 	public async setSheetId(id: number, sheetId: string) {
-		const connection = mysqlconnFn();
-		await connection.execute(`UPDATE Events SET SheetId = ? WHERE Id = ?`, [sheetId, id]);
+		await db.update(events).set({ sheetId }).where(eq(events.id, id));
 	}
 
 	public async delete({ id }: { id: number }) {
-		const connection = mysqlconnFn();
-		await connection.execute(
-			`
-              DELETE 
-              FROM Events
-              WHERE Id = ?
-          `,
-			[id]
-		);
+		await db.delete(events).where(eq(events.id, id));
 	}
 
 	public async getForCharacter({ characterId }: { characterId: number }): Promise<LarpEvent[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-              SELECT
-                  e.Id as id,
-                  e.Name as name,
-                  e.StartTime as start,
-                  e.EndTime as end,
-				e.Status as status,
-				e.Budget as budget,
-				e.RewardBudget as rewardBudget
-              FROM Events e
-              JOIN Event_Participants ep
-                  on ep.event = e.id
-              WHERE ep.CharacterId = ?
-          `,
-			[characterId]
-		);
-		if (Array.isArray(result) === false) return [];
-		if (result.length === 0) return [];
-		const events: LarpEvent[] = [];
-		for (const eventResult of result) {
-			if (isLarpEvent(eventResult)) events.push(eventResult);
-			else
-				console.error(`%c sql result is not event`, `background:red;color:black`, {
-					eventResult
-				});
-		}
-		return events;
+		const rows = await db
+			.select(eventColumns)
+			.from(events)
+			.innerJoin(eventParticipants, eq(eventParticipants.eventId, events.id))
+			.innerJoin(characterVersions, eq(characterVersions.id, eventParticipants.characterVersionId))
+			.where(eq(characterVersions.characterId, characterId));
+		return toLarpEvents(rows);
 	}
 }
 

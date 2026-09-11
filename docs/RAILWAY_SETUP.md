@@ -46,7 +46,7 @@ Set this in **Settings** → **Deploy** → **Deploy Command**:
 pnpm migrate
 ```
 
-This runs before the app starts on every deploy. It applies any unapplied migration files from `site/db/migrations/` and exits non-zero on failure (which aborts the deploy, keeping the previous version live).
+This runs before the app starts on every deploy. It applies any unapplied migrations from `site/drizzle/` and exits non-zero on failure (which aborts the deploy, keeping the previous version live).
 
 ---
 
@@ -61,9 +61,14 @@ Push to your main branch (or trigger a manual deploy). Railway will:
 Check the deploy logs to confirm the migration output, e.g.:
 
 ```
-[run]  0001_initial_schema.sql
-[done] 0001_initial_schema.sql
-Migrations complete.
+Migrations complete. 1 applied.
+```
+
+On the first deploy after the Drizzle cutover, an already-populated database logs the bootstrap line instead — the baseline is recorded as applied rather than executed, because the schema is already there:
+
+```
+[boot]  0000_baseline (tables already exist, marked as applied)
+Migrations complete. 1 applied.
 ```
 
 ---
@@ -72,14 +77,14 @@ Migrations complete.
 
 To make a schema change:
 
-1. Create a new file in `site/db/migrations/` following the naming convention:
+1. Edit the schema in `site/src/lib/db/schema.ts`
+2. Generate the migration:
+   ```sh
+   pnpm exec drizzle-kit generate --name your_description_here
    ```
-   0002_your_description_here.sql
-   ```
-2. Write your SQL (one logical change per file)
-3. Commit and push — the next Railway deploy will apply it automatically
+3. Review the generated SQL in `site/drizzle/`, then commit it together with `schema.ts` and the updated `site/drizzle/meta/` — the next Railway deploy will apply it automatically
 
-The migration runner tracks applied files in a `_migrations` table in the database, so each file is only ever executed once.
+The migration runner tracks applied migrations in a `__drizzle_migrations` table in the database, so each one is only ever executed once. See [database-migrations.md](database-migrations.md) for the full workflow.
 
 ---
 

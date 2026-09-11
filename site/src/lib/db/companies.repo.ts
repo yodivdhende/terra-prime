@@ -1,48 +1,22 @@
-import { mysqlconnFn } from './mysql';
+import { eq } from 'drizzle-orm';
+import { db } from './mysql';
+import { companies } from './schema';
+
+const companyColumns = {
+	id: companies.id,
+	name: companies.name,
+	description: companies.description,
+	link: companies.link
+};
 
 class CompanyRepo {
 	public async getAll(): Promise<Company[]> {
-		const connection = mysqlconnFn();
-		const [result] = await connection.execute(`
-      SELECT
-        c.Id as id,
-        c.Name as name,
-        c.Description as description,
-        c.Link as link
-      FROM Companies c
-      `);
-		if (Array.isArray(result) === false) return [];
-		if (result.length === 0) return [];
-		const companies: Company[] = [];
-		for (const companyResult of result) {
-			if (isCompany(companyResult)) companies.push(companyResult);
-			else
-				console.error(`%c sql result is not a company`, `background:red;color:black`, {
-					companyResult
-				});
-		}
-		return companies;
+		return db.select(companyColumns).from(companies);
 	}
 
 	public async getWithId(id: number): Promise<Company | null> {
-		const connection = await mysqlconnFn();
-		const [result] = await connection.execute(
-			`
-      SELECT
-        c.Id as id,
-        c.Name as name,
-        c.Description as description,
-        c.Link as link
-      FROM Companies c
-      WHERE c.Id = ?
-      `,
-			[id]
-		);
-		if (Array.isArray(result) === false) return null;
-		if (result.length === 0) return null;
-		const [company] = result;
-		if (isCompany(company) === false) return null;
-		return company;
+		const [company] = await db.select(companyColumns).from(companies).where(eq(companies.id, id));
+		return company ?? null;
 	}
 
 	public save(company: Company) {
@@ -51,29 +25,20 @@ class CompanyRepo {
 	}
 
 	public async create({ name, description, link }: Omit<Company, 'id'>) {
-		const connection = await mysqlconnFn();
-		const [result] = await connection.execute(
-			`INSERT INTO Companies (Name, Description, Link) VALUES (?, ?, ?)`,
-			[name, description, link ?? null]
-		);
-		if ('serverStatus' in result && result.serverStatus !== 2) return null;
-		if ('insertId' in result === false || result.insertId == null) return null;
-		return result.insertId;
+		const [result] = await db.insert(companies).values({ name, description, link: link ?? null });
+		return result.insertId ?? null;
 	}
 
 	public async edit({ id, name, description, link }: Company) {
-		const connection = await mysqlconnFn();
-		const [result] = await connection.execute(
-			`UPDATE Companies SET Name = ?, Description = ?, Link = ? WHERE Id = ?`,
-			[name, description, link ?? null, id]
-		);
-		if ('serverStatus' in result && result.serverStatus !== 2) return null;
+		await db
+			.update(companies)
+			.set({ name, description, link: link ?? null })
+			.where(eq(companies.id, id as number));
 		return id;
 	}
 
 	public async delete({ id }: { id: number }) {
-		const connection = await mysqlconnFn();
-		await connection.execute(`DELETE FROM Companies WHERE Id = ?`, [id]);
+		await db.delete(companies).where(eq(companies.id, id));
 	}
 }
 

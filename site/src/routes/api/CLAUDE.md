@@ -187,6 +187,51 @@ A coupon is a discrete grant tied to one user and one event. Multiple coupons ma
 
 ---
 
+## Devices
+
+A device is a `{ id, name, uid }` row and nothing more; `uid` is unique and is the identity the
+hardware presents — what a Port emits on the wire, or what an MQTT client announces itself as.
+What a device *is* lives in its roles, which are their own sub-resource. A device may hold several
+roles at once, and a device with none is unclassified — that is legal, and is what a freshly
+registered UID looks like.
+
+`DeviceRole` is a discriminated union on `role`:
+
+| `role` | fields | meaning |
+|---|---|---|
+| `port` | — | A Port. Being one is the whole of it: a Port carries no configured behaviour, and what happens when an AguesGuard docks with it is decided by whoever subscribes to the resulting `port.connected` / `port.disconnected` facts |
+| `aguesguard` | `characterVersionId` | The handheld, and the character version loaded onto it |
+| `game` | `portDeviceId` | The Port this game watches. The referenced device must itself hold the `port` role |
+| `printer` | `printsAvailable` | Feeds `Mission_Printer` — a mission's available prints are the sum over its attached printers |
+| `light` | `endpoint`, `fixture` | |
+
+| Method | Path | Auth | Returns | Description |
+|--------|------|------|---------|-------------|
+| GET | `/api/devices` | admin | `Device[]` (JSON) — `Device = { id: number, name: string, uid: string, roles: DeviceRole[] }` | List all devices with their roles |
+| PUT | `/api/devices` | admin | `{ id: number }` (JSON) | Create a device; body: `{ name, uid }`. 400 when `uid` is already registered |
+| GET | `/api/devices/ports` | admin | `{ id, name, uid }[]` (JSON) | Every device holding the `port` role — what the Game role's picker is filled from |
+| GET | `/api/devices/[id]` | admin | `Device` (JSON; 404 if not found) | Get a device and its roles |
+| POST | `/api/devices/[id]` | admin | empty body (200) | Update name/uid; body: `{ name, uid }`. 400 when `uid` belongs to another device |
+| DELETE | `/api/devices/[id]` | admin | empty body (200) | Delete a device. Its role rows go with it, any Game watching it as a Port loses that role, and it is detached from every mission it printed for |
+
+### Device roles
+
+One endpoint per role, addressed by name: `/api/devices/[id]/roles/[role]` where `role` is one of
+`port` / `aguesguard` / `game` / `printer` / `light`. POSTing a role a device already holds edits
+that role's fields in place, so the same call serves "make this a printer" and "change how many
+prints it has". Both verbs return the full updated `Device`.
+
+| Method | Path | Auth | Returns | Description |
+|--------|------|------|---------|-------------|
+| POST | `/api/devices/[id]/roles/[role]` | admin | `Device` (JSON) | Attach or update the role; body carries only that role's own fields (`port` takes none). 404 for an unknown role name or a missing device; 400 when the body is invalid, when an `aguesguard`'s character version does not exist, when a `game`'s port is not a Port, or when a game would watch itself |
+| DELETE | `/api/devices/[id]/roles/[role]` | admin | `Device` (JSON) | Detach the role. Detaching a role the device does not hold is a no-op, not an error. 400 when detaching `port` while a Game still watches it |
+
+A Port's UID is not set through this API at all: a standardized Arduino Nano is flashed once with
+`arduino-nano-uid/`, and its UID is written afterwards over Web Serial from `manage/devices` —
+browser to hardware, no server round-trip.
+
+---
+
 ## Forms (Google Forms integration)
 
 | Method | Path | Auth | Returns | Description |

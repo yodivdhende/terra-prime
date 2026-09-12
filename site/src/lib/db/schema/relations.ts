@@ -38,7 +38,15 @@ import {
 	partyMembers
 } from './characters';
 import { events, eventParticipants, eventCoupons } from './events';
-import { missions, missionParticipants, missionPrinter, devices, devicePrinter } from './missions';
+import {
+	devices,
+	devicePort,
+	deviceAguesGuard,
+	deviceGame,
+	devicePrinter,
+	deviceLight
+} from './devices';
+import { missions, missionParticipants, missionPrinter } from './missions';
 
 export const usersRelations = relations(users, ({ many }) => ({
 	admin: many(admins),
@@ -181,16 +189,53 @@ export const missionPrinterRelations = relations(missionPrinter, ({ one }) => ({
 	device: one(devices, { fields: [missionPrinter.deviceId], references: [devices.id] })
 }));
 
+/** One `one()` per role table: a device holds any subset of them, or none at all. */
 export const devicesRelations = relations(devices, ({ one, many }) => ({
+	port: one(devicePort, { fields: [devices.id], references: [devicePort.deviceId] }),
+	aguesGuard: one(deviceAguesGuard, {
+		fields: [devices.id],
+		references: [deviceAguesGuard.deviceId]
+	}),
+	game: one(deviceGame, { fields: [devices.id], references: [deviceGame.deviceId] }),
 	printer: one(devicePrinter, {
 		fields: [devices.id],
 		references: [devicePrinter.deviceId]
 	}),
+	light: one(deviceLight, { fields: [devices.id], references: [deviceLight.deviceId] }),
 	missions: many(missionPrinter)
+}));
+
+export const devicePortRelations = relations(devicePort, ({ one }) => ({
+	device: one(devices, { fields: [devicePort.deviceId], references: [devices.id] })
+}));
+
+export const deviceAguesGuardRelations = relations(deviceAguesGuard, ({ one }) => ({
+	device: one(devices, { fields: [deviceAguesGuard.deviceId], references: [devices.id] }),
+	characterVersion: one(characterVersions, {
+		fields: [deviceAguesGuard.characterVersionId],
+		references: [characterVersions.id]
+	})
+}));
+
+export const deviceGameRelations = relations(deviceGame, ({ one }) => ({
+	device: one(devices, {
+		fields: [deviceGame.deviceId],
+		references: [devices.id],
+		relationName: 'gameDevice'
+	}),
+	port: one(devices, {
+		fields: [deviceGame.portDeviceId],
+		references: [devices.id],
+		relationName: 'gamePort'
+	})
 }));
 
 export const devicePrinterRelations = relations(devicePrinter, ({ one }) => ({
 	device: one(devices, { fields: [devicePrinter.deviceId], references: [devices.id] })
+}));
+
+export const deviceLightRelations = relations(deviceLight, ({ one }) => ({
+	device: one(devices, { fields: [deviceLight.deviceId], references: [devices.id] })
 }));
 
 export const companyDiscountsItemsRelations = relations(companyDiscountsItems, ({ one }) => ({

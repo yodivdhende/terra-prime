@@ -15,6 +15,13 @@
       "when": 1789148598073,
       "tag": "0001_missions",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1789227520761,
+      "tag": "0002_device_roles",
+      "breakpoints": true
     }
   ]
 }

@@ -9,8 +9,8 @@
  * `Mission_Printer`, so wheeling a printer in or out changes a mission's availability without
  * any `Missions` row being edited. There is deliberately no `PrintPool` column.
  *
- * `Devices` and `Device_Printer` are the minimal registry the missions epic depends on — the
- * device-model epic extends them (extra columns, other role tables) rather than re-creating them.
+ * `Devices` and `Device_Printer` moved to `./devices.ts` when the device model grew the rest of
+ * its roles. Nothing here changed: a mission still reaches a printer through `Mission_Printer`.
  */
 import {
 	datetime,
@@ -19,38 +19,12 @@ import {
 	mysqlEnum,
 	mysqlTable,
 	primaryKey,
-	uniqueIndex,
 	varchar
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 import { missionStatus } from './enums';
 import { characterVersions } from './characters';
-
-export const devices = mysqlTable(
-	'Devices',
-	{
-		id: int('Id').autoincrement().primaryKey(),
-		name: varchar('Name', { length: 255 }).notNull(),
-		uid: varchar('Uid', { length: 255 }).notNull()
-	},
-	(table) => [uniqueIndex('dev_uid').on(table.uid)]
-);
-
-export const devicePrinter = mysqlTable(
-	'Device_Printer',
-	{
-		deviceId: int('Device').notNull(),
-		printsAvailable: int('PrintsAvailable').notNull().default(0)
-	},
-	(table) => [
-		primaryKey({ columns: [table.deviceId] }),
-		foreignKey({
-			name: 'dprn_device',
-			columns: [table.deviceId],
-			foreignColumns: [devices.id]
-		}).onDelete('cascade')
-	]
-);
+import { devicePrinter, devices } from './devices';
 
 export const missions = mysqlTable('Missions', {
 	id: int('Id').autoincrement().primaryKey(),

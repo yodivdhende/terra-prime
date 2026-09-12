@@ -70,3 +70,17 @@ the shared `db` client from `src/lib/db/mysql.ts` — no raw SQL.
 | `Party` | `Id`, `Name` | A group of characters |
 | `Party_Members` | `Party` → Party, `Member` → Characters | Characters in a party |
 | `Messages` | `Id`, `Sender` → Users, `Recipient` → Users, `Subject`, `Message`, `Attachment` (JSON) | In-game or out-of-game messages; `Sender` nullable (system messages) |
+
+### Missions & devices
+
+| Table | Key columns | Notes |
+|---|---|---|
+| `Missions` | `Id`, `Name`, `PlayerLimit`, `Status`, `CreatedAt` | Status: `open` / `closed`. `PlayerLimit` 0 means no limit. **No print pool column** |
+| `Mission_Participants` | `Mission` → Missions, `CharacterVersion` → Character_Versions, `AvailablePrints`, `RegisterAt` | PK `(Mission, CharacterVersion)`; the player is derived via `CharacterVersion → Character → Owner` |
+| `Mission_Printer` | `Mission` → Missions, `Device` → Devices | PK `(Mission, Device)`; association only |
+| `Devices` | `Id`, `Name`, `Uid` | Minimal registry created by `0020_missions.sql`; the device epic extends it |
+| `Device_Printer` | `Device` → Devices, `PrintsAvailable` | The printer role of a device |
+
+> A mission owns no print pool. Its available prints are
+> `SUM(Device_Printer.PrintsAvailable)` across the printers in `Mission_Printer`,
+> so attaching or detaching a machine changes the number with no `Missions` row edited.

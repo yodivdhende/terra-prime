@@ -38,6 +38,7 @@ import {
 	partyMembers
 } from './characters';
 import { events, eventParticipants, eventCoupons } from './events';
+import { missions, missionParticipants, missionPrinter, devices, devicePrinter } from './missions';
 
 export const usersRelations = relations(users, ({ many }) => ({
 	admin: many(admins),
@@ -160,6 +161,36 @@ export const eventParticipantsRelations = relations(eventParticipants, ({ one })
 export const eventCouponsRelations = relations(eventCoupons, ({ one }) => ({
 	event: one(events, { fields: [eventCoupons.eventId], references: [events.id] }),
 	user: one(users, { fields: [eventCoupons.userId], references: [users.id] })
+}));
+
+export const missionsRelations = relations(missions, ({ many }) => ({
+	participants: many(missionParticipants),
+	printers: many(missionPrinter)
+}));
+
+export const missionParticipantsRelations = relations(missionParticipants, ({ one }) => ({
+	mission: one(missions, { fields: [missionParticipants.missionId], references: [missions.id] }),
+	characterVersion: one(characterVersions, {
+		fields: [missionParticipants.characterVersionId],
+		references: [characterVersions.id]
+	})
+}));
+
+export const missionPrinterRelations = relations(missionPrinter, ({ one }) => ({
+	mission: one(missions, { fields: [missionPrinter.missionId], references: [missions.id] }),
+	device: one(devices, { fields: [missionPrinter.deviceId], references: [devices.id] })
+}));
+
+export const devicesRelations = relations(devices, ({ one, many }) => ({
+	printer: one(devicePrinter, {
+		fields: [devices.id],
+		references: [devicePrinter.deviceId]
+	}),
+	missions: many(missionPrinter)
+}));
+
+export const devicePrinterRelations = relations(devicePrinter, ({ one }) => ({
+	device: one(devices, { fields: [devicePrinter.deviceId], references: [devices.id] })
 }));
 
 export const companyDiscountsItemsRelations = relations(companyDiscountsItems, ({ one }) => ({

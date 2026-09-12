@@ -1,11 +1,14 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import type { RegisterManager } from '$lib/managers/register-manager.svelte';
 
 	let { REGISTER_MANAGER }: { REGISTER_MANAGER: RegisterManager } = $props();
 
-	if (REGISTER_MANAGER.couponCode.trim()) {
-		REGISTER_MANAGER.validateCoupon();
-	}
+	onMount(() => {
+		if (REGISTER_MANAGER.couponCode.trim()) {
+			REGISTER_MANAGER.validateCoupon();
+		}
+	});
 
 	function oninput(e: Event) {
 		REGISTER_MANAGER.couponCode = (e.target as HTMLInputElement).value;

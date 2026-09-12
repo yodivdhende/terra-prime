@@ -1,0 +1,2489 @@
+{
+  "version": "5",
+  "dialect": "mysql",
+  "id": "56679ab4-5dc3-4ac1-9fd8-471376b7631d",
+  "prevId": "7e05fa60-0645-4e13-872a-bc0968108d2c",
+  "tables": {
+    "Admins": {
+      "name": "Admins",
+      "columns": {
+        "UserId": {
+          "name": "UserId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Admins_ibfk_1": {
+          "name": "Admins_ibfk_1",
+          "tableFrom": "Admins",
+          "tableTo": "Users",
+          "columnsFrom": [
+            "UserId"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Admins_UserId_pk": {
+          "name": "Admins_UserId_pk",
+          "columns": [
+            "UserId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Email_Templates": {
+      "name": "Email_Templates",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "Key": {
+          "name": "Key",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "DocUrl": {
+          "name": "DocUrl",
+          "type": "varchar(2048)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "et_key_unique": {
+          "name": "et_key_unique",
+          "columns": [
+            "Key"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "Email_Templates_Id": {
+          "name": "Email_Templates_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Email_Verification_Tokens": {
+      "name": "Email_Verification_Tokens",
+      "columns": {
+        "Token": {
+          "name": "Token",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "UserId": {
+          "name": "UserId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "CreatedAt": {
+          "name": "CreatedAt",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "ExpiresAt": {
+          "name": "ExpiresAt",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "evt_user_key": {
+          "name": "evt_user_key",
+          "columns": [
+            "UserId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "evt_user_fk": {
+          "name": "evt_user_fk",
+          "tableFrom": "Email_Verification_Tokens",
+          "tableTo": "Users",
+          "columnsFrom": [
+            "UserId"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Email_Verification_Tokens_Token_pk": {
+          "name": "Email_Verification_Tokens_Token_pk",
+          "columns": [
+            "Token"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Messages": {
+      "name": "Messages",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "Sender": {
+          "name": "Sender",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Recipient": {
+          "name": "Recipient",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Subject": {
+          "name": "Subject",
+          "type": "varchar(512)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Message": {
+          "name": "Message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Attachment": {
+          "name": "Attachment",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Messages_ibfk_1": {
+          "name": "Messages_ibfk_1",
+          "tableFrom": "Messages",
+          "tableTo": "Users",
+          "columnsFrom": [
+            "Sender"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Messages_ibfk_2": {
+          "name": "Messages_ibfk_2",
+          "tableFrom": "Messages",
+          "tableTo": "Users",
+          "columnsFrom": [
+            "Recipient"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Messages_Id": {
+          "name": "Messages_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Password_Reset_Tokens": {
+      "name": "Password_Reset_Tokens",
+      "columns": {
+        "Token": {
+          "name": "Token",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "UserId": {
+          "name": "UserId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "CreatedAt": {
+          "name": "CreatedAt",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "ExpiresAt": {
+          "name": "ExpiresAt",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "prt_user_key": {
+          "name": "prt_user_key",
+          "columns": [
+            "UserId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "prt_user_fk": {
+          "name": "prt_user_fk",
+          "tableFrom": "Password_Reset_Tokens",
+          "tableTo": "Users",
+          "columnsFrom": [
+            "UserId"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Password_Reset_Tokens_Token_pk": {
+          "name": "Password_Reset_Tokens_Token_pk",
+          "columns": [
+            "Token"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Session_Roles": {
+      "name": "Session_Roles",
+      "columns": {
+        "Token": {
+          "name": "Token",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Role": {
+          "name": "Role",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Session_Roles_ibfk_1": {
+          "name": "Session_Roles_ibfk_1",
+          "tableFrom": "Session_Roles",
+          "tableTo": "Sessions",
+          "columnsFrom": [
+            "Token"
+          ],
+          "columnsTo": [
+            "Token"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Session_Roles_Token_Role_pk": {
+          "name": "Session_Roles_Token_Role_pk",
+          "columns": [
+            "Token",
+            "Role"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Sessions": {
+      "name": "Sessions",
+      "columns": {
+        "Token": {
+          "name": "Token",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "UserId": {
+          "name": "UserId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Description": {
+          "name": "Description",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Start": {
+          "name": "Start",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "End": {
+          "name": "End",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Sessions_ibfk_1": {
+          "name": "Sessions_ibfk_1",
+          "tableFrom": "Sessions",
+          "tableTo": "Users",
+          "columnsFrom": [
+            "UserId"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Sessions_Token_pk": {
+          "name": "Sessions_Token_pk",
+          "columns": [
+            "Token"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Users": {
+      "name": "Users",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "Name": {
+          "name": "Name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Email": {
+          "name": "Email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Password": {
+          "name": "Password",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Verified": {
+          "name": "Verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "Users_Id": {
+          "name": "Users_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Expertise": {
+      "name": "Expertise",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "Group": {
+          "name": "Group",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Name": {
+          "name": "Name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Description": {
+          "name": "Description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "CharacterAccess": {
+          "name": "CharacterAccess",
+          "type": "enum('all','none','specific')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'all'"
+        },
+        "Icon": {
+          "name": "Icon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "Group": {
+          "name": "Group",
+          "columns": [
+            "Group"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "Expertise_ibfk_1": {
+          "name": "Expertise_ibfk_1",
+          "tableFrom": "Expertise",
+          "tableTo": "Expertise_Groups",
+          "columnsFrom": [
+            "Group"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Expertise_Id": {
+          "name": "Expertise_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Expertise_Groups": {
+      "name": "Expertise_Groups",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "Name": {
+          "name": "Name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Description": {
+          "name": "Description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Icon": {
+          "name": "Icon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Color": {
+          "name": "Color",
+          "type": "varchar(7)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "Expertise_Groups_Id": {
+          "name": "Expertise_Groups_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Expertise_Point_Costs": {
+      "name": "Expertise_Point_Costs",
+      "columns": {
+        "Point": {
+          "name": "Point",
+          "type": "tinyint",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Cost": {
+          "name": "Cost",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "Expertise_Point_Costs_Point_pk": {
+          "name": "Expertise_Point_Costs_Point_pk",
+          "columns": [
+            "Point"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {
+        "epc_point_range": {
+          "name": "epc_point_range",
+          "value": "`Point` between 0 and 100"
+        }
+      }
+    },
+    "Implants": {
+      "name": "Implants",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "Name": {
+          "name": "Name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Description": {
+          "name": "Description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Cost": {
+          "name": "Cost",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "CharacterAccess": {
+          "name": "CharacterAccess",
+          "type": "enum('all','none','specific')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'all'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "Implants_Id": {
+          "name": "Implants_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Items": {
+      "name": "Items",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "Name": {
+          "name": "Name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Description": {
+          "name": "Description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Cost": {
+          "name": "Cost",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "MaxPerCharacter": {
+          "name": "MaxPerCharacter",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "CharacterAccess": {
+          "name": "CharacterAccess",
+          "type": "enum('all','none','specific')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'all'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "Items_Id": {
+          "name": "Items_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Companies": {
+      "name": "Companies",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "Name": {
+          "name": "Name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Description": {
+          "name": "Description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Link": {
+          "name": "Link",
+          "type": "varchar(2048)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "Companies_Id": {
+          "name": "Companies_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Company_Discounts_Expertise": {
+      "name": "Company_Discounts_Expertise",
+      "columns": {
+        "Company": {
+          "name": "Company",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Expertise": {
+          "name": "Expertise",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Discount": {
+          "name": "Discount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "cds_company": {
+          "name": "cds_company",
+          "tableFrom": "Company_Discounts_Expertise",
+          "tableTo": "Companies",
+          "columnsFrom": [
+            "Company"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "cds_skill": {
+          "name": "cds_skill",
+          "tableFrom": "Company_Discounts_Expertise",
+          "tableTo": "Expertise",
+          "columnsFrom": [
+            "Expertise"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Company_Discounts_Expertise_Company_Expertise_pk": {
+          "name": "Company_Discounts_Expertise_Company_Expertise_pk",
+          "columns": [
+            "Company",
+            "Expertise"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {
+        "cde_discount_pct": {
+          "name": "cde_discount_pct",
+          "value": "`Discount` between 0 and 100"
+        }
+      }
+    },
+    "Company_Discounts_Implants": {
+      "name": "Company_Discounts_Implants",
+      "columns": {
+        "Company": {
+          "name": "Company",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Implant": {
+          "name": "Implant",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Discount": {
+          "name": "Discount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "cdim_company": {
+          "name": "cdim_company",
+          "tableFrom": "Company_Discounts_Implants",
+          "tableTo": "Companies",
+          "columnsFrom": [
+            "Company"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "cdim_implant": {
+          "name": "cdim_implant",
+          "tableFrom": "Company_Discounts_Implants",
+          "tableTo": "Implants",
+          "columnsFrom": [
+            "Implant"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Company_Discounts_Implants_Company_Implant_pk": {
+          "name": "Company_Discounts_Implants_Company_Implant_pk",
+          "columns": [
+            "Company",
+            "Implant"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {
+        "cdim_discount_pct": {
+          "name": "cdim_discount_pct",
+          "value": "`Discount` between 0 and 100"
+        }
+      }
+    },
+    "Company_Discounts_Items": {
+      "name": "Company_Discounts_Items",
+      "columns": {
+        "Company": {
+          "name": "Company",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Item": {
+          "name": "Item",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Discount": {
+          "name": "Discount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "cdi_company": {
+          "name": "cdi_company",
+          "tableFrom": "Company_Discounts_Items",
+          "tableTo": "Companies",
+          "columnsFrom": [
+            "Company"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "cdi_item": {
+          "name": "cdi_item",
+          "tableFrom": "Company_Discounts_Items",
+          "tableTo": "Items",
+          "columnsFrom": [
+            "Item"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Company_Discounts_Items_Company_Item_pk": {
+          "name": "Company_Discounts_Items_Company_Item_pk",
+          "columns": [
+            "Company",
+            "Item"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {
+        "cdi_discount_pct": {
+          "name": "cdi_discount_pct",
+          "value": "`Discount` between 0 and 100"
+        }
+      }
+    },
+    "Character_Version_Expertise": {
+      "name": "Character_Version_Expertise",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "CharacterVersion": {
+          "name": "CharacterVersion",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Expertise": {
+          "name": "Expertise",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Value": {
+          "name": "Value",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "CharacterVersion": {
+          "name": "CharacterVersion",
+          "columns": [
+            "CharacterVersion"
+          ],
+          "isUnique": false
+        },
+        "Skill": {
+          "name": "Skill",
+          "columns": [
+            "Expertise"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "Character_Version_Expertise_ibfk_1": {
+          "name": "Character_Version_Expertise_ibfk_1",
+          "tableFrom": "Character_Version_Expertise",
+          "tableTo": "Character_Versions",
+          "columnsFrom": [
+            "CharacterVersion"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Character_Version_Expertise_Id": {
+          "name": "Character_Version_Expertise_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Character_Version_Implants": {
+      "name": "Character_Version_Implants",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "CharacterVersion": {
+          "name": "CharacterVersion",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Implant": {
+          "name": "Implant",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Slot": {
+          "name": "Slot",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        }
+      },
+      "indexes": {
+        "CharacterVersion": {
+          "name": "CharacterVersion",
+          "columns": [
+            "CharacterVersion"
+          ],
+          "isUnique": false
+        },
+        "Implant": {
+          "name": "Implant",
+          "columns": [
+            "Implant"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "Character_Version_Implants_ibfk_1": {
+          "name": "Character_Version_Implants_ibfk_1",
+          "tableFrom": "Character_Version_Implants",
+          "tableTo": "Character_Versions",
+          "columnsFrom": [
+            "CharacterVersion"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Character_Version_Implants_ibfk_2": {
+          "name": "Character_Version_Implants_ibfk_2",
+          "tableFrom": "Character_Version_Implants",
+          "tableTo": "Implants",
+          "columnsFrom": [
+            "Implant"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Character_Version_Implants_Id": {
+          "name": "Character_Version_Implants_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Character_Version_Items": {
+      "name": "Character_Version_Items",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "CharacterVersion": {
+          "name": "CharacterVersion",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Item": {
+          "name": "Item",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Count": {
+          "name": "Count",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 1
+        }
+      },
+      "indexes": {
+        "CharacterVersion": {
+          "name": "CharacterVersion",
+          "columns": [
+            "CharacterVersion"
+          ],
+          "isUnique": false
+        },
+        "Item": {
+          "name": "Item",
+          "columns": [
+            "Item"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "Character_Version_Items_ibfk_1": {
+          "name": "Character_Version_Items_ibfk_1",
+          "tableFrom": "Character_Version_Items",
+          "tableTo": "Character_Versions",
+          "columnsFrom": [
+            "CharacterVersion"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Character_Version_Items_ibfk_2": {
+          "name": "Character_Version_Items_ibfk_2",
+          "tableFrom": "Character_Version_Items",
+          "tableTo": "Items",
+          "columnsFrom": [
+            "Item"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Character_Version_Items_Id": {
+          "name": "Character_Version_Items_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Character_Versions": {
+      "name": "Character_Versions",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "Character": {
+          "name": "Character",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Name": {
+          "name": "Name",
+          "type": "varchar(254)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Company": {
+          "name": "Company",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "Character": {
+          "name": "Character",
+          "columns": [
+            "Character"
+          ],
+          "isUnique": false
+        },
+        "cv_company_key": {
+          "name": "cv_company_key",
+          "columns": [
+            "Company"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "Character_Versions_Characters": {
+          "name": "Character_Versions_Characters",
+          "tableFrom": "Character_Versions",
+          "tableTo": "Characters",
+          "columnsFrom": [
+            "Character"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "cv_company": {
+          "name": "cv_company",
+          "tableFrom": "Character_Versions",
+          "tableTo": "Companies",
+          "columnsFrom": [
+            "Company"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Character_Versions_Id": {
+          "name": "Character_Versions_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Characters": {
+      "name": "Characters",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "Name": {
+          "name": "Name",
+          "type": "varchar(254)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Owner": {
+          "name": "Owner",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "BackstoryId": {
+          "name": "BackstoryId",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ImplantLimit": {
+          "name": "ImplantLimit",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 2
+        }
+      },
+      "indexes": {
+        "Owner": {
+          "name": "Owner",
+          "columns": [
+            "Owner"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "Characters_ibfk_1": {
+          "name": "Characters_ibfk_1",
+          "tableFrom": "Characters",
+          "tableTo": "Users",
+          "columnsFrom": [
+            "Owner"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Characters_Id": {
+          "name": "Characters_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Expertise_Character_Access": {
+      "name": "Expertise_Character_Access",
+      "columns": {
+        "ExpertiseId": {
+          "name": "ExpertiseId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "CharacterId": {
+          "name": "CharacterId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "eca_expertise": {
+          "name": "eca_expertise",
+          "tableFrom": "Expertise_Character_Access",
+          "tableTo": "Expertise",
+          "columnsFrom": [
+            "ExpertiseId"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "eca_character": {
+          "name": "eca_character",
+          "tableFrom": "Expertise_Character_Access",
+          "tableTo": "Characters",
+          "columnsFrom": [
+            "CharacterId"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Expertise_Character_Access_ExpertiseId_CharacterId_pk": {
+          "name": "Expertise_Character_Access_ExpertiseId_CharacterId_pk",
+          "columns": [
+            "ExpertiseId",
+            "CharacterId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Implant_Character_Access": {
+      "name": "Implant_Character_Access",
+      "columns": {
+        "ImplantId": {
+          "name": "ImplantId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "CharacterId": {
+          "name": "CharacterId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "imca_implant": {
+          "name": "imca_implant",
+          "tableFrom": "Implant_Character_Access",
+          "tableTo": "Implants",
+          "columnsFrom": [
+            "ImplantId"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "imca_character": {
+          "name": "imca_character",
+          "tableFrom": "Implant_Character_Access",
+          "tableTo": "Characters",
+          "columnsFrom": [
+            "CharacterId"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Implant_Character_Access_ImplantId_CharacterId_pk": {
+          "name": "Implant_Character_Access_ImplantId_CharacterId_pk",
+          "columns": [
+            "ImplantId",
+            "CharacterId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Item_Character_Access": {
+      "name": "Item_Character_Access",
+      "columns": {
+        "ItemId": {
+          "name": "ItemId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "CharacterId": {
+          "name": "CharacterId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "ica_item": {
+          "name": "ica_item",
+          "tableFrom": "Item_Character_Access",
+          "tableTo": "Items",
+          "columnsFrom": [
+            "ItemId"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "ica_character": {
+          "name": "ica_character",
+          "tableFrom": "Item_Character_Access",
+          "tableTo": "Characters",
+          "columnsFrom": [
+            "CharacterId"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Item_Character_Access_ItemId_CharacterId_pk": {
+          "name": "Item_Character_Access_ItemId_CharacterId_pk",
+          "columns": [
+            "ItemId",
+            "CharacterId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Party": {
+      "name": "Party",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "Name": {
+          "name": "Name",
+          "type": "varchar(254)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "Party_Id": {
+          "name": "Party_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Party_Members": {
+      "name": "Party_Members",
+      "columns": {
+        "Party": {
+          "name": "Party",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Member": {
+          "name": "Member",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "Member": {
+          "name": "Member",
+          "columns": [
+            "Member"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "Party_Members_ibfk_1": {
+          "name": "Party_Members_ibfk_1",
+          "tableFrom": "Party_Members",
+          "tableTo": "Party",
+          "columnsFrom": [
+            "Party"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Party_Members_ibfk_2": {
+          "name": "Party_Members_ibfk_2",
+          "tableFrom": "Party_Members",
+          "tableTo": "Characters",
+          "columnsFrom": [
+            "Member"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Party_Members_Party_Member_pk": {
+          "name": "Party_Members_Party_Member_pk",
+          "columns": [
+            "Party",
+            "Member"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Event_Coupons": {
+      "name": "Event_Coupons",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "Event": {
+          "name": "Event",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "User": {
+          "name": "User",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Code": {
+          "name": "Code",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Type": {
+          "name": "Type",
+          "type": "enum('budget')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'budget'"
+        },
+        "Value": {
+          "name": "Value",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "RedeemedAt": {
+          "name": "RedeemedAt",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "ec_code": {
+          "name": "ec_code",
+          "columns": [
+            "Code"
+          ],
+          "isUnique": true
+        },
+        "ec_event_user": {
+          "name": "ec_event_user",
+          "columns": [
+            "Event",
+            "User"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "ec_event": {
+          "name": "ec_event",
+          "tableFrom": "Event_Coupons",
+          "tableTo": "Events",
+          "columnsFrom": [
+            "Event"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "ec_user": {
+          "name": "ec_user",
+          "tableFrom": "Event_Coupons",
+          "tableTo": "Users",
+          "columnsFrom": [
+            "User"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Event_Coupons_Id": {
+          "name": "Event_Coupons_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Event_Participants": {
+      "name": "Event_Participants",
+      "columns": {
+        "Event": {
+          "name": "Event",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "User": {
+          "name": "User",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "CharacterVersion": {
+          "name": "CharacterVersion",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "User": {
+          "name": "User",
+          "columns": [
+            "User"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "Event_Participants_ibfk_1": {
+          "name": "Event_Participants_ibfk_1",
+          "tableFrom": "Event_Participants",
+          "tableTo": "Events",
+          "columnsFrom": [
+            "Event"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Event_Participants_ibfk_2": {
+          "name": "Event_Participants_ibfk_2",
+          "tableFrom": "Event_Participants",
+          "tableTo": "Users",
+          "columnsFrom": [
+            "User"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Event_Participants_ibfk_3": {
+          "name": "Event_Participants_ibfk_3",
+          "tableFrom": "Event_Participants",
+          "tableTo": "Character_Versions",
+          "columnsFrom": [
+            "CharacterVersion"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Event_Participants_Event_User_pk": {
+          "name": "Event_Participants_Event_User_pk",
+          "columns": [
+            "Event",
+            "User"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Events": {
+      "name": "Events",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "Name": {
+          "name": "Name",
+          "type": "varchar(254)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "StartTime": {
+          "name": "StartTime",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "EndTime": {
+          "name": "EndTime",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Status": {
+          "name": "Status",
+          "type": "enum('Draft','Open','Live','Canceled','Done')",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'Draft'"
+        },
+        "Budget": {
+          "name": "Budget",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "FormId": {
+          "name": "FormId",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "SheetId": {
+          "name": "SheetId",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "RewardBudget": {
+          "name": "RewardBudget",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "Events_Id": {
+          "name": "Events_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Device_AguesGuard": {
+      "name": "Device_AguesGuard",
+      "columns": {
+        "Device": {
+          "name": "Device",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "CharacterVersion": {
+          "name": "CharacterVersion",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "dagd_device": {
+          "name": "dagd_device",
+          "tableFrom": "Device_AguesGuard",
+          "tableTo": "Devices",
+          "columnsFrom": [
+            "Device"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "dagd_character_version": {
+          "name": "dagd_character_version",
+          "tableFrom": "Device_AguesGuard",
+          "tableTo": "Character_Versions",
+          "columnsFrom": [
+            "CharacterVersion"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Device_AguesGuard_Device_pk": {
+          "name": "Device_AguesGuard_Device_pk",
+          "columns": [
+            "Device"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Device_Game": {
+      "name": "Device_Game",
+      "columns": {
+        "Device": {
+          "name": "Device",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Port": {
+          "name": "Port",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "dgam_device": {
+          "name": "dgam_device",
+          "tableFrom": "Device_Game",
+          "tableTo": "Devices",
+          "columnsFrom": [
+            "Device"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "dgam_port": {
+          "name": "dgam_port",
+          "tableFrom": "Device_Game",
+          "tableTo": "Devices",
+          "columnsFrom": [
+            "Port"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Device_Game_Device_pk": {
+          "name": "Device_Game_Device_pk",
+          "columns": [
+            "Device"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Device_Light": {
+      "name": "Device_Light",
+      "columns": {
+        "Device": {
+          "name": "Device",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Endpoint": {
+          "name": "Endpoint",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Fixture": {
+          "name": "Fixture",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "dlgt_device": {
+          "name": "dlgt_device",
+          "tableFrom": "Device_Light",
+          "tableTo": "Devices",
+          "columnsFrom": [
+            "Device"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Device_Light_Device_pk": {
+          "name": "Device_Light_Device_pk",
+          "columns": [
+            "Device"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Device_Port": {
+      "name": "Device_Port",
+      "columns": {
+        "Device": {
+          "name": "Device",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "dprt_device": {
+          "name": "dprt_device",
+          "tableFrom": "Device_Port",
+          "tableTo": "Devices",
+          "columnsFrom": [
+            "Device"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Device_Port_Device_pk": {
+          "name": "Device_Port_Device_pk",
+          "columns": [
+            "Device"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Device_Printer": {
+      "name": "Device_Printer",
+      "columns": {
+        "Device": {
+          "name": "Device",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "PrintsAvailable": {
+          "name": "PrintsAvailable",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "dprn_device": {
+          "name": "dprn_device",
+          "tableFrom": "Device_Printer",
+          "tableTo": "Devices",
+          "columnsFrom": [
+            "Device"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Device_Printer_Device_pk": {
+          "name": "Device_Printer_Device_pk",
+          "columns": [
+            "Device"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Devices": {
+      "name": "Devices",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "Name": {
+          "name": "Name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Uid": {
+          "name": "Uid",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "dev_uid": {
+          "name": "dev_uid",
+          "columns": [
+            "Uid"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "Devices_Id": {
+          "name": "Devices_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Mission_Participants": {
+      "name": "Mission_Participants",
+      "columns": {
+        "Mission": {
+          "name": "Mission",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "CharacterVersion": {
+          "name": "CharacterVersion",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "AvailablePrints": {
+          "name": "AvailablePrints",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "RegisterAt": {
+          "name": "RegisterAt",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "mpart_mission": {
+          "name": "mpart_mission",
+          "tableFrom": "Mission_Participants",
+          "tableTo": "Missions",
+          "columnsFrom": [
+            "Mission"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "mpart_character_version": {
+          "name": "mpart_character_version",
+          "tableFrom": "Mission_Participants",
+          "tableTo": "Character_Versions",
+          "columnsFrom": [
+            "CharacterVersion"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Mission_Participants_Mission_CharacterVersion_pk": {
+          "name": "Mission_Participants_Mission_CharacterVersion_pk",
+          "columns": [
+            "Mission",
+            "CharacterVersion"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Mission_Printer": {
+      "name": "Mission_Printer",
+      "columns": {
+        "Mission": {
+          "name": "Mission",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Device": {
+          "name": "Device",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "mprn_mission": {
+          "name": "mprn_mission",
+          "tableFrom": "Mission_Printer",
+          "tableTo": "Missions",
+          "columnsFrom": [
+            "Mission"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "mprn_device": {
+          "name": "mprn_device",
+          "tableFrom": "Mission_Printer",
+          "tableTo": "Devices",
+          "columnsFrom": [
+            "Device"
+          ],
+          "columnsTo": [
+            "Id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Mission_Printer_Mission_Device_pk": {
+          "name": "Mission_Printer_Mission_Device_pk",
+          "columns": [
+            "Mission",
+            "Device"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "Missions": {
+      "name": "Missions",
+      "columns": {
+        "Id": {
+          "name": "Id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "Name": {
+          "name": "Name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "PlayerLimit": {
+          "name": "PlayerLimit",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "Status": {
+          "name": "Status",
+          "type": "enum('open','closed')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'open'"
+        },
+        "CreatedAt": {
+          "name": "CreatedAt",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "Missions_Id": {
+          "name": "Missions_Id",
+          "columns": [
+            "Id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    }
+  },
+  "views": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {},
+    "indexes": {}
+  }
+}

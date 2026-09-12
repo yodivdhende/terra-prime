@@ -17,10 +17,12 @@ Drizzle is also the data layer: every repository in `site/src/lib/db/*.repo.ts` 
 | `companies.ts`  | companies and their discount tables                          |
 | `characters.ts` | characters, versions, version contents, access grants, party |
 | `events.ts`     | events, participants, coupons                                |
+| `devices.ts`    | devices and their role tables (port, aguesguard, game, …)     |
+| `missions.ts`   | missions, participants, mission-printer links                |
 | `relations.ts`  | relations for the relational query API                       |
 
-Modules import in one direction only — `auth`/`catalog` → `companies` → `characters` → `events` —
-which matches the foreign-key graph and keeps the module graph acyclic. `relations.ts` is the one
+Modules import in one direction only — `auth`/`catalog` → `companies` → `characters` →
+`events`/`devices` → `missions` — which matches the foreign-key graph and keeps the module graph acyclic. `relations.ts` is the one
 exception and is deliberately last: the relation graph *is* cyclic, but `relations()` takes a
 callback, so those cross-references resolve lazily and never form a module-load cycle.
 

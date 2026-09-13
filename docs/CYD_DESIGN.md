@@ -12,7 +12,7 @@ integrated 320x240 ILI9341 TFT screen and an XPT2046 resistive touch controller 
 the well-known RandomNerdTutorials hardware guide). In this repo, `cyd/` is a PlatformIO/Arduino
 firmware project that turns one of these boards into a **physical tabletop-RPG companion prop**:
 it sits at a player's table during a live session, renders character stats and animated
-screens (loading / loot / virus / skills / implants / items / messages) built with
+screens (loading / loot / virus / expertise / implants / messages) built with
 **LVGL** + **SquareLine Studio**, and reacts in real time to commands pushed from the server.
 
 The device is not autonomous — it is a thin client. All game logic, session state, and
@@ -20,10 +20,10 @@ character data live on the site (SvelteKit + MySQL). CYD talks to the site over 
 
 | Channel | Direction | Purpose |
 |---|---|---|
-| HTTP (REST) | device → server | `GET /api/characters/:id` to fetch character stats |
+| HTTP (REST) | device → server | `GET /api/my/*` — character at boot, expertise and implants when those screens open |
 | WebSocket (`/connections`) | bidirectional | status/link events out, screen-navigation commands in |
 | UART (serial) | external peripheral → device | receives tokens (e.g. from an RFID/NFC reader), relayed as "link" events |
-| SD card | local | loads `/config.json` at boot (WiFi creds, API/WS URLs, `characterId`, `sessionToken`) |
+| SD card | local | loads `/config.json` at boot (WiFi creds, API/WS URLs, `deviceUid`, `sessionToken`) |
 
 The admin-facing `manage/sessions` dashboard in the site connects to the **same** WebSocket
 endpoint as every CYD device, so admins can see which devices are connected live and trigger
@@ -53,7 +53,7 @@ flowchart LR
 
     Admin["Admin browser\nmanage/sessions"]
 
-    CYD -- "HTTP GET /api/characters/:id" --> API
+    CYD -- "HTTP GET /api/my/* (X-Device-Uid)" --> API
     CYD <-- "WebSocket: status, link ⇄ goTo" --> WS
     Admin <-- "WebSocket: session list ⇄ goTo" --> WS
     Admin -- "HTTP (session/char mgmt)" --> API
@@ -66,15 +66,17 @@ flowchart LR
 ```mermaid
 flowchart TB
     main["main.cpp\nsetup() / loop()"]
-    globals["globals.h/.cpp\nWiFi creds, domain, api_url,\ncharacter_id, sessionToken"]
+    globals["globals.h/.cpp\nWiFi creds, domain, api_url,\ndeviceUid, sessionToken"]
     sd["sd-reader.h/.cpp\nreads /config.json → globals"]
     conn["connection.cpp\nconnectToWifi()"]
     ws["web-socket.h/.cpp\nconnect, sendStatus(),\nsendLink(), handleMessage()"]
-    char["character.h/.cpp\nCharacter struct,\nfetchCharacter() (HTTP GET)"]
+    api["api.h/.cpp\napiGet() — REST reads with\nthis device's credentials"]
+    char["character.h/.cpp\nCharacter struct,\nfetchCharacter()"]
     uart["uart-interface.h/.cpp\nreads serial tokens,\ncalls sendLink(token, true)"]
     ui["ui-implementation.h/.cpp\nLVGL init, display flush,\ntouch read, uiSetup()/uiLoop()"]
-    screens["ui/*\nSquareLine Studio screens:\nHome, DownloadScreen, LootScreen,\nVirusScreen, Skills, Implants, Items, Messages"]
+    screens["ui/*\nSquareLine Studio screens:\nHome, DownloadScreen, LootScreen,\nVirusScreen, Expertise, Implants, Messages"]
     xition["ui-downloading.cpp / ui-loot.cpp / ui-virus.cpp\nscreen-transition logic"]
+    data["ui-expertise.cpp / ui-implants.cpp\nscreen contents from api/my/*"]
 
     main --> sd
     main --> conn
@@ -85,10 +87,14 @@ flowchart TB
     sd --> globals
     conn --> globals
     ws --> globals
-    char --> globals
+    api --> globals
+    char --> api
+    data --> api
     ws -- "goTo command" --> xition
     xition --> screens
     ui --> screens
+    ui --> data
+    data --> screens
     uart --> ws
 ```
 
@@ -139,24 +145,33 @@ sequenceDiagram
     A->>A: render device row (Wifi icon)
 ```
 
-### 5.2 Character fetch
+### 5.2 Character fetch, and the device's own reads
 
 ```mermaid
 sequenceDiagram
     participant D as CYD device
-    participant API as SvelteKit /api/characters/:id
+    participant API as SvelteKit /api/my/*
     participant DB as MySQL
 
-    D->>API: GET /api/characters/{character_id}
-    API->>API: authGuardForUser (admin role)
-    API->>DB: query Characters / Character_Versions
-    DB-->>API: character row
-    API-->>D: JSON {id, name, currentHp, maxHp}
-    D->>D: render Home screen with stats
+    D->>API: GET /api/my/character (X-Device-Uid: <uid>)
+    API->>DB: Devices WHERE Uid = <uid>
+    DB-->>API: device + roles
+    API->>API: require the aguesguard role
+    API->>DB: Character_Versions / Characters for that role's CharacterVersion
+    DB-->>API: character + version
+    API-->>D: JSON {id, name, versionId, versionName, companyId}
+    D->>D: render Home screen
+
+    Note over D,API: later, when a screen opens
+    D->>API: GET /api/my/expertise (same header)
+    API-->>D: expertise values + group colours (no SVG icons for a device)
+    D->>D: one progress bar per expertise
 ```
 
-> ⚠️ See [§7.3](#7-known-architecture-gaps) — the firmware currently sends no auth header,
-> but this route requires an authenticated admin session.
+The device asserts nothing about which character it is showing: it presents the UID it is
+registered under in `Devices`, and the server reads the bound character version from that device's
+`aguesguard` role. Re-binding a handheld is an admin edit of that role — nothing to reflash, no SD
+card to rewrite. `/api/my/**` serves a player's browser over the session cookie by the same route.
 
 ### 5.3 Link / loot mini-game
 
@@ -200,7 +215,10 @@ sequenceDiagram
 | Table | CYD reads | CYD writes | Notes |
 |---|---|---|---|
 | `Sessions` / `Session_Roles` | `sessionToken` is provisioned into `/config.json` on the SD card out-of-band | — (no direct writes) | Identity on the WS channel is self-asserted via `sessionToken` in the `status` message; there is no per-message auth check on the socket itself |
-| `Characters` / `Character_Versions` | via `GET /api/characters/:id` (`currentHp`, `maxHp`, `name`) | — | Fetched once at boot (when enabled) to populate the Home screen |
+| `Devices` / `Device_AguesGuard` | indirectly: the device sends its `Uid`, the server resolves the role's `CharacterVersion` | — | The device's identity on the REST channel. A UID is a bearer credential sent in the clear — see [§7.3](#7-known-architecture-gaps) |
+| `Characters` / `Character_Versions` | via `GET /api/my/character` (`name`, `versionId`, `versionName`) | — | Fetched once at boot (when enabled) to populate the Home screen |
+| `Character_Version_Expertise` / `Expertise` / `Expertise_Groups` | via `GET /api/my/expertise` (value, name, group name and colour) | — | Re-read every time the Expertise screen opens. Icons are withheld from device callers: they are SVG documents LVGL cannot draw |
+| `Character_Version_Implants` / `Implants` | via `GET /api/my/implants` (name, description, slot) | — | Re-read every time the Implants screen opens |
 
 Full schema reference: `site/CLAUDE.md`. Full REST endpoint reference: `site/src/routes/api/CLAUDE.md`.
 
@@ -223,10 +241,12 @@ so they're visible, not silently worked around.
    to a hardcoded `ws://localhost:5173/connections`, which will not resolve against a deployed
    domain and does not use `wss://` for TLS.
 
-3. **Unauthenticated firmware request against a gated endpoint.** The firmware's
-   `fetchCharacter()` (`cyd/src/character.cpp`) sends a plain `GET` with no auth header, but
-   `GET /api/characters/[characterId]` is guarded by `authGuardForUser` (admin role). As it
-   stands, this request would be rejected once auth is enforced in a deployed environment.
+3. **Device identity is a bearer UID.** The firmware's REST reads now authenticate — as the
+   device, not as a player — but `X-Device-Uid` is a plain identifier sent in the clear, so
+   anyone who can read one off the wire can replay it and read that character. This is the same
+   self-asserted identity the WebSocket channel has, where `sessionToken` in the `status` message
+   is taken at face value. Closing it means a per-device secret on `Devices` and signing or
+   presenting it per request; nothing does that yet.
 
 ---
 
@@ -239,17 +259,22 @@ so they're visible, not silently worked around.
 | SD config loading | `cyd/src/sd-reader.h`, `cyd/src/sd-reader.cpp` |
 | WiFi connect | `cyd/src/connection.cpp` |
 | WebSocket client | `cyd/src/web-socket.h`, `cyd/src/web-socket.cpp` |
+| REST client / credentials | `cyd/src/api.h`, `cyd/src/api.cpp` |
 | Character fetch | `cyd/src/character.h`, `cyd/src/character.cpp` |
 | UART token input | `cyd/src/uart-interface.h`, `cyd/src/uart-interface.cpp` |
 | LVGL/display glue | `cyd/src/ui-implementation.h`, `cyd/src/ui-implementation.cpp` |
 | Screen-transition logic | `cyd/src/ui-downloading.cpp`, `cyd/src/ui-loot.cpp`, `cyd/src/ui-virus.cpp` |
+| Screen contents from the API | `cyd/src/ui-expertise.cpp`, `cyd/src/ui-implants.cpp` |
 | SquareLine-generated screens | `cyd/src/ui/*` |
+| SquareLine project source | `cyd/ui-project/cyd-interface.spj` |
 | Firmware architecture notes | `cyd/CLAUDE.md` |
 | WS Express entry point | `site/websocket-server/index.ts` |
 | WS upgrade routing | `site/websocket-server/socket-server.ts` |
 | Connection/link state + broadcast | `site/websocket-server/connection-socket.ts` |
 | Admin live dashboard | `site/src/routes/manage/sessions/+page.svelte`, `site/src/lib/components/session-row.svelte` |
-| Character REST endpoint | `site/src/routes/api/characters/[characterId]/+server.ts` |
+| Player/device read paths | `site/src/routes/api/my/character/`, `.../my/expertise/`, `.../my/implants/` |
+| Caller → character version | `site/src/lib/server/my-character.service.ts` |
+| Device registry | `site/src/lib/db/device.repo.ts`, `site/src/lib/db/schema/devices.ts` |
 | Site schema reference | `site/CLAUDE.md` |
 | Site API reference | `site/src/routes/api/CLAUDE.md` |
 | Deployment config | `site/dockerfile`, `site/railway.toml`, `site/package.json` |

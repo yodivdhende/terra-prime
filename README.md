@@ -10,7 +10,7 @@ LARP event management system built with SvelteKit, MySQL, and Docker.
 | 3D/Graphics | Three.js, Threlte                 |
 | Runtime     | Node.js 24                        |
 | Database    | MySQL 8.0+                        |
-| Real-time   | WebSocket (ws)                    |
+| Real-time   | MQTT (Mosquitto) to props, SSE to the dashboard |
 | Containers  | Docker + Docker Compose           |
 | Package mgr | pnpm                              |
 

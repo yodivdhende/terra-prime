@@ -73,7 +73,7 @@ the shared `db` client from `src/lib/db/mysql.ts` — no raw SQL.
 | `Character_Versions` | `Id`, `Character` → Characters, `Name` | Snapshot of a character (e.g. per event) |
 | `Character_Version_Expertise` | `Id`, `CharacterVersion`, `Expertise` → Expertise, `Value` | Expertise levels for a version |
 | `Character_Version_Items` | `Id`, `CharacterVersion`, `Item` → Items, `Count` | Inventory for a version |
-| `Character_Version_Implants` | `Id`, `CharacterVersion`, `Implant` → Implants | Implants for a version |
+| `Character_Version_Implants` | `Id`, `CharacterVersion`, `Implant` → Implants, `Slot`, `ChargesRemaining` | Implants for a version. `ChargesRemaining` is seeded from `Implants.MaxCharges` when the loadout is written, counted down by the player activating the implant, and only ever put back by an admin refresh |
 
 ### Reference / Catalog
 
@@ -82,7 +82,7 @@ the shared `db` client from `src/lib/db/mysql.ts` — no raw SQL.
 | `Expertise_Groups` | `Id`, `Name`, `Description` | Category grouping for expertise |
 | `Expertise` | `Id`, `Group` → Expertise_Groups, `Name`, `Description` | Individual expertise entries |
 | `Items` | `Id`, `Name`, `Description` | Equippable items |
-| `Implants` | `Id`, `Name`, `Description` | Cybernetic / special implants |
+| `Implants` | `Id`, `Name`, `Description`, `MaxCharges` | Cybernetic / special implants. `MaxCharges` 0 means the implant is not activated at all; anything higher is the ceiling a fitted copy starts at and an admin refresh returns it to |
 
 ### Events & Social
 

@@ -109,9 +109,16 @@ Expertise has no per-entry cost. Every expertise shares the same cost curve, def
 
 ## Implants
 
+An implant may carry **charges**: `maxCharges` on the catalog row is how many activations a fitted
+copy gets, `0` (the default) meaning the implant is not activated at all. The count itself lives per
+fitted instance on `Character_Version_Implants.ChargesRemaining`, seeded from `maxCharges` whenever
+the loadout is written. Spending is the player's (`POST /api/my/implants/[id]/activate`), refilling
+is the admin's (`POST /api/characters/versions/[versionId]/implants/refresh`) — there is no path by
+which a device can raise a count.
+
 | Method | Path | Auth | Returns | Description |
 |--------|------|------|---------|-------------|
-| GET | `/api/implants` | admin/user | `Implant[]` (JSON) — `Implant = { id: number \| null, name: string, description: string, cost?: number }` | List all implants |
+| GET | `/api/implants` | admin/user | `Implant[]` (JSON) — `Implant = { id: number \| null, name: string, description: string, cost?: number, maxCharges?: number }` | List all implants |
 | PUT | `/api/implants` | admin | empty body (200) | Create/update implant; body: `Implant` |
 | GET | `/api/implants/[id]` | admin | `Implant` (JSON) | Get implant by ID |
 | POST | `/api/implants/[id]` | admin | empty body (200) | Update implant; body: `Implant` |
@@ -141,6 +148,7 @@ Expertise has no per-entry cost. Every expertise shares the same cost curve, def
 | DELETE | `/api/characters/versions/[versionId]` | admin | empty body (200) | Delete character version and its expertise/items/implants |
 | GET | `/api/characters/versions/[versionId]/full` | user | `CharacterVersionFull` (JSON) | Get full version detail, with expertise/items/implants resolved to catalog entries |
 | PUT | `/api/characters/versions/[versionId]/expertise` | user | empty body (200) | Replace version expertise; body: `CharacterVersionExpertise[]` |
+| POST | `/api/characters/versions/[versionId]/implants/refresh` | admin | `{ refreshed: number }` (JSON) | Recharge every implant this version carries, each back to its catalog `maxCharges`. Takes no body — nothing the caller sends decides how much is restored. 404 when the version does not exist. This is the admin half of the charge cycle; players only ever spend |
 
 ---
 
@@ -313,7 +321,8 @@ browser (`src/lib/utils/icon-export.ts`).
 | GET | `/api/my/user` | `User` (JSON) | Get the currently authenticated user |
 | GET | `/api/my/character` | `MyCharacterResponse` (JSON) — `{ id, name, versionId, versionName, companyId }` | The single character version the caller is playing. This is what an AguesGuard fetches at boot |
 | GET | `/api/my/expertise` | `MyExpertiseResponse` (JSON) — `{ characterId, characterName, versionId, versionName, expertise: VersionExpertise[] }`, ordered by group then name | The caller's own expertise with catalog names, values and icons — everything needed to draw a bar per entry |
-| GET | `/api/my/implants` | `MyImplantsResponse` (JSON) — `{ characterId, characterName, versionId, versionName, implants: VersionImplant[] }`, ordered by slot then name | The caller's own implants with their descriptions |
+| GET | `/api/my/implants` | `MyImplantsResponse` (JSON) — `{ characterId, characterName, versionId, versionName, implants: VersionImplant[] }`, ordered by slot then name. Each entry is `{ id, name, description, slot, maxCharges, chargesRemaining }`, one per **fitted instance** — the same implant in two slots is two entries and two independent charge stocks | The caller's own implants with their descriptions and charge counts |
+| POST | `/api/my/implants/[id]/activate` | `ActivateImplantResponse` (JSON) — `{ spent: boolean, implant: VersionImplant, implants: VersionImplant[] }` | Spend one charge of an implant the caller carries. `[id]` is the **catalog** implant id, the one the GET above lists, and the spend is scoped to the caller's own character version in a single statement; an implant the caller does not carry answers 404. Drains the lowest slot first. Running out is not an error: an implant already at zero answers 200 with `spent: false`, and a count never goes below 0. On success every AguesGuard bound to that version is pushed a `cyd.show` for the Implants screen so it redraws; that push is best-effort and a broker that is down does not fail the call |
 | GET | `/api/my/characters` | `Character[]` (JSON) | List characters owned by the current user |
 | GET | `/api/my/characters/with-events` | `(Character & { events: Array<{ id: number, name: string }> })[]` (JSON) | List the current user's characters, each with an `events` array |
 | GET | `/api/my/characters/versions` | `MyCharacterVersionsResponse` (JSON) — `{ characters: (Character & { versions: CharacterVersionFull[] })[] }` where each version's `expertise`/`items`/`implants` are joined with the catalog and `events` is the list of events the version is registered for: `expertise: { id, name, group, groupName, value }[]`, `items: { id, name, description, count }[]`, `implants: { id, name, description }[]`, `events: { id, name }[]` | List the current user's characters with their versions, each version's expertise/item/implant IDs resolved to full catalog entries plus the events the version is registered for |

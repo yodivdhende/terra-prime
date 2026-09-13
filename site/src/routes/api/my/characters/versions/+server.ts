@@ -33,6 +33,10 @@ export type VersionImplant = {
 	name: string;
 	description: string;
 	slot: number;
+	/** The catalog ceiling. `0` means this implant is not an activated one at all. */
+	maxCharges: number;
+	/** What is left of it on this character, counted down by activations until an admin refresh. */
+	chargesRemaining: number;
 };
 
 export type VersionEvent = {
@@ -139,7 +143,16 @@ function toFullVersion(
 		implants: version.implants.flatMap((vi) => {
 			const implant = implantById.get(vi.id);
 			if (!implant) return [];
-			return [{ id: vi.id, name: implant.name, description: implant.description, slot: vi.slot }];
+			return [
+				{
+					id: vi.id,
+					name: implant.name,
+					description: implant.description,
+					slot: vi.slot,
+					maxCharges: implant.maxCharges ?? 0,
+					chargesRemaining: vi.chargesRemaining ?? 0
+				}
+			];
 		}),
 		events: version.id != null ? (eventsByVersionId.get(version.id) ?? []) : []
 	};

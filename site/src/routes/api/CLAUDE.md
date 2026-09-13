@@ -297,10 +297,14 @@ The device header wins when both arrive. A UID is a bearer credential sent in th
 self-asserted device identity the WebSocket channel has; a per-device secret would close it and
 does not exist yet.
 
+`/api/my/expertise` sends `icon` and `groupIcon` as null to a device caller: they are multi-kilobyte
+SVG documents an ESP32 can neither render nor afford to parse. `groupColor` is always sent.
+
 | Method | Path | Returns | Description |
 |--------|------|---------|-------------|
 | GET | `/api/my/user` | `User` (JSON) | Get the currently authenticated user |
 | GET | `/api/my/character` | `MyCharacterResponse` (JSON) — `{ id, name, versionId, versionName, companyId }` | The single character version the caller is playing. This is what an AguesGuard fetches at boot |
+| GET | `/api/my/expertise` | `MyExpertiseResponse` (JSON) — `{ characterId, characterName, versionId, versionName, expertise: VersionExpertise[] }`, ordered by group then name | The caller's own expertise with catalog names, values and icons — everything needed to draw a bar per entry |
 | GET | `/api/my/characters` | `Character[]` (JSON) | List characters owned by the current user. `kind: 'npc'` rows are excluded — an admin's NPC pool is not a character they play |
 | GET | `/api/my/characters/with-events` | `(Character & { events: Array<{ id: number, name: string }> })[]` (JSON) | List the current user's characters, each with an `events` array |
 | GET | `/api/my/characters/versions` | `MyCharacterVersionsResponse` (JSON) — `{ characters: (Character & { versions: CharacterVersionFull[] })[], assignedCharacters: AssignedCharacterVersion[] }` where each version's `expertise`/`items`/`implants` are joined with the catalog and `events` is the list of events the version is registered for: `expertise: { id, name, group, groupName, value }[]`, `items: { id, name, description, count }[]`, `implants: { id, name, description }[]`, `events: { id, name }[]`. `assignedCharacters` holds the NPC sheets handed to this user as an extra — `CharacterVersionFull & { characterName: string, event: { id, name } }`, hydrated the same way but read-only, since the user does not own them | List the current user's characters with their versions, plus the NPC versions assigned to them as an extra |

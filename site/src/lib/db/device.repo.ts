@@ -1,5 +1,5 @@
 import { eq, inArray } from 'drizzle-orm';
-import { DEVICE_ROLE_NAMES } from '$lib/types/device';
+import { DEVICE_ROLE_NAMES, isDeviceRoleName } from '$lib/types/device';
 import type {
 	Device,
 	DeviceRole,
@@ -8,7 +8,7 @@ import type {
 	EditDevice,
 	NewDevice
 } from '$lib/types/device';
-import { db } from './mysql';
+import { db, type Database } from './mysql';
 import {
 	characterVersions,
 	deviceAguesGuard,
@@ -19,6 +19,19 @@ import {
 	devices,
 	missionPrinter
 } from './schema';
+
+/** Whatever `db.transaction`'s callback is handed — usable anywhere `db` itself is. */
+type DbClient = Database | Parameters<Parameters<Database['transaction']>[0]>[0];
+
+/**
+ * Thrown to roll back the transaction in `create` when a role fails to attach — returning a
+ * failure value from inside `db.transaction` would still commit whatever ran before it.
+ */
+class RoleAttachFailure extends Error {
+	constructor(public reason: Extract<SaveResult, { ok: false }>['reason']) {
+		super(reason);
+	}
+}
 
 /**
  * The device registry.
@@ -54,11 +67,27 @@ class DeviceRepo {
 		return { ...row, roles: roles.get(row.id) ?? [] };
 	}
 
-	public async create({ name, uid }: NewDevice): Promise<SaveResult> {
+	public async create({ name, uid, roles = [] }: NewDevice): Promise<SaveResult> {
 		if (await this.uidTaken(uid)) return { ok: false, reason: 'uid-taken' };
-		const [result] = await db.insert(devices).values({ name: name.trim(), uid: uid.trim() });
-		if (result.insertId == null) return { ok: false, reason: 'uid-taken' };
-		return { ok: true, id: result.insertId };
+		try {
+			const id = await db.transaction(async (tx) => {
+				const [result] = await tx.insert(devices).values({ name: name.trim(), uid: uid.trim() });
+				if (result.insertId == null) throw new RoleAttachFailure('uid-taken');
+				for (const role of roles) {
+					const attached = await this.attachRoleTx(tx, result.insertId, role);
+					if (attached.ok === false) {
+						// Impossible here: the device was just created in this same transaction.
+						if (attached.reason === 'device-not-found') throw new RoleAttachFailure('uid-taken');
+						throw new RoleAttachFailure(attached.reason);
+					}
+				}
+				return result.insertId;
+			});
+			return { ok: true, id };
+		} catch (err) {
+			if (err instanceof RoleAttachFailure) return { ok: false, reason: err.reason };
+			throw err;
+		}
 	}
 
 	public async edit({ id, name, uid }: EditDevice): Promise<SaveResult> {
@@ -91,21 +120,34 @@ class DeviceRepo {
 			.from(devices)
 			.where(eq(devices.id, deviceId));
 		if (device == null) return { ok: false, reason: 'device-not-found' };
+		return this.attachRoleTx(db, deviceId, role);
+	}
 
+	/**
+	 * The actual per-role validation and upsert, against whatever client it's handed — `db` for a
+	 * standalone attach, or a transaction's `tx` so `create` can attach initial roles atomically
+	 * with the insert. Does not check the device exists; callers that need that guarantee (or get
+	 * it for free, like `create` inserting in the same transaction) do it themselves.
+	 */
+	private async attachRoleTx(
+		client: DbClient,
+		deviceId: number,
+		role: DeviceRole
+	): Promise<AttachRoleResult> {
 		switch (role.role) {
 			case 'port':
-				await db
+				await client
 					.insert(devicePort)
 					.values({ deviceId })
 					.onDuplicateKeyUpdate({ set: { deviceId } });
 				return { ok: true };
 			case 'aguesguard': {
-				const [version] = await db
+				const [version] = await client
 					.select({ id: characterVersions.id })
 					.from(characterVersions)
 					.where(eq(characterVersions.id, role.characterVersionId));
 				if (version == null) return { ok: false, reason: 'character-version-not-found' };
-				await db
+				await client
 					.insert(deviceAguesGuard)
 					.values({ deviceId, characterVersionId: role.characterVersionId })
 					.onDuplicateKeyUpdate({ set: { characterVersionId: role.characterVersionId } });
@@ -115,25 +157,25 @@ class DeviceRepo {
 				// A Game watches a Port, and the database cannot say "this id must also be in
 				// Device_Port" — so the check lives here.
 				if (role.portDeviceId === deviceId) return { ok: false, reason: 'port-is-self' };
-				const [port] = await db
+				const [port] = await client
 					.select({ deviceId: devicePort.deviceId })
 					.from(devicePort)
 					.where(eq(devicePort.deviceId, role.portDeviceId));
 				if (port == null) return { ok: false, reason: 'not-a-port' };
-				await db
+				await client
 					.insert(deviceGame)
 					.values({ deviceId, portDeviceId: role.portDeviceId })
 					.onDuplicateKeyUpdate({ set: { portDeviceId: role.portDeviceId } });
 				return { ok: true };
 			}
 			case 'printer':
-				await db
+				await client
 					.insert(devicePrinter)
 					.values({ deviceId, printsAvailable: role.printsAvailable })
 					.onDuplicateKeyUpdate({ set: { printsAvailable: role.printsAvailable } });
 				return { ok: true };
 			case 'light':
-				await db
+				await client
 					.insert(deviceLight)
 					.values({ deviceId, endpoint: role.endpoint, fixture: role.fixture })
 					.onDuplicateKeyUpdate({ set: { endpoint: role.endpoint, fixture: role.fixture } });
@@ -242,7 +284,12 @@ export type {
 	PrinterRole
 } from '$lib/types/device';
 
-export type SaveResult = { ok: true; id: number } | { ok: false; reason: 'uid-taken' };
+export type SaveResult =
+	| { ok: true; id: number }
+	| {
+			ok: false;
+			reason: 'uid-taken' | 'character-version-not-found' | 'not-a-port' | 'port-is-self';
+	  };
 
 export type AttachRoleResult =
 	| { ok: true }
@@ -300,6 +347,24 @@ export function parseDeviceRole(role: DeviceRoleName, body: unknown): DeviceRole
 			return { role: 'light', endpoint, fixture };
 		}
 	}
+}
+
+/**
+ * Parses `body` as a set of initial roles for `PUT /api/devices` — each entry carries its own
+ * `role` field, unlike `parseDeviceRole`, whose role name comes from the URL instead.
+ */
+export function parseDeviceRoles(body: unknown): DeviceRole[] | null {
+	if (Array.isArray(body) === false) return null;
+	const roles: DeviceRole[] = [];
+	for (const entry of body) {
+		if (typeof entry !== 'object' || entry === null || 'role' in entry === false) return null;
+		const { role } = entry as { role: unknown };
+		if (isDeviceRoleName(role) === false) return null;
+		const parsed = parseDeviceRole(role, entry);
+		if (parsed == null) return null;
+		roles.push(parsed);
+	}
+	return roles;
 }
 
 function readInt(body: object, key: string): number | null {

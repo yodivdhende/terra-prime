@@ -3,6 +3,7 @@
 	import type { DeviceDraft, DeviceRole, DeviceRoleName, DeviceSummary } from '$lib/types/device';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 	import { isWebSerialSupported, programUid } from '$lib/utils/web-serial';
+	import Hint from '$lib/components/hint.svelte';
 
 	let { device = $bindable<DeviceDraft>() }: { device: DeviceDraft } = $props();
 
@@ -27,8 +28,9 @@
 	const webSerial = isWebSerialSupported();
 
 	/**
-	 * Roles are their own sub-resource, so a checkbox on an unsaved device has nothing to POST to.
-	 * Editing them waits until the device exists.
+	 * Roles are their own sub-resource once the device exists, so an unsaved device can't POST to
+	 * them yet. Before save, toggling a role just edits the local draft in place — the parent page
+	 * sends `device.roles` along with the initial create request instead.
 	 */
 	const saved = $derived(device.id != null);
 
@@ -51,13 +53,14 @@
 
 	async function toggleRole(name: DeviceRoleName, attach: boolean) {
 		if (attach === false) {
-			await detachRole(name);
+			if (saved) await detachRole(name);
+			else removeDraftRole(name);
 			return;
 		}
 		// Sensible starting values; the revealed fields then edit the role in place.
 		switch (name) {
 			case 'port':
-				await attachRole(name, {});
+				await applyRole({ role: name });
 				break;
 			case 'aguesguard': {
 				const characterVersionId = characterVersions[0]?.id;
@@ -65,7 +68,7 @@
 					TOAST_MANAGER.warning('There are no character versions to load onto an AguesGuard');
 					return;
 				}
-				await attachRole(name, { characterVersionId });
+				await applyRole({ role: name, characterVersionId });
 				break;
 			}
 			case 'game': {
@@ -74,16 +77,34 @@
 					TOAST_MANAGER.warning('Register a port before making a device a game');
 					return;
 				}
-				await attachRole(name, { portDeviceId });
+				await applyRole({ role: name, portDeviceId });
 				break;
 			}
 			case 'printer':
-				await attachRole(name, { printsAvailable: 0 });
+				await applyRole({ role: name, printsAvailable: 0 });
 				break;
 			case 'light':
-				await attachRole(name, { endpoint: '', fixture: '' });
+				await applyRole({ role: name, endpoint: '', fixture: '' });
 				break;
 		}
+	}
+
+	/** Attaches the role over the network once the device is saved; otherwise edits the draft. */
+	async function applyRole(role: DeviceRole) {
+		if (saved === false) {
+			setDraftRole(role);
+			return;
+		}
+		const { role: name, ...body } = role;
+		await attachRole(name, body);
+	}
+
+	function setDraftRole(role: DeviceRole) {
+		device.roles = [...device.roles.filter((existing) => existing.role !== role.role), role];
+	}
+
+	function removeDraftRole(name: DeviceRoleName) {
+		device.roles = device.roles.filter((role) => role.role !== name);
 	}
 
 	async function attachRole(name: DeviceRoleName, body: Record<string, unknown>) {
@@ -157,107 +178,103 @@
 		{/if}
 	</div>
 	{#if webSerial === false}
-		<p class="hint">
-			Programming over USB needs Web Serial — use desktop Chrome or Edge, or transcribe the uid off
-			the hardware by hand.
-		</p>
+		<Hint
+			text="Programming over USB needs Web Serial — use desktop Chrome or Edge, or transcribe the uid off the hardware by hand."
+		/>
 	{/if}
 
 	<fieldset>
 		<legend>Roles</legend>
-		<p class="hint">
-			A device is whatever its roles say it is, and it may hold several. A device with no roles is
-			unclassified, which is fine. A port carries no behaviour of its own — what happens when an
-			AguesGuard docks with it is decided by whoever listens for the event.
-		</p>
-		{#if saved === false}
-			<p class="hint">Roles can be attached once the device is saved.</p>
-		{:else}
-			{#each DEVICE_ROLE_NAMES as name (name)}
-				{@const role = roleOf(name)}
-				<div class="role">
-					<label class="role-toggle">
-						<input
-							type="checkbox"
-							checked={role != null}
-							onchange={(event) => toggleRole(name, event.currentTarget.checked)}
-						/>
-						{ROLE_LABELS[name]}
-					</label>
+		<Hint
+			text="A device is whatever its roles say it is, and it may hold several. A device with no roles is unclassified, which is fine. A port carries no behaviour of its own — what happens when an AguesGuard docks with it is decided by whoever listens for the event."
+		/>
+		{#each DEVICE_ROLE_NAMES as name (name)}
+			{@const role = roleOf(name)}
+			<div class="role">
+				<label class="role-toggle">
+					<input
+						type="checkbox"
+						checked={role != null}
+						onchange={(event) => toggleRole(name, event.currentTarget.checked)}
+					/>
+					{ROLE_LABELS[name]}
+				</label>
 
-					{#if role?.role === 'aguesguard'}
-						<div class="role-fields">
-							<label for="device-character-version">character version</label>
-							<select
-								id="device-character-version"
-								value={role.characterVersionId}
-								onchange={(event) =>
-									attachRole('aguesguard', {
-										characterVersionId: Number(event.currentTarget.value)
-									})}
-							>
-								{#each characterVersions as version (version.id)}
-									<option value={version.id}>
-										{version.characterName} — {version.name} ({version.ownerName})
-									</option>
-								{/each}
-							</select>
-						</div>
-					{:else if role?.role === 'game'}
-						<div class="role-fields">
-							<label for="device-port">port</label>
-							<select
-								id="device-port"
-								value={role.portDeviceId}
-								onchange={(event) =>
-									attachRole('game', { portDeviceId: Number(event.currentTarget.value) })}
-							>
-								{#each ports.filter(({ id }) => id !== device.id) as port (port.id)}
-									<option value={port.id}>{port.name} ({port.uid})</option>
-								{/each}
-							</select>
-						</div>
-					{:else if role?.role === 'printer'}
-						<div class="role-fields">
-							<label for="device-prints-available">prints available</label>
-							<input
-								id="device-prints-available"
-								type="number"
-								min="0"
-								value={role.printsAvailable}
-								onchange={(event) =>
-									attachRole('printer', { printsAvailable: Number(event.currentTarget.value) })}
-							/>
-						</div>
-					{:else if role?.role === 'light'}
-						<div class="role-fields">
-							<label for="device-endpoint">endpoint</label>
-							<input
-								id="device-endpoint"
-								type="text"
-								value={role.endpoint}
-								onchange={(event) =>
-									attachRole('light', {
-										endpoint: event.currentTarget.value,
-										fixture: role.fixture
-									})}
-							/>
-							<label for="device-fixture">fixture</label>
-							<input
-								id="device-fixture"
-								type="text"
-								value={role.fixture}
-								onchange={(event) =>
-									attachRole('light', {
-										endpoint: role.endpoint,
-										fixture: event.currentTarget.value
-									})}
-							/>
-						</div>
-					{/if}
-				</div>
-			{/each}
-		{/if}
+				{#if role?.role === 'aguesguard'}
+					<div class="role-fields">
+						<label for="device-character-version">character version</label>
+						<select
+							id="device-character-version"
+							value={role.characterVersionId}
+							onchange={(event) =>
+								applyRole({
+									role: 'aguesguard',
+									characterVersionId: Number(event.currentTarget.value)
+								})}
+						>
+							{#each characterVersions as version (version.id)}
+								<option value={version.id}>
+									{version.characterName} — {version.name} ({version.ownerName})
+								</option>
+							{/each}
+						</select>
+					</div>
+				{:else if role?.role === 'game'}
+					<div class="role-fields">
+						<label for="device-port">port</label>
+						<select
+							id="device-port"
+							value={role.portDeviceId}
+							onchange={(event) =>
+								applyRole({ role: 'game', portDeviceId: Number(event.currentTarget.value) })}
+						>
+							{#each ports.filter(({ id }) => id !== device.id) as port (port.id)}
+								<option value={port.id}>{port.name} ({port.uid})</option>
+							{/each}
+						</select>
+					</div>
+				{:else if role?.role === 'printer'}
+					<div class="role-fields">
+						<label for="device-prints-available">prints available</label>
+						<input
+							id="device-prints-available"
+							type="number"
+							min="0"
+							value={role.printsAvailable}
+							onchange={(event) =>
+								applyRole({ role: 'printer', printsAvailable: Number(event.currentTarget.value) })}
+						/>
+					</div>
+				{:else if role?.role === 'light'}
+					<div class="role-fields">
+						<label for="device-endpoint">endpoint</label>
+						<input
+							id="device-endpoint"
+							type="text"
+							value={role.endpoint}
+							onchange={(event) =>
+								applyRole({
+									role: 'light',
+									endpoint: event.currentTarget.value,
+									fixture: role.fixture
+								})}
+						/>
+						<label for="device-fixture">fixture</label>
+						<input
+							id="device-fixture"
+							type="text"
+							value={role.fixture}
+							onchange={(event) =>
+								applyRole({
+									role: 'light',
+									endpoint: role.endpoint,
+									fixture: event.currentTarget.value
+								})}
+						/>
+					</div>
+				{/if}
+			</div>
+		{/each}
 	</fieldset>
 </main>
 
@@ -293,12 +310,6 @@
 		letter-spacing: 0.05em;
 		opacity: 0.6;
 		padding: 0 4px;
-	}
-
-	.hint {
-		margin: 0;
-		font-size: 0.8rem;
-		opacity: 0.6;
 	}
 
 	.role {

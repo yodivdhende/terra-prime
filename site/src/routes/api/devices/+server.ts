@@ -1,4 +1,4 @@
-import { deviceRepo, isNewDevice } from '$lib/db/device.repo';
+import { deviceRepo, isNewDevice, parseDeviceRoles } from '$lib/db/device.repo';
 import { BadRequest } from '$lib/types/errors';
 import { UserRole } from '$lib/types/roles';
 import { getSessionToken } from '$lib/utils/cookies';
@@ -17,8 +17,17 @@ export const PUT: RequestHandler = async ({ cookies, request }) => {
 		await authGuard(getSessionToken(cookies), [UserRole.admin]);
 		const device = await request.json();
 		if (isNewDevice(device) === false) throw new BadRequest();
-		const result = await deviceRepo.create(device);
-		if (result.ok === false) throw new BadRequest('uid is already registered');
+		const roles = parseDeviceRoles(device.roles ?? []);
+		if (roles == null) throw new BadRequest('invalid roles');
+		const result = await deviceRepo.create({ ...device, roles });
+		if (result.ok === false) {
+			if (result.reason === 'character-version-not-found') {
+				throw new BadRequest('character version does not exist');
+			}
+			if (result.reason === 'port-is-self') throw new BadRequest('a game cannot watch itself');
+			if (result.reason === 'not-a-port') throw new BadRequest('device is not a port');
+			throw new BadRequest('uid is already registered');
+		}
 		return json({ id: result.id });
 	});
 };

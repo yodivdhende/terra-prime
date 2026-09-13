@@ -73,6 +73,7 @@
 		flex-direction: column;
 		gap: 8px;
 		padding: 8px;
+		max-width: 400px;
 	}
 
 	.actions {

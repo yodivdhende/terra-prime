@@ -3,6 +3,7 @@ import { characterVersionRepo, type CharacterVersionBare } from '$lib/db/charact
 import { deviceRepo } from '$lib/db/device.repo';
 import { NoAccesRequest, NotFoundRequest, UnAutherizedRequestError } from '$lib/types/errors';
 import { UserRole } from '$lib/types/roles';
+import { setPotentialSessionToken } from '$lib/utils/cookies';
 import { authGuardForUser } from '$lib/utils/request';
 import type { Cookies } from '@sveltejs/kit';
 
@@ -73,7 +74,7 @@ async function resolveForDevice(uid: string): Promise<MyCharacterVersion> {
  * newest owned version is used, which is the one a player has just been building.
  */
 async function resolveForSession(cookies: Cookies, url: URL): Promise<MyCharacterVersion> {
-	const token = cookies.get('session-token');
+	const token = setPotentialSessionToken(cookies);
 	if (token == null) throw new UnAutherizedRequestError();
 	const { userId } = await authGuardForUser(token, [UserRole.user]);
 

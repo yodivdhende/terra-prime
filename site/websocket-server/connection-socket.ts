@@ -120,6 +120,11 @@ export type WebStatusCommandInfo = {
 export type CYDStatusCommandInfo = {
 	sessionToken: string;
 	connectionType: 'CYD';
+	/**
+	 * Signal bars, 0 (no link) to 4 (full), mapped from RSSI by the device — see
+	 * `wifiStrengthLevel()` in `cyd/src/connection.cpp`. The device re-sends its status whenever the
+	 * level changes bracket, so this tracks a handheld walking out of range.
+	 */
 	wifiStrength: number;
 };
 export type StatusCommandInfo = WebStatusCommandInfo | CYDStatusCommandInfo;

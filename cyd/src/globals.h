@@ -5,6 +5,13 @@
 #include <Arduino.h>
 #include <XPT2046_Touchscreen.h>
 
+/*Touch screen config*/
+#define XPT2046_IRQ 36 //GPIO driver cảm ứng
+#define XPT2046_MOSI 32
+#define XPT2046_MISO 39
+#define XPT2046_CLK 25
+#define XPT2046_CS 33
+
 extern const uint16_t screenWidth;
 extern const uint16_t screenHeight;
 extern TFT_eSPI tft;

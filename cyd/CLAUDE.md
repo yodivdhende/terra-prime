@@ -14,6 +14,7 @@ Part of the terra-prime monorepo. The web server lives at `../site/` (SvelteKit 
 
 - **PlatformIO** CLI or VS Code extension
 - **Hardware** — ESP32 dev board with 320×240 TFT (ILI9341) and XPT2046 touch controller
+- **Battery** (optional) — dual-18650 "V8" shield with an **INA219** across its raw cell terminals (see Battery & Power Save)
 - **SD card** — FAT-formatted with `/config.json` at the root (see Runtime Config)
 - **SquareLine Studio 1.5.1** — only needed for UI design changes
 
@@ -44,16 +45,18 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
 
 **Boot sequence** (`src/main.cpp`):
 1. `screenSetup()` — init TFT + touch SPI
-2. `setupSD()` — read `/config.json` from SD into globals *(commented out)*
-3. `connectToWifi()` *(commented out)*
-4. `fetchCharacter()` — GET `{apiUrl}my/character`, authenticated as this device *(commented out)*
-5. `webSocketSetup()` — connect to `{domain}:{webSocketPort}/connections` *(commented out)*
-6. `uiSetup()` — init LVGL, register callbacks, call `ui_init()`
+2. `powerSetup()` — init I2C and the INA219 battery sense IC
+3. `setupSD()` — read `/config.json` from SD into globals *(commented out)*
+4. `connectToWifi()` *(commented out)*
+5. `fetchCharacter()` — GET `{apiUrl}my/character`, authenticated as this device *(commented out)*
+6. `webSocketSetup()` — connect to `{domain}:{webSocketPort}/connections` *(commented out)*
+7. `uiSetup()` — init LVGL, register callbacks, call `ui_init()`
 
-**Main loop** runs three handlers:
+**Main loop** runs four handlers:
 - `uiLoop()` — `lv_timer_handler()` every 5 ms
-- `webSocketLoop()` — processes WebSocket frames
+- `webSocketLoop()` — processes WebSocket frames, re-sends `status` when the WiFi bars change
 - `uartSerialLoop()` — reads newline-delimited serial tokens, calls `sendLink()`
+- `powerLoop()` — samples the battery, and sleeps the device once the UI has been idle
 
 **Communication channels:**
 
@@ -63,6 +66,7 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
 | WebSocket | Server → Device | Navigate to screen (`loading`, `loot`, `virus`) |
 | UART Serial | External → Device | Receive tokens, relay via `sendLink()` |
 | SD card | SD ⇄ Device | Load config and the expertise icon pack at boot; store the last answer per `api/my` path for offline use |
+| I2C | Sense IC → Device | INA219 on the battery terminals — pack voltage and current |
 
 WebSocket routing (`src/web-socket.cpp`): incoming `{ "goTo": { "screen": "loading|loot|virus" } }` calls the corresponding `Ui*Setup()`.
 
@@ -84,7 +88,9 @@ WebSocket routing (`src/web-socket.cpp`): incoming `{ "goTo": { "screen": "loadi
 | `src/character.h/cpp` | `Character` struct, `fetchCharacter()` |
 | `src/sd-reader.h/cpp` | `setupSD()` + `readConfig()` — parses `/config.json` into globals |
 | `src/uart-interface.h/cpp` | `uartSerialLoop()` — reads serial tokens |
-| `src/connection.h/cpp` | `connectToWifi()` |
+| `src/connection.h/cpp` | `connectToWifi()`, `reconnectWifi()`, `wifiRssi()` / `wifiStrengthLevel()` |
+| `src/power.h/cpp` | INA219 battery read, charge curve, idle → light sleep, wake on touch |
+| `src/ui-status-bar.h/cpp` | `uiStatusBarInit()` — battery and WiFi icons in every screen's header |
 | `src/log.h/cpp` | `logWhite/logGreen/logRed()` — color output to Serial + TFT |
 | `src/ui-downloading.cpp` | `UiLoadingSetup()` — animated progress bar |
 | `src/ui-loot.cpp` | `UiLootSetup()` |
@@ -114,6 +120,49 @@ Screen *contents* that come from the API live outside `src/ui/` too. `uiSetup()`
 `ui<Screen>Init()` per data-backed screen after `ui_init()`; each hangs its own list under the
 generated header and title and refills it on `LV_EVENT_SCREEN_LOADED`, so a value an admin changes
 mid-event shows up the next time the player opens that screen.
+
+The header's status icons work the same way: SquareLine exports one static frame each, and
+`uiStatusBarInit()` (`src/ui-status-bar.cpp`) gives them their state on an `lv_timer` — reaching the
+icons through `ui_comp_get_child(header, UI_COMP_HEADER_*)` rather than editing generated code.
+
+---
+
+## Battery & Power Save
+
+Both live in `src/power.cpp`.
+
+**Battery.** The prop runs off a dual-18650 "V8" shield, whose two cells sit in *parallel* behind a
+5V boost converter. An **INA219** across the shield's **raw cell terminals** — ahead of the booster,
+where the voltage still tracks charge — reports bus voltage and current over I2C:
+
+| INA219 | goes to |
+|---|---|
+| Vin+ | cell pack + (the shield's raw battery terminal) |
+| Vin- | the shield's battery input, i.e. the load side |
+| VCC / GND | 3V3 / GND |
+| SDA | GPIO 27 |
+| SCL | GPIO 22 |
+
+GPIO 27 and 22 are broken out on the CYD's spare connectors and are clear of both SPI buses (the
+display and the XPT2046). No ADC pin is used. Wired as above, current reads **positive while
+discharging**, negative while charging.
+
+Voltage alone would read a handheld as half-empty the moment its backlight came on, so the current
+reading is used to add the I·R sag back before the voltage is looked up in a single-cell 18650
+discharge curve. If no INA219 answers, readings come back `metered = false`, the status bar shows
+`--`, and everything else runs unchanged.
+
+**Power save.** After `POWER_SAVE_IDLE_MS` (2 min) without a touch — measured with LVGL's own
+inactivity timer — the backlight goes out, the radio is taken down, and the ESP32 enters **light**
+sleep. Light, not deep: RAM and the call stack survive, so the screen the player was on comes back
+already built. The XPT2046's IRQ line (GPIO 36) is the `ext0` wake source; on wake the backlight
+comes back, LVGL's inactivity is reset, and `reconnectWifi()` re-associates if the device was
+online — the WebSocket client reconnects itself from there.
+
+Re-associating takes a few seconds, so a screen opened right after a wake may find no network. That
+is what the SD cache is for: `apiGet()` serves the stored answer and the screen fills anyway.
+
+`powerSaveSetIdleTimeout(0)` disables sleeping, which is what you want on the bench.
 
 ---
 
@@ -192,8 +241,11 @@ The cache is disposable. Deleting `/cache` costs one round trip per screen.
 - **SquareLine Studio export path** may be set to an absolute Windows path. Update it in SquareLine preferences when exporting from a different machine.
 - **TFT rotation:** `screenSetup()` sets rotation 0 (portrait); `uiSetup()` overrides to rotation 1 (landscape) for LVGL. Don't change the `uiSetup()` rotation without also updating LVGL display dimensions.
 - **UART unlink is commented out.** `sendLink(token, false)` is never called — tokens are never automatically unlinked.
-- **`connectToWifi()` blocks indefinitely** — no timeout if the network is unreachable.
+- **`connectToWifi()` blocks indefinitely** — no timeout if the network is unreachable. `reconnectWifi(timeoutMs)` is the bounded one, used after a wake.
 - **`setupSD()` mounts at 80 MHz**, which is past the SPI-mode SD ceiling of 40 MHz. It predates
   the offline cache, which depends on the card mounting, so it is worth checking on hardware — if
   the card is unreliable, this is the first thing to lower.
+- **The device sleeps after 2 minutes idle.** It wakes on touch, but a bench board with nothing touching it will go dark — call `powerSaveSetIdleTimeout(0)` while developing.
+- **Light sleep drops the WiFi link on purpose.** The radio cannot stay associated through it; `powerLoop()` re-associates on wake, so anything holding a socket must tolerate a reconnect.
+- **Battery readings need the INA219 on the *raw* cell terminals.** Metering the shield's boosted 5V output would read a flat 5V until the converter gave up.
 - **`logRed/logGreen/logWhite` write to TFT directly.** After LVGL takes over, raw TFT writes conflict with LVGL rendering. Code that runs from a screen logs to `Serial` instead — see `src/api.cpp`.

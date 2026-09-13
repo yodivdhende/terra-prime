@@ -6,6 +6,7 @@
 #include <globals.h>
 #include <character.h>
 #include <ui-expertise.h>
+#include <ui-implants.h>
 #include <XPT2046_Touchscreen.h>
 
 /*Don't forget to set Sketchbook location in File/Preferences to the path of your UI project (the parent foder of this INO file)*/
@@ -120,6 +121,7 @@ void uiSetup()
     // Screen contents that come from the API live outside the generated `ui/`, and are wired up
     // once the generated objects exist.
     uiExpertiseInit();
+    uiImplantsInit();
 
     Serial.println("Setup done");
 }

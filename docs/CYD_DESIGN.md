@@ -179,8 +179,10 @@ card to rewrite. `/api/my/**` serves a player's browser over the session cookie 
 Every answer is also written to the SD card, and every failed request falls back to the last one
 stored for that path, so a prop that loses WiFi mid-event keeps showing the player their own sheet.
 Each stored body records the character version it belongs to and is refused if that no longer
-matches, so a re-bound handheld never falls back to the previous player's numbers. The screens mark
-a stored body as stale rather than passing it off as current.
+matches, so a re-bound handheld never falls back to the previous player's numbers. Whether an answer
+came from the card is reported back to the caller but not drawn on the screens: the header's WiFi
+icon is where "these values are old" belongs, and nothing drives it yet — see
+[§7.4](#7-known-architecture-gaps).
 
 ### 5.3 Link / loot mini-game
 
@@ -256,6 +258,12 @@ so they're visible, not silently worked around.
    self-asserted identity the WebSocket channel has, where `sessionToken` in the `status` message
    is taken at face value. Closing it means a per-device secret on `Devices` and signing or
    presenting it per request; nothing does that yet.
+
+4. **Nothing tells the player the values are old.** The device falls back to the copy on its SD
+   card when a request fails, and `ApiResult.stale` marks that body as stored rather than live, but
+   no screen shows it. The header's WiFi icon is the intended home for it and is a static image
+   today, as is the header's clock. Until one of them is driven, a player cannot tell a cached
+   sheet from a current one.
 
 ---
 

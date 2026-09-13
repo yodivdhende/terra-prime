@@ -147,8 +147,10 @@ server prefers the device UID when both arrive.
 
 `apiGet()` writes every answer to `/cache/<path>.json` on the same card and falls back to it when a
 request fails, so losing WiFi mid-event leaves the player's own sheet on screen instead of an error.
-A cached body is flagged stale and the screens say "Offline - showing the last stored values" above
-the values, so nobody reads them as current.
+
+`ApiResult.stale` says whether a body came from the card rather than the network. The screens do not
+surface it — the header's WiFi icon is where that belongs, and it is not wired to anything yet. Until
+it is, stored values are shown without any marking.
 
 Each file is a header line — the cache format version, a tab, and the character version the body
 belongs to — followed by the body. That version is checked on read: an AguesGuard re-bound to

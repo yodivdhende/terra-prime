@@ -78,7 +78,13 @@ export const characterVersionImplants = mysqlTable(
 		id: int('Id').autoincrement().primaryKey(),
 		characterVersionId: int('CharacterVersion'),
 		implantId: int('Implant'),
-		slot: int('Slot').notNull().default(1)
+		slot: int('Slot').notNull().default(1),
+		/**
+		 * What is left of this fitted implant's charges. Counted down by the player activating it
+		 * and only ever put back by an admin — see `Implants.MaxCharges` for the ceiling, and
+		 * `character_version.repo.ts` for the two mutations that move it.
+		 */
+		chargesRemaining: int('ChargesRemaining').notNull().default(0)
 	},
 	(table) => [
 		index('CharacterVersion').on(table.characterVersionId),

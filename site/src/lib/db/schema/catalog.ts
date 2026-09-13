@@ -73,5 +73,11 @@ export const implants = mysqlTable('Implants', {
 	name: varchar('Name', { length: 255 }).notNull(),
 	description: text('Description').notNull(),
 	cost: int('Cost').notNull().default(0),
+	/**
+	 * How many times a fitted instance of this implant can be activated before an admin recharges
+	 * it. `0` — the default — means the implant is not a charged one at all, which is what every
+	 * implant written before charges existed stays.
+	 */
+	maxCharges: int('MaxCharges').notNull().default(0),
 	characterAccess: mysqlEnum('CharacterAccess', characterAccess).notNull().default('all')
 });

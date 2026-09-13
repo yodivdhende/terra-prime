@@ -3063,7 +3063,7 @@
                   {
                     "nid": 10,
                     "strtype": "OBJECT/Name",
-                    "strval": "SkillsButtonImage",
+                    "strval": "ExpertiseButtonImage",
                     "InheritedType": 10
                   },
                   {
@@ -3221,7 +3221,7 @@
                   {
                     "nid": 10,
                     "strtype": "OBJECT/Name",
-                    "strval": "SkillButtonLabel",
+                    "strval": "ExpertiseButtonLabel",
                     "InheritedType": 10
                   },
                   {
@@ -3335,7 +3335,7 @@
                   {
                     "nid": 1030,
                     "strtype": "LABEL/Text",
-                    "strval": "Skills",
+                    "strval": "Expertise",
                     "InheritedType": 10
                   },
                   {
@@ -3372,7 +3372,7 @@
               {
                 "nid": 10,
                 "strtype": "OBJECT/Name",
-                "strval": "SkillsButton",
+                "strval": "ExpertiseButton",
                 "InheritedType": 10
               },
               {
@@ -9556,7 +9556,7 @@
               {
                 "nid": 10,
                 "strtype": "OBJECT/Name",
-                "strval": "SkillTitle",
+                "strval": "ExpertiseTitle",
                 "InheritedType": 10
               },
               {
@@ -9670,7 +9670,7 @@
               {
                 "nid": 1030,
                 "strtype": "LABEL/Text",
-                "strval": "Skills",
+                "strval": "Expertise",
                 "InheritedType": 10
               },
               {
@@ -9695,7 +9695,7 @@
           {
             "nid": 10,
             "strtype": "OBJECT/Name",
-            "strval": "Skills",
+            "strval": "Expertise",
             "InheritedType": 10
           },
           {

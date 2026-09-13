@@ -31,10 +31,10 @@ extern "C" {
 void ui_Home_screen_init(void);
 extern lv_obj_t * ui_Home;
 extern lv_obj_t * ui_Header;
-void ui_event_SkillsButton(lv_event_t * e);
-extern lv_obj_t * ui_SkillsButton;
-extern lv_obj_t * ui_SkillsButtonImage;
-extern lv_obj_t * ui_SkillButtonLabel;
+void ui_event_ExpertiseButton(lv_event_t * e);
+extern lv_obj_t * ui_ExpertiseButton;
+extern lv_obj_t * ui_ExpertiseButtonImage;
+extern lv_obj_t * ui_ExpertiseButtonLabel;
 void ui_event_ImplantsButton(lv_event_t * e);
 extern lv_obj_t * ui_ImplantsButton;
 extern lv_obj_t * ui_ImplantButtonImage;
@@ -69,11 +69,11 @@ extern lv_obj_t * ui_DangerLabel;
 extern lv_obj_t * ui_Panel1;
 // CUSTOM VARIABLES
 
-// SCREEN: ui_Skills
-void ui_Skills_screen_init(void);
-extern lv_obj_t * ui_Skills;
+// SCREEN: ui_Expertise
+void ui_Expertise_screen_init(void);
+extern lv_obj_t * ui_Expertise;
 extern lv_obj_t * ui_Header4;
-extern lv_obj_t * ui_SkillTitle;
+extern lv_obj_t * ui_ExpertiseTitle;
 // CUSTOM VARIABLES
 
 // SCREEN: ui_Implants

@@ -10,11 +10,15 @@
 #include <async-fetch.h>
 #include <ui-expertise.h>
 #include <ui-implants.h>
+#include <ui-status-bar.h>
 #include <XPT2046_Touchscreen.h>
 
 /*Don't forget to set Sketchbook location in File/Preferences to the path of your UI project (the parent foder of this INO file)*/
-const uint16_t screenWidth  = 320;
-const uint16_t screenHeight = 240;
+// The display buffer below is sized at compile time, which the shared `extern const`
+// screenWidth/screenHeight (`globals.cpp`) cannot give within this translation unit — hence these
+// same-value, differently-named compile-time copies used only for that one enum.
+#define LV_DISPLAY_WIDTH  320
+#define LV_DISPLAY_HEIGHT 240
 
 /*Loading sreen*/
 
@@ -24,7 +28,7 @@ const uint16_t screenHeight = 240;
 /*Change to your screen resolution*/
 enum
 {
-    SCREENBUFFER_SIZE_PIXELS = screenWidth * screenHeight / 10
+    SCREENBUFFER_SIZE_PIXELS = LV_DISPLAY_WIDTH * LV_DISPLAY_HEIGHT / 10
 };
 static lv_color_t buf[SCREENBUFFER_SIZE_PIXELS];
 
@@ -143,6 +147,9 @@ void uiSetup()
     // once the generated objects exist.
     uiExpertiseInit();
     uiImplantsInit();
+    // The header's battery and WiFi icons are the same: generated as one static frame, given their
+    // state from outside.
+    uiStatusBarInit();
 
     // The generated header ships with a placeholder label; fill it in from the character fetched
     // at boot rather than editing generated code.

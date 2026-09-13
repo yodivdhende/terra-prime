@@ -14,6 +14,7 @@ Part of the terra-prime monorepo. The web server lives at `../site/` (SvelteKit 
 
 - **PlatformIO** CLI or VS Code extension
 - **Hardware** — ESP32 dev board with 320×240 TFT (ILI9341) and XPT2046 touch controller
+- **Battery** (optional) — dual-18650 "V8" shield with an **INA219** across its raw cell terminals (see Battery & Power Save)
 - **SD card** — FAT-formatted with `/config.json` at the root (see Runtime Config)
 - **SquareLine Studio 1.5.1** — only needed for UI design changes
 
@@ -44,17 +45,18 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
 
 **Boot sequence** (`src/main.cpp`):
 1. `screenSetup()` — init TFT + touch SPI, **portrait**
-2. `bootScreenInit()` — draw the title and every step as pending, **straight to the panel**
-3. `runBootSequence()` (`src/boot.cpp`) runs the five steps, marking each as it goes:
+2. `powerSetup()` — init I2C and the INA219 battery sense IC
+3. `bootScreenInit()` — draw the title and every step as pending, **straight to the panel**
+4. `runBootSequence()` (`src/boot.cpp`) runs the five steps, marking each as it goes:
    1. `setupSD()` — mount the card, parse `/config.json` into globals
    2. `connectToWifi()` — give up after `wifiTimeout` seconds
    3. `fetchCharacter()` — GET `{apiUrl}my/character`, authenticated as this device
    4. `prefetchDetails()` — GET `my/expertise` and `my/implants` to warm the SD cache for those
       screens; best-effort, so it always reports OK even offline
    5. `webSocketSetup()` — configure the client; it connects asynchronously from `loop()`
-4. All passed → hold ~1.2s so the finished list can be read, then `uiSetup()` (LVGL, `ui_init()`,
+5. All passed → hold ~1.2s so the finished list can be read, then `uiSetup()` (LVGL, `ui_init()`,
    `uiExpertiseInit()`, `uiImplantsInit()`), which turns the panel landscape and repaints it with Home
-5. Any failure → `bootScreenHalt()` and `setup()` returns. `uiSetup()` is never reached, so the boot
+6. Any failure → `bootScreenHalt()` and `setup()` returns. `uiSetup()` is never reached, so the boot
    screen and the failing step's `logRed` line stay on the panel
 
 **Boot runs portrait, the UI runs landscape.** The long edge vertical is 20 lines of text against
@@ -74,11 +76,13 @@ The step table in `src/boot.h`/`boot.cpp` is the single source for both the sequ
 rows, so a new step cannot be added to one and missed by the other. `boot.cpp` knows nothing about
 how progress is displayed — it takes an observer.
 
-**Main loop** does nothing at all after a failed boot: LVGL was never initialised, the WebSocket
-client may never have been begun, and the config naming the server may never have been read. The
-boot screen needs no upkeep — it is drawn on the panel, not rendered. When boot succeeded:
+**Main loop** runs `powerLoop()` unconditionally — it only touches the I2C battery IC and the
+radio's power mode, neither of which depends on LVGL, the WebSocket client, or the boot screen — then
+does nothing else at all after a failed boot: LVGL was never initialised, the WebSocket client may
+never have been begun, and the config naming the server may never have been read. The boot screen
+needs no upkeep — it is drawn on the panel, not rendered. When boot succeeded, it also runs:
 - `uiLoop()` — `lv_timer_handler()` every 5 ms
-- `webSocketLoop()` — processes WebSocket frames
+- `webSocketLoop()` — processes WebSocket frames, re-sends `status` when the WiFi bars change
 - `uartSerialLoop()` — reads newline-delimited serial tokens, calls `sendLink()`
 
 **Communication channels:**
@@ -89,6 +93,7 @@ boot screen needs no upkeep — it is drawn on the panel, not rendered. When boo
 | WebSocket | Server → Device | Navigate to screen (`loading`, `loot`, `virus`) |
 | UART Serial | External → Device | Receive tokens, relay via `sendLink()` |
 | SD card | SD ⇄ Device | Load config and the expertise icon pack at boot; store the last answer per `api/my` path for offline use |
+| I2C | Sense IC → Device | INA219 on the battery terminals — pack voltage and current |
 
 WebSocket routing (`src/web-socket.cpp`): incoming `{ "goTo": { "screen": "loading|loot|virus" } }` calls the corresponding `Ui*Setup()`.
 
@@ -115,7 +120,9 @@ naming the step and the reason.
 | `src/character.h/cpp` | `Character` struct, `fetchCharacter()` |
 | `src/sd-reader.h/cpp` | `setupSD()` + `readConfig()` — parses `/config.json` into globals |
 | `src/uart-interface.h/cpp` | `uartSerialLoop()` — reads serial tokens |
-| `src/connection.h/cpp` | `connectToWifi()` |
+| `src/connection.h/cpp` | `connectToWifi()`, `reconnectWifi()`, `wifiRssi()` / `wifiStrengthLevel()` |
+| `src/power.h/cpp` | INA219 battery read, charge curve, idle → light sleep, wake on touch |
+| `src/ui-status-bar.h/cpp` | `uiStatusBarInit()` — battery and WiFi icons in every screen's header |
 | `src/log.h/cpp` | `logWhite/logGreen/logRed()` — Serial, plus the panel until `uiSetup()` calls `logSetTftEnabled(false)` |
 | `src/ui-downloading.cpp` | `UiLoadingSetup()` — animated progress bar |
 | `src/ui-loot.cpp` | `UiLootSetup()` |
@@ -147,6 +154,49 @@ generated header and title and refills it on `LV_EVENT_SCREEN_LOADED`, so a valu
 mid-event shows up the next time the player opens that screen. Expertise and Implants refill in two
 steps — paint from the SD cache immediately, then redraw again if a background network refresh
 turns up something different — see **Offline cache** below.
+
+The header's status icons work the same way: SquareLine exports one static frame each, and
+`uiStatusBarInit()` (`src/ui-status-bar.cpp`) gives them their state on an `lv_timer` — reaching the
+icons through `ui_comp_get_child(header, UI_COMP_HEADER_*)` rather than editing generated code.
+
+---
+
+## Battery & Power Save
+
+Both live in `src/power.cpp`.
+
+**Battery.** The prop runs off a dual-18650 "V8" shield, whose two cells sit in *parallel* behind a
+5V boost converter. An **INA219** across the shield's **raw cell terminals** — ahead of the booster,
+where the voltage still tracks charge — reports bus voltage and current over I2C:
+
+| INA219 | goes to |
+|---|---|
+| Vin+ | cell pack + (the shield's raw battery terminal) |
+| Vin- | the shield's battery input, i.e. the load side |
+| VCC / GND | 3V3 / GND |
+| SDA | GPIO 27 |
+| SCL | GPIO 22 |
+
+GPIO 27 and 22 are broken out on the CYD's spare connectors and are clear of both SPI buses (the
+display and the XPT2046). No ADC pin is used. Wired as above, current reads **positive while
+discharging**, negative while charging.
+
+Voltage alone would read a handheld as half-empty the moment its backlight came on, so the current
+reading is used to add the I·R sag back before the voltage is looked up in a single-cell 18650
+discharge curve. If no INA219 answers, readings come back `metered = false`, the status bar shows
+`--`, and everything else runs unchanged.
+
+**Power save.** After `POWER_SAVE_IDLE_MS` (2 min) without a touch — measured with LVGL's own
+inactivity timer — the backlight goes out, the radio is taken down, and the ESP32 enters **light**
+sleep. Light, not deep: RAM and the call stack survive, so the screen the player was on comes back
+already built. The XPT2046's IRQ line (GPIO 36) is the `ext0` wake source; on wake the backlight
+comes back, LVGL's inactivity is reset, and `reconnectWifi()` re-associates if the device was
+online — the WebSocket client reconnects itself from there.
+
+Re-associating takes a few seconds, so a screen opened right after a wake may find no network. That
+is what the SD cache is for: `apiGet()` serves the stored answer and the screen fills anyway.
+
+`powerSaveSetIdleTimeout(0)` disables sleeping, which is what you want on the bench.
 
 ---
 
@@ -304,3 +354,9 @@ and doing the `cacheWrite()`/redraw from `uiLoop()` sidesteps this rather than n
   that calls `reattachSd()` on entry and `reattachTouch()` on exit, since it touches the card while
   the UI runs. Both `begin()`s are internally idempotent (`SDFS`'s `_pdrv`, `SPIClass`'s `_spi`), so
   reclaiming either side needs the matching `end()` first or the reattach silently no-ops.
+- **`reconnectWifi(timeoutMs)` is the bounded reconnect used after a wake** — the boot step's
+  `connectToWifi()` already gives up after `wifiTimeout` seconds, but re-associating coming out of
+  power save is a separate call with its own deadline.
+- **The device sleeps after 2 minutes idle.** It wakes on touch, but a bench board with nothing touching it will go dark — call `powerSaveSetIdleTimeout(0)` while developing.
+- **Light sleep drops the WiFi link on purpose.** The radio cannot stay associated through it; `powerLoop()` re-associates on wake, so anything holding a socket must tolerate a reconnect.
+- **Battery readings need the INA219 on the *raw* cell terminals.** Metering the shield's boosted 5V output would read a flat 5V until the converter gave up.

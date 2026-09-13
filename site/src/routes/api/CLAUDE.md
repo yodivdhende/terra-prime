@@ -232,6 +232,28 @@ browser to hardware, no server round-trip.
 
 ---
 
+## Realtime
+
+The control room's live view of the fleet. The browser does **not** connect to the MQTT broker: it
+streams from the site, which runs the bridge that holds the only broker credentials there are. Both
+endpoints answer 503 when the process was started without the realtime entrypoint (`pnpm start`,
+or `vite dev` before the `realtime-bridge` plugin runs) — see `site/realtime/` and
+`docs/MQTT_SETUP.md`.
+
+| Method | Path | Auth | Returns | Description |
+|--------|------|------|---------|-------------|
+| GET | `/api/realtime` | admin | `text/event-stream` | Server-sent `RealtimeFrame`s. The first is always a `snapshot` (every device's last known status, plus the recent event log), so a dashboard opening mid-game is current without a second fetch; everything after it is a delta — `device`, `event`, or `broker`. A `: keepalive` comment every 25s keeps proxies from hanging up |
+| POST | `/api/realtime/commands` | admin | `{ ok: true }` (JSON) | Publish one command. Body is a `CommandRequest`: `{ target: 'device', uid, command }` where `command` is `{ kind: 'cyd.show', screen, data? }` or `{ kind: 'cyd.notify', message, durationMs? }`; `{ target: 'broadcast', notify }`; or `{ target: 'light', cue }`. 400 for an unknown target, an unparseable command, or a `uid` that is not topic-safe; 502 when the broker is unreachable |
+
+The caller names a **target**, never a topic. The topic tree is the device-facing API
+(`$lib/realtime/topics.ts`) and stays server-side, so an admin session cannot publish somewhere the
+dashboard was never meant to reach — and a device may never publish a command at all, which the
+broker ACL enforces independently.
+
+Frame and payload types live in `$lib/realtime/stream.ts` and `$lib/realtime/messages.ts`.
+
+---
+
 ## Forms (Google Forms integration)
 
 | Method | Path | Auth | Returns | Description |
@@ -273,9 +295,9 @@ rather than listing everything they own. They accept two kinds of caller, resolv
   the device's `aguesguard` role, so the prop carries no player's session token. 401 for an unknown
   UID, 403 for a device without the `aguesguard` role, 404 when the bound version is gone.
 
-The device header wins when both arrive. A UID is a bearer credential sent in the clear — the same
-self-asserted device identity the WebSocket channel has; a per-device secret would close it and
-does not exist yet.
+The device header wins when both arrive. A UID is a bearer credential sent in the clear; a
+per-device secret would close it and does not exist yet. The realtime channel does not have this
+problem — the broker checks a password per device and confines each prop with an ACL.
 
 `/api/my/expertise` sends `icon` and `groupIcon` as null to a device caller: they are multi-kilobyte
 SVG documents an ESP32 can neither render nor afford to parse. `groupColor` is always sent, and is

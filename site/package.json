@@ -14,9 +14,10 @@
 		"lint": "prettier --check . && eslint .",
 		"host": "npm run dev -- --host 0.0.0.0",
 		"start": "node ./build/index.js",
-		"start:websocket": "node ./websocket-server",
+		"start:realtime": "node ./realtime/index.ts",
 		"migrate": "tsx db/migrate.ts",
-		"seed": "tsx db/seed.ts"
+		"seed": "tsx db/seed.ts",
+		"mqtt:credentials": "tsx db/mqtt-credentials.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.1",
@@ -47,15 +48,14 @@
 		"@threlte/extras": "^9.15.1",
 		"@types/express": "^5.0.6",
 		"@types/three": "^0.174.0",
-		"@types/ws": "^8.18.1",
 		"bcrypt": "^6.0.0",
 		"drizzle-orm": "^0.45.2",
 		"express": "^5.2.1",
 		"googleapis": "^105.0.0",
+		"mqtt": "^5.14.1",
 		"mysql2": "^3.22.3",
 		"three": "^0.180.0",
 		"tsx": "^4.21.0",
-		"uuid": "^11.1.1",
-		"ws": "^8.20.0"
+		"uuid": "^11.1.1"
 	}
 }

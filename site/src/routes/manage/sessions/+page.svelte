@@ -1,47 +1,20 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Dropdown from '$lib/components/dropdown.svelte';
 	import { Settings2 } from '@lucide/svelte';
-	import type {
-		ConnectionCommand,
-		StatusCommandInfo,
-		WebStatusCommandInfo
-	} from '../../../../websocket-server/connection-socket';
 	import SessionRow from '$lib/components/session-row.svelte';
 	import { type PageProps } from './$types';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
+	/**
+	 * No realtime here any more. This page used to open a socket to the relay and render a
+	 * connection icon per session token, which only worked because a device's identity *was* a
+	 * hand-copied session token. Devices are their own registry now and announce themselves by UID
+	 * over MQTT, so live status and the commands that go with it live on `manage/devices` — where
+	 * the UIDs are — and this page is back to being about auth sessions.
+	 */
 	let { data }: PageProps = $props();
-	let sessionToken: string | undefined = $derived(data.sessionToken);
-	let connections: StatusCommandInfo[] = $state([]);
-	let webSocket: WebSocket | undefined;
-
-	if (browser) {
-		webSocket = new WebSocket('ws://localhost:5173/connections');
-		webSocket.onopen = () => {
-			if (sessionToken != null) {
-				webSocket?.send(
-					JSON.stringify({status: { sessionToken: sessionToken, connectionType: 'Web' } as WebStatusCommandInfo})
-				);
-			}
-			webSocket!.onmessage = (event) => {
-				console.log('socket message:', event.data);
-				connections = JSON.parse(event.data);
-			};
-		};
-	}
-
-	function sendCommand(command: "virus", token: string) {
-		if (command === "virus") {
-			webSocket?.send(
-				JSON.stringify({
-					goTo: { targetToken: token, screen: 'virus'}, 
-				} as ConnectionCommand 
-			));
-		}
-	}
 
 	async function deleteConnection(token: string) {
 		try {
@@ -58,8 +31,6 @@
 			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}
 	}
-
-
 </script>
 
 <main>
@@ -68,7 +39,6 @@
 		<thead>
 			<tr>
 				<th>Token</th>
-				<th>Connection</th>
 				<th>Roles</th>
 				<th>Start</th>
 				<th>End</th>
@@ -80,12 +50,7 @@
 			{#if data.sessions}
 				{#each data.sessions as session (session.token)}
 					<tr>
-						<SessionRow
-							{session}
-							connection={connections.find(
-								(connection) => connection.sessionToken === session.token
-							)}
-						/>
+						<SessionRow {session} />
 						<td>
 							<Dropdown {button} {content} />
 							{#snippet button()}
@@ -94,8 +59,11 @@
 							{#snippet content()}
 								<ul class="options">
 									<li><button class="btn">edit</button></li>
-									<li><button class="btn" onclick={() => sendCommand("virus", session.token)}>send virus</button></li>
-									<li><button class="btn btn-danger" onclick={() => deleteConnection(session.token)}>delete</button></li>
+									<li>
+										<button class="btn btn-danger" onclick={() => deleteConnection(session.token)}
+											>delete</button
+										>
+									</li>
 								</ul>
 							{/snippet}
 						</td>

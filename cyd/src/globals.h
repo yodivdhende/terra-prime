@@ -18,11 +18,22 @@ extern TFT_eSPI tft;
 extern String wifi_ssid;
 extern String wifi_password;
 extern String domain;
-extern int webSocketPort;
 extern String api_url;
 extern String sessionToken;
 /** The UID this device is registered under in `Devices` — how it authenticates to the API. */
 extern String deviceUid;
+
+/**
+ * The broker, from `config.json`'s `mqtt` block. The username is this device's own UID and the
+ * password is its own: a credential is per prop, because a prop ends up in a player's hands.
+ */
+extern String mqttHost;
+extern int mqttPort;
+extern String mqttUsername;
+extern String mqttPassword;
+
+/** Reported in the device's status so the control room can see what a prop is running. */
+extern const char *firmwareVersion;
 
 extern XPT2046_Touchscreen ts;
 void clearScreen();

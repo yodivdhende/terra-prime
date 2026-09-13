@@ -8,14 +8,15 @@
 #include <character.h>
 #include <ui-implementation.h>
 #include <uart-interface.h>
-#include <web-socket.h>
+#include <mqtt-client.h>
+#include <ui-notify.h>
 #include <power.h>
 
 void setup () {
   Serial.begin(115200);
   screenSetup();
   powerSetup();
-  logWhite("booting V0.0.4");
+  logWhite("booting V%s", firmwareVersion);
   // if(setupSD() == false) {
   //   return;
   // };
@@ -25,7 +26,7 @@ void setup () {
   // if(fetchCharacter() == false){
   //   return;
   // };
-  // webSocketSetup();
+  // mqttSetup();
   clearScreen();
   uiSetup(); 
 }
@@ -33,7 +34,8 @@ void setup () {
 
 void loop (){
   uiLoop();
-  webSocketLoop();
+  mqttLoop();
+  uiNotifyLoop();
   uartSerialLoop();
   powerLoop();
 }

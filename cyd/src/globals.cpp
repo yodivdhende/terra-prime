@@ -14,11 +14,17 @@ XPT2046_Touchscreen ts(XPT2046_CS, XPT2046_IRQ);
 String wifi_ssid;
 String wifi_password;
 String domain;
-int webSocketPort;
 String api_url;
 String boot_gif_path;
 String sessionToken;
 String deviceUid;
+
+String mqttHost;
+int mqttPort = 1883;
+String mqttUsername;
+String mqttPassword;
+
+const char *firmwareVersion = "0.0.5";
 
 
 TFT_eSPI tft = TFT_eSPI( screenHeight ,screenWidth ); /* TFT instance */

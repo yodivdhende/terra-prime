@@ -17,6 +17,29 @@ No state management. Logic lives in **service files** (`*.service.ts`), e.g. `us
 
 > The naming makes the boundary explicit: **managers = frontend reactive state**, **services = backend business logic**.
 
+### Realtime (`realtime/`, `src/lib/realtime/`)
+
+Devices talk to the site over **MQTT**, through a broker that runs as its own Railway service
+(`mqtt/`, deployed per `docs/MQTT_SETUP.md`). The site runs a **bridge** that holds the only broker
+credentials there are: it subscribes to what props publish, keeps the fleet's live state in memory,
+and publishes commands on behalf of the control room. The domain does not know which transport
+delivered anything.
+
+- `realtime/index.ts` — **the deployed entrypoint**. Starts the bridge and mounts the SvelteKit
+  handler in one process. `pnpm start` is adapter-node alone and has no realtime layer in it; the
+  container runs `pnpm start:realtime`.
+- `realtime/bridge.ts` — the bridge. Plain Node, run under type stripping.
+- `src/lib/realtime/` — the shared contract: `topics.ts` (the device-facing API), `messages.ts`
+  (payloads and their parsers), `stream.ts` (the browser-facing SSE frames), `registry.ts` (how a
+  route reaches the bridge). **Nothing in this folder may import `$lib`, Drizzle or `$app/*`** —
+  there is no bundler in front of the bridge, so an unresolvable import here is a container that
+  will not boot. It is also why these modules import each other by full `.ts` path.
+- The **dashboard does not connect to the broker.** `manage/devices` holds an `EventSource` on
+  `/api/realtime` and posts to `/api/realtime/commands`, both admin-guarded like every other admin
+  route. Broker credentials never reach a browser, and the browser never names a topic.
+
+Design and topic tree: `docs/CYD_DESIGN.md` §3.2 and §4.
+
 ### UI patterns
 
 **"Add new" button above tables**: use a `CirclePlus` icon from `@lucide/svelte` as the trigger, placed above the `<table>` inside `<main>`. Color it `var(--color-accent)` with no border or background. Render it as an `<a>` when it links to a creation page (`src/routes/manage/events/+page.svelte`), or as a `<button>` when it adds an inline draft row to the same page (`src/routes/manage/events/[id]/budget/+page.svelte`). For inline drafts, keep a `drafts: Draft[]` `$state` array, append draft rows at the top of `<tbody>`, and on save call the upsert endpoint then `invalidateAll()`.

@@ -9,8 +9,43 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"moduleResolution": "bundler"
-	}
+		"moduleResolution": "bundler",
+		// `realtime/` is run by Node directly, with no bundler to resolve extensionless imports for
+		// it, so the realtime modules import each other by full `.ts` path. Nothing is emitted from
+		// here — Node strips the types at load — so importing a `.ts` path is safe to allow.
+		"allowImportingTsExtensions": true
+	},
+	// `.svelte-kit/tsconfig.json` only includes `src/`, which left the deployed entrypoint as the
+	// one piece of server code nobody type-checked. Overriding `include` means restating what that
+	// generated config lists, per the note below.
+	"include": [
+		".svelte-kit/ambient.d.ts",
+		".svelte-kit/non-ambient.d.ts",
+		".svelte-kit/types/**/$types.d.ts",
+		"vite.config.js",
+		"vite.config.ts",
+		"src/**/*.js",
+		"src/**/*.ts",
+		"src/**/*.svelte",
+		"realtime/**/*.ts",
+		"realtime/**/*.d.ts",
+		"db/**/*.ts",
+		"test/**/*.js",
+		"test/**/*.ts",
+		"test/**/*.svelte",
+		"tests/**/*.js",
+		"tests/**/*.ts",
+		"tests/**/*.svelte"
+	],
+	"exclude": [
+		"node_modules/**",
+		"src/service-worker.js",
+		"src/service-worker/**/*.js",
+		"src/service-worker.ts",
+		"src/service-worker/**/*.ts",
+		"src/service-worker.d.ts",
+		"src/service-worker/**/*.d.ts"
+	]
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
 	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
 	//

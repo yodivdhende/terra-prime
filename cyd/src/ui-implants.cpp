@@ -70,9 +70,6 @@ static void fillImplants(lv_event_t * e)
         return;
     }
 
-    // Said before the values, so nobody reads stale numbers as current ones.
-    if (result.stale) addMessage("Offline - showing the last stored values.");
-
     JsonArray implants = document["implants"].as<JsonArray>();
     if (implants.isNull() || implants.size() == 0) {
         addMessage("No implants fitted.");

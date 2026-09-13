@@ -102,9 +102,6 @@ static void fillExpertise(lv_event_t * e)
         return;
     }
 
-    // Said before the values, so nobody reads stale numbers as current ones.
-    if (result.stale) addMessage("Offline - showing the last stored values.");
-
     JsonArray expertise = document["expertise"].as<JsonArray>();
     if (expertise.isNull() || expertise.size() == 0) {
         addMessage("No expertise on record.");

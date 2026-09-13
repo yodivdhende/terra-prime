@@ -1,4 +1,4 @@
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, gt, inArray, sql } from 'drizzle-orm';
 import { db } from './mysql';
 import {
 	characterVersionExpertise,
@@ -6,6 +6,7 @@ import {
 	characterVersionItems,
 	characterVersions,
 	characters,
+	implants,
 	users
 } from './schema';
 import { eventParticipantsRepo } from './event_participants.repo';
@@ -26,7 +27,7 @@ type VersionRow = {
 
 type LoadedVersion = VersionRow & {
 	items: { itemId: number | null; count: number | null }[];
-	implants: { implantId: number | null; slot: number }[];
+	implants: { implantId: number | null; slot: number; chargesRemaining: number }[];
 	expertise: { expertiseId: number | null; value: number | null }[];
 };
 
@@ -56,7 +57,11 @@ function toBare(row: LoadedVersion): CharacterVersionBare | null {
 			.map((i) => ({ id: i.itemId as number, count: i.count as number })),
 		implants: row.implants
 			.filter((i) => i.implantId != null)
-			.map((i) => ({ id: i.implantId as number, slot: i.slot }))
+			.map((i) => ({
+				id: i.implantId as number,
+				slot: i.slot,
+				chargesRemaining: i.chargesRemaining
+			}))
 	};
 }
 
@@ -183,15 +188,21 @@ class CharacterVersionRepo {
 			}));
 	}
 
-	public async getImplantsforCharacterVersions(
-		ids: number[]
-	): Promise<{ characterVersionId: number; implantId: number; slot: number }[]> {
+	public async getImplantsforCharacterVersions(ids: number[]): Promise<
+		{
+			characterVersionId: number;
+			implantId: number;
+			slot: number;
+			chargesRemaining: number;
+		}[]
+	> {
 		if (ids.length === 0) return [];
 		const rows = await db
 			.select({
 				characterVersionId: characterVersionImplants.characterVersionId,
 				implantId: characterVersionImplants.implantId,
-				slot: characterVersionImplants.slot
+				slot: characterVersionImplants.slot,
+				chargesRemaining: characterVersionImplants.chargesRemaining
 			})
 			.from(characterVersionImplants)
 			.where(inArray(characterVersionImplants.characterVersionId, ids));
@@ -200,7 +211,8 @@ class CharacterVersionRepo {
 			.map((row) => ({
 				characterVersionId: row.characterVersionId as number,
 				implantId: row.implantId as number,
-				slot: row.slot
+				slot: row.slot,
+				chargesRemaining: row.chargesRemaining
 			}));
 	}
 
@@ -260,21 +272,104 @@ class CharacterVersionRepo {
 			);
 	}
 
+	/**
+	 * A fitted implant is written at full charge: `ChargesRemaining` is seeded from the catalog's
+	 * `MaxCharges` rather than taken from the caller, because the loadout editor decides *which*
+	 * implants a character carries and an admin refresh decides how charged they are — the write
+	 * path never gets a say in the count. `update()` re-fits the whole loadout, so saving a version
+	 * mid-event recharges it; that is a shop-side edit, not something a player can reach.
+	 */
 	public async saveImplants({
 		versionId,
-		implants
+		implants: fitted
 	}: {
 		versionId: number;
 		implants: CharacterVersionImplant[];
 	}) {
-		if (implants.length === 0) return;
+		if (fitted.length === 0) return;
+		const maxCharges = await this.maxChargesForImplants(fitted.map((implant) => implant.id));
 		await db.insert(characterVersionImplants).values(
-			implants.map((implant) => ({
+			fitted.map((implant) => ({
 				characterVersionId: versionId,
 				implantId: implant.id,
-				slot: implant.slot
+				slot: implant.slot,
+				chargesRemaining: maxCharges.get(implant.id) ?? 0
 			}))
 		);
+	}
+
+	private async maxChargesForImplants(ids: number[]): Promise<Map<number, number>> {
+		if (ids.length === 0) return new Map();
+		const rows = await db
+			.select({ id: implants.id, maxCharges: implants.maxCharges })
+			.from(implants)
+			.where(inArray(implants.id, ids));
+		return new Map(rows.map((row) => [row.id, row.maxCharges]));
+	}
+
+	/**
+	 * Spend one charge of an implant the given version carries — the device activation path.
+	 *
+	 * Addressed by catalog implant id rather than by instance row, because that is the id the
+	 * device knows: `/api/my/implants` lists implants, not table rows. The version id is part of
+	 * the same statement, so an activation can only ever reach an implant the caller's own
+	 * character actually has fitted, and `ChargesRemaining > 0` is what keeps the count off the
+	 * floor no matter how many activations race.
+	 *
+	 * Returns null when the version does not carry that implant at all — the caller's 404 — and
+	 * otherwise says whether a charge was spent and what is left.
+	 */
+	public async spendCharge({
+		characterVersionId,
+		implantId
+	}: {
+		characterVersionId: number;
+		implantId: number;
+	}): Promise<{ spent: boolean; chargesRemaining: number } | null> {
+		const fitted = and(
+			eq(characterVersionImplants.characterVersionId, characterVersionId),
+			eq(characterVersionImplants.implantId, implantId)
+		);
+		const before = await db
+			.select({ chargesRemaining: characterVersionImplants.chargesRemaining })
+			.from(characterVersionImplants)
+			.where(fitted);
+		if (before.length === 0) return null;
+
+		// The same implant fitted in two slots is two rows and two stocks; one activation spends
+		// one of them, lowest slot first, so a loadout drains in the order the player reads it.
+		const [result] = await db
+			.update(characterVersionImplants)
+			.set({ chargesRemaining: sql`${characterVersionImplants.chargesRemaining} - 1` })
+			.where(and(fitted, gt(characterVersionImplants.chargesRemaining, 0)))
+			.orderBy(characterVersionImplants.slot)
+			.limit(1);
+
+		const after = await db
+			.select({ chargesRemaining: characterVersionImplants.chargesRemaining })
+			.from(characterVersionImplants)
+			.where(fitted);
+		return {
+			spent: result.affectedRows > 0,
+			chargesRemaining: after.reduce((total, row) => total + row.chargesRemaining, 0)
+		};
+	}
+
+	/**
+	 * Put every implant this version carries back to its catalog `MaxCharges` — the admin refresh.
+	 *
+	 * A correlated subquery rather than a read-then-write, so a live event's recharge is one
+	 * statement and cannot half-apply. Uncharged implants land back on 0, which is where they
+	 * already were.
+	 */
+	public async refreshCharges(characterVersionId: number): Promise<number> {
+		const [result] = await db
+			.update(characterVersionImplants)
+			.set({
+				chargesRemaining: sql`(select ${implants.maxCharges} from ${implants} where ${implants.id} = ${characterVersionImplants.implantId})`
+			})
+			.where(eq(characterVersionImplants.characterVersionId, characterVersionId));
+		return result.affectedRows;
 	}
 
 	private async deleteExpertise(versionId: number): Promise<void> {
@@ -390,6 +485,12 @@ export function isCharacterVersionItem(item: unknown): item is CharacterVersionI
 export type CharacterVersionImplant = {
 	id: number;
 	slot: number;
+	/**
+	 * Read-only: filled in on the way out, ignored on the way in. The loadout editor posts back
+	 * what a character carries, and letting it post a charge count would hand a player the admin's
+	 * refresh — `saveImplants` seeds the count from the catalog instead.
+	 */
+	chargesRemaining?: number;
 };
 
 export function isCharacterVersionImplant(value: unknown): value is CharacterVersionImplant {

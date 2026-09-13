@@ -277,10 +277,14 @@ The device header wins when both arrive. A UID is a bearer credential sent in th
 self-asserted device identity the WebSocket channel has; a per-device secret would close it and
 does not exist yet.
 
+`/api/my/expertise` sends `icon` and `groupIcon` as null to a device caller: they are multi-kilobyte
+SVG documents an ESP32 can neither render nor afford to parse. `groupColor` is always sent.
+
 | Method | Path | Returns | Description |
 |--------|------|---------|-------------|
 | GET | `/api/my/user` | `User` (JSON) | Get the currently authenticated user |
 | GET | `/api/my/character` | `MyCharacterResponse` (JSON) — `{ id, name, versionId, versionName, companyId }` | The single character version the caller is playing. This is what an AguesGuard fetches at boot |
+| GET | `/api/my/expertise` | `MyExpertiseResponse` (JSON) — `{ characterId, characterName, versionId, versionName, expertise: VersionExpertise[] }`, ordered by group then name | The caller's own expertise with catalog names, values and icons — everything needed to draw a bar per entry |
 | GET | `/api/my/characters` | `Character[]` (JSON) | List characters owned by the current user |
 | GET | `/api/my/characters/with-events` | `(Character & { events: Array<{ id: number, name: string }> })[]` (JSON) | List the current user's characters, each with an `events` array |
 | GET | `/api/my/characters/versions` | `MyCharacterVersionsResponse` (JSON) — `{ characters: (Character & { versions: CharacterVersionFull[] })[] }` where each version's `expertise`/`items`/`implants` are joined with the catalog and `events` is the list of events the version is registered for: `expertise: { id, name, group, groupName, value }[]`, `items: { id, name, description, count }[]`, `implants: { id, name, description }[]`, `events: { id, name }[]` | List the current user's characters with their versions, each version's expertise/item/implant IDs resolved to full catalog entries plus the events the version is registered for |

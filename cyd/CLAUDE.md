@@ -143,6 +143,24 @@ character it is showing. Register the UID and attach the role under `manage/devi
 cookie, which keeps a device that is not in the registry yet working against `/api/my/**`; the
 server prefers the device UID when both arrive.
 
+### Expertise is bars, never numbers
+
+The Expertise screen draws **no numeric values** — a player reads their standing off the length of
+a bar and nothing else. Anything added to that screen has to hold to it.
+
+For that to work every bar shares one geometry: the same width, over the same 0-100 range, starting
+at the same x. Each expertise group gets its own bar above its members, holding the mean of what
+the character has in that group, so a group and its members sit on one scale and are directly
+comparable. Group and member rows differ in font, bar thickness and spacing — never in the bar's
+width or range, since that is the only quantitative thing on the screen.
+
+> The mean is computed on the device, from values it already has. If "standing in a group" ever
+> becomes a game-defined number rather than a way of drawing one, it belongs in
+> `/api/my/expertise` instead, so the site and the device cannot disagree about it.
+
+The site's admin and character-building pages still show numbers: an admin editing a value and a
+player spending points both need them. The rule is about the player-facing device screen.
+
 ### Expertise icons
 
 The device cannot draw the site's expertise SVGs — LVGL has no SVG renderer — so they are

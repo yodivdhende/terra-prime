@@ -14,37 +14,37 @@ void ui_Home_screen_init(void)
     lv_obj_set_x(ui_Header, -1);
     lv_obj_set_y(ui_Header, -107);
 
-    ui_SkillsButton = lv_button_create(ui_Home);
-    lv_obj_set_width(ui_SkillsButton, 70);
-    lv_obj_set_height(ui_SkillsButton, 70);
-    lv_obj_set_x(ui_SkillsButton, -70);
-    lv_obj_set_y(ui_SkillsButton, -35);
-    lv_obj_set_align(ui_SkillsButton, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_SkillsButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_remove_flag(ui_SkillsButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_SkillsButton, lv_color_hex(0x3D3D3D), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_SkillsButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_SkillsButton, lv_color_hex(0x656565), LV_PART_MAIN | LV_STATE_PRESSED);
-    lv_obj_set_style_bg_opa(ui_SkillsButton, 255, LV_PART_MAIN | LV_STATE_PRESSED);
+    ui_ExpertiseButton = lv_button_create(ui_Home);
+    lv_obj_set_width(ui_ExpertiseButton, 70);
+    lv_obj_set_height(ui_ExpertiseButton, 70);
+    lv_obj_set_x(ui_ExpertiseButton, -70);
+    lv_obj_set_y(ui_ExpertiseButton, -35);
+    lv_obj_set_align(ui_ExpertiseButton, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_ExpertiseButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_remove_flag(ui_ExpertiseButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_ExpertiseButton, lv_color_hex(0x3D3D3D), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_ExpertiseButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_ExpertiseButton, lv_color_hex(0x656565), LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(ui_ExpertiseButton, 255, LV_PART_MAIN | LV_STATE_PRESSED);
 
-    ui_SkillsButtonImage = lv_image_create(ui_SkillsButton);
-    lv_image_set_src(ui_SkillsButtonImage, &ui_img_user_png);
-    lv_obj_set_width(ui_SkillsButtonImage, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_SkillsButtonImage, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_SkillsButtonImage, 0);
-    lv_obj_set_y(ui_SkillsButtonImage, -5);
-    lv_obj_set_align(ui_SkillsButtonImage, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_SkillsButtonImage, LV_OBJ_FLAG_CLICKABLE);     /// Flags
-    lv_obj_remove_flag(ui_SkillsButtonImage, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    ui_ExpertiseButtonImage = lv_image_create(ui_ExpertiseButton);
+    lv_image_set_src(ui_ExpertiseButtonImage, &ui_img_user_png);
+    lv_obj_set_width(ui_ExpertiseButtonImage, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_ExpertiseButtonImage, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_ExpertiseButtonImage, 0);
+    lv_obj_set_y(ui_ExpertiseButtonImage, -5);
+    lv_obj_set_align(ui_ExpertiseButtonImage, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_ExpertiseButtonImage, LV_OBJ_FLAG_CLICKABLE);     /// Flags
+    lv_obj_remove_flag(ui_ExpertiseButtonImage, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_SkillButtonLabel = lv_label_create(ui_SkillsButton);
-    lv_obj_set_width(ui_SkillButtonLabel, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_SkillButtonLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_SkillButtonLabel, 0);
-    lv_obj_set_y(ui_SkillButtonLabel, 24);
-    lv_obj_set_align(ui_SkillButtonLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_SkillButtonLabel, "Skills");
-    lv_obj_set_style_text_font(ui_SkillButtonLabel, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_ExpertiseButtonLabel = lv_label_create(ui_ExpertiseButton);
+    lv_obj_set_width(ui_ExpertiseButtonLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_ExpertiseButtonLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_ExpertiseButtonLabel, 0);
+    lv_obj_set_y(ui_ExpertiseButtonLabel, 24);
+    lv_obj_set_align(ui_ExpertiseButtonLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_ExpertiseButtonLabel, "Expertise");
+    lv_obj_set_style_text_font(ui_ExpertiseButtonLabel, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_ImplantsButton = lv_button_create(ui_Home);
     lv_obj_set_width(ui_ImplantsButton, 70);
@@ -142,7 +142,7 @@ void ui_Home_screen_init(void)
     lv_label_set_text(ui_MessagesButtonLabel, "Messages");
     lv_obj_set_style_text_font(ui_MessagesButtonLabel, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_add_event_cb(ui_SkillsButton, ui_event_SkillsButton, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_ExpertiseButton, ui_event_ExpertiseButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_ImplantsButton, ui_event_ImplantsButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_ItemsButton, ui_event_ItemsButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_MessagesButton, ui_event_MessagesButton, LV_EVENT_ALL, NULL);

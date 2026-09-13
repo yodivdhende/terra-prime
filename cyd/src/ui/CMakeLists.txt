@@ -4,7 +4,7 @@ SET(SOURCES ui_comp_header.c
     ui_DownloadScreen.c
     ui_LootScreen.c
     ui_VirusScreen.c
-    ui_Skills.c
+    ui_Expertise.c
     ui_Implants.c
     ui_Items.c
     ui_Messages.c

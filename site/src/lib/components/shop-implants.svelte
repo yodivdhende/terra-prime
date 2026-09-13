@@ -4,6 +4,8 @@
 		name: string;
 		description: string;
 		cost: number;
+		/** `0`, or absent, for an implant that is not activated at all. */
+		maxCharges?: number;
 	};
 </script>
 
@@ -68,6 +70,13 @@
 								slot {slot}
 								{#if currentEntry}
 									<span class="slot-implant-name">— {currentEntry.name}</span>
+									{#if (currentEntry.maxCharges ?? 0) > 0}
+										<!-- What a recharge puts back, and what the handheld is spending. -->
+										<span class="slot-charges" title="charges remaining">
+											{current?.chargesRemaining ??
+												currentEntry.maxCharges}/{currentEntry.maxCharges}
+										</span>
+									{/if}
 								{/if}
 							</span>
 							{#if current}
@@ -143,6 +152,15 @@
 		text-transform: none;
 		letter-spacing: 0;
 		opacity: 0.7;
+	}
+
+	.slot-charges {
+		margin-left: 0.4rem;
+		padding: 0.02rem 0.3rem;
+		font-size: 0.8em;
+		letter-spacing: 0.05em;
+		color: var(--color-accent);
+		border: 1px solid color-mix(in srgb, var(--color-accent) 45%, transparent);
 	}
 
 	.slot-remove {

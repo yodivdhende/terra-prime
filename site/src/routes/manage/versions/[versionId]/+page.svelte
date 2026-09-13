@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CharacterVersionShop from '$lib/components/character-version-shop.svelte';
+	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { createCharacterManager } from '$lib/managers/character-manager.svelte';
 	import { type PageProps } from './$types';
@@ -22,6 +23,36 @@
 	let saving = $state(false);
 	let saveError = $state<string | null>(null);
 	let saved = $state(false);
+	let refreshing = $state(false);
+
+	/**
+	 * Put this character's implants back to full. Recharging is an admin action — the player's
+	 * handheld only ever spends charges — so this is the control room's counterpart to the
+	 * activation button on the prop.
+	 */
+	async function refreshCharges() {
+		const versionId = manager.version.id;
+		if (versionId == null) return;
+		refreshing = true;
+		try {
+			const result = await fetch(`/api/characters/versions/${versionId}/implants/refresh`, {
+				method: 'post'
+			});
+			if (result.ok) {
+				const { refreshed }: { refreshed: number } = await result.json();
+				TOAST_MANAGER.success(
+					refreshed === 0 ? 'No implants to recharge' : `Recharged ${refreshed} implants`
+				);
+				await invalidateAll();
+			} else {
+				TOAST_MANAGER.error(`Recharge failed (${result.status})`);
+			}
+		} catch (err) {
+			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
+		} finally {
+			refreshing = false;
+		}
+	}
 
 	async function save() {
 		if (manager.character.id == null || manager.version.id == null) return;
@@ -77,6 +108,9 @@
 			{:else if saved}
 				<span class="success">saved</span>
 			{/if}
+			<button class="btn" onclick={refreshCharges} disabled={refreshing}>
+				{refreshing ? 'recharging…' : 'recharge implants'}
+			</button>
 			<button class="btn" onclick={save} disabled={saving}>
 				{saving ? 'saving…' : 'save'}
 			</button>

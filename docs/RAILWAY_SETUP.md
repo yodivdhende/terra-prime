@@ -40,13 +40,15 @@ Railway will use the `Dockerfile` at `site/dockerfile` automatically. No changes
 
 ### Deploy command
 
-Set this in **Settings** → **Deploy** → **Deploy Command**:
+**Leave this empty.** `site/railway.toml` sets `startCommand` to `pnpm migrate && pnpm start:realtime`, and config in the repo wins over the dashboard.
 
-```
-pnpm migrate
-```
+A Deploy Command set here silently *replaces* the image's `CMD` rather than running before it, which is how this service once ended up running plain adapter-node with no realtime layer in it — no device and no dashboard could reach it. One place decides what the container runs, and it is the repo.
 
-This runs before the app starts on every deploy. It applies any unapplied migrations from `site/drizzle/` and exits non-zero on failure (which aborts the deploy, keeping the previous version live).
+The migration still runs first: it is the first half of that start command, and it exits non-zero on failure, which aborts the deploy and keeps the previous version live.
+
+### Config as code
+
+Set **Settings** → **Config-as-code** to `site/railway.toml`.
 
 ---
 
@@ -56,7 +58,7 @@ Push to your main branch (or trigger a manual deploy). Railway will:
 
 1. Build the Docker image
 2. Run `pnpm migrate` — connects to the MySQL service and applies any pending migrations
-3. Start the app with `pnpm start`
+3. Start the app with `pnpm start:realtime` — the SvelteKit handler *and* the MQTT bridge in one process
 
 Check the deploy logs to confirm the migration output, e.g.:
 
@@ -70,6 +72,16 @@ On the first deploy after the Drizzle cutover, an already-populated database log
 [boot]  0000_baseline (tables already exist, marked as applied)
 Migrations complete. 1 applied.
 ```
+
+---
+
+## 5. The MQTT Broker Service
+
+Devices talk to the site over MQTT, through a broker that runs as its own Railway service in the same project. It needs a volume, a TCP proxy, and a credential per prop.
+
+That is enough moving parts to have its own document: [MQTT_SETUP.md](./MQTT_SETUP.md).
+
+The app service will deploy and serve the website without it — the bridge logs that it has no broker and the dashboard says so — but no prop can reach anything until the broker is up.
 
 ---
 

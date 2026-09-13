@@ -37,6 +37,10 @@ CMD ["pnpm", "migrate"]
 FROM base
 COPY --from=prod-deps /app/node_modules node_modules/
 COPY --from=build /app/build build/
-EXPOSE 4174
-CMD ["sh", "-c", "pnpm migrate && pnpm start"]
+# `PORT` is what `realtime/index.ts` binds; Railway injects it, so this is only the local default.
+EXPOSE 3000
+# `pnpm start` is adapter-node on its own: no MQTT bridge, no `/api/realtime`, nothing a device or
+# the control room can reach. The realtime entrypoint mounts the same SvelteKit handler and starts
+# the bridge alongside it, which is the only shape in which this container is actually deployable.
+CMD ["sh", "-c", "pnpm migrate && pnpm start:realtime"]
 

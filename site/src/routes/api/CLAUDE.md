@@ -208,7 +208,7 @@ registered UID looks like.
 | Method | Path | Auth | Returns | Description |
 |--------|------|------|---------|-------------|
 | GET | `/api/devices` | admin | `Device[]` (JSON) — `Device = { id: number, name: string, uid: string, roles: DeviceRole[] }` | List all devices with their roles |
-| PUT | `/api/devices` | admin | `{ id: number }` (JSON) | Create a device; body: `{ name, uid }`. 400 when `uid` is already registered |
+| PUT | `/api/devices` | admin | `{ id: number }` (JSON) | Create a device, optionally with its initial roles in the same request; body: `{ name, uid, roles?: DeviceRole[] }`. Attaching the roles is atomic with the create — if any role is invalid the whole request 400s and no device is created. 400 when `uid` is already registered, when a role entry is malformed, when an `aguesguard`'s character version does not exist, when a `game`'s port is not a Port, or when a game would watch itself |
 | GET | `/api/devices/ports` | admin | `{ id, name, uid }[]` (JSON) | Every device holding the `port` role — what the Game role's picker is filled from |
 | GET | `/api/devices/[id]` | admin | `Device` (JSON; 404 if not found) | Get a device and its roles |
 | POST | `/api/devices/[id]` | admin | empty body (200) | Update name/uid; body: `{ name, uid }`. 400 when `uid` belongs to another device |

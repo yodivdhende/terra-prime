@@ -8,29 +8,38 @@
 	let device: DeviceDraft = $state({
 		id: null,
 		name: '',
-		uid: '',
+		uid: crypto.randomUUID(),
 		roles: []
 	});
 
 	async function save() {
-		const { name, uid } = $state.snapshot(device);
+		const { name, uid, roles } = $state.snapshot(device);
 		try {
 			const response = await fetch('/api/devices', {
 				method: 'put',
-				body: JSON.stringify({ name, uid }),
+				body: JSON.stringify({ name, uid, roles }),
 				headers: { 'content-type': 'application/json' }
 			});
 			if (response.ok === false) {
-				TOAST_MANAGER.error('Failed to save device');
+				TOAST_MANAGER.error(await errorMessage(response, 'Failed to save device'));
 				return;
 			}
 			const { id } = await response.json();
 			TOAST_MANAGER.success('Device saved');
 			await invalidate('/api/devices');
-			// Straight to the edit page: roles are a sub-resource, so they need the device to exist.
+			// Land on the edit page either way, for any further role changes.
 			await goto(resolve('/manage/devices/[id]', { id: String(id) }));
 		} catch (err) {
 			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
+		}
+	}
+
+	async function errorMessage(response: Response, fallback: string): Promise<string> {
+		try {
+			const body = await response.json();
+			return typeof body?.message === 'string' ? body.message : fallback;
+		} catch {
+			return fallback;
 		}
 	}
 </script>
@@ -49,5 +58,6 @@
 		display: flex;
 		flex-direction: column;
 		padding: 8px;
+		max-width: 400px;
 	}
 </style>

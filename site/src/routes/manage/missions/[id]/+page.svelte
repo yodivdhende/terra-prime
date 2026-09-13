@@ -2,6 +2,7 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import MissionForm from '$lib/components/mission-form.svelte';
+	import Hint from '$lib/components/hint.svelte';
 	import type { Mission, MissionDraft } from '$lib/db/mission.repo';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 	import type { PageProps } from './$types';
@@ -88,7 +89,7 @@
 		<fieldset>
 			<legend>Participants</legend>
 			{#if (loaded?.participants.length ?? 0) === 0}
-				<p class="hint">Nobody has registered for this mission yet.</p>
+				<Hint text="Nobody has registered for this mission yet." />
 			{:else}
 				<table>
 					<thead>
@@ -149,12 +150,6 @@
 		letter-spacing: 0.05em;
 		opacity: 0.6;
 		padding: 0 4px;
-	}
-
-	.hint {
-		margin: 0;
-		font-size: 0.8rem;
-		opacity: 0.6;
 	}
 
 	table {

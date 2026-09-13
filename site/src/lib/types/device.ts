@@ -33,6 +33,8 @@ export type Device = DeviceSummary & {
 export type NewDevice = {
 	name: string;
 	uid: string;
+	/** Optional initial roles, attached in the same request that creates the device. */
+	roles?: DeviceRole[];
 };
 
 export type EditDevice = NewDevice & { id: number };

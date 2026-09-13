@@ -66,21 +66,26 @@ bool readConfig(fs::FS &fs) {
 
   logWhite("Setting config");
 
-  int characterId = configObject["characterId"];
+  // No `characterId`: which character this device shows is the server's answer, read from the
+  // `aguesguard` role of the device registered under `deviceUid`.
+  String deviceUidString = configObject["deviceUid"];
   String sessionTokenString= configObject["sessionToken"];
   String ssid = configObject["wifi"]["ssid"];
   String password = configObject["wifi"]["password"];
   String baseUrl = configObject["domain"];
   String apiUrl= configObject["apiUrl"];
-  int id = configObject["characterId"];
   int port = configObject["webSocketPort"];
   wifi_ssid = ssid;
   wifi_password = password;
   api_url = apiUrl;
   domain = baseUrl;
-  character_id = id;
+  deviceUid = deviceUidString;
   sessionToken = sessionTokenString;
   webSocketPort = port;
+
+  if (deviceUid.length() == 0) {
+    logRed("No deviceUid in config.json - the API will not know which character this is");
+  }
 
   return true;
 }

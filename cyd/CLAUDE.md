@@ -46,7 +46,7 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
 1. `screenSetup()` — init TFT + touch SPI
 2. `setupSD()` — read `/config.json` from SD into globals *(commented out)*
 3. `connectToWifi()` *(commented out)*
-4. `fetchCharacter()` — GET `{apiUrl}/characters/{character_id}` *(commented out)*
+4. `fetchCharacter()` — GET `{apiUrl}my/character`, authenticated as this device *(commented out)*
 5. `webSocketSetup()` — connect to `{domain}:{webSocketPort}/connections` *(commented out)*
 6. `uiSetup()` — init LVGL, register callbacks, call `ui_init()`
 
@@ -59,7 +59,7 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
 
 | Channel | Direction | Purpose |
 |---|---|---|
-| HTTP REST | Device → Server | Fetch character data on boot |
+| HTTP REST | Device → Server | Fetch character data on boot, and screen data on demand |
 | WebSocket | Server → Device | Navigate to screen (`loading`, `loot`, `virus`) |
 | UART Serial | External → Device | Receive tokens, relay via `sendLink()` |
 | SD card | SD → Device | Load config at boot |
@@ -79,6 +79,7 @@ WebSocket routing (`src/web-socket.cpp`): incoming `{ "goTo": { "screen": "loadi
 | `src/globals.h/cpp` | Global state: screen dims, WiFi creds, API URL, touch SPI pins, `screenSetup()` |
 | `src/ui-implementation.h/cpp` | LVGL init, display flush, touch read callbacks, `uiSetup()` / `uiLoop()` |
 | `src/web-socket.h/cpp` | WebSocket client — setup, event handler, `sendLink()`, screen routing |
+| `src/api.h/cpp` | `apiGet()` — every REST read, with this device's credentials attached |
 | `src/character.h/cpp` | `Character` struct, `fetchCharacter()` |
 | `src/sd-reader.h/cpp` | `setupSD()` + `readConfig()` — parses `/config.json` into globals |
 | `src/uart-interface.h/cpp` | `uartSerialLoop()` — reads serial tokens |
@@ -118,12 +119,21 @@ Device reads `/config.json` from SD card root at boot (`src/sd-reader.cpp`):
   "apiUrl": "http://host/api/",
   "domain": "host",
   "webSocketPort": 80,
-  "characterId": 1,
+  "deviceUid": "...",
   "sessionToken": "..."
 }
 ```
 
-`apiUrl` must include a trailing slash — `fetchCharacter()` appends `characters/{id}` directly.
+`apiUrl` must include a trailing slash — `apiGet()` appends the path directly.
+
+`deviceUid` is the UID this handheld is registered under in the site's `Devices` table, and is how
+every REST read authenticates: the server resolves which character version the device is bound to
+from its `aguesguard` role. There is no `characterId` — the device does not get to assert which
+character it is showing. Register the UID and attach the role under `manage/devices`.
+
+`sessionToken` identifies this device on the WebSocket channel. `apiGet()` also sends it as a
+cookie, which keeps a device that is not in the registry yet working against `/api/my/**`; the
+server prefers the device UID when both arrive.
 
 ---
 
@@ -135,4 +145,4 @@ Device reads `/config.json` from SD card root at boot (`src/sd-reader.cpp`):
 - **TFT rotation:** `screenSetup()` sets rotation 0 (portrait); `uiSetup()` overrides to rotation 1 (landscape) for LVGL. Don't change the `uiSetup()` rotation without also updating LVGL display dimensions.
 - **UART unlink is commented out.** `sendLink(token, false)` is never called — tokens are never automatically unlinked.
 - **`connectToWifi()` blocks indefinitely** — no timeout if the network is unreachable.
-- **`logRed/logGreen/logWhite` write to TFT directly.** After LVGL takes over, raw TFT writes conflict with LVGL rendering.
+- **`logRed/logGreen/logWhite` write to TFT directly.** After LVGL takes over, raw TFT writes conflict with LVGL rendering. Code that runs from a screen logs to `Serial` instead — see `src/api.cpp`.

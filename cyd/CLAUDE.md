@@ -62,7 +62,7 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
 | HTTP REST | Device → Server | Fetch character data on boot, and screen data on demand |
 | WebSocket | Server → Device | Navigate to screen (`loading`, `loot`, `virus`) |
 | UART Serial | External → Device | Receive tokens, relay via `sendLink()` |
-| SD card | SD ⇄ Device | Load config at boot; store the last answer per `api/my` path for offline use |
+| SD card | SD ⇄ Device | Load config and the expertise icon pack at boot; store the last answer per `api/my` path for offline use |
 
 WebSocket routing (`src/web-socket.cpp`): incoming `{ "goTo": { "screen": "loading|loot|virus" } }` calls the corresponding `Ui*Setup()`.
 
@@ -142,6 +142,30 @@ character it is showing. Register the UID and attach the role under `manage/devi
 `sessionToken` identifies this device on the WebSocket channel. `apiGet()` also sends it as a
 cookie, which keeps a device that is not in the registry yet working against `/api/my/**`; the
 server prefers the device UID when both arrive.
+
+### Expertise icons
+
+The device cannot draw the site's expertise SVGs — LVGL has no SVG renderer — so they are
+rasterized once on the site and copied to the card. In `manage/expertise`, **icon pack for
+AguesGuard** downloads a zip that unpacks onto the card root:
+
+```
+icons/expertise/<expertise id>.bin
+icons/expertise-groups/<group id>.bin
+```
+
+Each file is a 24x24 `LV_COLOR_FORMAT_A8` LVGL binary image: a 12-byte header and 576 alpha bytes,
+588 bytes in total. A8 is a bare mask, and LVGL tints it with the widget's `image_recolor` style —
+`ui-expertise.cpp` sets that from the group colour the API sends, so re-colouring a group on the
+site needs no re-export. Only the ids change the files.
+
+Keyed on id because names get edited and ids do not. A missing file draws nothing and keeps the
+row's indent, so a card with a partial pack, or no `icons/` at all, still lays out correctly.
+
+LVGL reaches the card through `LV_USE_FS_STDIO` with `LV_FS_STDIO_PATH "/sd/"` — the Arduino SD
+library mounts through the ESP32's VFS at `/sd`, so `fopen()` gets there and no custom `lv_fs`
+driver is needed. Paths are written `A:icons/expertise/12.bin`. `LV_CACHE_DEF_SIZE` is 32 KB so
+scrolling does not re-read every icon off the card each frame.
 
 ### Offline cache
 

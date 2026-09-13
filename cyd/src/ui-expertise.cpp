@@ -17,12 +17,16 @@
  * copy on the SD card that `api.cpp` falls back to when the network is gone.
  *
  * The server sends this device no icons: they are SVG documents, which LVGL cannot draw and the
- * ESP32 cannot afford to parse. A bar is tinted with its group's colour instead, and rows arrive
- * sorted by group, so each group is drawn under its own heading.
+ * ESP32 cannot afford to parse. Icons come off the SD card instead, pre-rasterized by the site's
+ * icon-pack export (`manage/expertise`), keyed on expertise id. Bars and icons are tinted with the
+ * group's colour, and rows arrive sorted by group, so each group is drawn under its own heading.
  */
 
 /** Expertise values share the 0-100 scale the site's point-cost table is defined over. */
 #define EXPERTISE_MAX 100
+
+/** Matches `ICON_SIZE` in the site's `icon-export.ts`: the pack is rasterized at exactly this. */
+#define ICON_SIZE 24
 
 static lv_obj_t * expertiseList = NULL;
 
@@ -46,25 +50,61 @@ static void addGroupHeading(const char * name)
     lv_obj_set_style_pad_top(heading, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
-static void addBar(const char * name, int value, lv_color_t color)
+/**
+ * The icon for one expertise, off the SD card.
+ *
+ * `A:` is LVGL's stdio driver, rooted at `/sd/` (`LV_FS_STDIO_PATH`), so this resolves to
+ * `/sd/icons/expertise/<id>.bin` — an `LV_COLOR_FORMAT_A8` image written by the site's icon-pack
+ * export. A8 is a bare alpha mask, which LVGL tints with the widget's `image_recolor`, so the group
+ * colour comes from the API at draw time and is not baked into the file.
+ *
+ * A missing file is not an error: LVGL draws nothing and the slot still holds the row's indent, so
+ * a card with a partial pack, or none at all, lines up with one that has every icon.
+ */
+static void addIcon(lv_obj_t * row, int expertiseId, lv_color_t color)
+{
+    lv_obj_t * icon = lv_image_create(row);
+    lv_obj_set_size(icon, ICON_SIZE, ICON_SIZE);
+
+    char path[48];
+    lv_snprintf(path, sizeof(path), "A:icons/expertise/%d.bin", expertiseId);
+    lv_image_set_src(icon, path);
+
+    lv_obj_set_style_image_recolor(icon, color, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_image_recolor_opa(icon, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
+}
+
+static void addBar(int expertiseId, const char * name, int value, lv_color_t color)
 {
     lv_obj_t * row = lv_obj_create(expertiseList);
     lv_obj_remove_style_all(row);
     lv_obj_set_width(row, lv_pct(100));
     lv_obj_set_height(row, 30);
     lv_obj_remove_flag(row, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(row, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_t * nameLabel = lv_label_create(row);
+    addIcon(row, expertiseId, color);
+
+    // Everything but the icon shares the rest of the row, so no width does arithmetic on 320.
+    lv_obj_t * body = lv_obj_create(row);
+    lv_obj_remove_style_all(body);
+    lv_obj_set_height(body, lv_pct(100));
+    lv_obj_set_flex_grow(body, 1);
+    lv_obj_remove_flag(body, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_t * nameLabel = lv_label_create(body);
     lv_label_set_text(nameLabel, name);
     lv_obj_set_style_text_font(nameLabel, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_align(nameLabel, LV_ALIGN_TOP_LEFT, 0, 0);
 
-    lv_obj_t * valueLabel = lv_label_create(row);
+    lv_obj_t * valueLabel = lv_label_create(body);
     lv_label_set_text_fmt(valueLabel, "%d", value);
     lv_obj_set_style_text_font(valueLabel, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_align(valueLabel, LV_ALIGN_TOP_RIGHT, 0, 0);
 
-    lv_obj_t * bar = lv_bar_create(row);
+    lv_obj_t * bar = lv_bar_create(body);
     lv_obj_set_size(bar, lv_pct(100), 8);
     lv_obj_align(bar, LV_ALIGN_BOTTOM_LEFT, 0, 0);
     lv_bar_set_range(bar, 0, EXPERTISE_MAX);
@@ -116,7 +156,8 @@ static void fillExpertise(lv_event_t * e)
             currentGroup = groupName;
             addGroupHeading(groupName.c_str());
         }
-        addBar(entry["name"] | "?", entry["value"] | 0, parseColor(entry["groupColor"], fallback));
+        addBar(entry["id"] | 0, entry["name"] | "?", entry["value"] | 0,
+               parseColor(entry["groupColor"], fallback));
     }
 }
 

@@ -298,7 +298,13 @@ self-asserted device identity the WebSocket channel has; a per-device secret wou
 does not exist yet.
 
 `/api/my/expertise` sends `icon` and `groupIcon` as null to a device caller: they are multi-kilobyte
-SVG documents an ESP32 can neither render nor afford to parse. `groupColor` is always sent.
+SVG documents an ESP32 can neither render nor afford to parse. `groupColor` is always sent, and is
+what the device tints both its bars and its icons with.
+
+A device gets its icons from its own SD card instead, as 24px LVGL A8 images exported from
+`manage/expertise` and keyed on expertise/group id — so `id` in this response is what the firmware
+builds an icon path from. No server route serves those files; the export is built in the admin's
+browser (`src/lib/utils/icon-export.ts`).
 
 | Method | Path | Returns | Description |
 |--------|------|---------|-------------|

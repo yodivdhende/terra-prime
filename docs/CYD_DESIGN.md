@@ -23,7 +23,7 @@ character data live on the site (SvelteKit + MySQL). CYD talks to the site over 
 | HTTP (REST) | device → server | `GET /api/my/*` — character at boot, expertise and implants when those screens open |
 | WebSocket (`/connections`) | bidirectional | status/link events out, screen-navigation commands in |
 | UART (serial) | external peripheral → device | receives tokens (e.g. from an RFID/NFC reader), relayed as "link" events |
-| SD card | local | loads `/config.json` at boot (WiFi creds, API/WS URLs, `deviceUid`, `sessionToken`); stores the last answer per `api/my` path for offline use |
+| SD card | local | loads `/config.json` at boot (WiFi creds, API/WS URLs, `deviceUid`, `sessionToken`) and the expertise icon pack; stores the last answer per `api/my` path for offline use |
 
 The admin-facing `manage/sessions` dashboard in the site connects to the **same** WebSocket
 endpoint as every CYD device, so admins can see which devices are connected live and trigger
@@ -37,7 +37,7 @@ screen changes (e.g. "send virus") on a specific device.
 flowchart LR
     subgraph Table["Tabletop prop"]
         UART[UART peripheral\ntoken/RFID reader]
-        SD[(SD card\nconfig.json + api cache)]
+        SD[(SD card\nconfig.json + api cache\n+ icon pack)]
         CYD["CYD device\nESP32 + LVGL UI"]
         UART -- "serial tokens" --> CYD
         SD -- "WiFi/API/WS config" --> CYD
@@ -228,7 +228,7 @@ sequenceDiagram
 | `Sessions` / `Session_Roles` | `sessionToken` is provisioned into `/config.json` on the SD card out-of-band | — (no direct writes) | Identity on the WS channel is self-asserted via `sessionToken` in the `status` message; there is no per-message auth check on the socket itself |
 | `Devices` / `Device_AguesGuard` | indirectly: the device sends its `Uid`, the server resolves the role's `CharacterVersion` | — | The device's identity on the REST channel. A UID is a bearer credential sent in the clear — see [§7.3](#7-known-architecture-gaps) |
 | `Characters` / `Character_Versions` | via `GET /api/my/character` (`name`, `versionId`, `versionName`) | — | Fetched once at boot (when enabled) to populate the Home screen |
-| `Character_Version_Expertise` / `Expertise` / `Expertise_Groups` | via `GET /api/my/expertise` (value, name, group name and colour) | — | Re-read every time the Expertise screen opens, and cached on the SD card for when that read fails. Icons are withheld from device callers: they are SVG documents LVGL cannot draw |
+| `Character_Version_Expertise` / `Expertise` / `Expertise_Groups` | via `GET /api/my/expertise` (value, name, group name and colour) | — | Re-read every time the Expertise screen opens, and cached on the SD card for when that read fails. The SVG icons are withheld from device callers; the device draws 24px A8 copies from its card instead, exported from `manage/expertise` and tinted at draw time with the group colour |
 | `Character_Version_Implants` / `Implants` | via `GET /api/my/implants` (name, description, slot) | — | Re-read every time the Implants screen opens, and cached on the SD card for when that read fails |
 
 Full schema reference: `site/CLAUDE.md`. Full REST endpoint reference: `site/src/routes/api/CLAUDE.md`.
@@ -275,6 +275,7 @@ so they're visible, not silently worked around.
 | Firmware shared state | `cyd/src/globals.h`, `cyd/src/globals.cpp` |
 | SD config loading | `cyd/src/sd-reader.h`, `cyd/src/sd-reader.cpp` |
 | Offline cache on the card | `cyd/src/cache.h`, `cyd/src/cache.cpp` |
+| Icon pack export | `site/src/lib/utils/icon-export.ts`, `.../lvgl-image.ts`, `.../zip.ts`, `.../rasterize-svg.ts` |
 | WiFi connect | `cyd/src/connection.cpp` |
 | WebSocket client | `cyd/src/web-socket.h`, `cyd/src/web-socket.cpp` |
 | REST client / credentials | `cyd/src/api.h`, `cyd/src/api.cpp` |

@@ -289,11 +289,14 @@
  *Used by image decoders such as `lv_lodepng` to keep the decoded image in the memory.
  *If size is not set to 0, the decoder will fail to decode when the cache is full.
  *If size is 0, the cache function is not enabled and the decoded mem will be released immediately after use.*/
-#define LV_CACHE_DEF_SIZE       0
+/* Sized for the AguesGuard's icon pack: 24x24 A8 is 576 bytes decoded, so 32 KB holds well over
+ * the number of expertise entries a character has. Without a cache every scroll frame re-reads the
+ * icon off the SD card. */
+#define LV_CACHE_DEF_SIZE       (32 * 1024)
 
 /*Default number of image header cache entries. The cache is used to store the headers of images
  *The main logic is like `LV_CACHE_DEF_SIZE` but for image headers.*/
-#define LV_IMAGE_HEADER_CACHE_DEF_CNT 0
+#define LV_IMAGE_HEADER_CACHE_DEF_CNT 32
 
 /*Number of stops allowed per gradient. Increase this to allow more stops.
  *This adds (sizeof(lv_color_t) + 1) bytes per additional stop*/
@@ -614,10 +617,12 @@
 /*File system interfaces for common APIs */
 
 /*API for fopen, fread, etc*/
-#define LV_USE_FS_STDIO 0
+/* On, so LVGL can load icons from the SD card. The Arduino SD library mounts the card through the
+ * ESP32's VFS at /sd, so plain fopen() reaches it and no custom lv_fs driver is needed. */
+#define LV_USE_FS_STDIO 1
 #if LV_USE_FS_STDIO
     #define LV_FS_STDIO_LETTER 'A' //'\0'     /*Set an upper cased letter on which the drive will accessible (e.g. 'A')*/
-    #define LV_FS_STDIO_PATH "drive/"         /*Set the working directory. File/directory paths will be appended to it.*/
+    #define LV_FS_STDIO_PATH "/sd/"           /*Set the working directory. File/directory paths will be appended to it.*/
     #define LV_FS_STDIO_CACHE_SIZE 0    /*>0 to cache this number of bytes in lv_fs_read()*/
 #endif
 

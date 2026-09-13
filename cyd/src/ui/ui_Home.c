@@ -78,42 +78,10 @@ void ui_Home_screen_init(void)
     lv_label_set_text(ui_ImplantsButtonLabel, "Implants");
     lv_obj_set_style_text_font(ui_ImplantsButtonLabel, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_ItemsButton = lv_button_create(ui_Home);
-    lv_obj_set_width(ui_ItemsButton, 70);
-    lv_obj_set_height(ui_ItemsButton, 70);
-    lv_obj_set_x(ui_ItemsButton, -70);
-    lv_obj_set_y(ui_ItemsButton, 50);
-    lv_obj_set_align(ui_ItemsButton, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_ItemsButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_remove_flag(ui_ItemsButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_ItemsButton, lv_color_hex(0x3D3D3D), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_ItemsButton, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_ItemsButton, lv_color_hex(0x656565), LV_PART_MAIN | LV_STATE_PRESSED);
-    lv_obj_set_style_bg_opa(ui_ItemsButton, 255, LV_PART_MAIN | LV_STATE_PRESSED);
-
-    ui_ItemsButtonImage = lv_image_create(ui_ItemsButton);
-    lv_image_set_src(ui_ItemsButtonImage, &ui_img_1177636178);
-    lv_obj_set_width(ui_ItemsButtonImage, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_ItemsButtonImage, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_ItemsButtonImage, 0);
-    lv_obj_set_y(ui_ItemsButtonImage, -5);
-    lv_obj_set_align(ui_ItemsButtonImage, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_ItemsButtonImage, LV_OBJ_FLAG_CLICKABLE);     /// Flags
-    lv_obj_remove_flag(ui_ItemsButtonImage, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-
-    ui_ItemsButtonLabel = lv_label_create(ui_ItemsButton);
-    lv_obj_set_width(ui_ItemsButtonLabel, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_ItemsButtonLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_ItemsButtonLabel, 0);
-    lv_obj_set_y(ui_ItemsButtonLabel, 25);
-    lv_obj_set_align(ui_ItemsButtonLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_ItemsButtonLabel, "Items");
-    lv_obj_set_style_text_font(ui_ItemsButtonLabel, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
-
     ui_MessagesButton = lv_button_create(ui_Home);
     lv_obj_set_width(ui_MessagesButton, 70);
     lv_obj_set_height(ui_MessagesButton, 70);
-    lv_obj_set_x(ui_MessagesButton, 70);
+    lv_obj_set_x(ui_MessagesButton, 0);
     lv_obj_set_y(ui_MessagesButton, 50);
     lv_obj_set_align(ui_MessagesButton, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_MessagesButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
@@ -144,7 +112,6 @@ void ui_Home_screen_init(void)
 
     lv_obj_add_event_cb(ui_ExpertiseButton, ui_event_ExpertiseButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_ImplantsButton, ui_event_ImplantsButton, LV_EVENT_ALL, NULL);
-    lv_obj_add_event_cb(ui_ItemsButton, ui_event_ItemsButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_MessagesButton, ui_event_MessagesButton, LV_EVENT_ALL, NULL);
 
 }

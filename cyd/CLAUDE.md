@@ -96,7 +96,7 @@ WebSocket routing (`src/web-socket.cpp`): incoming `{ "goTo": { "screen": "loadi
 
 UI is designed in **SquareLine Studio 1.5.1**. Never manually edit `src/ui/` — it is regenerated on every export.
 
-Screens: `Home`, `DownloadScreen`, `LootScreen`, `VirusScreen`, `Expertise`, `Implants`, `Items`, `Messages`.
+Screens: `Home`, `DownloadScreen`, `LootScreen`, `VirusScreen`, `Expertise`, `Implants`, `Messages`.
 
 **Edit workflow:**
 1. Open `ui-project/cyd-interface.spj` in SquareLine Studio 1.5.1

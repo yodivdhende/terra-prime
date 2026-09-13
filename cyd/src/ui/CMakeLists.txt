@@ -6,7 +6,6 @@ SET(SOURCES ui_comp_header.c
     ui_VirusScreen.c
     ui_Expertise.c
     ui_Implants.c
-    ui_Items.c
     ui_Messages.c
     ui.c
     ui_comp_hook.c
@@ -16,7 +15,6 @@ SET(SOURCES ui_comp_header.c
     ui_img_house_sm_png.c
     ui_img_user_png.c
     ui_img_1577569611.c
-    ui_img_1177636178.c
     ui_img_9038990.c)
 
 add_library(ui ${SOURCES})

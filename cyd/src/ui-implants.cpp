@@ -3,14 +3,16 @@
 #include <lvgl.h>
 #include <ui/ui.h>
 #include <api.h>
+#include <character.h>
 #include <ui-implants.h>
 
 /**
  * The Implants screen: every implant the character carries, each with its description.
  *
  * Same shape as `ui-expertise.cpp` — `src/ui/` is generated, so this hangs a list under the
- * generated header and title and refills it on every `LV_EVENT_SCREEN_LOADED`. Rows arrive sorted
- * by slot, so the list reads in the order the implants sit in the body.
+ * generated header and title and refills it on every `LV_EVENT_SCREEN_LOADED`, which also refreshes
+ * the copy on the SD card that `api.cpp` falls back to offline. Rows arrive sorted by slot, so the
+ * list reads in the order the implants sit in the body.
  */
 
 static lv_obj_t * implantList = NULL;
@@ -52,20 +54,24 @@ static void fillImplants(lv_event_t * e)
     LV_UNUSED(e);
     lv_obj_clean(implantList);
 
-    const String response = apiGet("my/implants");
-    if (response == "") {
-        addMessage("No connection to the network.");
+    // The version this device believes it is: a stored body for any other character is not used.
+    const ApiResult result = apiGet("my/implants", currentCharacter.versionId);
+    if (result.body == "") {
+        addMessage("No connection, and nothing stored yet.");
         return;
     }
 
     JsonDocument document;
-    const DeserializationError error = deserializeJson(document, response);
+    const DeserializationError error = deserializeJson(document, result.body);
     if (error) {
         Serial.print("implants: JSON error ");
         Serial.println(error.c_str());
         addMessage("Could not read your implants.");
         return;
     }
+
+    // Said before the values, so nobody reads stale numbers as current ones.
+    if (result.stale) addMessage("Offline - showing the last stored values.");
 
     JsonArray implants = document["implants"].as<JsonArray>();
     if (implants.isNull() || implants.size() == 0) {

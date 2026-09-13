@@ -23,7 +23,7 @@ character data live on the site (SvelteKit + MySQL). CYD talks to the site over 
 | HTTP (REST) | device → server | `GET /api/my/*` — character at boot, expertise and implants when those screens open |
 | WebSocket (`/connections`) | bidirectional | status/link events out, screen-navigation commands in |
 | UART (serial) | external peripheral → device | receives tokens (e.g. from an RFID/NFC reader), relayed as "link" events |
-| SD card | local | loads `/config.json` at boot (WiFi creds, API/WS URLs, `deviceUid`, `sessionToken`) |
+| SD card | local | loads `/config.json` at boot (WiFi creds, API/WS URLs, `deviceUid`, `sessionToken`); stores the last answer per `api/my` path for offline use |
 
 The admin-facing `manage/sessions` dashboard in the site connects to the **same** WebSocket
 endpoint as every CYD device, so admins can see which devices are connected live and trigger
@@ -37,10 +37,11 @@ screen changes (e.g. "send virus") on a specific device.
 flowchart LR
     subgraph Table["Tabletop prop"]
         UART[UART peripheral\ntoken/RFID reader]
-        SD[(SD card\nconfig.json)]
+        SD[(SD card\nconfig.json + api cache)]
         CYD["CYD device\nESP32 + LVGL UI"]
         UART -- "serial tokens" --> CYD
         SD -- "WiFi/API/WS config" --> CYD
+        CYD -- "last api/my answers" --> SD
     end
 
     subgraph Site["terra-prime site (SvelteKit)"]
@@ -68,6 +69,7 @@ flowchart TB
     main["main.cpp\nsetup() / loop()"]
     globals["globals.h/.cpp\nWiFi creds, domain, api_url,\ndeviceUid, sessionToken"]
     sd["sd-reader.h/.cpp\nreads /config.json → globals"]
+    cache["cache.h/.cpp\nlast answer per path,\non the SD card"]
     conn["connection.cpp\nconnectToWifi()"]
     ws["web-socket.h/.cpp\nconnect, sendStatus(),\nsendLink(), handleMessage()"]
     api["api.h/.cpp\napiGet() — REST reads with\nthis device's credentials"]
@@ -88,6 +90,7 @@ flowchart TB
     conn --> globals
     ws --> globals
     api --> globals
+    api -- "store / fall back" --> cache
     char --> api
     data --> api
     ws -- "goTo command" --> xition
@@ -173,6 +176,12 @@ registered under in `Devices`, and the server reads the bound character version 
 `aguesguard` role. Re-binding a handheld is an admin edit of that role — nothing to reflash, no SD
 card to rewrite. `/api/my/**` serves a player's browser over the session cookie by the same route.
 
+Every answer is also written to the SD card, and every failed request falls back to the last one
+stored for that path, so a prop that loses WiFi mid-event keeps showing the player their own sheet.
+Each stored body records the character version it belongs to and is refused if that no longer
+matches, so a re-bound handheld never falls back to the previous player's numbers. The screens mark
+a stored body as stale rather than passing it off as current.
+
 ### 5.3 Link / loot mini-game
 
 ```mermaid
@@ -217,8 +226,8 @@ sequenceDiagram
 | `Sessions` / `Session_Roles` | `sessionToken` is provisioned into `/config.json` on the SD card out-of-band | — (no direct writes) | Identity on the WS channel is self-asserted via `sessionToken` in the `status` message; there is no per-message auth check on the socket itself |
 | `Devices` / `Device_AguesGuard` | indirectly: the device sends its `Uid`, the server resolves the role's `CharacterVersion` | — | The device's identity on the REST channel. A UID is a bearer credential sent in the clear — see [§7.3](#7-known-architecture-gaps) |
 | `Characters` / `Character_Versions` | via `GET /api/my/character` (`name`, `versionId`, `versionName`) | — | Fetched once at boot (when enabled) to populate the Home screen |
-| `Character_Version_Expertise` / `Expertise` / `Expertise_Groups` | via `GET /api/my/expertise` (value, name, group name and colour) | — | Re-read every time the Expertise screen opens. Icons are withheld from device callers: they are SVG documents LVGL cannot draw |
-| `Character_Version_Implants` / `Implants` | via `GET /api/my/implants` (name, description, slot) | — | Re-read every time the Implants screen opens |
+| `Character_Version_Expertise` / `Expertise` / `Expertise_Groups` | via `GET /api/my/expertise` (value, name, group name and colour) | — | Re-read every time the Expertise screen opens, and cached on the SD card for when that read fails. Icons are withheld from device callers: they are SVG documents LVGL cannot draw |
+| `Character_Version_Implants` / `Implants` | via `GET /api/my/implants` (name, description, slot) | — | Re-read every time the Implants screen opens, and cached on the SD card for when that read fails |
 
 Full schema reference: `site/CLAUDE.md`. Full REST endpoint reference: `site/src/routes/api/CLAUDE.md`.
 
@@ -257,6 +266,7 @@ so they're visible, not silently worked around.
 | Firmware entry / lifecycle | `cyd/src/main.cpp` |
 | Firmware shared state | `cyd/src/globals.h`, `cyd/src/globals.cpp` |
 | SD config loading | `cyd/src/sd-reader.h`, `cyd/src/sd-reader.cpp` |
+| Offline cache on the card | `cyd/src/cache.h`, `cyd/src/cache.cpp` |
 | WiFi connect | `cyd/src/connection.cpp` |
 | WebSocket client | `cyd/src/web-socket.h`, `cyd/src/web-socket.cpp` |
 | REST client / credentials | `cyd/src/api.h`, `cyd/src/api.cpp` |

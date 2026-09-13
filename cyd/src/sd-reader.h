@@ -3,4 +3,6 @@
     #include <FS.h>
     bool setupSD();
     bool readConfig(fs::FS &fs);
+    /** Whether the card mounted at boot, so the cache knows there is anywhere to write. */
+    bool isSdReady();
 #endif

@@ -8,11 +8,22 @@
 #include <ArduinoJson.h>
 
 
+/**
+ * The card outlives `setupSD()` now — the cache in `cache.cpp` reads and writes it while the UI is
+ * running — and `SD.begin()` keeps a pointer to the bus it is handed, not a copy. This used to be a
+ * local, which left that pointer dangling the moment `setupSD()` returned; it was harmless only
+ * because nothing touched the card afterwards.
+ */
+static SPIClass sdSpi(VSPI);
+static bool sdReady = false;
+
+bool isSdReady() {
+  return sdReady;
+}
+
 bool setupSD() {
 
-  SPIClass spi = SPIClass(VSPI);
-
-  if (!SD.begin(SS, spi, 80000000)) {
+  if (!SD.begin(SS, sdSpi, 80000000)) {
     logRed("Card Mount Failed");
     return false;
   }
@@ -36,6 +47,7 @@ bool setupSD() {
 
   uint64_t cardSize = SD.cardSize() / (1024 * 1024);
   logGreen("SD Card Size: %lluMB", String(cardSize).c_str());
+  sdReady = true;
   return readConfig(SD);
 }
 

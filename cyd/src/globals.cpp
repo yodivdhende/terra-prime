@@ -20,9 +20,9 @@ String wifi_password;
 String domain;
 int webSocketPort;
 String api_url;
-int character_id;
 String boot_gif_path;
 String sessionToken;
+String deviceUid;
 
 
 TFT_eSPI tft = TFT_eSPI( screenHeight ,screenWidth ); /* TFT instance */

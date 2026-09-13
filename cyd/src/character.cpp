@@ -1,77 +1,47 @@
 #include <Arduino.h>
 #include <character.h>
-#include <WiFi.h>
-#include <globals.h>
+#include <api.h>
 #include <ArduinoJson.h>
-#include <HTTPClient.h>
 #include <log.h>
 
 Character currentCharacter;
 
-String httpGETRequest(const char* serverName) {
-  WiFiClient client;
-  HTTPClient http;
-    
-  // Your Domain name with URL path or IP address with path
-  http.begin(client, serverName);
-  
-  // If you need Node-RED/server authentication, insert user and password below
-  //http.setAuthorization("REPLACE_WITH_SERVER_USERNAME", "REPLACE_WITH_SERVER_PASSWORD");
-  
-  // Send HTTP POST request
-  int httpResponseCode = http.GET();
-  
-  String payload = "{}"; 
-  
-  if (httpResponseCode>0) {
-    logWhite("HTTP Response code: %s", String(httpResponseCode).c_str());
-    payload = http.getString();
-  }
-  else {
-    logRed("Error code: ");
-    logRed(String(httpResponseCode).c_str());
-  }
-  // Free resources
-  http.end();
-
-  return payload;
-}
-
+/**
+ * `GET api/my/character` — the character version this device is bound to.
+ *
+ * The old call was `GET api/characters/{characterId}` with no auth header at all, against a route
+ * guarded for admins, using a character id the SD card asserted. `api/my/character` is the read
+ * path for "whoever is asking", and `apiGet()` identifies this device to it (see `api.cpp`), so the
+ * server decides which character comes back.
+ */
 bool fetchCharacter()
 {
-  if(WiFi.status() == WL_CONNECTED) {
-    String characterUrl = api_url+ "characters/" + String(character_id);
-    logWhite("fetching: ");
-    logWhite(characterUrl.c_str());
-
-    String characterResponse = httpGETRequest(characterUrl.c_str());
-    logWhite(characterResponse.c_str());
-
-    if(characterResponse == "") {
-      logRed("Empty response");
-      return false;
-    }
-
-    JsonDocument characterObj;
-    DeserializationError error = deserializeJson(characterObj, characterResponse);
-
-    if(error) {
-      logRed("JSON error:");
-      logRed(error.c_str());  
-      return false;
-    }
-
-    String name = characterObj["name"];
-    currentCharacter.id = characterObj["id"];
-    currentCharacter.name = name;
-    currentCharacter.currentHp = characterObj["currentHp"];
-    currentCharacter.maxHp = characterObj["maxHp"];
-
-    logGreen(name.c_str());
-    if(name == NULL){
-      return false;
-    }
-    return true;
+  String response = apiGet("my/character");
+  if (response == "") {
+    logRed("Empty character response");
+    return false;
   }
-  return false;
+
+  JsonDocument characterObj;
+  DeserializationError error = deserializeJson(characterObj, response);
+  if (error) {
+    logRed("JSON error:");
+    logRed(error.c_str());
+    return false;
+  }
+
+  if (characterObj["name"].is<const char*>() == false) {
+    logRed("Character response had no name");
+    return false;
+  }
+
+  String name = characterObj["name"];
+  currentCharacter.id = characterObj["id"];
+  currentCharacter.name = name;
+  currentCharacter.versionId = characterObj["versionId"];
+  String versionName = characterObj["versionName"];
+  currentCharacter.versionName = versionName;
+
+  logGreen(name.c_str());
+  return true;
 }

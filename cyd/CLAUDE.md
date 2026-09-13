@@ -62,7 +62,7 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
 | HTTP REST | Device → Server | Fetch character data on boot, and screen data on demand |
 | WebSocket | Server → Device | Navigate to screen (`loading`, `loot`, `virus`) |
 | UART Serial | External → Device | Receive tokens, relay via `sendLink()` |
-| SD card | SD → Device | Load config at boot |
+| SD card | SD ⇄ Device | Load config at boot; store the last answer per `api/my` path for offline use |
 
 WebSocket routing (`src/web-socket.cpp`): incoming `{ "goTo": { "screen": "loading|loot|virus" } }` calls the corresponding `Ui*Setup()`.
 
@@ -79,7 +79,8 @@ WebSocket routing (`src/web-socket.cpp`): incoming `{ "goTo": { "screen": "loadi
 | `src/globals.h/cpp` | Global state: screen dims, WiFi creds, API URL, touch SPI pins, `screenSetup()` |
 | `src/ui-implementation.h/cpp` | LVGL init, display flush, touch read callbacks, `uiSetup()` / `uiLoop()` |
 | `src/web-socket.h/cpp` | WebSocket client — setup, event handler, `sendLink()`, screen routing |
-| `src/api.h/cpp` | `apiGet()` — every REST read, with this device's credentials attached |
+| `src/api.h/cpp` | `apiGet()` — every REST read: device credentials on the way out, SD fallback on failure |
+| `src/cache.h/cpp` | `cacheRead()` / `cacheWrite()` — the stored copy of each `api/my` answer |
 | `src/character.h/cpp` | `Character` struct, `fetchCharacter()` |
 | `src/sd-reader.h/cpp` | `setupSD()` + `readConfig()` — parses `/config.json` into globals |
 | `src/uart-interface.h/cpp` | `uartSerialLoop()` — reads serial tokens |
@@ -142,6 +143,20 @@ character it is showing. Register the UID and attach the role under `manage/devi
 cookie, which keeps a device that is not in the registry yet working against `/api/my/**`; the
 server prefers the device UID when both arrive.
 
+### Offline cache
+
+`apiGet()` writes every answer to `/cache/<path>.json` on the same card and falls back to it when a
+request fails, so losing WiFi mid-event leaves the player's own sheet on screen instead of an error.
+A cached body is flagged stale and the screens say "Offline - showing the last stored values" above
+the values, so nobody reads them as current.
+
+Each file is a header line — the cache format version, a tab, and the character version the body
+belongs to — followed by the body. That version is checked on read: an AguesGuard re-bound to
+another character will not fall back to the previous player's numbers, it shows nothing instead.
+Writes go to a `.part` file and are renamed, because the prop gets switched off mid-write.
+
+The cache is disposable. Deleting `/cache` costs one round trip per screen.
+
 ---
 
 ## Gotchas
@@ -152,4 +167,7 @@ server prefers the device UID when both arrive.
 - **TFT rotation:** `screenSetup()` sets rotation 0 (portrait); `uiSetup()` overrides to rotation 1 (landscape) for LVGL. Don't change the `uiSetup()` rotation without also updating LVGL display dimensions.
 - **UART unlink is commented out.** `sendLink(token, false)` is never called — tokens are never automatically unlinked.
 - **`connectToWifi()` blocks indefinitely** — no timeout if the network is unreachable.
+- **`setupSD()` mounts at 80 MHz**, which is past the SPI-mode SD ceiling of 40 MHz. It predates
+  the offline cache, which depends on the card mounting, so it is worth checking on hardware — if
+  the card is unreliable, this is the first thing to lower.
 - **`logRed/logGreen/logWhite` write to TFT directly.** After LVGL takes over, raw TFT writes conflict with LVGL rendering. Code that runs from a screen logs to `Serial` instead — see `src/api.cpp`.

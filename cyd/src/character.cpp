@@ -13,13 +13,21 @@ Character currentCharacter;
  * guarded for admins, using a character id the SD card asserted. `api/my/character` is the read
  * path for "whoever is asking", and `apiGet()` identifies this device to it (see `api.cpp`), so the
  * server decides which character comes back.
+ *
+ * Version 0 is passed because this request is what establishes which version this device is: the
+ * stored copy is accepted whatever version it holds, which is what lets the device finish booting
+ * with no network at all.
  */
 bool fetchCharacter()
 {
-  String response = apiGet("my/character");
+  const ApiResult result = apiGet("my/character", 0);
+  const String& response = result.body;
   if (response == "") {
-    logRed("Empty character response");
+    logRed("No character, and none stored");
     return false;
+  }
+  if (result.stale) {
+    logWhite("Offline - using the stored character");
   }
 
   JsonDocument characterObj;

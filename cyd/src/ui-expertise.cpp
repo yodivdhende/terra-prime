@@ -3,6 +3,7 @@
 #include <lvgl.h>
 #include <ui/ui.h>
 #include <api.h>
+#include <character.h>
 #include <ui-expertise.h>
 
 /**
@@ -12,7 +13,8 @@
  * `src/ui/` is generated from the SquareLine project, so nothing here edits it — the screen arrives
  * with a header and a title, and this file hangs a list under them and refills it on every
  * `LV_EVENT_SCREEN_LOADED`. Refilling rather than fetching once means a value an admin changes
- * mid-event shows up the next time the player opens the screen.
+ * mid-event shows up the next time the player opens the screen, and that every visit refreshes the
+ * copy on the SD card that `api.cpp` falls back to when the network is gone.
  *
  * The server sends this device no icons: they are SVG documents, which LVGL cannot draw and the
  * ESP32 cannot afford to parse. A bar is tinted with its group's colour instead, and rows arrive
@@ -84,20 +86,24 @@ static void fillExpertise(lv_event_t * e)
     LV_UNUSED(e);
     lv_obj_clean(expertiseList);
 
-    const String response = apiGet("my/expertise");
-    if (response == "") {
-        addMessage("No connection to the network.");
+    // The version this device believes it is: a stored body for any other character is not used.
+    const ApiResult result = apiGet("my/expertise", currentCharacter.versionId);
+    if (result.body == "") {
+        addMessage("No connection, and nothing stored yet.");
         return;
     }
 
     JsonDocument document;
-    const DeserializationError error = deserializeJson(document, response);
+    const DeserializationError error = deserializeJson(document, result.body);
     if (error) {
         Serial.print("expertise: JSON error ");
         Serial.println(error.c_str());
         addMessage("Could not read your expertise.");
         return;
     }
+
+    // Said before the values, so nobody reads stale numbers as current ones.
+    if (result.stale) addMessage("Offline - showing the last stored values.");
 
     JsonArray expertise = document["expertise"].as<JsonArray>();
     if (expertise.isNull() || expertise.size() == 0) {

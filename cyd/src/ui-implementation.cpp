@@ -7,11 +7,14 @@
 #include <character.h>
 #include <ui-expertise.h>
 #include <ui-implants.h>
+#include <ui-status-bar.h>
 #include <XPT2046_Touchscreen.h>
 
 /*Don't forget to set Sketchbook location in File/Preferences to the path of your UI project (the parent foder of this INO file)*/
-const uint16_t screenWidth  = 320;
-const uint16_t screenHeight = 240;
+// Deliberately file-local copies of what `globals.cpp` exports: the display buffer below is sized
+// at compile time, which an `extern const` cannot do.
+static const uint16_t screenWidth  = 320;
+static const uint16_t screenHeight = 240;
 
 /*Loading sreen*/
 
@@ -122,6 +125,9 @@ void uiSetup()
     // once the generated objects exist.
     uiExpertiseInit();
     uiImplantsInit();
+    // The header's battery and WiFi icons are the same: generated as one static frame, given their
+    // state from outside.
+    uiStatusBarInit();
 
     Serial.println("Setup done");
 }

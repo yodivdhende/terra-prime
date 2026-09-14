@@ -9,10 +9,12 @@
 #include <ui-implementation.h>
 #include <uart-interface.h>
 #include <web-socket.h>
+#include <power.h>
 
 void setup () {
   Serial.begin(115200);
   screenSetup();
+  powerSetup();
   logWhite("booting V0.0.4");
   // if(setupSD() == false) {
   //   return;
@@ -30,9 +32,10 @@ void setup () {
 
 
 void loop (){
-  uiLoop(); 
+  uiLoop();
   webSocketLoop();
   uartSerialLoop();
+  powerLoop();
 }
 
 

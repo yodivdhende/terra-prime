@@ -24,6 +24,7 @@ character data live on the site (SvelteKit + MySQL). CYD talks to the site over 
 | WebSocket (`/connections`) | bidirectional | status/link events out, screen-navigation commands in |
 | UART (serial) | external peripheral → device | receives tokens (e.g. from an RFID/NFC reader), relayed as "link" events |
 | SD card | local | loads `/config.json` at boot (WiFi creds, API/WS URLs, `deviceUid`, `sessionToken`) and the expertise icon pack; stores the last answer per `api/my` path for offline use |
+| I2C | sense IC → device | INA219 on the battery terminals: pack voltage and current, for the charge readout ([§3.1](#31-power-and-signal-telemetry)) |
 
 The admin-facing `manage/sessions` dashboard in the site connects to the **same** WebSocket
 endpoint as every CYD device, so admins can see which devices are connected live and trigger
@@ -75,6 +76,8 @@ flowchart TB
     api["api.h/.cpp\napiGet() — REST reads with\nthis device's credentials"]
     char["character.h/.cpp\nCharacter struct,\nfetchCharacter()"]
     uart["uart-interface.h/.cpp\nreads serial tokens,\ncalls sendLink(token, true)"]
+    power["power.h/.cpp\nINA219 over I2C, charge curve,\nidle → light sleep, wake on touch"]
+    status["ui-status-bar.h/.cpp\nbattery + WiFi icons\nin every screen's header"]
     ui["ui-implementation.h/.cpp\nLVGL init, display flush,\ntouch read, uiSetup()/uiLoop()"]
     screens["ui/*\nSquareLine Studio screens:\nHome, DownloadScreen, LootScreen,\nVirusScreen, Expertise, Implants, Messages"]
     xition["ui-downloading.cpp / ui-loot.cpp / ui-virus.cpp\nscreen-transition logic"]
@@ -85,9 +88,15 @@ flowchart TB
     main --> ws
     main --> char
     main --> uart
+    main --> power
     main --> ui
     sd --> globals
     conn --> globals
+    power --> conn
+    ui --> status
+    status --> power
+    status --> conn
+    status --> screens
     ws --> globals
     api --> globals
     api -- "store / fall back" --> cache
@@ -103,6 +112,45 @@ flowchart TB
 
 > Note: as of the current firmware, `main.cpp` boots directly into the UI with SD/WiFi/
 > character-fetch/WebSocket init **commented out** (dev-mode state) — see `cyd/CLAUDE.md`.
+
+### 3.1 Power and signal telemetry
+
+The prop is untethered: it runs an evening at the table off two 18650 cells on a "V8" shield, which
+wires them in **parallel** behind a 5V boost converter. Two things follow from that, and both live
+outside the generated UI.
+
+**Knowing the charge.** The boosted 5V rail says nothing about the cells — it reads a flat 5V until
+the converter gives up. So an **INA219** sits across the shield's *raw* cell terminals and reports
+bus voltage and current over I2C (SDA 27, SCL 22 — clear of the display and touch SPI buses; no ADC
+pin). A pack under load sags well below its resting voltage, so `power.cpp` adds the I·R drop back
+from the current reading before looking the voltage up in a single-cell 18650 discharge curve. The
+sense IC is optional: with none on the bus every reading comes back unmetered and the status bar
+says `--` rather than inventing a number.
+
+**Making the charge last.** After two minutes without a touch — LVGL's own inactivity timer — the
+backlight goes out and the ESP32 enters **light** sleep. Light rather than deep is the whole point:
+RAM and the call stack survive, so the screen the player left is still built and still holds its
+data. The XPT2046 pulls its IRQ line (GPIO 36) low on touch, and that is the `ext0` wake source.
+The radio cannot stay associated through light sleep, so it is taken down deliberately and
+`reconnectWifi()` brings it back on wake; the WebSocket client reconnects itself from there, and a
+screen opened before the link is back fills from the SD cache ([§3](#3-cyd-firmware-components)).
+
+**Signal strength** is read from the radio as RSSI and bucketed into 0–4 bars
+(`wifiStrengthLevel()`). The bars go two places: the header icon, and the `wifiStrength` field of
+the `status` message the device sends the WebSocket server. `status` is otherwise sent once on
+connect, so a handheld walking out of range would sit in the admin list showing full bars — the
+device re-sends it whenever the bracket changes.
+
+```mermaid
+flowchart LR
+    ina["INA219\n(raw cell terminals)"] -- "I2C: bus V, shunt V" --> power["power.cpp\nsag compensation +\ndischarge curve"]
+    touch["XPT2046 IRQ\nGPIO 36"] -- "ext0 wake" --> power
+    power -- "idle 2 min" --> sleep["light sleep\nbacklight off, radio down"]
+    radio["WiFi radio"] -- "RSSI" --> level["wifiStrengthLevel()\n0-4 bars"]
+    power -- "percentage, charging" --> bar["ui-status-bar.cpp\nheader icons"]
+    level --> bar
+    level -- "status.wifiStrength" --> ws["websocket-server\n/connections"]
+```
 
 ---
 
@@ -123,7 +171,7 @@ flowchart LR
 
 **Discriminated connection types** (`connection-socket.ts`):
 - `WebStatusCommandInfo` — `connectionType: 'Web'` (admin dashboard)
-- `CYDStatusCommandInfo` — `connectionType: 'CYD'`, includes `wifiStrength`
+- `CYDStatusCommandInfo` — `connectionType: 'CYD'`, includes `wifiStrength` (0–4 bars, see [§3.1](#31-power-and-signal-telemetry))
 
 `site/src/lib/components/session-row.svelte` renders a Wifi icon for `'CYD'` connections and
 an EthernetPort icon for `'Web'` connections in the admin list.
@@ -276,7 +324,9 @@ so they're visible, not silently worked around.
 | SD config loading | `cyd/src/sd-reader.h`, `cyd/src/sd-reader.cpp` |
 | Offline cache on the card | `cyd/src/cache.h`, `cyd/src/cache.cpp` |
 | Icon pack export | `site/src/lib/utils/icon-export.ts`, `.../lvgl-image.ts`, `.../zip.ts`, `.../rasterize-svg.ts` |
-| WiFi connect | `cyd/src/connection.cpp` |
+| WiFi connect, reconnect, RSSI → bars | `cyd/src/connection.cpp` |
+| Battery metering and power save | `cyd/src/power.h`, `cyd/src/power.cpp` |
+| Header battery / WiFi icons | `cyd/src/ui-status-bar.h`, `cyd/src/ui-status-bar.cpp` |
 | WebSocket client | `cyd/src/web-socket.h`, `cyd/src/web-socket.cpp` |
 | REST client / credentials | `cyd/src/api.h`, `cyd/src/api.cpp` |
 | Character fetch | `cyd/src/character.h`, `cyd/src/character.cpp` |

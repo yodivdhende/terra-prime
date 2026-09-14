@@ -8,6 +8,7 @@ overrides:
   cookie@<0.7.0: ^0.7.2
   uuid@<11.1.1: ^11.1.1
   esbuild@<0.25.0: ^0.25.12
+  sql-escaper@1.5.2: 1.5.1
 
 importers:
 
@@ -1903,8 +1904,8 @@ packages:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
 
-  sql-escaper@1.5.2:
-    resolution: {integrity: sha512-6CKD38c31SENivxOADeMNLdukOnUxUcflKtzVWzace7Riv1v7cAEym5Cx9Q7gYZ3ezIJI7ZpqecQq8cqNeSSFg==}
+  sql-escaper@1.5.1:
+    resolution: {integrity: sha512-4toX5E1fQbBrpfXidaHnF0669nkAdETeIPTs2SUjxxD7RRIs9ICG4gtpmfc68JCEKehsdwLFqBu9VlQqZ1P1gg==}
     engines: {bun: '>=1.0.0', deno: '>=2.0.0', node: '>=12.0.0'}
 
   statuses@2.0.2:
@@ -3500,7 +3501,7 @@ snapshots:
       long: 5.3.2
       lru.min: 1.1.5
       named-placeholders: 1.1.6
-      sql-escaper: 1.5.2
+      sql-escaper: 1.5.1
 
   named-placeholders@1.1.6:
     dependencies:
@@ -3775,7 +3776,7 @@ snapshots:
 
   source-map@0.6.1: {}
 
-  sql-escaper@1.5.2: {}
+  sql-escaper@1.5.1: {}
 
   statuses@2.0.2: {}
 

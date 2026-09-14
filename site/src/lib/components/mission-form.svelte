@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { MissionDraft, MissionPrinter } from '$lib/db/mission.repo';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
+	import Hint from '$lib/components/hint.svelte';
 
 	let { mission = $bindable<MissionDraft>() }: { mission: MissionDraft } = $props();
 
@@ -82,16 +83,15 @@
 	<input id="mission-player-limit" type="number" min="0" bind:value={mission.playerLimit} />
 
 	{#if mission.id == null}
-		<p class="hint">Printers can be attached once the mission is saved.</p>
+		<Hint text="Printers can be attached once the mission is saved." />
 	{:else}
 		<fieldset>
 			<legend>Printers</legend>
-			<p class="hint">
-				A mission has no print pool of its own. Its available prints are the sum of the printers
-				attached to it — wheel one in or out to change the number.
-			</p>
+			<Hint
+				text="A mission has no print pool of its own. Its available prints are the sum of the printers attached to it — wheel one in or out to change the number."
+			/>
 			{#if attached.length === 0}
-				<p class="hint">No printers attached.</p>
+				<Hint text="No printers attached." />
 			{:else}
 				<table>
 					<thead>
@@ -143,7 +143,7 @@
 					>
 				</div>
 			{:else}
-				<p class="hint">No unattached printers available.</p>
+				<Hint text="No unattached printers available." />
 			{/if}
 		</fieldset>
 	{/if}
@@ -182,12 +182,6 @@
 		letter-spacing: 0.05em;
 		opacity: 0.6;
 		padding: 0 4px;
-	}
-
-	.hint {
-		margin: 0;
-		font-size: 0.8rem;
-		opacity: 0.6;
 	}
 
 	table {

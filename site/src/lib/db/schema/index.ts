@@ -8,11 +8,13 @@
  * | `companies.ts`  | companies and their discount tables                          |
  * | `characters.ts` | characters, versions, version contents, access grants, party |
  * | `events.ts`     | events, participants, coupons                                |
- * | `missions.ts`   | missions, participants, printer devices                      |
+ * | `devices.ts`    | devices and their role tables (port, aguesguard, game, …)     |
+ * | `missions.ts`   | missions, participants, mission-printer links                |
  * | `relations.ts`  | relations for the relational query API                       |
  *
  * Modules import in one direction only — `auth`/`catalog` -> `companies` -> `characters` ->
- * `events`/`missions` — which matches the foreign-key graph and keeps the module graph acyclic.
+ * `events`/`devices` -> `missions` — which matches the foreign-key graph and keeps the module
+ * graph acyclic.
  *
  * The physical schema predates Drizzle: tables and columns are PascalCase, so every column
  * declares its database name explicitly and exposes a camelCase TypeScript property. Index and
@@ -28,5 +30,6 @@ export * from './catalog';
 export * from './companies';
 export * from './characters';
 export * from './events';
+export * from './devices';
 export * from './missions';
 export * from './relations';

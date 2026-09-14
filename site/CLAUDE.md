@@ -26,7 +26,7 @@ Terra Prime is a LARP / tabletop event management system. Players have character
 ## Database
 
 Schema lives in `src/lib/db/schema/` (Drizzle ORM), split by domain — `auth`, `catalog`,
-`companies`, `characters`, `events`, plus `relations`. Import from `$lib/db/schema`, which
+`companies`, `characters`, `events`, `devices`, `missions`, plus `relations`. Import from `$lib/db/schema`, which
 re-exports all of them. MySQL / InnoDB, utf8mb4.
 Migrations are generated into `drizzle/`; see `docs/database-migrations.md`.
 Tables and columns are PascalCase, so each column names its database column explicitly and
@@ -78,9 +78,22 @@ the shared `db` client from `src/lib/db/mysql.ts` — no raw SQL.
 | `Missions` | `Id`, `Name`, `PlayerLimit`, `Status`, `CreatedAt` | Status: `open` / `closed`. `PlayerLimit` 0 means no limit. **No print pool column** |
 | `Mission_Participants` | `Mission` → Missions, `CharacterVersion` → Character_Versions, `AvailablePrints`, `RegisterAt` | PK `(Mission, CharacterVersion)`; the player is derived via `CharacterVersion → Character → Owner` |
 | `Mission_Printer` | `Mission` → Missions, `Device` → Devices | PK `(Mission, Device)`; association only |
-| `Devices` | `Id`, `Name`, `Uid` | Minimal registry created by `0020_missions.sql`; the device epic extends it |
+| `Devices` | `Id`, `Name`, `Uid` | The registry. `Uid` is unique — the identity the hardware presents on the wire or over MQTT |
+| `Device_Port` | `Device` → Devices | The port role. No columns of its own: being one is the whole of it |
+| `Device_AguesGuard` | `Device` → Devices, `CharacterVersion` → Character_Versions | The handheld, and which character version is loaded onto it |
+| `Device_Game` | `Device` → Devices, `Port` → Devices | The game role, and the port it watches. `Port` must itself hold the port role — enforced in `device.repo.ts`, not by the database |
 | `Device_Printer` | `Device` → Devices, `PrintsAvailable` | The printer role of a device |
+| `Device_Light` | `Device` → Devices, `Endpoint`, `Fixture` | The light role |
 
 > A mission owns no print pool. Its available prints are
 > `SUM(Device_Printer.PrintsAvailable)` across the printers in `Mission_Printer`,
 > so attaching or detaching a machine changes the number with no `Missions` row edited.
+
+> A device is only a name and a UID; what it *is* lives in the role tables, each keyed one-to-one
+> on `Devices.Id`. A device may hold several roles at once, and a device with none is
+> unclassified — legal, and what a freshly registered UID looks like. A **Port** in particular
+> carries no configured behaviour: what happens when an AguesGuard docks with one is decided by
+> whoever subscribes to the resulting `port.connected` / `port.disconnected` facts, which is how
+> a Game claims a Port without any registry change. Ports are standardized Arduino Nanos flashed
+> once with `arduino-nano-uid/`; their UID is written afterwards over Web Serial from
+> `manage/devices`.

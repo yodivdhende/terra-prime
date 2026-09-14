@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import EventForm from '$lib/components/event-form.svelte';
 	import CharacterVersionPreview from '$lib/components/character-version-preview.svelte';
+	import { Printer } from '@lucide/svelte';
 	import type { PageProps } from './$types';
 	import type { LarpEvent } from '$lib/db/event.repo';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
@@ -79,7 +80,13 @@
 	</div>
 	<section class="event-participants">
 		{#if event?.id != null}
-			<a href={resolve('/manage/events/[id]/coupons', { id: String(event.id) })}>Manage Coupons →</a>
+			<a href={resolve('/manage/events/[id]/coupons', { id: String(event.id) })}>Manage Coupons →</a
+			>
+			{#if participants.length > 0}
+				<a href={resolve('/manage/events/[id]/sheets', { id: String(event.id) })}
+					>Print all sheets →</a
+				>
+			{/if}
 		{/if}
 		<h2>Participants</h2>
 		{#if participants.length === 0}
@@ -92,6 +99,7 @@
 						<th>Owner</th>
 						<th>Version</th>
 						<th>Overview</th>
+						<th>Print</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -110,6 +118,19 @@
 									/>
 								{:else}
 									<p class="status">version not found</p>
+								{/if}
+							</td>
+							<td>
+								{#if event?.id != null}
+									<a
+										class="print-link"
+										aria-label="Print sheet for {character.name}"
+										href="{resolve('/manage/events/[id]/sheets', {
+											id: String(event.id)
+										})}?versionId={character.characterVersionId}"
+									>
+										<Printer size="1.1em" />
+									</a>
 								{/if}
 							</td>
 						</tr>
@@ -171,6 +192,12 @@
 	.preview-cell {
 		min-width: 200px;
 		max-width: 320px;
+	}
+
+	.print-link {
+		display: inline-flex;
+		align-items: center;
+		color: var(--color-accent);
 	}
 
 	.status {

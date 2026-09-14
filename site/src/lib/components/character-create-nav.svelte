@@ -65,9 +65,13 @@
 				</span>
 				<span class="step-overview">
 					{#if expertiseManager && expertiseManager.selected.length > 0}
-						<CharacterExpertiseGroups manager={expertiseManager} size={iconSize} />
+						<span class="overview-expertise">
+							<CharacterExpertiseGroups manager={expertiseManager} size={iconSize} />
+						</span>
 					{:else if !expertiseManager && expertise.groups.length > 0}
-						<CharacterExpertiseGroups expertise={expertise.groups} size={iconSize} />
+						<span class="overview-expertise">
+							<CharacterExpertiseGroups expertise={expertise.groups} size={iconSize} />
+						</span>
 					{:else}
 						<span class="overview-empty">none selected</span>
 					{/if}
@@ -208,6 +212,11 @@
 		justify-content: space-between;
 		gap: 0.4rem;
 		min-height: 1.2rem;
+	}
+
+	.overview-expertise {
+		width: 100%;
+		max-width: 200px;
 	}
 
 	.overview-name {

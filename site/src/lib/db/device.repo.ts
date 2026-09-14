@@ -170,6 +170,22 @@ class DeviceRepo {
 		}
 	}
 
+	/**
+	 * Every AguesGuard bound to this character version — who to tell when that character's data
+	 * changes under them. Normally one handheld, but the role is not unique on the version and a
+	 * spare provisioned for the same player is a real thing during an event.
+	 */
+	public async getAguesGuardsForCharacterVersion(
+		characterVersionId: number
+	): Promise<DeviceSummary[]> {
+		return db
+			.select({ id: devices.id, name: devices.name, uid: devices.uid })
+			.from(deviceAguesGuard)
+			.innerJoin(devices, eq(devices.id, deviceAguesGuard.deviceId))
+			.where(eq(deviceAguesGuard.characterVersionId, characterVersionId))
+			.orderBy(devices.name);
+	}
+
 	/** Every device holding the Port role — what a Game picks from. */
 	public async getAllPorts(): Promise<DeviceSummary[]> {
 		const rows = await db

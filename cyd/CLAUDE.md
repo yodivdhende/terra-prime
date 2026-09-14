@@ -4,7 +4,7 @@
 
 ESP32 firmware for the **CYD (Cheap Yellow Display)** tabletop RPG gaming dashboard.
 Runs on an ESP32 dev board with a 320×240 TFT touchscreen (XPT2046 touch controller).
-Displays a character stat screen, navigates between game screens via WebSocket commands from the terra-prime web server (`../site/`), and links UART tokens to player sessions.
+Displays a character stat screen, navigates between game screens on commands published by the terra-prime web server (`../site/`) over MQTT, and reports the UID of whatever board it docks with as an event on the same transport.
 
 Part of the terra-prime monorepo. The web server lives at `../site/` (SvelteKit + Express).
 
@@ -20,7 +20,7 @@ Part of the terra-prime monorepo. The web server lives at `../site/` (SvelteKit 
 
 External libs fetched automatically by PlatformIO on first build:
 - `XPT2046_Touchscreen` (GitHub)
-- `arduinoWebSockets` (GitHub)
+- `PubSubClient` (PlatformIO registry)
 
 Bundled in `lib/`:
 - `TFT_eSPI`
@@ -49,13 +49,14 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
 3. `setupSD()` — read `/config.json` from SD into globals *(commented out)*
 4. `connectToWifi()` *(commented out)*
 5. `fetchCharacter()` — GET `{apiUrl}my/character`, authenticated as this device *(commented out)*
-6. `webSocketSetup()` — connect to `{domain}:{webSocketPort}/connections` *(commented out)*
+6. `mqttSetup()` — connect to the broker from `config.json`'s `mqtt` block, register the last will, publish a retained status *(commented out)*
 7. `uiSetup()` — init LVGL, register callbacks, call `ui_init()`
 
-**Main loop** runs four handlers:
+**Main loop** runs five handlers:
 - `uiLoop()` — `lv_timer_handler()` every 5 ms
-- `webSocketLoop()` — processes WebSocket frames, re-sends `status` when the WiFi bars change
-- `uartSerialLoop()` — reads newline-delimited serial tokens, calls `sendLink()`
+- `mqttLoop()` — pumps the MQTT client, reconnects when the link drops, re-announces status when the WiFi bars or the charge change bracket
+- `uiNotifyLoop()` — takes the `cyd.notify` banner down when its time is up
+- `uartSerialLoop()` — reads newline-delimited UIDs off the serial line, calls `publishPortConnected()`
 - `powerLoop()` — samples the battery, and sleeps the device once the UI has been idle
 
 **Communication channels:**
@@ -63,12 +64,13 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
 | Channel | Direction | Purpose |
 |---|---|---|
 | HTTP REST | Device → Server | Fetch character data on boot, and screen data on demand |
-| WebSocket | Server → Device | Navigate to screen (`loading`, `loot`, `virus`) |
-| UART Serial | External → Device | Receive tokens, relay via `sendLink()` |
+| MQTT | Device → Broker | Retained status (online, WiFi bars, charge), and events for docking with a Port or Printer |
+| MQTT | Broker → Device | `cyd.show` (navigate to `loading`, `loot`, `virus`) and `cyd.notify` (banner), on its own topic and on the broadcast topic |
+| UART Serial | External → Device | The UID of the board this prop just docked with, republished via `publishPortConnected()` |
 | SD card | SD ⇄ Device | Load config and the expertise icon pack at boot; store the last answer per `api/my` path for offline use |
 | I2C | Sense IC → Device | INA219 on the battery terminals — pack voltage and current |
 
-WebSocket routing (`src/web-socket.cpp`): incoming `{ "goTo": { "screen": "loading|loot|virus" } }` calls the corresponding `Ui*Setup()`.
+Command routing (`src/mqtt-client.cpp`): an incoming `{ "kind": "cyd.show", "screen": "loading|loot|virus" }` calls the corresponding `Ui*Setup()`; `{ "kind": "cyd.notify", "message": "..." }` raises the banner without changing screens. The topic tree is defined in `site/src/lib/realtime/topics.ts` — it is the API between every prop and the server, and these strings are flashed into hardware, so it is not cheap to change.
 
 **Current dev state:** Network init is **commented out** in `main.cpp`. The device boots directly into LVGL for UI development without SD or WiFi.
 
@@ -82,12 +84,13 @@ WebSocket routing (`src/web-socket.cpp`): incoming `{ "goTo": { "screen": "loadi
 | `src/main.cpp` | Entry point — `setup()` / `loop()` wiring |
 | `src/globals.h/cpp` | Global state: screen dims, WiFi creds, API URL, touch SPI pins, `screenSetup()` |
 | `src/ui-implementation.h/cpp` | LVGL init, display flush, touch read callbacks, `uiSetup()` / `uiLoop()` |
-| `src/web-socket.h/cpp` | WebSocket client — setup, event handler, `sendLink()`, screen routing |
+| `src/mqtt-client.h/cpp` | MQTT client — connect with a last will, retained status, event publishing, command routing |
+| `src/ui-notify.h/cpp` | `uiNotifyShow()` — the `cyd.notify` banner, drawn on LVGL's top layer so it survives a screen change |
 | `src/api.h/cpp` | `apiGet()` — every REST read: device credentials on the way out, SD fallback on failure |
 | `src/cache.h/cpp` | `cacheRead()` / `cacheWrite()` — the stored copy of each `api/my` answer |
 | `src/character.h/cpp` | `Character` struct, `fetchCharacter()` |
 | `src/sd-reader.h/cpp` | `setupSD()` + `readConfig()` — parses `/config.json` into globals |
-| `src/uart-interface.h/cpp` | `uartSerialLoop()` — reads serial tokens |
+| `src/uart-interface.h/cpp` | `uartSerialLoop()` — reads the docked board's UID off the serial line |
 | `src/connection.h/cpp` | `connectToWifi()`, `reconnectWifi()`, `wifiRssi()` / `wifiStrengthLevel()` |
 | `src/power.h/cpp` | INA219 battery read, charge curve, idle → light sleep, wake on touch |
 | `src/ui-status-bar.h/cpp` | `uiStatusBarInit()` — battery and WiFi icons in every screen's header |
@@ -157,7 +160,7 @@ inactivity timer — the backlight goes out, the radio is taken down, and the ES
 sleep. Light, not deep: RAM and the call stack survive, so the screen the player was on comes back
 already built. The XPT2046's IRQ line (GPIO 36) is the `ext0` wake source; on wake the backlight
 comes back, LVGL's inactivity is reset, and `reconnectWifi()` re-associates if the device was
-online — the WebSocket client reconnects itself from there.
+online — the MQTT client reconnects itself from there.
 
 Re-associating takes a few seconds, so a screen opened right after a wake may find no network. That
 is what the SD cache is for: `apiGet()` serves the stored answer and the screen fills anyway.
@@ -175,9 +178,14 @@ Device reads `/config.json` from SD card root at boot (`src/sd-reader.cpp`):
   "wifi": { "ssid": "...", "password": "..." },
   "apiUrl": "http://host/api/",
   "domain": "host",
-  "webSocketPort": 80,
   "deviceUid": "...",
-  "sessionToken": "..."
+  "sessionToken": "...",
+  "mqtt": {
+    "host": "broker-host",
+    "port": 1883,
+    "username": "...",
+    "password": "..."
+  }
 }
 ```
 
@@ -188,7 +196,11 @@ every REST read authenticates: the server resolves which character version the d
 from its `aguesguard` role. There is no `characterId` — the device does not get to assert which
 character it is showing. Register the UID and attach the role under `manage/devices`.
 
-`sessionToken` identifies this device on the WebSocket channel. `apiGet()` also sends it as a
+`mqtt.username` defaults to `deviceUid` when omitted — that is what the broker's ACL is written
+against. The password is this prop's own: credentials are per device, because props get handed to
+players. Issue them with `pnpm mqtt:credentials` in `site/`; see `docs/MQTT_SETUP.md`.
+
+`sessionToken` is now only a REST fallback. `apiGet()` sends it as a
 cookie, which keeps a device that is not in the registry yet working against `/api/my/**`; the
 server prefers the device UID when both arrive.
 
@@ -240,7 +252,7 @@ The cache is disposable. Deleting `/cache` costs one round trip per screen.
 - **`src/ui/` is generated code.** Manual edits are overwritten on the next SquareLine Studio export.
 - **SquareLine Studio export path** may be set to an absolute Windows path. Update it in SquareLine preferences when exporting from a different machine.
 - **TFT rotation:** `screenSetup()` sets rotation 0 (portrait); `uiSetup()` overrides to rotation 1 (landscape) for LVGL. Don't change the `uiSetup()` rotation without also updating LVGL display dimensions.
-- **UART unlink is commented out.** `sendLink(token, false)` is never called — tokens are never automatically unlinked.
+- **UART undock is commented out.** `publishPortDisconnected(uid)` is never called, so a prop that walks away from a Port never says so — the dwell that opens the Port is only cancelled by the device going offline.
 - **`connectToWifi()` blocks indefinitely** — no timeout if the network is unreachable. `reconnectWifi(timeoutMs)` is the bounded one, used after a wake.
 - **`setupSD()` mounts at 80 MHz**, which is past the SPI-mode SD ceiling of 40 MHz. It predates
   the offline cache, which depends on the card mounting, so it is worth checking on hardware — if

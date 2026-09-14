@@ -109,9 +109,16 @@ Expertise has no per-entry cost. Every expertise shares the same cost curve, def
 
 ## Implants
 
+An implant may carry **charges**: `maxCharges` on the catalog row is how many activations a fitted
+copy gets, `0` (the default) meaning the implant is not activated at all. The count itself lives per
+fitted instance on `Character_Version_Implants.ChargesRemaining`, seeded from `maxCharges` whenever
+the loadout is written. Spending is the player's (`POST /api/my/implants/[id]/activate`), refilling
+is the admin's (`POST /api/characters/versions/[versionId]/implants/refresh`) — there is no path by
+which a device can raise a count.
+
 | Method | Path | Auth | Returns | Description |
 |--------|------|------|---------|-------------|
-| GET | `/api/implants` | admin/user | `Implant[]` (JSON) — `Implant = { id: number \| null, name: string, description: string, cost?: number }` | List all implants |
+| GET | `/api/implants` | admin/user | `Implant[]` (JSON) — `Implant = { id: number \| null, name: string, description: string, cost?: number, maxCharges?: number }` | List all implants |
 | PUT | `/api/implants` | admin | empty body (200) | Create/update implant; body: `Implant` |
 | GET | `/api/implants/[id]` | admin | `Implant` (JSON) | Get implant by ID |
 | POST | `/api/implants/[id]` | admin | empty body (200) | Update implant; body: `Implant` |
@@ -141,6 +148,7 @@ Expertise has no per-entry cost. Every expertise shares the same cost curve, def
 | DELETE | `/api/characters/versions/[versionId]` | admin | empty body (200) | Delete character version and its expertise/items/implants |
 | GET | `/api/characters/versions/[versionId]/full` | user | `CharacterVersionFull` (JSON) | Get full version detail, with expertise/items/implants resolved to catalog entries |
 | PUT | `/api/characters/versions/[versionId]/expertise` | user | empty body (200) | Replace version expertise; body: `CharacterVersionExpertise[]` |
+| POST | `/api/characters/versions/[versionId]/implants/refresh` | admin | `{ refreshed: number }` (JSON) | Recharge every implant this version carries, each back to its catalog `maxCharges`. Takes no body — nothing the caller sends decides how much is restored. 404 when the version does not exist. This is the admin half of the charge cycle; players only ever spend |
 
 ---
 
@@ -232,6 +240,28 @@ browser to hardware, no server round-trip.
 
 ---
 
+## Realtime
+
+The control room's live view of the fleet. The browser does **not** connect to the MQTT broker: it
+streams from the site, which runs the bridge that holds the only broker credentials there are. Both
+endpoints answer 503 when the process was started without the realtime entrypoint (`pnpm start`,
+or `vite dev` before the `realtime-bridge` plugin runs) — see `site/realtime/` and
+`docs/MQTT_SETUP.md`.
+
+| Method | Path | Auth | Returns | Description |
+|--------|------|------|---------|-------------|
+| GET | `/api/realtime` | admin | `text/event-stream` | Server-sent `RealtimeFrame`s. The first is always a `snapshot` (every device's last known status, plus the recent event log), so a dashboard opening mid-game is current without a second fetch; everything after it is a delta — `device`, `event`, or `broker`. A `: keepalive` comment every 25s keeps proxies from hanging up |
+| POST | `/api/realtime/commands` | admin | `{ ok: true }` (JSON) | Publish one command. Body is a `CommandRequest`: `{ target: 'device', uid, command }` where `command` is `{ kind: 'cyd.show', screen, data? }` or `{ kind: 'cyd.notify', message, durationMs? }`; `{ target: 'broadcast', notify }`; or `{ target: 'light', cue }`. 400 for an unknown target, an unparseable command, or a `uid` that is not topic-safe; 502 when the broker is unreachable |
+
+The caller names a **target**, never a topic. The topic tree is the device-facing API
+(`$lib/realtime/topics.ts`) and stays server-side, so an admin session cannot publish somewhere the
+dashboard was never meant to reach — and a device may never publish a command at all, which the
+broker ACL enforces independently.
+
+Frame and payload types live in `$lib/realtime/stream.ts` and `$lib/realtime/messages.ts`.
+
+---
+
 ## Forms (Google Forms integration)
 
 | Method | Path | Auth | Returns | Description |
@@ -273,9 +303,9 @@ rather than listing everything they own. They accept two kinds of caller, resolv
   the device's `aguesguard` role, so the prop carries no player's session token. 401 for an unknown
   UID, 403 for a device without the `aguesguard` role, 404 when the bound version is gone.
 
-The device header wins when both arrive. A UID is a bearer credential sent in the clear — the same
-self-asserted device identity the WebSocket channel has; a per-device secret would close it and
-does not exist yet.
+The device header wins when both arrive. A UID is a bearer credential sent in the clear; a
+per-device secret would close it and does not exist yet. The realtime channel does not have this
+problem — the broker checks a password per device and confines each prop with an ACL.
 
 `/api/my/expertise` sends `icon` and `groupIcon` as null to a device caller: they are multi-kilobyte
 SVG documents an ESP32 can neither render nor afford to parse. `groupColor` is always sent, and is
@@ -291,7 +321,8 @@ browser (`src/lib/utils/icon-export.ts`).
 | GET | `/api/my/user` | `User` (JSON) | Get the currently authenticated user |
 | GET | `/api/my/character` | `MyCharacterResponse` (JSON) — `{ id, name, versionId, versionName, companyId }` | The single character version the caller is playing. This is what an AguesGuard fetches at boot |
 | GET | `/api/my/expertise` | `MyExpertiseResponse` (JSON) — `{ characterId, characterName, versionId, versionName, expertise: VersionExpertise[] }`, ordered by group then name | The caller's own expertise with catalog names, values and icons — everything needed to draw a bar per entry |
-| GET | `/api/my/implants` | `MyImplantsResponse` (JSON) — `{ characterId, characterName, versionId, versionName, implants: VersionImplant[] }`, ordered by slot then name | The caller's own implants with their descriptions |
+| GET | `/api/my/implants` | `MyImplantsResponse` (JSON) — `{ characterId, characterName, versionId, versionName, implants: VersionImplant[] }`, ordered by slot then name. Each entry is `{ id, name, description, slot, maxCharges, chargesRemaining }`, one per **fitted instance** — the same implant in two slots is two entries and two independent charge stocks | The caller's own implants with their descriptions and charge counts |
+| POST | `/api/my/implants/[id]/activate` | `ActivateImplantResponse` (JSON) — `{ spent: boolean, implant: VersionImplant, implants: VersionImplant[] }` | Spend one charge of an implant the caller carries. `[id]` is the **catalog** implant id, the one the GET above lists, and the spend is scoped to the caller's own character version in a single statement; an implant the caller does not carry answers 404. Drains the lowest slot first. Running out is not an error: an implant already at zero answers 200 with `spent: false`, and a count never goes below 0. On success every AguesGuard bound to that version is pushed a `cyd.show` for the Implants screen so it redraws; that push is best-effort and a broker that is down does not fail the call |
 | GET | `/api/my/characters` | `Character[]` (JSON) | List characters owned by the current user |
 | GET | `/api/my/characters/with-events` | `(Character & { events: Array<{ id: number, name: string }> })[]` (JSON) | List the current user's characters, each with an `events` array |
 | GET | `/api/my/characters/versions` | `MyCharacterVersionsResponse` (JSON) — `{ characters: (Character & { versions: CharacterVersionFull[] })[] }` where each version's `expertise`/`items`/`implants` are joined with the catalog and `events` is the list of events the version is registered for: `expertise: { id, name, group, groupName, value }[]`, `items: { id, name, description, count }[]`, `implants: { id, name, description }[]`, `events: { id, name }[]` | List the current user's characters with their versions, each version's expertise/item/implant IDs resolved to full catalog entries plus the events the version is registered for |

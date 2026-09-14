@@ -4,5 +4,10 @@ dockerfilePath="./site/dockerfile"
 
 
 [deploy]
+# Pinned here as well as in the dockerfile because a Deploy Command set in the Railway dashboard
+# silently replaces the image's CMD — which is how this service ended up running plain
+# adapter-node with no realtime layer in it. Config in the repo wins over the dashboard, so this
+# is the one place that decides what the container runs.
+startCommand="pnpm migrate && pnpm start:realtime"
 restartPolicyMaxRetries=3
 restartPolicyType="ON_FAILURE"

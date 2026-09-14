@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <log.h>
 #include <globals.h>
-#include <web-socket.h>
+#include <mqtt-client.h>
 
 unsigned long lastMessageTimeStamp = 0;
 String lastMessage = "";
@@ -21,7 +21,7 @@ void uartSerialLoop()
             lastMessage = receivedMessage;
             receivedMessage = "";
             lastMessageTimeStamp = millis();
-            sendLink(lastMessage, true);
+            publishPortConnected(lastMessage);
         }
         if(isAscii(incommingChar))
         {
@@ -32,6 +32,6 @@ void uartSerialLoop()
     // {
     //     receivedMessage = "";
     //     lastMessageTimeStamp = 0;
-    //     sendLink(lastMessage, false);
+    //     publishPortDisconnected(lastMessage);
     // }
 }

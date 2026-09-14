@@ -18,9 +18,33 @@ services:
       - MYSQLUSER=yodi
       - MYSQLPASSWORD=Tester@123
       - MYSQLDATABASE=testaliceDB
+      # `vite dev` starts the bridge through the `realtime-bridge` plugin in `vite.config.ts`.
+      - MQTT_URL=mqtt://mqtt:1883
+      - MQTT_USERNAME=tp-bridge
+      - MQTT_PASSWORD=bridge-dev
     depends_on:
       migrate:
         condition: service_completed_successfully
+
+  # The broker, same image as the Railway service. Credentials here are local-only throwaways;
+  # the real ones are per prop and issued by `pnpm mqtt:credentials` — see docs/MQTT_SETUP.md.
+  mqtt:
+    container_name: terra-prime-mqtt
+    build:
+      context: ./mqtt
+      dockerfile: Dockerfile
+    ports:
+      - 1883:1883
+    environment:
+      - MQTT_PORT=1883
+      - MQTT_BRIDGE_USERNAME=tp-bridge
+      - MQTT_BRIDGE_PASSWORD=bridge-dev
+      - MQTT_LIGHT_USERNAME=tp-light
+      - MQTT_LIGHT_PASSWORD=light-dev
+      # One bench device, so a handheld on the desk can join without anyone issuing credentials.
+      - MQTT_DEVICE_CREDENTIALS=[{"uid":"bench-01","password":"bench-dev","roles":["aguesguard"]}]
+    volumes:
+      - mqtt-data:/mosquitto/data
 
   db:
     container_name: terra-prime-db
@@ -78,6 +102,7 @@ services:
   #
 volumes:
   db-data:
+  mqtt-data:
 
 networks:
   default:

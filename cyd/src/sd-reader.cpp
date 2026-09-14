@@ -86,17 +86,29 @@ bool readConfig(fs::FS &fs) {
   String password = configObject["wifi"]["password"];
   String baseUrl = configObject["domain"];
   String apiUrl= configObject["apiUrl"];
-  int port = configObject["webSocketPort"];
   wifi_ssid = ssid;
   wifi_password = password;
   api_url = apiUrl;
   domain = baseUrl;
   deviceUid = deviceUidString;
   sessionToken = sessionTokenString;
-  webSocketPort = port;
+
+  // The broker credential is this device's own — see `pnpm mqtt:credentials` in `site/`, which
+  // prints the block to paste here alongside the broker's own copy. `username` defaults to the
+  // device UID because that is what the broker's ACL is written against.
+  String mqttHostString = configObject["mqtt"]["host"] | "";
+  String mqttUsernameString = configObject["mqtt"]["username"] | "";
+  String mqttPasswordString = configObject["mqtt"]["password"] | "";
+  mqttHost = mqttHostString;
+  mqttPort = configObject["mqtt"]["port"] | 1883;
+  mqttUsername = mqttUsernameString.length() == 0 ? deviceUid : mqttUsernameString;
+  mqttPassword = mqttPasswordString;
 
   if (deviceUid.length() == 0) {
     logRed("No deviceUid in config.json - the API will not know which character this is");
+  }
+  if (mqttHost.length() == 0) {
+    logRed("No mqtt.host in config.json - this device will not reach the broker");
   }
 
   return true;

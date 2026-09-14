@@ -13,6 +13,9 @@
 	<input type="textarea" bind:value={implant.description} />
 	<label for="cost">cost</label>
 	<input id="cost" type="number" min="0" bind:value={implant.cost} />
+	<label for="max-charges">max charges</label>
+	<input id="max-charges" type="number" min="0" step="1" bind:value={implant.maxCharges} />
+	<small>0 for an implant that is not activated at all. Recharging is an admin action.</small>
 </main>
 
 <style>
@@ -20,5 +23,10 @@
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
+	}
+
+	small {
+		font-size: 0.75rem;
+		opacity: 0.6;
 	}
 </style>

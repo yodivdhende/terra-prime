@@ -56,7 +56,16 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 			implants: bare.implants.flatMap((vi): VersionImplant[] => {
 				const implant = implantById.get(vi.id);
 				if (!implant) return [];
-				return [{ id: vi.id, name: implant.name, description: implant.description, slot: vi.slot }];
+				return [
+					{
+						id: vi.id,
+						name: implant.name,
+						description: implant.description,
+						slot: vi.slot,
+						maxCharges: implant.maxCharges ?? 0,
+						chargesRemaining: vi.chargesRemaining ?? 0
+					}
+				];
 			}),
 			events: []
 		};

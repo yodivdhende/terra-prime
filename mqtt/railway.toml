@@ -1,0 +1,12 @@
+[build]
+builder="DOCKERFILE"
+dockerfilePath="./mqtt/Dockerfile"
+
+[deploy]
+# A broker that keeps restarting looks exactly like a room full of dead props, so let it try
+# harder than the site does before giving up.
+restartPolicyMaxRetries=10
+restartPolicyType="ON_FAILURE"
+# One instance. Retained status and the last will are per-broker state: two replicas would each
+# hold half the fleet and disagree about who is online.
+numReplicas=1

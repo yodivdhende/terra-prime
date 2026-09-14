@@ -8,11 +8,22 @@
 #include <ArduinoJson.h>
 
 
+/**
+ * The card outlives `setupSD()` now — the cache in `cache.cpp` reads and writes it while the UI is
+ * running — and `SD.begin()` keeps a pointer to the bus it is handed, not a copy. This used to be a
+ * local, which left that pointer dangling the moment `setupSD()` returned; it was harmless only
+ * because nothing touched the card afterwards.
+ */
+static SPIClass sdSpi(VSPI);
+static bool sdReady = false;
+
+bool isSdReady() {
+  return sdReady;
+}
+
 bool setupSD() {
 
-  SPIClass spi = SPIClass(VSPI);
-
-  if (!SD.begin(SS, spi, 80000000)) {
+  if (!SD.begin(SS, sdSpi, 80000000)) {
     logRed("Card Mount Failed");
     return false;
   }
@@ -36,6 +47,7 @@ bool setupSD() {
 
   uint64_t cardSize = SD.cardSize() / (1024 * 1024);
   logGreen("SD Card Size: %lluMB", String(cardSize).c_str());
+  sdReady = true;
   return readConfig(SD);
 }
 
@@ -66,21 +78,26 @@ bool readConfig(fs::FS &fs) {
 
   logWhite("Setting config");
 
-  int characterId = configObject["characterId"];
+  // No `characterId`: which character this device shows is the server's answer, read from the
+  // `aguesguard` role of the device registered under `deviceUid`.
+  String deviceUidString = configObject["deviceUid"];
   String sessionTokenString= configObject["sessionToken"];
   String ssid = configObject["wifi"]["ssid"];
   String password = configObject["wifi"]["password"];
   String baseUrl = configObject["domain"];
   String apiUrl= configObject["apiUrl"];
-  int id = configObject["characterId"];
   int port = configObject["webSocketPort"];
   wifi_ssid = ssid;
   wifi_password = password;
   api_url = apiUrl;
   domain = baseUrl;
-  character_id = id;
+  deviceUid = deviceUidString;
   sessionToken = sessionTokenString;
   webSocketPort = port;
+
+  if (deviceUid.length() == 0) {
+    logRed("No deviceUid in config.json - the API will not know which character this is");
+  }
 
   return true;
 }

@@ -13,8 +13,9 @@ extern String wifi_password;
 extern String domain;
 extern int webSocketPort;
 extern String api_url;
-extern int character_id;
 extern String sessionToken;
+/** The UID this device is registered under in `Devices` — how it authenticates to the API. */
+extern String deviceUid;
 
 extern XPT2046_Touchscreen ts;
 void clearScreen();

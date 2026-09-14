@@ -12,18 +12,14 @@
 void ui_Home_screen_init(void);
 lv_obj_t * ui_Home;
 lv_obj_t * ui_Header;
-void ui_event_SkillsButton(lv_event_t * e);
-lv_obj_t * ui_SkillsButton;
-lv_obj_t * ui_SkillsButtonImage;
-lv_obj_t * ui_SkillButtonLabel;
+void ui_event_ExpertiseButton(lv_event_t * e);
+lv_obj_t * ui_ExpertiseButton;
+lv_obj_t * ui_ExpertiseButtonImage;
+lv_obj_t * ui_ExpertiseButtonLabel;
 void ui_event_ImplantsButton(lv_event_t * e);
 lv_obj_t * ui_ImplantsButton;
 lv_obj_t * ui_ImplantButtonImage;
 lv_obj_t * ui_ImplantsButtonLabel;
-void ui_event_ItemsButton(lv_event_t * e);
-lv_obj_t * ui_ItemsButton;
-lv_obj_t * ui_ItemsButtonImage;
-lv_obj_t * ui_ItemsButtonLabel;
 void ui_event_MessagesButton(lv_event_t * e);
 lv_obj_t * ui_MessagesButton;
 lv_obj_t * ui_MessagesButtonImage;
@@ -50,11 +46,11 @@ lv_obj_t * ui_DangerLabel;
 lv_obj_t * ui_Panel1;
 // CUSTOM VARIABLES
 
-// SCREEN: ui_Skills
-void ui_Skills_screen_init(void);
-lv_obj_t * ui_Skills;
+// SCREEN: ui_Expertise
+void ui_Expertise_screen_init(void);
+lv_obj_t * ui_Expertise;
 lv_obj_t * ui_Header4;
-lv_obj_t * ui_SkillTitle;
+lv_obj_t * ui_ExpertiseTitle;
 // CUSTOM VARIABLES
 
 // SCREEN: ui_Implants
@@ -62,13 +58,6 @@ void ui_Implants_screen_init(void);
 lv_obj_t * ui_Implants;
 lv_obj_t * ui_Header3;
 lv_obj_t * ui_ImplantsTitle;
-// CUSTOM VARIABLES
-
-// SCREEN: ui_Items
-void ui_Items_screen_init(void);
-lv_obj_t * ui_Items;
-lv_obj_t * ui_Header2;
-lv_obj_t * ui_ItemsTitle;
 // CUSTOM VARIABLES
 
 // SCREEN: ui_Messages
@@ -91,12 +80,12 @@ lv_obj_t * ui____initial_actions0;
 ///////////////////// ANIMATIONS ////////////////////
 
 ///////////////////// FUNCTIONS ////////////////////
-void ui_event_SkillsButton(lv_event_t * e)
+void ui_event_ExpertiseButton(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
 
     if(event_code == LV_EVENT_PRESSED) {
-        _ui_screen_change(&ui_Skills, LV_SCR_LOAD_ANIM_MOVE_LEFT, 200, 0, &ui_Skills_screen_init);
+        _ui_screen_change(&ui_Expertise, LV_SCR_LOAD_ANIM_MOVE_LEFT, 200, 0, &ui_Expertise_screen_init);
     }
 }
 
@@ -106,15 +95,6 @@ void ui_event_ImplantsButton(lv_event_t * e)
 
     if(event_code == LV_EVENT_PRESSED) {
         _ui_screen_change(&ui_Implants, LV_SCR_LOAD_ANIM_MOVE_LEFT, 200, 0, &ui_Implants_screen_init);
-    }
-}
-
-void ui_event_ItemsButton(lv_event_t * e)
-{
-    lv_event_code_t event_code = lv_event_get_code(e);
-
-    if(event_code == LV_EVENT_PRESSED) {
-        _ui_screen_change(&ui_Items, LV_SCR_LOAD_ANIM_MOVE_LEFT, 200, 0, &ui_Items_screen_init);
     }
 }
 
@@ -141,9 +121,8 @@ void ui_init(void)
     ui_DownloadScreen_screen_init();
     ui_LootScreen_screen_init();
     ui_VirusScreen_screen_init();
-    ui_Skills_screen_init();
+    ui_Expertise_screen_init();
     ui_Implants_screen_init();
-    ui_Items_screen_init();
     ui_Messages_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_Home);

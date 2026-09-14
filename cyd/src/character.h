@@ -6,8 +6,9 @@
     public:
         int id;
         String name;
-        int currentHp;
-        int maxHp;
+        /** The character version this device is bound to — what every `api/my` read is about. */
+        int versionId;
+        String versionName;
     };
 
     extern Character currentCharacter;

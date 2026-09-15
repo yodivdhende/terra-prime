@@ -297,7 +297,14 @@ class CharacterVersionRepo {
 	}
 
 	public async getAllWithCharacterName(): Promise<
-		{ id: number; name: string; characterId: number; characterName: string; ownerName: string }[]
+		{
+			id: number;
+			name: string;
+			characterId: number;
+			characterName: string;
+			ownerId: number;
+			ownerName: string;
+		}[]
 	> {
 		const rows = await db
 			.select({
@@ -305,6 +312,7 @@ class CharacterVersionRepo {
 				name: characterVersions.name,
 				characterId: characterVersions.characterId,
 				characterName: characters.name,
+				ownerId: users.id,
 				ownerName: users.name
 			})
 			.from(characterVersions)
@@ -318,6 +326,7 @@ class CharacterVersionRepo {
 				name: row.name as string,
 				characterId: row.characterId,
 				characterName: row.characterName as string,
+				ownerId: row.ownerId,
 				ownerName: row.ownerName as string
 			}));
 	}

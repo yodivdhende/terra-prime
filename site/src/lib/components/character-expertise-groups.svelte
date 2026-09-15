@@ -84,39 +84,36 @@
 
 <div class="expertise-groups">
 	{#each groups as group (group.id)}
-		<div class="group">
+		<div class="expertise group">
 			{#if group.icon}
-				<div class="group-icon">
+				<div class="expertise-icon">
 					<Icon src={group.icon} color={group.color} tooltip={group.name} {size} />
 				</div>
 			{/if}
 			{#if showNames}
-				<div class="group-name">
-					<!-- Tinted by group by default; an ancestor can override for a low-contrast surface. -->
+				<div class="expertise-name">
 					<span style="color: var(--expertise-group-name-color, {group.color})">{group.name}</span>
 				</div>
 			{/if}
-			<div class="group-bar bar">
+			<div class="expertise-bar bar">
 				<ProgressBar value={group.average} color={group.color} name={group.name} />
 			</div>
 		</div>
-		<div class="expertise">
-			{#each group.expertise as entry (entry.id)}
-				<div class="entry">
-					{#if entry.icon}
-						<div class="entry-icon">
-							<Icon src={entry.icon} color={group.color} tooltip={entry.name} {size} />
-						</div>
-					{/if}
-					{#if showExpertiseNames}
-						<div class="entry-name">{entry.name}</div>
-					{/if}
-					<div class="entry-bar bar">
-						<ProgressBar value={entry.value} color={group.color} name={entry.name} />
+		{#each group.expertise as entry (entry.id)}
+			<div class="expertise">
+				{#if entry.icon}
+					<div class="expertise-icon">
+						<Icon src={entry.icon} color={group.color} tooltip={entry.name} {size} />
 					</div>
+				{/if}
+				{#if showExpertiseNames}
+					<div class="expertise-name">{entry.name}</div>
+				{/if}
+				<div class="expertise-bar bar">
+					<ProgressBar value={entry.value} color={group.color} name={entry.name} />
 				</div>
-			{/each}
-		</div>
+			</div>
+		{/each}
 	{/each}
 </div>
 
@@ -130,7 +127,7 @@
 		width: 100%;
 	}
 
-	.group {
+	.expertise {
 		display: grid;
 		grid-template:
 			'icon name' 1em
@@ -140,55 +137,27 @@
 		column-gap: 0.25rem;
 	}
 
-	.group-icon {
-		grid-area: icon;
+	.group .expertise-icon {
+		margin: 0;
+		margin-right: 1em;
 	}
-	.group-name {
+
+	.expertise-icon {
+		grid-area: icon;
+		margin-left: 1em;
+	}
+	.expertise-name {
 		grid-area: name;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		opacity: 0.8;
 		white-space: nowrap;
 	}
-	.group-bar {
+	.expertise-bar {
 		grid-area: bar;
-	}
-
-	.expertise {
-		display: flex;
-		flex-direction: column;
-		gap: 0.2rem;
-		padding-left: 1rem;
-	}
-
-	.entry {
-		display: grid;
-		grid-template:
-			'icon name' 1em
-			'icon bar' min-content
-			/ min-content 1fr;
-		align-items: center;
-		column-gap: 0.25rem;
-	}
-
-	.entry-name {
-		grid-area: name;
-		letter-spacing: 0.04em;
-		opacity: 0.7;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
 	}
 
 	.bar {
 		width: 100%;
-	}
-
-	.entry-icon {
-		grid-area: icon;
-	}
-
-	.entry-bar {
-		grid-area: bar;
 	}
 </style>

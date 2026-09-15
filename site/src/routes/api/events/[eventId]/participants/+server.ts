@@ -6,7 +6,7 @@ import {
 } from '$lib/db/character_version.repo';
 import { eventParticipantsRepo, isEventParticapant } from '$lib/db/event_participants.repo';
 import { isNumberOrError } from '$lib/request.utils';
-import { BadRequest } from '$lib/types/errors';
+import { BadRequest, NotFoundRequest } from '$lib/types/errors';
 import { getSessionToken } from '$lib/utils/cookies';
 import { authGuard, authGuardForUser, handleRequest } from '$lib/utils/request';
 import { json, type RequestHandler } from '@sveltejs/kit';
@@ -37,6 +37,19 @@ function isCharacterWithVersions(value: unknown): value is CharacterWithVersions
   );
 }
 
+type ParticipantVersionBody = {
+  characterVersionId: number;
+};
+
+function isParticipantVersionBody(value: unknown): value is ParticipantVersionBody {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'characterVersionId' in value &&
+    typeof value.characterVersionId === 'number'
+  );
+}
+
 export const GET: RequestHandler = async ({ cookies, params }) => {
   return handleRequest(async () => {
     await authGuardForUser(getSessionToken(cookies), ['admin']);
@@ -46,11 +59,45 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
   });
 };
 
+/**
+ * Attach an *existing* character version to an event. `PUT` above is character-shaped — it clones
+ * the last version into a new one — so linking a version an organiser picked from a list needs its
+ * own verb. The owner is derived from the version server-side; the client never supplies a userId.
+ */
+export const POST: RequestHandler = async ({ cookies, params, request }) => {
+  return handleRequest(async () => {
+    await authGuard(getSessionToken(cookies), ['admin']);
+    const eventId = isNumberOrError(params.eventId);
+    const body = await request.json();
+    if (!isParticipantVersionBody(body)) throw new BadRequest();
+
+    const version = await characterVersionRepo.getWithId(body.characterVersionId);
+    if (version == null) throw new NotFoundRequest('character version not found');
+    const character = await characterRepo.getById(version.characterId);
+
+    // `Event_Participants` is keyed on (Event, User), so a second version for the same owner would
+    // silently replace the first. Refuse instead and let the admin remove the existing row.
+    const existingParticipation = await eventParticipantsRepo.getUserParticipation({
+      eventId,
+      userId: character.ownerId,
+    });
+    if (existingParticipation != null)
+      throw new BadRequest('owner already participates in this event');
+
+    await eventParticipantsRepo.participate({
+      eventId,
+      userId: character.ownerId,
+      characterVersionId: body.characterVersionId,
+    });
+
+    return new Response();
+  });
+};
+
 export const PUT: RequestHandler = async ({ cookies, params, request }) => {
   return handleRequest(async () => {
     await authGuard(getSessionToken(cookies), ['admin']);
     const eventId = isNumberOrError(params.eventId);
-    console.dir(request)
     const body = await request.json();
     if (!isCharacterWithVersions(body)) throw new BadRequest();
 

@@ -163,6 +163,7 @@ Event dates (`start`, `end`) are sent as ISO strings and converted to `Date` obj
 |--------|------|------|---------|-------------|
 | GET | `/api/events/[eventId]/participants` | admin | `Character[]` (JSON) — repo returns the characters playing in this event | List all participants for event |
 | PUT | `/api/events/[eventId]/participants` | admin | empty body (200) | Register a participant; body: `CharacterWithVersions` (`{ id: number \| null, name, ownerId, ownerName, versions: CharacterVersionBare[] }`). Creates the character when `id` is null, otherwise updates it; then creates/updates the **last** entry in `versions` (create when its `id` is null) and registers that version for the event under `ownerId` |
+| POST | `/api/events/[eventId]/participants` | admin | empty body (200) | Attach an **existing** character version to the event; body: `{ characterVersionId: number }`. The owner is derived from the version server-side. Returns 404 when the version is unknown, and 400 when that owner already participates in this event (`Event_Participants` is keyed on (Event, User)) |
 | DELETE | `/api/events/[eventId]/participants` | admin | empty body (200) | Remove participant; body: `EventParticipant` (`{ eventId, userId, characterVersion }`) |
 | GET | `/api/events/[eventId]/participants/characters/[characterId]` | user | `EventParticipant \| null` (JSON; null when not found) | Get participation record for a specific character |
 

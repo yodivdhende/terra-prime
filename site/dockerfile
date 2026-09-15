@@ -27,6 +27,8 @@ RUN pnpm run build
 
 FROM base AS dev
 RUN pnpm install --frozen-lockfile
+RUN chown -R node:node /app /pnpm
+USER node
 EXPOSE 5173
 CMD ["pnpm", "host"]
 

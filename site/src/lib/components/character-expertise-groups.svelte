@@ -18,12 +18,16 @@
 		expertise = [],
 		manager,
 		size = '2em',
-		showNames = false
+		showNames = false,
+		showExpertiseNames = false
 	}: {
 		expertise?: ExpertiseGroupEntry[];
 		manager?: ExpertiseManager;
 		size?: string;
+		/** Label each group with its name. */
 		showNames?: boolean;
+		/** Label each individual expertise bar with its name. */
+		showExpertiseNames?: boolean;
 	} = $props();
 
 	const groups = $derived.by(() => {
@@ -88,7 +92,8 @@
 			{/if}
 			{#if showNames}
 				<div class="group-name">
-					<span style="color: {group.color}">{group.name}</span>
+					<!-- Tinted by group by default; an ancestor can override for a low-contrast surface. -->
+					<span style="color: var(--expertise-group-name-color, {group.color})">{group.name}</span>
 				</div>
 			{/if}
 			<div class="group-bar bar">
@@ -103,7 +108,9 @@
 							<Icon src={entry.icon} color={group.color} tooltip={entry.name} {size} />
 						</div>
 					{/if}
-					<!-- {/if} -->
+					{#if showExpertiseNames}
+						<div class="entry-name">{entry.name}</div>
+					{/if}
 					<div class="entry-bar bar">
 						<ProgressBar value={entry.value} color={group.color} name={entry.name} />
 					</div>
@@ -114,14 +121,13 @@
 </div>
 
 <style>
+	/* Always fills its container; callers scope the width they want. */
 	.expertise-groups {
 		display: flex;
 		flex-wrap: nowrap;
 		flex-direction: column;
 		gap: 0.75rem;
 		width: 100%;
-		max-width: 200px;
-		font: 1.5em;
 	}
 
 	.group {
@@ -158,10 +164,20 @@
 	.entry {
 		display: grid;
 		grid-template:
+			'icon name' 1em
 			'icon bar' min-content
 			/ min-content 1fr;
 		align-items: center;
-		gap: 0.25rem;
+		column-gap: 0.25rem;
+	}
+
+	.entry-name {
+		grid-area: name;
+		letter-spacing: 0.04em;
+		opacity: 0.7;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.bar {

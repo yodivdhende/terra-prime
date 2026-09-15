@@ -60,7 +60,9 @@
 	{#if expertise.length > 0}
 		<section class="section">
 			<h4 class="section-label">expertise</h4>
-			<CharacterExpertiseGroups {expertise} showNames={true} size="2em" />
+			<div class="expertise-groups">
+				<CharacterExpertiseGroups {expertise} showNames={true} size="2em" />
+			</div>
 		</section>
 	{/if}
 
@@ -139,6 +141,12 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.4rem;
+	}
+
+	/* The expertise block sizes itself; the entry lists below stay full width. */
+	.expertise-groups {
+		width: 100%;
+		max-width: 200px;
 	}
 
 	.section-label {

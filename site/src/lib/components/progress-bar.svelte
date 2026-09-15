@@ -28,14 +28,20 @@
 <style>
 	.track {
 		height: 6px;
-		background: rgba(255, 255, 255, 0.1);
+		/* Overridable by any ancestor, e.g. a light-background or print surface. */
+		background: var(--progress-track, rgba(255, 255, 255, 0.1));
 		border-radius: 3px;
 		overflow: hidden;
+		/* Browsers drop background colours when printing; without this every bar prints empty. */
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
 	}
 
 	.fill {
 		height: 100%;
 		border-radius: 3px;
 		transition: width 0.2s;
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
 	}
 </style>

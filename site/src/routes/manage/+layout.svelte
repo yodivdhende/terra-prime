@@ -159,4 +159,35 @@
 		max-width: 50vw;
 		max-height: 60vh;
 	}
+
+	/*
+	 * The shell is built for a fixed viewport. None of that chrome belongs on paper, and the page
+	 * has to be free to flow past one screen height.
+	 */
+	@media print {
+		header,
+		.background,
+		aside,
+		.backdrop {
+			display: none !important;
+		}
+
+		main {
+			display: block;
+			width: auto;
+			height: auto;
+			overflow: visible;
+		}
+
+		section {
+			display: block;
+			height: auto;
+		}
+
+		.section-container {
+			border: none;
+			background: white;
+			color: black;
+		}
+	}
 </style>

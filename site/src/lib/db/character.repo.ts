@@ -116,7 +116,9 @@ class CharacterRepo {
 				// Keep the stored id when the caller does not supply one.
 				backstoryId: sql`COALESCE(${character.backstoryId ?? null}, ${characters.backstoryId})`,
 				implantLimit: character.implantLimit ?? 2,
-				kind: character.kind ?? 'player'
+				// As with `backstoryId`: keep the stored kind when the caller does not supply one, so
+				// an edit that predates the NPC pool cannot silently turn an NPC into a player character.
+				kind: sql`COALESCE(${character.kind ?? null}, ${characters.kind})`
 			})
 			.where(eq(characters.id, character.id));
 	}

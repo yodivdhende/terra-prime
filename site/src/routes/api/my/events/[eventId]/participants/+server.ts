@@ -5,6 +5,7 @@ import {
   type CharacterVersionBare,
 } from '$lib/db/character_version.repo';
 import { eventCouponRepo } from '$lib/db/event_coupon.repo';
+import { eventExtrasRepo } from '$lib/db/event_extras.repo';
 import { eventPlayersRepo } from '$lib/db/event_players.repo';
 import { itemRepo } from '$lib/db/items.repo';
 import { computeCharacterVersionCost, getAvailableBudget } from '$lib/server/budget.service';
@@ -25,13 +26,33 @@ type CharacterWithVersions = {
   couponCode?: string | null;
 };
 
+/** The current user's enrolment, whichever kind it is; 204 when they have none. */
 export const GET: RequestHandler = async ({ cookies, params }) => {
   return handleRequest(async () => {
     const { userId } = await authGuardForUser(getSessionToken(cookies), [UserRole.user]);
     const eventId = isNumberOrError(params.eventId);
-    const participation = await eventPlayersRepo.getPlayerForUser({ eventId, userId });
-    if (!participation) return new Response(null, { status: 204 });
-    return json(participation);
+    const [player, extra] = await Promise.all([
+      eventPlayersRepo.getPlayerForUser({ eventId, userId }),
+      eventExtrasRepo.getEnrolment({ eventId, userId }),
+    ]);
+    if (player) return json({ type: 'player' as const, ...player });
+    if (extra) return json({ type: 'extra' as const });
+    return new Response(null, { status: 204 });
+  });
+};
+
+/**
+ * Sign up as an extra. An extra does not build a character, so there is no budget, no coupon and
+ * no version here — the organisation assigns NPCs later from the event manage page.
+ */
+export const POST: RequestHandler = async ({ cookies, params, request }) => {
+  return handleRequest(async () => {
+    const { userId } = await authGuardForUser(getSessionToken(cookies), [UserRole.user]);
+    const eventId = isNumberOrError(params.eventId);
+    const body = await request.json();
+    if (body?.type !== 'extra') throw new BadRequest();
+    await eventExtrasRepo.enrol({ eventId, userId });
+    return json({ ok: true });
   });
 };
 
@@ -41,6 +62,13 @@ export const PUT: RequestHandler = async ({ cookies, params, request, locals }) 
     const eventId = isNumberOrError(params.eventId);
     const body = await request.json();
     if (!isCharacterWithVersions(body)) throw new BadRequest();
+
+    // NPCs are handed out through the extras endpoints; a player cannot register one as their own.
+    if (body.id != null) {
+      const existing = await characterRepo.getById(body.id);
+      if (existing.kind === 'npc')
+        throw new BadRequest('npc characters cannot be registered as a player');
+    }
 
     const [characterId, existingParticipation] = await Promise.all([
       characterRepo.save(

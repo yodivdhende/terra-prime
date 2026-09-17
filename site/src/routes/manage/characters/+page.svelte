@@ -10,6 +10,7 @@
 		{ label: 'Id', key: 'id' },
 		{ label: 'Name', key: 'name' },
 		{ label: 'Player', key: 'ownerName' },
+		{ label: 'Kind', key: 'kind' },
 		{ label: 'Backstory', key: 'backstoryId' }
 	];
 </script>
@@ -23,6 +24,7 @@
 				<td><a href={resolve('/manage/characters/[id]', { id: String(character.id) })}>{character.id}</a></td>
 				<td>{character.name}</td>
 				<td>{character.ownerName}</td>
+				<td>{character.kind}</td>
 				<td>
 					{#if character.backstoryId}
 						<a href={`https://docs.google.com/document/d/${character.backstoryId}/edit`} target="_blank" rel="noopener noreferrer">Open</a>

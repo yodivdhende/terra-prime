@@ -34,9 +34,12 @@ export const events = mysqlTable('Events', {
 /**
  * The one character version a player plays at an event, keyed on (Event, User).
  *
- * Renamed from `Event_Participants` by `0001_add_extras`; MySQL's `RENAME TABLE` keeps constraint
- * names, so the foreign keys are still called `Event_Participants_ibfk_*` on the renamed table and
- * stay pinned to those names here — the same convention as the `Skill` index in `characters.ts`.
+ * Renamed from `Event_Participants` by `0001_add_extras`. InnoDB rewrites constraint names in the
+ * auto-generated `<table>_ibfk_N` form when the table is renamed, so these came out of the rename
+ * as `Event_Players_ibfk_*` — verified by replaying the migration against a seeded pre-rename
+ * database. The index MySQL created for the third foreign key keeps its old name
+ * (`Event_Participants_ibfk_3`), but implicit foreign-key indexes are not declared here; see
+ * `./index.ts`.
  */
 export const eventPlayers = mysqlTable(
 	'Event_Players',
@@ -49,17 +52,17 @@ export const eventPlayers = mysqlTable(
 		primaryKey({ columns: [table.eventId, table.userId] }),
 		index('User').on(table.userId),
 		foreignKey({
-			name: 'Event_Participants_ibfk_1',
+			name: 'Event_Players_ibfk_1',
 			columns: [table.eventId],
 			foreignColumns: [events.id]
 		}),
 		foreignKey({
-			name: 'Event_Participants_ibfk_2',
+			name: 'Event_Players_ibfk_2',
 			columns: [table.userId],
 			foreignColumns: [users.id]
 		}),
 		foreignKey({
-			name: 'Event_Participants_ibfk_3',
+			name: 'Event_Players_ibfk_3',
 			columns: [table.characterVersionId],
 			foreignColumns: [characterVersions.id]
 		})

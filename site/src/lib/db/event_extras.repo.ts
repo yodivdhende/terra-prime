@@ -49,6 +49,12 @@ class EventExtrasRepo {
 		await db.insert(eventExtras).values({ eventId, userId, characterVersionId });
 	}
 
+	/**
+	 * Take one character back off an extra. The assignment and the enrolment share a row, so when
+	 * this is the only row that extra has at the event the version is nulled rather than deleted —
+	 * unassigning a character must not quietly drop the person from the event. `withdraw` is the
+	 * one way out.
+	 */
 	public async unassign({
 		eventId,
 		characterVersionId
@@ -56,14 +62,30 @@ class EventExtrasRepo {
 		eventId: number;
 		characterVersionId: number;
 	}): Promise<void> {
-		await db
-			.delete(eventExtras)
+		const [row] = await db
+			.select({ id: eventExtras.id, userId: eventExtras.userId })
+			.from(eventExtras)
 			.where(
 				and(
 					eq(eventExtras.eventId, eventId),
 					eq(eventExtras.characterVersionId, characterVersionId)
 				)
 			);
+		if (row == null) return;
+
+		const rows = await db
+			.select({ id: eventExtras.id })
+			.from(eventExtras)
+			.where(and(eq(eventExtras.eventId, eventId), eq(eventExtras.userId, row.userId)));
+
+		if (rows.length === 1) {
+			await db
+				.update(eventExtras)
+				.set({ characterVersionId: null })
+				.where(eq(eventExtras.id, row.id));
+			return;
+		}
+		await db.delete(eventExtras).where(eq(eventExtras.id, row.id));
 	}
 
 	/** Remove the extra from the event, assignments and all. */

@@ -46,7 +46,7 @@ the shared `db` client from `src/lib/db/mysql.ts` — no raw SQL.
 
 | Table | Key columns | Notes |
 |---|---|---|
-| `Characters` | `Id`, `Name`, `Owner` → Users | A player's character |
+| `Characters` | `Id`, `Name`, `Owner` → Users, `Kind` | A character. `Kind` is `player` (built by its owner) or `npc` (authored by an admin and handed to an event's extras); everything below this table is shared by both |
 | `Character_Versions` | `Id`, `Character` → Characters, `Name` | Snapshot of a character (e.g. per event) |
 | `Character_Version_Expertise` | `Id`, `CharacterVersion`, `Expertise` → Expertise, `Value` | Expertise levels for a version |
 | `Character_Version_Items` | `Id`, `CharacterVersion`, `Item` → Items, `Count` | Inventory for a version |
@@ -66,7 +66,8 @@ the shared `db` client from `src/lib/db/mysql.ts` — no raw SQL.
 | Table | Key columns | Notes |
 |---|---|---|
 | `Events` | `Id`, `Name`, `StartTime`, `EndTime`, `Status` | Status: `Draft` / `Open` / `Live` / `Canceled` |
-| `Event_Participants` | `Event` → Events, `User` → Users, `CharacterVersion` → Character_Versions | Which character version a user plays at an event |
+| `Event_Players` | `Event` → Events, `User` → Users, `CharacterVersion` → Character_Versions | Which character version a user plays at an event; keyed on (Event, User). Renamed from `Event_Participants` |
+| `Event_Extras` | `Id`, `Event` → Events, `User` → Users, `CharacterVersion` → Character_Versions (nullable) | Crew / NPC actors. Many rows per (Event, User) — an extra may be handed several NPCs — and a null version means "enrolled, nothing assigned yet". Which table a row is in *is* the signup type; there is no discriminator column |
 | `Party` | `Id`, `Name` | A group of characters |
 | `Party_Members` | `Party` → Party, `Member` → Characters | Characters in a party |
 | `Messages` | `Id`, `Sender` → Users, `Recipient` → Users, `Subject`, `Message`, `Attachment` (JSON) | In-game or out-of-game messages; `Sender` nullable (system messages) |

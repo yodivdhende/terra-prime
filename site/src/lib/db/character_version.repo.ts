@@ -9,6 +9,7 @@ import {
 	users
 } from './schema';
 import { eventParticipantsRepo } from './event_participants.repo';
+import { assertVersionCompanyMatchesSubco } from '$lib/server/subco.service';
 
 /**
  * Children are loaded with one query per child table, then attached in memory — the same shape the
@@ -118,6 +119,7 @@ class CharacterVersionRepo {
 	}
 
 	public async create(characterVersion: CharacterVersionBare): Promise<number> {
+		await assertVersionCompanyMatchesSubco(characterVersion);
 		const [result] = await db.insert(characterVersions).values({
 			characterId: characterVersion.characterId,
 			name: characterVersion.name,
@@ -134,6 +136,7 @@ class CharacterVersionRepo {
 
 	public async update(characterVersion: CharacterVersionBare): Promise<number> {
 		if (characterVersion.id == null) throw new Error('update requires an id');
+		await assertVersionCompanyMatchesSubco(characterVersion);
 		const versionId = characterVersion.id;
 		await db
 			.update(characterVersions)

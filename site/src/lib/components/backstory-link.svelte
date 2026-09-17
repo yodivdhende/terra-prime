@@ -2,11 +2,17 @@
 	let {
 		characterId,
 		characterName,
-		backstoryId = $bindable()
+		backstoryId = $bindable(),
+		idEndpoint = (id: number) => `/api/characters/${id}/backstory`,
+		newEndpoint = '/api/my/characters/backstory',
+		newPayloadKey = 'characterName'
 	}: {
 		characterId: number | null;
 		characterName?: string;
 		backstoryId?: string | null;
+		idEndpoint?: (id: number) => string;
+		newEndpoint?: string;
+		newPayloadKey?: string;
 	} = $props();
 
 	let loading = $state(false);
@@ -26,11 +32,11 @@
 		try {
 			const res =
 				characterId != null
-					? await fetch(`/api/characters/${characterId}/backstory`, { method: 'POST' })
-					: await fetch(`/api/my/characters/backstory`, {
+					? await fetch(idEndpoint(characterId), { method: 'POST' })
+					: await fetch(newEndpoint, {
 							method: 'POST',
 							headers: { 'Content-Type': 'application/json' },
-							body: JSON.stringify({ characterName: characterName ?? '' })
+							body: JSON.stringify({ [newPayloadKey]: characterName ?? '' })
 						});
 			if (!res.ok) {
 				error = 'Failed to create backstory document';

@@ -7,7 +7,7 @@ import {
 	characterVersions,
 	characters,
 	eventParticipants,
-	partyMembers,
+	subcoMembers,
 	users
 } from './schema';
 
@@ -136,7 +136,7 @@ class CharacterRepo {
 		}
 
 		await db.delete(characterVersions).where(eq(characterVersions.characterId, id));
-		await db.delete(partyMembers).where(eq(partyMembers.memberId, id));
+		await db.delete(subcoMembers).where(eq(subcoMembers.memberId, id));
 		await db.delete(characters).where(eq(characters.id, id));
 	}
 }

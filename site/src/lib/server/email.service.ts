@@ -5,7 +5,8 @@ import { RequestError } from '$lib/types/errors';
 
 const SUBJECTS: Record<string, string> = {
 	verify_email: 'Verify your Terra Prime email',
-	password_reset: 'Reset your Terra Prime password'
+	password_reset: 'Reset your Terra Prime password',
+	subco_invite: 'You have been invited to a Terra Prime subco'
 };
 
 function escapeHtml(s: string): string {
@@ -30,7 +31,8 @@ export async function sendTemplated({
 	if (subject == null) throw new RequestError(400, `unknown email templateKey: ${templateKey}`);
 
 	const template = await emailTemplateRepo.getByKey(templateKey);
-	if (template == null) throw new RequestError(500, `no Email_Templates row for key: ${templateKey}`);
+	if (template == null)
+		throw new RequestError(500, `no Email_Templates row for key: ${templateKey}`);
 
 	const docId = extractDocId(template.docUrl);
 	if (docId == null)

@@ -15,16 +15,16 @@ import * as expertiseGroups from './expertise_groups';
 import * as expertisePointCosts from './expertise_point_costs';
 import * as implants from './implants';
 import * as items from './items';
-import * as party from './party';
-import * as partyMembers from './party_members';
 import * as sessions from './sessions';
+import * as subco from './subco';
+import * as subcoMembers from './subco_members';
 import * as users from './users';
 
 type Db = MySql2Database<typeof schema>;
 
 /**
  * Insert order is foreign-key safe top to bottom. `seed.ts` still disables FK checks around the
- * whole run because `Characters`, `Character_Versions`, and `Party` reference each other in a way
+ * whole run because `Characters`, `Character_Versions`, and `Subco` reference each other in a way
  * no single ordering satisfies during a full rebuild.
  */
 export async function insertSeedData(db: Db) {
@@ -70,8 +70,8 @@ export async function insertSeedData(db: Db) {
 			label: 'event_participants',
 			run: () => db.insert(schema.eventParticipants).values(eventParticipants.rows)
 		},
-		{ label: 'party', run: () => db.insert(schema.party).values(party.rows) },
-		{ label: 'party_members', run: () => db.insert(schema.partyMembers).values(partyMembers.rows) },
+		{ label: 'subco', run: () => db.insert(schema.subco).values(subco.rows) },
+		{ label: 'subco_members', run: () => db.insert(schema.subcoMembers).values(subcoMembers.rows) },
 		{
 			label: 'sessions',
 			run: async () => {

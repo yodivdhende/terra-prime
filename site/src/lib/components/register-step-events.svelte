@@ -57,6 +57,34 @@
 			<span class="dates">{formatDate(event.start)} – {formatDate(event.end)}</span>
 		</div>
 
+		<fieldset class="type">
+			<legend>attending as</legend>
+			<label>
+				<input
+					type="radio"
+					name="participant-type"
+					value="player"
+					checked={REGISTER_MANAGER.participantType === 'player'}
+					onchange={() => (REGISTER_MANAGER.participantType = 'player')}
+				/>
+				<span>player</span>
+			</label>
+			<label>
+				<input
+					type="radio"
+					name="participant-type"
+					value="extra"
+					checked={REGISTER_MANAGER.participantType === 'extra'}
+					onchange={() => (REGISTER_MANAGER.participantType = 'extra')}
+				/>
+				<span>extra</span>
+			</label>
+			<p class="type-hint">
+				an extra does not build a character — you play the characters the organisation provides,
+				and they appear in your codex once the organisers assign them.
+			</p>
+		</fieldset>
+
 		{#if REGISTER_MANAGER.selectedFormId}
 			{#if REGISTER_MANAGER.formLoading}
 				<p class="status">loading form…</p>
@@ -97,6 +125,37 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+	}
+
+	.type {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		border: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
+		padding: 0.6rem 0.75rem;
+	}
+
+	.type legend {
+		font-size: 0.62em;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		opacity: 0.4;
+		padding: 0 0.3rem;
+	}
+
+	.type label {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.75em;
+		cursor: pointer;
+	}
+
+	.type-hint {
+		margin: 0.2rem 0 0;
+		font-size: 0.68em;
+		color: var(--color-main-dim);
+		opacity: 0.7;
 	}
 
 	.form-header {

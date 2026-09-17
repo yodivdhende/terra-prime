@@ -21,7 +21,8 @@
 
 <div class="register">
 	<nav class="steps">
-		{#each REGISTER_MANAGER.steps as step (step.id)}
+		<!-- An extra skips the character steps, so the strip must not advertise them. -->
+		{#each REGISTER_MANAGER.visibleSteps as step, index (step.id)}
 			<span
 				class="step"
 				class:active={step.id === REGISTER_MANAGER.currentStep}
@@ -29,7 +30,7 @@
 			>
 				{step.label}
 			</span>
-			{#if step.id < REGISTER_MANAGER.steps.length - 1}
+			{#if index < REGISTER_MANAGER.visibleSteps.length - 1}
 				<span class="sep">›</span>
 			{/if}
 		{/each}

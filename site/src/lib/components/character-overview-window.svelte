@@ -36,27 +36,56 @@
 		event: VersionEvent;
 	};
 
+	/**
+	 * One NPC version can be handed out at more than one event, so an assigned entry is identified
+	 * by (event, version) rather than by version id alone.
+	 */
+	type Selection =
+		| { kind: 'owned'; versionId: number }
+		| { kind: 'assigned'; eventId: number; versionId: number };
+
 	let characters = $state<CharacterEntry[]>([]);
 	let assignedCharacters = $state<AssignedVersion[]>([]);
 	let loading = $state(true);
 	let failed = $state(false);
-	let selectedVersionId = $state<number | null>(null);
+	let selection = $state<Selection | null>(null);
 
-	const selectedAssigned = $derived(
-		assignedCharacters.find((v) => v.id === selectedVersionId) ?? null
-	);
+	function isSelected(candidate: Selection): boolean {
+		if (selection == null || selection.kind !== candidate.kind) return false;
+		if (selection.kind === 'owned' || candidate.kind === 'owned')
+			return selection.versionId === candidate.versionId;
+		return selection.versionId === candidate.versionId && selection.eventId === candidate.eventId;
+	}
+
+	const selectedAssigned = $derived.by(() => {
+		const current = selection;
+		if (current?.kind !== 'assigned') return null;
+		return (
+			assignedCharacters.find(
+				(v) => v.id === current.versionId && v.event.id === current.eventId
+			) ?? null
+		);
+	});
 
 	const selectedVersion = $derived.by(() => {
-		for (const c of characters) {
-			const v = c.versions.find((v) => v.id === selectedVersionId);
-			if (v) return v;
+		const current = selection;
+		if (current?.kind === 'owned') {
+			for (const c of characters) {
+				const v = c.versions.find((v) => v.id === current.versionId);
+				if (v) return v;
+			}
+			return null;
 		}
 		return selectedAssigned;
 	});
 
 	const selectedCharacterName = $derived.by(() => {
-		const owned = characters.find((c) => c.versions.some((v) => v.id === selectedVersionId));
-		if (owned) return owned.name;
+		const current = selection;
+		if (current?.kind === 'owned') {
+			return (
+				characters.find((c) => c.versions.some((v) => v.id === current.versionId))?.name ?? ''
+			);
+		}
 		return selectedAssigned?.characterName ?? '';
 	});
 
@@ -86,8 +115,12 @@
 			.then((data: { characters: CharacterEntry[]; assignedCharacters: AssignedVersion[] }) => {
 				characters = data.characters;
 				assignedCharacters = data.assignedCharacters ?? [];
-				if (selectedVersionId == null) {
-					selectedVersionId = characters[0]?.versions[0]?.id ?? assignedCharacters[0]?.id ?? null;
+				if (selection == null) {
+					const owned = characters[0]?.versions[0];
+					const assigned = assignedCharacters[0];
+					if (owned) selection = { kind: 'owned', versionId: owned.id };
+					else if (assigned)
+						selection = { kind: 'assigned', eventId: assigned.event.id, versionId: assigned.id };
 				}
 				loading = false;
 			})
@@ -122,8 +155,8 @@
 					{#each character.versions as version (version.id)}
 						<button
 							class="version-entry"
-							class:active={selectedVersionId === version.id}
-							onclick={() => (selectedVersionId = version.id)}
+							class:active={isSelected({ kind: 'owned', versionId: version.id })}
+							onclick={() => (selection = { kind: 'owned', versionId: version.id })}
 						>
 							{version.name}
 						</button>
@@ -145,8 +178,17 @@
 						{#each group.versions as version (version.id)}
 							<button
 								class="version-entry"
-								class:active={selectedVersionId === version.id}
-								onclick={() => (selectedVersionId = version.id)}
+								class:active={isSelected({
+									kind: 'assigned',
+									eventId: group.event.id,
+									versionId: version.id
+								})}
+								onclick={() =>
+									(selection = {
+										kind: 'assigned',
+										eventId: group.event.id,
+										versionId: version.id
+									})}
 							>
 								{version.characterName} — {version.name}
 							</button>

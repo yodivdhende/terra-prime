@@ -11,7 +11,8 @@
 	let character = $state<NewCharacter>({
 		name: '',
 		ownerId: 1,
-		backstoryId: null
+		backstoryId: null,
+		kind: 'player'
 	});
 	const users = $derived(data.users);
 

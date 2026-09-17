@@ -1965,8 +1965,8 @@
         }
       },
       "foreignKeys": {
-        "Event_Participants_ibfk_1": {
-          "name": "Event_Participants_ibfk_1",
+        "Event_Players_ibfk_1": {
+          "name": "Event_Players_ibfk_1",
           "tableFrom": "Event_Players",
           "tableTo": "Events",
           "columnsFrom": [
@@ -1978,8 +1978,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "Event_Participants_ibfk_2": {
-          "name": "Event_Participants_ibfk_2",
+        "Event_Players_ibfk_2": {
+          "name": "Event_Players_ibfk_2",
           "tableFrom": "Event_Players",
           "tableTo": "Users",
           "columnsFrom": [
@@ -1991,8 +1991,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "Event_Participants_ibfk_3": {
-          "name": "Event_Participants_ibfk_3",
+        "Event_Players_ibfk_3": {
+          "name": "Event_Players_ibfk_3",
           "tableFrom": "Event_Players",
           "tableTo": "Character_Versions",
           "columnsFrom": [

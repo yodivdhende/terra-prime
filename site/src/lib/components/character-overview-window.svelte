@@ -30,21 +30,49 @@
 		versions: VersionFull[];
 	};
 
+	/** An NPC sheet handed to this user as an extra: read-only, and owned by the organisation. */
+	type AssignedVersion = VersionFull & {
+		characterName: string;
+		event: VersionEvent;
+	};
+
 	let characters = $state<CharacterEntry[]>([]);
+	let assignedCharacters = $state<AssignedVersion[]>([]);
 	let loading = $state(true);
 	let failed = $state(false);
 	let selectedVersionId = $state<number | null>(null);
+
+	const selectedAssigned = $derived(
+		assignedCharacters.find((v) => v.id === selectedVersionId) ?? null
+	);
 
 	const selectedVersion = $derived.by(() => {
 		for (const c of characters) {
 			const v = c.versions.find((v) => v.id === selectedVersionId);
 			if (v) return v;
 		}
-		return null;
+		return selectedAssigned;
 	});
 
-	const selectedCharacter = $derived(
-		characters.find((c) => c.versions.some((v) => v.id === selectedVersionId)) ?? null
+	const selectedCharacterName = $derived.by(() => {
+		const owned = characters.find((c) => c.versions.some((v) => v.id === selectedVersionId));
+		if (owned) return owned.name;
+		return selectedAssigned?.characterName ?? '';
+	});
+
+	const isEmpty = $derived(characters.length === 0 && assignedCharacters.length === 0);
+
+	/** Assigned sheets are listed under the event they were handed out for. */
+	const assignedByEvent = $derived(
+		assignedCharacters.reduce(
+			(groups, version) => {
+				const group = groups.find((g) => g.event.id === version.event.id);
+				if (group) group.versions.push(version);
+				else groups.push({ event: version.event, versions: [version] });
+				return groups;
+			},
+			[] as { event: VersionEvent; versions: AssignedVersion[] }[]
+		)
 	);
 
 	$effect(() => {
@@ -55,10 +83,11 @@
 				if (!r.ok) throw new Error();
 				return r.json();
 			})
-			.then((data: { characters: CharacterEntry[] }) => {
+			.then((data: { characters: CharacterEntry[]; assignedCharacters: AssignedVersion[] }) => {
 				characters = data.characters;
+				assignedCharacters = data.assignedCharacters ?? [];
 				if (selectedVersionId == null) {
-					selectedVersionId = characters[0]?.versions[0]?.id ?? null;
+					selectedVersionId = characters[0]?.versions[0]?.id ?? assignedCharacters[0]?.id ?? null;
 				}
 				loading = false;
 			})
@@ -75,7 +104,7 @@
 			<span class="status">loading...</span>
 		{:else if failed}
 			<span class="status error">failed to load</span>
-		{:else if characters.length === 0}
+		{:else if isEmpty}
 			<span class="status">no characters found</span>
 		{:else}
 			{#each characters as character (character.id)}
@@ -104,6 +133,27 @@
 					{/if}
 				</div>
 			{/each}
+			{#if assignedCharacters.length > 0}
+				<!-- No BackstoryLink here: the backstory edit path writes through /api/my/characters/…,
+				     which an extra does not own. -->
+				<span class="section-label">assigned</span>
+				{#each assignedByEvent as group (group.event.id)}
+					<div class="character-node">
+						<div class="character-header">
+							<span class="character-name">{group.event.name}</span>
+						</div>
+						{#each group.versions as version (version.id)}
+							<button
+								class="version-entry"
+								class:active={selectedVersionId === version.id}
+								onclick={() => (selectedVersionId = version.id)}
+							>
+								{version.characterName} — {version.name}
+							</button>
+						{/each}
+					</div>
+				{/each}
+			{/if}
 		{/if}
 	</div>
 
@@ -112,7 +162,12 @@
 			<span class="status">select a version</span>
 		{:else}
 			<div class="detail-scroll">
-				{#if selectedVersion.events.length > 0}
+				{#if selectedAssigned != null}
+					<div class="version-events">
+						<span class="event-tag">{selectedAssigned.event.name}</span>
+						<span class="event-tag">assigned</span>
+					</div>
+				{:else if selectedVersion.events.length > 0}
 					<div class="version-events">
 						{#each selectedVersion.events as event (event.id)}
 							<span class="event-tag">{event.name}</span>
@@ -120,7 +175,7 @@
 					</div>
 				{/if}
 				<CharacterVersion
-					characterName={selectedCharacter?.name ?? ''}
+					characterName={selectedCharacterName}
 					versionName={selectedVersion.name}
 					companyName={selectedVersion.company?.name ?? null}
 					expertise={selectedVersion.expertise}
@@ -201,6 +256,14 @@
 	.version-entry.active {
 		opacity: 1;
 		color: var(--color-accent);
+	}
+
+	.section-label {
+		padding: 0.6rem 0.75rem 0.2rem;
+		font-size: 0.62em;
+		opacity: 0.35;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
 	}
 
 	.no-versions {

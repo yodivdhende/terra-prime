@@ -37,8 +37,15 @@ function allRequiredAnswered(form: GoogleForm, answers: Record<string, string | 
   return true;
 }
 
+/** The two middle steps build a character, which only a player does. */
+const CHARACTER_STEPS = [1, 2];
+const CONFIRM_STEP = 3;
+
+export type ParticipantType = 'player' | 'extra';
+
 export function createRegisterManager(characterManager: CharacterManager) {
   let currentStep = $state(0);
+  let participantType = $state<ParticipantType>('player');
   let events: StringLarpEvent[] = $state([]);
   let selectedEventId = $state<number | null>(null);
   const selectedEvent = $derived(events.find(e => e.id === selectedEventId));
@@ -64,6 +71,7 @@ export function createRegisterManager(characterManager: CharacterManager) {
       if (selectedEventId === null) return false;
       if (!selectedFormId) return true;
       if (formLoading || formError || !form) return false;
+      // An extra answers the same Google Form; only the character rules fall away.
       return allRequiredAnswered(form, formAnswers);
     }
     if (currentStep === 1) return true;
@@ -75,11 +83,18 @@ export function createRegisterManager(characterManager: CharacterManager) {
 
   function next() {
     if (!canAdvance) return;
+    // An extra plays characters the organisation provides, so the character steps do not apply.
+    if (currentStep === 0 && participantType === 'extra') {
+      currentStep = CONFIRM_STEP;
+      return;
+    }
     currentStep++;
   }
 
   function back() {
-    if (currentStep === 3 && editMode) {
+    if (currentStep === CONFIRM_STEP && participantType === 'extra') {
+      currentStep = 0;
+    } else if (currentStep === 3 && editMode) {
       currentStep = 2;
     } else if (currentStep === 3 && selectedCharacterId !== null) {
       currentStep = 1;
@@ -93,6 +108,7 @@ export function createRegisterManager(characterManager: CharacterManager) {
 
   function selectEvent(id: number) {
     selectedEventId = id;
+    participantType = 'player';
     const event = events.find(e => e.id === id);
     const formId = event?.formId ?? null;
     resetForm();
@@ -188,6 +204,7 @@ export function createRegisterManager(characterManager: CharacterManager) {
 
   function reset() {
     currentStep = 0;
+    participantType = 'player';
     selectedEventId = null;
     selectedCharacterId = null;
     selectedVersionId = null;
@@ -202,6 +219,14 @@ export function createRegisterManager(characterManager: CharacterManager) {
   return {
     get steps() { return STEPS; },
     get currentStep() { return currentStep; },
+    get participantType() { return participantType; },
+    set participantType(value: ParticipantType) { participantType = value; },
+    /** The steps to show in the strip: an extra never walks the character steps. */
+    get visibleSteps() {
+      return participantType === 'extra'
+        ? STEPS.filter((step) => !CHARACTER_STEPS.includes(step.id))
+        : STEPS;
+    },
     get selectedEventId() { return selectedEventId; },
     get selectedFormId() { return selectedFormId; },
     get selectedCharacterId() { return selectedCharacterId; },

@@ -74,8 +74,10 @@ export const POST: RequestHandler = async ({ cookies, params, request }) => {
     const version = await characterVersionRepo.getWithId(body.characterVersionId);
     if (version == null) throw new NotFoundRequest('character version not found');
     const character = await characterRepo.getById(version.characterId);
+    if (character.kind === 'npc')
+      throw new BadRequest('npc characters are assigned through /api/events/[eventId]/extras');
 
-    // `Event_Participants` is keyed on (Event, User), so a second version for the same owner would
+    // `Event_Players` is keyed on (Event, User), so a second version for the same owner would
     // silently replace the first. Refuse instead and let the admin remove the existing row.
     const existingParticipation = await eventPlayersRepo.getPlayerForUser({
       eventId,

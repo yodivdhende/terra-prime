@@ -6,6 +6,8 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 export const GET: RequestHandler = async ({ cookies }) => {
 	return handleRequest(async () => {
 		const { userId } = await authGuardForUser(getSessionToken(cookies), ['user']);
-		return json(await characterRepo.getForUser(userId));
+		const characters = await characterRepo.getForUser(userId);
+		// An admin owns the NPC pool they author; those are not characters they play.
+		return json(characters.filter((character) => character.kind === 'player'));
 	});
 };

@@ -329,9 +329,10 @@
 		width: 90px;
 	}
 
+	/* Wide enough that a card always has room for the sheet's full 460px of bar. */
 	.cards {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(540px, 1fr));
 		gap: 16px;
 	}
 
@@ -350,9 +351,12 @@
 			padding: 0;
 		}
 
-		/* Two cards per row on paper; each card avoids breaking across a page itself. */
+		/*
+		 * One card per row: two would leave under 95mm each, and the bars have to stay the 460px
+		 * the character sheet draws them at. Cards still stack several to a page.
+		 */
 		.cards {
-			grid-template-columns: repeat(2, 1fr);
+			grid-template-columns: 1fr;
 			gap: 8mm;
 		}
 	}

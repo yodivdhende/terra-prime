@@ -97,6 +97,9 @@
 		/* Group tints are too pale to read as text on white; the bars still carry the colour. */
 		--expertise-group-name-color: #111;
 		width: 100%;
+		/* Same cap as the character sheet, so a card's bars are the length of the sheet's and the
+		   two can be held side by side and compared directly. */
+		max-width: 460px;
 		color: #111;
 	}
 

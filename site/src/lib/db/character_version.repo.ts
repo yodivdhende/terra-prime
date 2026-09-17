@@ -1,4 +1,5 @@
 import { eq, inArray } from 'drizzle-orm';
+import type { CharacterKind } from './character.repo';
 import { db } from './mysql';
 import {
 	characterVersionExpertise,
@@ -8,7 +9,8 @@ import {
 	characters,
 	users
 } from './schema';
-import { eventParticipantsRepo } from './event_participants.repo';
+import { eventExtrasRepo } from './event_extras.repo';
+import { eventPlayersRepo } from './event_players.repo';
 
 /**
  * Children are loaded with one query per child table, then attached in memory — the same shape the
@@ -157,7 +159,8 @@ class CharacterVersionRepo {
 			this.deleteItems(characterVersionId),
 			this.deleteImplants(characterVersionId),
 			this.deleteExpertise(characterVersionId),
-			eventParticipantsRepo.deleteForCharacterVersion(characterVersionId)
+			eventPlayersRepo.deleteForCharacterVersion(characterVersionId),
+			eventExtrasRepo.deleteForCharacterVersion(characterVersionId)
 		]);
 		await db.delete(characterVersions).where(eq(characterVersions.id, characterVersionId));
 	}
@@ -304,6 +307,7 @@ class CharacterVersionRepo {
 			characterName: string;
 			ownerId: number;
 			ownerName: string;
+			kind: CharacterKind;
 		}[]
 	> {
 		const rows = await db
@@ -313,7 +317,9 @@ class CharacterVersionRepo {
 				characterId: characterVersions.characterId,
 				characterName: characters.name,
 				ownerId: users.id,
-				ownerName: users.name
+				ownerName: users.name,
+				// The manage-page pickers split player versions from NPC versions out of this one fetch.
+				kind: characters.kind
 			})
 			.from(characterVersions)
 			.innerJoin(characters, eq(characters.id, characterVersions.characterId))
@@ -327,7 +333,8 @@ class CharacterVersionRepo {
 				characterId: row.characterId,
 				characterName: row.characterName as string,
 				ownerId: row.ownerId,
-				ownerName: row.ownerName as string
+				ownerName: row.ownerName as string,
+				kind: row.kind
 			}));
 	}
 

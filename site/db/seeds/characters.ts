@@ -5,5 +5,7 @@ export const rows: (typeof characters.$inferInsert)[] = [
 	{ id: 2, name: 'Alice', owner: 3 },
 	{ id: 3, name: 'Eve', owner: 4 },
 	{ id: 4, name: 'Mallory', owner: 2 },
-	{ id: 5, name: 'Patric', owner: 2 }
+	{ id: 5, name: 'Patric', owner: 2 },
+	{ id: 6, name: 'Dock Foreman', owner: 1, kind: 'npc' },
+	{ id: 7, name: 'Syndicate Runner', owner: 1, kind: 'npc' }
 ];

@@ -1,7 +1,7 @@
 import { characterRepo, type Character } from "$lib/db/character.repo";
 import { characterVersionRepo, type CharacterVersionBare } from "$lib/db/character_version.repo";
 import { companyRepo, type Company } from "$lib/db/companies.repo";
-import { eventParticipantsRepo } from "$lib/db/event_participants.repo";
+import { eventPlayersRepo } from "$lib/db/event_players.repo";
 import { implantRepo, type Implant } from "$lib/db/implants.repo";
 import { itemRepo, type Item } from "$lib/db/items.repo";
 import { expertiseRepo, type Expertise } from "$lib/db/expertise.repo";
@@ -65,7 +65,7 @@ export const GET: RequestHandler = async ({ cookies }) => {
 			implantRepo.getAll(),
 			companyRepo.getAll()
 		]);
-		const events = await eventParticipantsRepo.getEventsForCharacters(characters.map((c) => c.id));
+		const events = await eventPlayersRepo.getEventsForCharacters(characters.map((c) => c.id));
 		const response: MyCharacterVersionsResponse = {
 			characters: toCharactersWithVersions(characters, versions, expertise, items, implants, events, companies)
 		};

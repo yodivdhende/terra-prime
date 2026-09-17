@@ -1,8 +1,8 @@
 import { characterRepo } from '$lib/db/character.repo';
 import { characterVersionRepo } from '$lib/db/character_version.repo';
 import { eventRepo } from '$lib/db/event.repo';
-import { eventParticipantsRepo } from '$lib/db/event_participants.repo';
 import { expertiseRepo } from '$lib/db/expertise.repo';
+import { findAttendanceForCharacter } from '$lib/server/event-attendance.service';
 import { EventStatus } from '$lib/types/event-status';
 import { BadRequest, NotFoundRequest } from '$lib/types/errors';
 import { handleRequest } from '$lib/utils/request';
@@ -47,13 +47,13 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 		const [character] = candidates;
 
-		const participant = await eventParticipantsRepo.getParticipantForCharacter({
+		const attendance = await findAttendanceForCharacter({
 			eventId: event.id,
 			characterId: character.id
 		});
-		if (!participant) throw new NotFoundRequest(`"${name}" is not registered for the live event`);
+		if (!attendance) throw new NotFoundRequest(`"${name}" is not registered for the live event`);
 
-		const version = await characterVersionRepo.getWithId(participant.characterVersion);
+		const version = await characterVersionRepo.getWithId(attendance.characterVersion);
 		if (!version) throw new NotFoundRequest('character version not found');
 
 		const expertiseById = new Map(
@@ -82,7 +82,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			ownerName: character.ownerName,
 			eventId: event.id,
 			eventName: event.name,
-			versionId: version.id ?? participant.characterVersion,
+			versionId: version.id ?? attendance.characterVersion,
 			versionName: version.name,
 			expertise
 		};

@@ -1,15 +1,17 @@
 import { eq, inArray, sql } from 'drizzle-orm';
 import { db } from './mysql';
 import {
+	characterKind,
 	characterVersionExpertise,
 	characterVersionImplants,
 	characterVersionItems,
 	characterVersions,
 	characters,
-	eventParticipants,
+	eventPlayers,
 	partyMembers,
 	users
 } from './schema';
+import { eventExtrasRepo } from './event_extras.repo';
 
 const characterColumns = {
 	id: characters.id,
@@ -17,7 +19,8 @@ const characterColumns = {
 	ownerId: characters.owner,
 	ownerName: users.name,
 	backstoryId: characters.backstoryId,
-	implantLimit: characters.implantLimit
+	implantLimit: characters.implantLimit,
+	kind: characters.kind
 };
 
 type CharacterRow = {
@@ -27,6 +30,7 @@ type CharacterRow = {
 	ownerName: string | null;
 	backstoryId: string | null;
 	implantLimit: number;
+	kind: CharacterKind;
 };
 
 function toCharacter(row: CharacterRow): Character {
@@ -37,7 +41,8 @@ function toCharacter(row: CharacterRow): Character {
 		ownerId: row.ownerId as number,
 		ownerName: row.ownerName ?? '',
 		backstoryId: row.backstoryId,
-		implantLimit: row.implantLimit
+		implantLimit: row.implantLimit,
+		kind: row.kind
 	};
 }
 
@@ -77,6 +82,12 @@ class CharacterRepo {
 		return rows.map(toCharacter);
 	}
 
+	/** The admin-authored pool the event manage page hands out to extras. */
+	public async getNpcs(): Promise<Character[]> {
+		const rows = await this.selectCharacters().where(eq(characters.kind, 'npc'));
+		return rows.map(toCharacter);
+	}
+
 	public async save(character: NewCharacter | Character): Promise<number | undefined> {
 		if (isCharacter(character)) {
 			await this.edit(character);
@@ -90,7 +101,8 @@ class CharacterRepo {
 			name: character.name,
 			owner: character.ownerId,
 			backstoryId: character.backstoryId ?? null,
-			implantLimit: character.implantLimit ?? 2
+			implantLimit: character.implantLimit ?? 2,
+			kind: character.kind ?? 'player'
 		});
 		return result.insertId;
 	}
@@ -103,7 +115,8 @@ class CharacterRepo {
 				owner: character.ownerId,
 				// Keep the stored id when the caller does not supply one.
 				backstoryId: sql`COALESCE(${character.backstoryId ?? null}, ${characters.backstoryId})`,
-				implantLimit: character.implantLimit ?? 2
+				implantLimit: character.implantLimit ?? 2,
+				kind: character.kind ?? 'player'
 			})
 			.where(eq(characters.id, character.id));
 	}
@@ -130,9 +143,8 @@ class CharacterRepo {
 			await db
 				.delete(characterVersionImplants)
 				.where(inArray(characterVersionImplants.characterVersionId, versionIds));
-			await db
-				.delete(eventParticipants)
-				.where(inArray(eventParticipants.characterVersionId, versionIds));
+			await db.delete(eventPlayers).where(inArray(eventPlayers.characterVersionId, versionIds));
+			await eventExtrasRepo.deleteForCharacterVersions(versionIds);
 		}
 
 		await db.delete(characterVersions).where(eq(characterVersions.characterId, id));
@@ -143,11 +155,15 @@ class CharacterRepo {
 
 export const characterRepo = new CharacterRepo();
 
+/** `player` characters are built by their owner; `npc` rows are authored by an admin for extras. */
+export type CharacterKind = (typeof characterKind)[number];
+
 export type Character = NewCharacter & {
 	id: number;
 	ownerName: string;
 	backstoryId?: string | null;
 	implantLimit?: number;
+	kind: CharacterKind;
 };
 
 export function isCharacter(character: unknown): character is Character {
@@ -161,10 +177,15 @@ export type NewCharacter = {
 	ownerId: number;
 	backstoryId?: string | null;
 	implantLimit?: number;
+	kind?: CharacterKind;
 };
 
 export function isNewCharacter(character: unknown): character is NewCharacter {
 	if (typeof character !== 'object' || character === null) return false;
 	const c = character as Record<string, unknown>;
-	return typeof c.name === 'string' && typeof c.ownerId === 'number';
+	return (
+		typeof c.name === 'string' &&
+		typeof c.ownerId === 'number' &&
+		(c.kind === undefined || characterKind.includes(c.kind as CharacterKind))
+	);
 }

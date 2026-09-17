@@ -4,7 +4,7 @@ import {
   isCharacterVersionBare,
   type CharacterVersionBare,
 } from '$lib/db/character_version.repo';
-import { eventParticipantsRepo, isEventParticapant } from '$lib/db/event_participants.repo';
+import { eventPlayersRepo, isEventPlayer } from '$lib/db/event_players.repo';
 import { isNumberOrError } from '$lib/request.utils';
 import { BadRequest, NotFoundRequest } from '$lib/types/errors';
 import { getSessionToken } from '$lib/utils/cookies';
@@ -55,7 +55,7 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
     await authGuardForUser(getSessionToken(cookies), ['admin']);
     const { eventId } = params;
     const numberId = isNumberOrError(eventId);
-    return json(await eventParticipantsRepo.getPerticipants({ eventId: numberId }));
+    return json(await eventPlayersRepo.getPlayers({ eventId: numberId }));
   });
 };
 
@@ -77,14 +77,14 @@ export const POST: RequestHandler = async ({ cookies, params, request }) => {
 
     // `Event_Participants` is keyed on (Event, User), so a second version for the same owner would
     // silently replace the first. Refuse instead and let the admin remove the existing row.
-    const existingParticipation = await eventParticipantsRepo.getUserParticipation({
+    const existingParticipation = await eventPlayersRepo.getPlayerForUser({
       eventId,
       userId: character.ownerId,
     });
     if (existingParticipation != null)
       throw new BadRequest('owner already participates in this event');
 
-    await eventParticipantsRepo.participate({
+    await eventPlayersRepo.participate({
       eventId,
       userId: character.ownerId,
       characterVersionId: body.characterVersionId,
@@ -112,7 +112,7 @@ export const PUT: RequestHandler = async ({ cookies, params, request }) => {
             ownerName: body.ownerName,
           }
       ),
-      eventParticipantsRepo.getUserParticipation({ eventId, userId: body.ownerId }),
+      eventPlayersRepo.getPlayerForUser({ eventId, userId: body.ownerId }),
     ]);
     if (characterId == null) throw new BadRequest();
 
@@ -129,7 +129,7 @@ export const PUT: RequestHandler = async ({ cookies, params, request }) => {
       characterId,
     });
 
-    await eventParticipantsRepo.participate({
+    await eventPlayersRepo.participate({
       eventId,
       userId: body.ownerId,
       characterVersionId,
@@ -143,8 +143,8 @@ export const DELETE: RequestHandler = async ({ cookies, request }) => {
   return handleRequest(async () => {
     await authGuard(getSessionToken(cookies), ['admin']);
     const body = await request.json();
-    if (isEventParticapant(body) == false) throw new BadRequest();
-    await eventParticipantsRepo.withdraw({ eventId: body.eventId, characterVersionId: body.characterVersion });
+    if (isEventPlayer(body) == false) throw new BadRequest();
+    await eventPlayersRepo.withdraw({ eventId: body.eventId, characterVersionId: body.characterVersion });
     return new Response();
   });
 };

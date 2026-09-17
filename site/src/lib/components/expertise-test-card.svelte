@@ -17,15 +17,20 @@
 </script>
 
 <article class="test-card">
+	<span class="corners" aria-hidden="true"></span>
+
 	<header class="header">
-		<h2 class="test-name">{name.trim() === '' ? 'unnamed test' : name}</h2>
-		<div class="effort">
-			{#if effort === 'group'}
-				<Users size="1.6em" />
-			{:else}
-				<User size="1.6em" />
-			{/if}
-			<span class="effort-label">{effort === 'group' ? 'group' : 'single'}</span>
+		<div class="system-line">expertise test</div>
+		<div class="title-row">
+			<h2 class="test-name">{name.trim() === '' ? 'unnamed test' : name}</h2>
+			<div class="effort">
+				{#if effort === 'group'}
+					<Users size="1.1em" />
+				{:else}
+					<User size="1.1em" />
+				{/if}
+				<span class="effort-label">[{effort === 'group' ? 'group' : 'single'}]</span>
+			</div>
 		</div>
 	</header>
 
@@ -34,58 +39,119 @@
 			<CharacterExpertiseGroups {groups} showNames showExpertiseNames size="1.5em" />
 		</div>
 	{:else}
-		<p class="empty">no targets</p>
+		<p class="empty">-- no targets --</p>
 	{/if}
 </article>
 
 <style>
 	/*
-	 * Print-first, like the character sheet this is held next to: dark ink on white, independent of
-	 * the app's CRT theme. Group colours still come from the data so the bars match the sheet.
+	 * A teletype printout: dark ink on white so it costs no toner and survives a printer dropping
+	 * backgrounds, but dressed as terminal output — square corners, dashed rules, a `>` prompt and
+	 * bracketed tags. Group colours still come from the data so the bars match the character sheet
+	 * this is held next to.
 	 */
 	.test-card {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
 		padding: 1.25rem;
-		border: 2px solid #111;
-		border-radius: 4px;
+		border: 1px dashed #111;
+		border-radius: 0;
 		background: white;
 		color: #111;
 		font-family: var(--font-mono);
 		break-inside: avoid;
 	}
 
+	/* `+` at each corner, the way a box drawn in characters closes itself. */
+	.corners {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+
+	.test-card::before,
+	.test-card::after,
+	.corners::before,
+	.corners::after {
+		content: '+';
+		position: absolute;
+		font-size: 1rem;
+		line-height: 1;
+		color: #111;
+	}
+
+	.test-card::before {
+		top: -0.5em;
+		left: -0.31em;
+	}
+
+	.test-card::after {
+		top: -0.5em;
+		right: -0.31em;
+	}
+
+	.corners::before {
+		bottom: -0.5em;
+		left: -0.31em;
+	}
+
+	.corners::after {
+		bottom: -0.5em;
+		right: -0.31em;
+	}
+
 	.header {
 		display: flex;
-		align-items: center;
+		flex-direction: column;
+		gap: 0.5rem;
+		border-bottom: 1px dashed #111;
+		padding-bottom: 0.6rem;
+	}
+
+	/* The line a terminal prints above its output. */
+	.system-line {
+		font-size: 0.6rem;
+		text-transform: uppercase;
+		letter-spacing: 0.35em;
+		color: #666;
+	}
+
+	.title-row {
+		display: flex;
+		align-items: baseline;
 		justify-content: space-between;
 		gap: 1rem;
-		border-bottom: 2px solid #111;
-		padding-bottom: 0.6rem;
 	}
 
 	.test-name {
 		margin: 0;
-		font-size: 1.3rem;
+		font-size: 1.15rem;
 		font-weight: bold;
-		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
 	}
 
-	/* The icon carries the meaning; the caption keeps it unambiguous on paper. */
+	.test-name::before {
+		content: '> ';
+		color: #666;
+	}
+
+	/* The icon carries the meaning; the bracketed tag keeps it unambiguous on paper. */
 	.effort {
 		display: flex;
-		flex-direction: column;
 		align-items: center;
-		gap: 0.15rem;
+		gap: 0.3rem;
 		flex-shrink: 0;
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		color: #444;
 	}
 
 	.effort-label {
-		font-size: 0.6rem;
-		text-transform: uppercase;
-		letter-spacing: 0.12em;
-		color: #666;
+		white-space: nowrap;
 	}
 
 	/*
@@ -106,6 +172,7 @@
 	.empty {
 		margin: 0;
 		font-size: 0.8rem;
+		letter-spacing: 0.1em;
 		color: #888;
 	}
 </style>

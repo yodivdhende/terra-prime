@@ -329,10 +329,14 @@
 		width: 90px;
 	}
 
-	/* Wide enough that a card always has room for the sheet's full 460px of bar. */
+	/*
+	 * Fixed-width columns sized to hold the sheet's full 460px of bar plus the card's padding, so a
+	 * card hugs its contents instead of stretching a gutter inside its border. As many columns fit
+	 * as the width allows: several across on screen, one down an A4 page.
+	 */
 	.cards {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(540px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(0, 520px));
 		gap: 16px;
 	}
 
@@ -352,11 +356,10 @@
 		}
 
 		/*
-		 * One card per row: two would leave under 95mm each, and the bars have to stay the 460px
-		 * the character sheet draws them at. Cards still stack several to a page.
+		 * A4 fits one 520px column: two would leave under 95mm each, and the bars have to stay the
+		 * 460px the character sheet draws them at. Cards still stack several to a page.
 		 */
 		.cards {
-			grid-template-columns: 1fr;
 			gap: 8mm;
 		}
 	}

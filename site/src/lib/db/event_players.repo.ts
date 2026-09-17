@@ -1,9 +1,9 @@
 import { and, eq, inArray, ne, sum } from 'drizzle-orm';
 import { type Character } from './character.repo';
 import { db } from './mysql';
-import { characterVersions, characters, eventParticipants, events, users } from './schema';
+import { characterVersions, characters, eventPlayers, events, users } from './schema';
 
-class EventParticipatnsRepo {
+class EventPlayersRepo {
 	public async participate({
 		eventId,
 		userId,
@@ -14,7 +14,7 @@ class EventParticipatnsRepo {
 		characterVersionId: number;
 	}) {
 		await db
-			.insert(eventParticipants)
+			.insert(eventPlayers)
 			.values({ eventId, userId, characterVersionId })
 			.onDuplicateKeyUpdate({ set: { characterVersionId } });
 	}
@@ -27,39 +27,41 @@ class EventParticipatnsRepo {
 		characterVersionId: number;
 	}) {
 		await db
-			.delete(eventParticipants)
+			.delete(eventPlayers)
 			.where(
 				and(
-					eq(eventParticipants.eventId, eventId),
-					eq(eventParticipants.characterVersionId, characterVersionId)
+					eq(eventPlayers.eventId, eventId),
+					eq(eventPlayers.characterVersionId, characterVersionId)
 				)
 			);
 	}
 
-	public async getPerticipants({
+	public async getPlayers({
 		eventId
 	}: {
 		eventId: number;
-	}): Promise<EventParticipantCharacter[]> {
+	}): Promise<EventPlayerCharacter[]> {
 		const rows = await db
 			.select({
 				id: characters.id,
 				name: characters.name,
 				ownerId: users.id,
 				ownerName: users.name,
+				kind: characters.kind,
 				characterVersionId: characterVersions.id
 			})
-			.from(eventParticipants)
-			.innerJoin(characterVersions, eq(characterVersions.id, eventParticipants.characterVersionId))
+			.from(eventPlayers)
+			.innerJoin(characterVersions, eq(characterVersions.id, eventPlayers.characterVersionId))
 			.innerJoin(characters, eq(characters.id, characterVersions.characterId))
-			.innerJoin(users, eq(users.id, eventParticipants.userId))
-			.where(eq(eventParticipants.eventId, eventId));
+			.innerJoin(users, eq(users.id, eventPlayers.userId))
+			.where(eq(eventPlayers.eventId, eventId));
 
 		return rows.map((row) => ({
 			id: row.id,
 			name: row.name ?? '',
 			ownerId: row.ownerId,
 			ownerName: row.ownerName ?? '',
+			kind: row.kind,
 			characterVersionId: row.characterVersionId
 		}));
 	}
@@ -73,13 +75,13 @@ class EventParticipatnsRepo {
 	}): Promise<number> {
 		const [row] = await db
 			.select({ totalReward: sum(events.rewardBudget) })
-			.from(eventParticipants)
-			.innerJoin(characterVersions, eq(characterVersions.id, eventParticipants.characterVersionId))
-			.innerJoin(events, and(eq(events.id, eventParticipants.eventId), eq(events.status, 'Done')))
+			.from(eventPlayers)
+			.innerJoin(characterVersions, eq(characterVersions.id, eventPlayers.characterVersionId))
+			.innerJoin(events, and(eq(events.id, eventPlayers.eventId), eq(events.status, 'Done')))
 			.where(
 				and(
 					eq(characterVersions.characterId, characterId),
-					ne(eventParticipants.eventId, excludeEventId)
+					ne(eventPlayers.eventId, excludeEventId)
 				)
 			);
 		return Number(row?.totalReward ?? 0);
@@ -87,8 +89,8 @@ class EventParticipatnsRepo {
 
 	public async deleteForCharacterVersion(characterVersionId: number): Promise<void> {
 		await db
-			.delete(eventParticipants)
-			.where(eq(eventParticipants.characterVersionId, characterVersionId));
+			.delete(eventPlayers)
+			.where(eq(eventPlayers.characterVersionId, characterVersionId));
 	}
 
 	public async getEventsForCharacters(
@@ -104,15 +106,15 @@ class EventParticipatnsRepo {
 				eventId: events.id,
 				eventName: events.name
 			})
-			.from(eventParticipants)
-			.innerJoin(characterVersions, eq(characterVersions.id, eventParticipants.characterVersionId))
-			.innerJoin(events, eq(events.id, eventParticipants.eventId))
+			.from(eventPlayers)
+			.innerJoin(characterVersions, eq(characterVersions.id, eventPlayers.characterVersionId))
+			.innerJoin(events, eq(events.id, eventPlayers.eventId))
 			.where(inArray(characterVersions.characterId, characterIds));
 
 		return rows.map((row) => ({ ...row, eventName: row.eventName ?? '' }));
 	}
 
-	public async getUserParticipation({
+	public async getPlayerForUser({
 		eventId,
 		userId
 	}: {
@@ -122,57 +124,57 @@ class EventParticipatnsRepo {
 		const [row] = await db
 			.select({
 				characterId: characterVersions.characterId,
-				characterVersionId: eventParticipants.characterVersionId
+				characterVersionId: eventPlayers.characterVersionId
 			})
-			.from(eventParticipants)
-			.innerJoin(characterVersions, eq(characterVersions.id, eventParticipants.characterVersionId))
-			.where(and(eq(eventParticipants.eventId, eventId), eq(eventParticipants.userId, userId)));
+			.from(eventPlayers)
+			.innerJoin(characterVersions, eq(characterVersions.id, eventPlayers.characterVersionId))
+			.where(and(eq(eventPlayers.eventId, eventId), eq(eventPlayers.userId, userId)));
 		if (row?.characterVersionId == null) return undefined;
 		return { characterId: row.characterId, characterVersionId: row.characterVersionId };
 	}
 
-	public async getParticipantForCharacter({
+	public async getPlayerForCharacter({
 		eventId,
 		characterId
 	}: {
 		eventId: number;
 		characterId: number;
-	}): Promise<EventParticapant | undefined> {
+	}): Promise<EventPlayer | undefined> {
 		const [row] = await db
 			.select({
-				eventId: eventParticipants.eventId,
-				userId: eventParticipants.userId,
-				characterVersion: eventParticipants.characterVersionId
+				eventId: eventPlayers.eventId,
+				userId: eventPlayers.userId,
+				characterVersion: eventPlayers.characterVersionId
 			})
-			.from(eventParticipants)
-			.innerJoin(characterVersions, eq(characterVersions.id, eventParticipants.characterVersionId))
+			.from(eventPlayers)
+			.innerJoin(characterVersions, eq(characterVersions.id, eventPlayers.characterVersionId))
 			.where(
-				and(eq(eventParticipants.eventId, eventId), eq(characterVersions.characterId, characterId))
+				and(eq(eventPlayers.eventId, eventId), eq(characterVersions.characterId, characterId))
 			);
 		if (row?.characterVersion == null) return undefined;
 		return { eventId: row.eventId, userId: row.userId, characterVersion: row.characterVersion };
 	}
 }
 
-export const eventParticipantsRepo = new EventParticipatnsRepo();
+export const eventPlayersRepo = new EventPlayersRepo();
 
-export type EventParticipantCharacter = Character & { characterVersionId: number };
+export type EventPlayerCharacter = Character & { characterVersionId: number };
 
-export type EventParticapant = {
+export type EventPlayer = {
 	eventId: number;
 	userId: number;
 	characterVersion: number;
 };
 
-export function isEventParticapant(particiapant: unknown): particiapant is EventParticapant {
+export function isEventPlayer(player: unknown): player is EventPlayer {
 	return (
-		typeof particiapant === 'object' &&
-		particiapant != null &&
-		'eventId' in particiapant &&
-		typeof particiapant.eventId === 'number' &&
-		'userId' in particiapant &&
-		typeof particiapant.userId === 'number' &&
-		'characterVersion' in particiapant &&
-		typeof particiapant.characterVersion === 'number'
+		typeof player === 'object' &&
+		player != null &&
+		'eventId' in player &&
+		typeof player.eventId === 'number' &&
+		'userId' in player &&
+		typeof player.userId === 'number' &&
+		'characterVersion' in player &&
+		typeof player.characterVersion === 'number'
 	);
 }

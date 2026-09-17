@@ -1,4 +1,4 @@
-import { eventParticipantsRepo } from '$lib/db/event_participants.repo';
+import { findAttendanceForCharacter } from '$lib/server/event-attendance.service';
 import { isNumberOrError } from '$lib/request.utils';
 import { UserRole } from '$lib/types/roles';
 import { getSessionToken } from '$lib/utils/cookies';
@@ -10,10 +10,10 @@ export const GET: RequestHandler = async ({ cookies, params}) => {
 		await authGuardForUser(getSessionToken(cookies), [UserRole.user]);
 		const eventId =isNumberOrError(params.eventId);
 		const characterId = isNumberOrError(params.characterId);
-		const participant = await eventParticipantsRepo.getParticipantForCharacter({
+		const attendance = await findAttendanceForCharacter({
 			eventId,
 			characterId,
 		});
-		return json(participant);
+		return json(attendance);
 	});
 };

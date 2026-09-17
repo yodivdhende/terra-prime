@@ -37,13 +37,14 @@ import {
 	party,
 	partyMembers
 } from './characters';
-import { events, eventParticipants, eventCoupons } from './events';
+import { events, eventPlayers, eventExtras, eventCoupons } from './events';
 
 export const usersRelations = relations(users, ({ many }) => ({
 	admin: many(admins),
 	characters: many(characters),
 	sessions: many(sessions),
-	eventParticipations: many(eventParticipants),
+	eventPlayers: many(eventPlayers),
+	eventExtras: many(eventExtras),
 	eventCoupons: many(eventCoupons),
 	emailVerificationTokens: many(emailVerificationTokens),
 	passwordResetTokens: many(passwordResetTokens)
@@ -74,7 +75,8 @@ export const characterVersionsRelations = relations(characterVersions, ({ one, m
 	expertise: many(characterVersionExpertise),
 	implants: many(characterVersionImplants),
 	items: many(characterVersionItems),
-	eventParticipations: many(eventParticipants)
+	eventPlayers: many(eventPlayers),
+	eventExtras: many(eventExtras)
 }));
 
 export const companiesRelations = relations(companies, ({ many }) => ({
@@ -144,15 +146,25 @@ export const characterVersionItemsRelations = relations(characterVersionItems, (
 }));
 
 export const eventsRelations = relations(events, ({ many }) => ({
-	participants: many(eventParticipants),
+	players: many(eventPlayers),
+	extras: many(eventExtras),
 	coupons: many(eventCoupons)
 }));
 
-export const eventParticipantsRelations = relations(eventParticipants, ({ one }) => ({
-	event: one(events, { fields: [eventParticipants.eventId], references: [events.id] }),
-	user: one(users, { fields: [eventParticipants.userId], references: [users.id] }),
+export const eventPlayersRelations = relations(eventPlayers, ({ one }) => ({
+	event: one(events, { fields: [eventPlayers.eventId], references: [events.id] }),
+	user: one(users, { fields: [eventPlayers.userId], references: [users.id] }),
 	characterVersion: one(characterVersions, {
-		fields: [eventParticipants.characterVersionId],
+		fields: [eventPlayers.characterVersionId],
+		references: [characterVersions.id]
+	})
+}));
+
+export const eventExtrasRelations = relations(eventExtras, ({ one }) => ({
+	event: one(events, { fields: [eventExtras.eventId], references: [events.id] }),
+	user: one(users, { fields: [eventExtras.userId], references: [users.id] }),
+	characterVersion: one(characterVersions, {
+		fields: [eventExtras.characterVersionId],
 		references: [characterVersions.id]
 	})
 }));

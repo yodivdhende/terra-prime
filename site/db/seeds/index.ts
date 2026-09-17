@@ -8,7 +8,8 @@ import * as characterVersionItems from './character_version_items';
 import * as characterVersions from './character_versions';
 import * as characters from './characters';
 import * as companies from './companies';
-import * as eventParticipants from './event_participants';
+import * as eventExtras from './event_extras';
+import * as eventPlayers from './event_players';
 import * as events from './events';
 import * as expertise from './expertise';
 import * as expertiseGroups from './expertise_groups';
@@ -67,9 +68,10 @@ export async function insertSeedData(db: Db) {
 		},
 		{ label: 'events', run: () => db.insert(schema.events).values(events.rows) },
 		{
-			label: 'event_participants',
-			run: () => db.insert(schema.eventParticipants).values(eventParticipants.rows)
+			label: 'event_players',
+			run: () => db.insert(schema.eventPlayers).values(eventPlayers.rows)
 		},
+		{ label: 'event_extras', run: () => db.insert(schema.eventExtras).values(eventExtras.rows) },
 		{ label: 'party', run: () => db.insert(schema.party).values(party.rows) },
 		{ label: 'party_members', run: () => db.insert(schema.partyMembers).values(partyMembers.rows) },
 		{

@@ -1,8 +1,8 @@
-import type { EventParticipantCharacter } from '$lib/db/event_participants.repo';
+import type { EventPlayerCharacter } from '$lib/db/event_players.repo';
 import type { CharacterVersionFull } from '$lib/managers/character-manager.svelte';
 
 export type EventParticipantWithVersion = {
-	character: EventParticipantCharacter;
+	character: EventPlayerCharacter;
 	version: CharacterVersionFull | null;
 };
 
@@ -14,7 +14,7 @@ export async function loadEventParticipants(
 	fetch: typeof globalThis.fetch,
 	eventId: string
 ): Promise<EventParticipantWithVersion[]> {
-	const characters: EventParticipantCharacter[] = await (
+	const characters: EventPlayerCharacter[] = await (
 		await fetch(`/api/events/${eventId}/participants`, { method: 'GET' })
 	)?.json();
 

@@ -5,7 +5,7 @@ import {
   type CharacterVersionBare,
 } from '$lib/db/character_version.repo';
 import { eventCouponRepo } from '$lib/db/event_coupon.repo';
-import { eventParticipantsRepo } from '$lib/db/event_participants.repo';
+import { eventPlayersRepo } from '$lib/db/event_players.repo';
 import { itemRepo } from '$lib/db/items.repo';
 import { computeCharacterVersionCost, getAvailableBudget } from '$lib/server/budget.service';
 import { isNumberOrError } from '$lib/request.utils';
@@ -29,7 +29,7 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
   return handleRequest(async () => {
     const { userId } = await authGuardForUser(getSessionToken(cookies), [UserRole.user]);
     const eventId = isNumberOrError(params.eventId);
-    const participation = await eventParticipantsRepo.getUserParticipation({ eventId, userId });
+    const participation = await eventPlayersRepo.getPlayerForUser({ eventId, userId });
     if (!participation) return new Response(null, { status: 204 });
     return json(participation);
   });
@@ -54,7 +54,7 @@ export const PUT: RequestHandler = async ({ cookies, params, request, locals }) 
             backstoryId: body.backstoryId ?? null,
           }
       ),
-      eventParticipantsRepo.getUserParticipation({ eventId, userId }),
+      eventPlayersRepo.getPlayerForUser({ eventId, userId }),
     ]);
     if (characterId == null) throw new BadRequest();
 
@@ -95,7 +95,7 @@ export const PUT: RequestHandler = async ({ cookies, params, request, locals }) 
       characterId,
     });
 
-    await eventParticipantsRepo.participate({
+    await eventPlayersRepo.participate({
       eventId,
       userId: body.ownerId,
       characterVersionId,

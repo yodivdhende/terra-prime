@@ -9,5 +9,9 @@ export const rows: (typeof characterVersionExpertise.$inferInsert)[] = [
 	{ id: 6, characterVersionId: 2, expertiseId: 4, value: 10 },
 	{ id: 7, characterVersionId: 5, expertiseId: 3, value: 10 },
 	{ id: 8, characterVersionId: 5, expertiseId: 6, value: 10 },
-	{ id: 9, characterVersionId: 5, expertiseId: 9, value: 10 }
+	{ id: 9, characterVersionId: 5, expertiseId: 9, value: 10 },
+	{ id: 10, characterVersionId: 6, expertiseId: 1, value: 20 },
+	{ id: 11, characterVersionId: 6, expertiseId: 3, value: 30 },
+	{ id: 12, characterVersionId: 7, expertiseId: 2, value: 20 },
+	{ id: 13, characterVersionId: 7, expertiseId: 4, value: 20 }
 ];

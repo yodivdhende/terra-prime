@@ -13,7 +13,7 @@
 
 import { characterRepo, type Character } from '$lib/db/character.repo';
 import { characterVersionRepo } from '$lib/db/character_version.repo';
-import { eventParticipantsRepo } from '$lib/db/event_participants.repo';
+import { findAttendanceForCharacter } from '$lib/server/event-attendance.service';
 import { eventRepo } from '$lib/db/event.repo';
 import { expertiseRepo, type Expertise } from '$lib/db/expertise.repo';
 import { EventStatus } from '$lib/types/event-status';
@@ -100,19 +100,19 @@ export async function resolveActiveCharacter(
 
 	if (event.id == null) throw new NoLiveEventError('live event has no id');
 
-	const participant = await eventParticipantsRepo.getParticipantForCharacter({
+	const attendance = await findAttendanceForCharacter({
 		eventId: event.id,
 		characterId: chosen.id
 	});
-	if (participant?.characterVersion == null) {
+	if (attendance?.characterVersion == null) {
 		throw new NotInLiveEventError(
 			`character ${chosen.id} is not registered for event ${event.id}`
 		);
 	}
 
-	const version = await characterVersionRepo.getWithId(participant.characterVersion);
+	const version = await characterVersionRepo.getWithId(attendance.characterVersion);
 	if (version == null || version.id == null) {
-		throw new NotInLiveEventError(`version ${participant.characterVersion} not found`);
+		throw new NotInLiveEventError(`version ${attendance.characterVersion} not found`);
 	}
 
 	const expertiseCatalog = await expertiseRepo.getAll();

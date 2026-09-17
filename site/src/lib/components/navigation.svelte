@@ -33,6 +33,7 @@
 				<a class="entry child" href={resolve('/manage/expertise/point-costs')}
 					>Expertise Point Costs</a
 				>
+				<a class="entry child" href={resolve('/manage/expertise/tests')}>Expertise Tests</a>
 				<a class="entry child" href={resolve('/manage/items')}>Items</a>
 				<a class="entry child" href={resolve('/manage/implants')}>Implants</a>
 				<a class="entry child" href={resolve('/manage/companies')}>Companies</a>

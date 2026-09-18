@@ -11,11 +11,10 @@
     void logRed(const char* log, const char* param);
 
     /**
-     * The last message passed to `logRed`, or "" if there has been none.
+     * Whether these also write to the panel. On until `uiSetup()` turns it off.
      *
-     * The boot screen halts on the step that failed, and the reason a step failed is only ever
-     * stated in a `logRed` call. This is how that reason reaches the screen without touching the
-     * call sites. The pointer is to a mutable static: copy the text, do not keep the pointer.
+     * Boot reports through these calls and the boot screen is drawn the same way, so the panel is
+     * the right destination until LVGL owns the display — after which a raw write corrupts it.
      */
-    const char* logLastError();
+    void logSetTftEnabled(bool enabled);
 #endif

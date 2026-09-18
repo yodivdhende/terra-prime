@@ -42,28 +42,36 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
 
 ## Architecture
 
-**Boot sequence** (`src/main.cpp`) — **LVGL comes up first**, so the boot screen can report the
-rest:
-1. `screenSetup()` — init TFT + touch SPI
-2. `clearScreen()`
-3. `uiSetup()` — init LVGL, register callbacks, call `ui_init()`, `uiExpertiseInit()`, `uiImplantsInit()`
-4. `uiBootInit()` — build the boot screen from `boot.h`'s step table and show it
-5. `runBootSequence()` (`src/boot.cpp`) runs the four steps, reporting each to the screen:
+**Boot sequence** (`src/main.cpp`):
+1. `screenSetup()` — init TFT + touch SPI, landscape
+2. `bootScreenInit()` — draw the title and every step as pending, **straight to the panel**
+3. `runBootSequence()` (`src/boot.cpp`) runs the four steps, marking each as it goes:
    1. `setupSD()` — mount the card, parse `/config.json` into globals
    2. `connectToWifi()` — give up after `wifiTimeout` seconds
    3. `fetchCharacter()` — GET `{apiUrl}my/character`, authenticated as this device
    4. `webSocketSetup()` — configure the client; it connects asynchronously from `loop()`
-6. All passed → `uiBootFinish()` holds ~1.2s, then loads Home. Any failure → `uiBootHalt()` stays
-   on the boot screen with the failed step marked and the reason on the detail line.
+4. All passed → hold ~1.2s so the finished list can be read, then `uiSetup()` (LVGL, `ui_init()`,
+   `uiExpertiseInit()`, `uiImplantsInit()`), which repaints the whole panel with Home
+5. Any failure → `bootScreenHalt()` and `setup()` returns. `uiSetup()` is never reached, so the boot
+   screen and the failing step's `logRed` line stay on the panel
+
+**The boot screen is not an LVGL screen, deliberately.** An LVGL one would mean initialising LVGL
+before the steps could be reported, pumping it by hand so anything that blocks still paints,
+allocating and freeing a screen around a handover, and competing with the WiFi stack for heap at
+the worst moment. Drawing text with `tft.print` needs none of it: `screenSetup()` has already
+readied the display, a print is on the glass when it returns, and LVGL overwrites the screen when
+it starts anyway.
 
 The step table in `src/boot.h`/`boot.cpp` is the single source for both the sequence and the screen's
-rows, so a new step cannot be added to one and missed by the other.
+rows, so a new step cannot be added to one and missed by the other. `boot.cpp` knows nothing about
+how progress is displayed — it takes an observer.
 
-**Main loop**:
-- `uiLoop()` — `lv_timer_handler()` every 5 ms. Runs unconditionally: it repaints a halted boot
-  screen and it fires the timer that hands over to Home.
-- `webSocketLoop()` and `uartSerialLoop()` — **only when every boot step passed**. A halt can
-  happen before the config naming the server was even read, so there is nothing for them to talk to.
+**Main loop** does nothing at all after a failed boot: LVGL was never initialised, the WebSocket
+client may never have been begun, and the config naming the server may never have been read. The
+boot screen needs no upkeep — it is drawn on the panel, not rendered. When boot succeeded:
+- `uiLoop()` — `lv_timer_handler()` every 5 ms
+- `webSocketLoop()` — processes WebSocket frames
+- `uartSerialLoop()` — reads newline-delimited serial tokens, calls `sendLink()`
 
 **Communication channels:**
 
@@ -92,14 +100,14 @@ naming the step and the reason.
 | `src/ui-implementation.h/cpp` | LVGL init, display flush, touch read callbacks, `uiSetup()` / `uiLoop()` |
 | `src/web-socket.h/cpp` | WebSocket client — setup, event handler, `sendLink()`, screen routing |
 | `src/boot.h/cpp` | The boot step table and `runBootSequence()` — no LVGL, no screen knowledge |
-| `src/ui-boot.h/cpp` | The boot screen: a row per step, marked as it runs |
+| `src/boot-screen.h/cpp` | The boot screen, drawn to the panel with TFT_eSPI — not LVGL |
 | `src/api.h/cpp` | `apiGet()` — every REST read: device credentials on the way out, SD fallback on failure |
 | `src/cache.h/cpp` | `cacheRead()` / `cacheWrite()` — the stored copy of each `api/my` answer |
 | `src/character.h/cpp` | `Character` struct, `fetchCharacter()` |
 | `src/sd-reader.h/cpp` | `setupSD()` + `readConfig()` — parses `/config.json` into globals |
 | `src/uart-interface.h/cpp` | `uartSerialLoop()` — reads serial tokens |
 | `src/connection.h/cpp` | `connectToWifi()` |
-| `src/log.h/cpp` | `logWhite/logGreen/logRed()` — Serial output; `logLastError()` feeds the boot screen |
+| `src/log.h/cpp` | `logWhite/logGreen/logRed()` — Serial, plus the panel until `uiSetup()` calls `logSetTftEnabled(false)` |
 | `src/ui-downloading.cpp` | `UiLoadingSetup()` — animated progress bar |
 | `src/ui-loot.cpp` | `UiLootSetup()` |
 | `src/ui-virus.cpp` | `UiVirusSetup()` |
@@ -115,10 +123,6 @@ naming the step and the reason.
 UI is designed in **SquareLine Studio 1.5.1**. Never manually edit `src/ui/` — it is regenerated on every export.
 
 Screens: `Home`, `DownloadScreen`, `LootScreen`, `VirusScreen`, `Expertise`, `Implants`, `Messages`.
-
-The **boot screen has no SquareLine counterpart** — it lives only for the length of a boot and is
-built entirely in `src/ui-boot.cpp` with `lv_obj_create(NULL)`, then deleted on hand-over. It still
-inherits the dark theme `ui_init()` installs, so it matches the rest.
 
 **Edit workflow:**
 1. Open `ui-project/cyd-interface.spj` in SquareLine Studio 1.5.1
@@ -240,11 +244,13 @@ The cache is disposable. Deleting `/cache` costs one round trip per screen.
 - **`setupSD()` mounts at 80 MHz**, which is past the SPI-mode SD ceiling of 40 MHz. It predates
   the offline cache, which depends on the card mounting, so it is worth checking on hardware — if
   the card is unreliable, this is the first thing to lower.
-- **`log*` is Serial-only.** It used to write to the `tft` object as well, which was safe only while
-  the boot sequence owned the display. LVGL now starts before any boot step runs, so there is no
-  such window left. `logRed()` additionally keeps its last message, which `logLastError()` hands to
-  the boot screen — that is the only way a failure reason reaches the halted screen, so keep using
-  `logRed` for failures rather than `Serial.println`.
+- **`log*` writes to the panel until `uiSetup()` runs**, then Serial only — raw writes corrupt what
+  LVGL has drawn. So a `logRed` from a failing boot step appears under the boot screen's step list,
+  which is how a halt explains itself, while one from `api.cpp` at runtime goes to Serial alone.
+  Keep using `logRed` for boot failures rather than `Serial.println`.
+- **Boot-screen drawing preserves the log cursor.** `log*` prints wherever the cursor is, and
+  drawing a step row moves it. `boot-screen.cpp` saves and restores it (`KeepCursor`); without that
+  a `logRed` lands on top of the step list instead of below it.
 - **SD and touch are both on VSPI, with different pins — enabling the SD step may cost touch.**
   `screenSetup()` begins `tsSpi` (VSPI) on CLK 25 / MISO 39 / MOSI 32 / CS 33; `setupSD()` hands
   `sdSpi` (also VSPI) to `SD.begin()`, which begins it on VSPI's default 18/19/23 with CS 5. SCK and

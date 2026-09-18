@@ -80,17 +80,17 @@ flowchart TB
     xition["ui-downloading.cpp / ui-loot.cpp / ui-virus.cpp\nscreen-transition logic"]
     data["ui-expertise.cpp / ui-implants.cpp\nscreen contents from api/my/*"]
     boot["boot.h/.cpp\nthe boot step table\nand its runner"]
-    uiboot["ui-boot.h/.cpp\nboot screen: a row per step"]
+    bootui["boot-screen.h/.cpp\nboot screen, drawn to the\npanel (not LVGL)"]
 
     main --> ui
     main --> boot
-    main --> uiboot
+    main --> bootui
     main --> uart
     boot --> sd
     boot --> conn
     boot --> char
     boot --> ws
-    boot -- "step state" --> uiboot
+    boot -- "step state" --> bootui
     sd --> globals
     conn --> globals
     ws --> globals
@@ -106,9 +106,9 @@ flowchart TB
     uart --> ws
 ```
 
-> Note: LVGL is initialised **before** the network steps, so the boot screen can report them. The
-> steps themselves live in `boot.cpp` as a table; a failure halts on the boot screen rather than
-> continuing to Home — see `cyd/CLAUDE.md`.
+> Note: the boot steps live in `boot.cpp` as a table and report to a boot screen drawn straight to
+> the panel with TFT_eSPI — not LVGL, which only starts once they have all passed. A failure halts
+> with the screen and its reason left on the panel. See `cyd/CLAUDE.md`.
 
 ---
 
@@ -146,22 +146,21 @@ sequenceDiagram
     participant WS as websocket-server\n(/connections)
     participant A as Admin browser\n(manage/sessions)
 
-    D->>D: screenSetup(), uiSetup() - LVGL up first
-    D->>D: uiBootInit() - boot screen, every step pending
+    D->>D: screenSetup() - panel ready
+    D->>D: bootScreenInit() - step list drawn to the panel
     D->>D: setupSD() -> /config.json, marks the row
     D->>D: connectToWifi() - gives up after wifiTimeout
     D->>D: fetchCharacter() - or the SD cache
     D->>WS: connect ws://{domain}:{port}/connections
-    D->>D: all steps green -> hold ~1.2s -> Home
+    D->>D: all steps green -> hold ~1.2s -> uiSetup() -> Home
     D->>WS: {"status": {"sessionToken": "...", "connectionType": "CYD"}}
     WS->>WS: store in connection Map
     WS->>A: broadcast updated session list
     A->>A: render device row (Wifi icon)
 ```
 
-> A failed step stops here: the boot screen stays up with that row marked and the reason on its
-> detail line, and `loop()` skips `webSocketLoop()` / `uartSerialLoop()` because the config naming
-> the server may never have been read.
+> A failed step stops here: `uiSetup()` is never reached, so the panel keeps the step list with that
+> row marked and the failing step's `logRed` line beneath it, and `loop()` does nothing at all.
 
 ### 5.2 Character fetch, and the device's own reads
 
@@ -298,7 +297,7 @@ so they're visible, not silently worked around.
 | Firmware shared state | `cyd/src/globals.h`, `cyd/src/globals.cpp` |
 | SD config loading | `cyd/src/sd-reader.h`, `cyd/src/sd-reader.cpp` |
 | Offline cache on the card | `cyd/src/cache.h`, `cyd/src/cache.cpp` |
-| Boot sequence / boot screen | `cyd/src/boot.h`, `cyd/src/boot.cpp`, `cyd/src/ui-boot.h`, `cyd/src/ui-boot.cpp` |
+| Boot sequence / boot screen | `cyd/src/boot.h`, `cyd/src/boot.cpp`, `cyd/src/boot-screen.h`, `cyd/src/boot-screen.cpp` |
 | Icon pack export | `site/src/lib/utils/icon-export.ts`, `.../lvgl-image.ts`, `.../zip.ts`, `.../rasterize-svg.ts` |
 | WiFi connect | `cyd/src/connection.cpp` |
 | WebSocket client | `cyd/src/web-socket.h`, `cyd/src/web-socket.cpp` |

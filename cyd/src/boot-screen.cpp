@@ -1,0 +1,115 @@
+#include <boot-screen.h>
+#include <TFT_eSPI.h>
+#include <globals.h>
+
+/**
+ * Layout, in the landscape orientation `screenSetup()` now leaves the panel in:
+ *
+ *     AguesGuard V0.0.4            <- title
+ *     ok  SD card and config       <- one row per boot step, marker redrawn as it changes
+ *     >>  WiFi
+ *     ..  Character
+ *     ..  Realtime link configured
+ *     connecting... 7s             <- detail line, overwritten in place
+ *     (log output flows from here down)
+ *
+ * Markers are cleared with a filled rectangle before being drawn, because font 2 is proportional
+ * and a shorter marker would otherwise leave the tail of the previous one behind.
+ */
+
+#define TITLE_Y 4
+#define LIST_Y 28
+#define ROW_HEIGHT 18
+#define MARKER_X 6
+#define MARKER_WIDTH 26
+#define LABEL_X 34
+/** Clear air under the detail line, so clearing it can never clip the first line of log output. */
+#define LOG_GAP 8
+
+static int detailY = 0;
+
+/**
+ * `log*` prints at whatever the cursor happens to be, and drawing a row or the detail line moves
+ * it. Without putting it back, a `logRed` from a failing step lands on top of the step list instead
+ * of in the log area below it.
+ */
+class KeepCursor {
+public:
+    KeepCursor() : x(tft.getCursorX()), y(tft.getCursorY()) {}
+    ~KeepCursor() { tft.setCursor(x, y); }
+private:
+    int16_t x;
+    int16_t y;
+};
+
+static int rowY(int index)
+{
+    return LIST_Y + index * ROW_HEIGHT;
+}
+
+/** Clear a band the full width of the screen. */
+static void clearBand(int y, int height)
+{
+    tft.fillRect(0, y, screenWidth, height, TFT_BLACK);
+}
+
+static void drawMarker(int index, const char* marker, uint16_t colour)
+{
+    tft.fillRect(MARKER_X, rowY(index), MARKER_WIDTH, ROW_HEIGHT, TFT_BLACK);
+    tft.setTextColor(colour, TFT_BLACK);
+    tft.setCursor(MARKER_X, rowY(index));
+    tft.print(marker);
+}
+
+void bootScreenInit()
+{
+    tft.fillScreen(TFT_BLACK);
+
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setCursor(MARKER_X, TITLE_Y);
+    tft.print("AguesGuard " FIRMWARE_VERSION);
+
+    const int count = bootStepCount();
+    for (int i = 0; i < count; i++) {
+        drawMarker(i, "..", TFT_DARKGREY);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        tft.setCursor(LABEL_X, rowY(i));
+        tft.print(bootStepLabel(i));
+    }
+
+    detailY = rowY(count) + 6;
+    // Log output starts below the detail line, so a logRed from a failing step lands under the
+    // list instead of on top of it, with a gap so redrawing the detail cannot clip it.
+    tft.setCursor(MARKER_X, detailY + ROW_HEIGHT + LOG_GAP);
+}
+
+void bootScreenSetStep(int index, BootStepState state, const char* detail)
+{
+    if (index < 0 || index >= bootStepCount()) return;
+    const KeepCursor keep;
+
+    switch (state) {
+        case BOOT_PENDING: drawMarker(index, "..", TFT_DARKGREY); break;
+        case BOOT_RUNNING: drawMarker(index, ">>", TFT_WHITE);    break;
+        case BOOT_OK:      drawMarker(index, "ok", TFT_GREEN);    break;
+        case BOOT_FAILED:  drawMarker(index, "!!", TFT_RED);      break;
+    }
+
+    if (detail != NULL && detail[0] != '\0') {
+        // In place: the WiFi step reports once a second and must not scroll the list away.
+        clearBand(detailY, ROW_HEIGHT);
+        tft.setTextColor(TFT_LIGHTGREY, TFT_BLACK);
+        tft.setCursor(MARKER_X, detailY);
+        tft.print(detail);
+    }
+}
+
+void bootScreenHalt(int failedIndex)
+{
+    const KeepCursor keep;
+    clearBand(detailY, ROW_HEIGHT);
+    tft.setTextColor(TFT_RED, TFT_BLACK);
+    tft.setCursor(MARKER_X, detailY);
+    tft.print(bootStepLabel(failedIndex));
+    tft.print(" failed");
+}

@@ -41,7 +41,9 @@ void screenSetup()
   ts.begin(tsSpi);
   ts.setRotation(1);
   tft.init();
-  tft.setRotation(0) ;
+  // Landscape, matching what LVGL uses: the boot screen is drawn straight to the panel before
+  // LVGL exists, and it should not be sideways relative to every screen after it.
+  tft.setRotation(1);
   clearScreen();
   tft.setTextFont(2);
 }

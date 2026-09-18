@@ -5,6 +5,7 @@
 #include <ui/ui.h>
 #include <globals.h>
 #include <character.h>
+#include <log.h>
 #include <ui-expertise.h>
 #include <ui-implants.h>
 #include <XPT2046_Touchscreen.h>
@@ -103,7 +104,9 @@ void uiSetup()
     lv_log_register_print_cb(my_print); /* register print function for debugging */
 #endif
 
-    tft.setRotation(1); /* Landscape orientation, flipped */
+    // LVGL owns the display from here, so raw writes have to stop. screenSetup() already set the
+    // rotation LVGL needs.
+    logSetTftEnabled(false);
 
     static lv_disp_t *disp;
     disp = lv_display_create(screenWidth, screenHeight);

@@ -85,8 +85,9 @@ int runBootSequence(BootObserver observer)
         const bool ok = steps[i].run();
 
         if (ok == false) {
-            // The only statement of *why* a step failed is the logRed call inside it.
-            if (observer != NULL) observer(i, BOOT_FAILED, logLastError());
+            // No reason passed: the step's own logRed has already written it to the panel, right
+            // below the list the observer is drawing.
+            if (observer != NULL) observer(i, BOOT_FAILED, NULL);
             runningIndex = -1;
             currentObserver = NULL;
             return i;

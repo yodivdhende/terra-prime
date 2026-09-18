@@ -1,52 +1,56 @@
 #include <Arduino.h>
 #include <boot.h>
+#include <boot-screen.h>
 #include <globals.h>
 #include <log.h>
-#include <ui-boot.h>
 #include <ui-implementation.h>
 #include <uart-interface.h>
 #include <web-socket.h>
 
 /**
- * LVGL comes up before the boot steps run, which is the reverse of how this used to be.
+ * Boot draws straight to the panel, then LVGL starts and takes it over.
  *
- * The four network steps used to sit commented out ahead of `uiSetup()`, each aborting `setup()` on
- * failure — so a failed boot produced a device with no UI at all, and a successful one reported its
- * progress by writing raw text to the panel, which is why `log.cpp` no longer touches the TFT. With
- * the UI first, the boot screen can show every step as it happens and stay on the one that broke.
+ * The four network steps used to sit commented out here, each shaped
+ * `if (x() == false) { return; }` — so a failure aborted `setup()` silently and a success reported
+ * only to whoever had a serial cable attached. They run for real now, against a boot screen that
+ * names every step and marks each as it goes.
+ *
+ * A failed step stops here: `uiSetup()` is never reached, so the boot screen and the reason under
+ * it stay on the panel instead of being overwritten by a UI the device cannot use anyway.
  */
 
-/** Whether every boot step passed. The loop handlers below have nothing to do if they did not. */
+/** Long enough to read the finished list, short enough not to keep a player waiting. */
+#define BOOT_HOLD_MS 1200
+
+/** Whether every step passed. Nothing in `loop()` has anything to do if they did not. */
 static bool bootOk = false;
 
 void setup () {
   Serial.begin(115200);
+  screenSetup();
   logWhite("booting " FIRMWARE_VERSION);
 
-  screenSetup();
-  clearScreen();
-  uiSetup();
-
-  // Replaces the screen ui_init() loaded. Nothing has painted yet, so Home never flashes.
-  uiBootInit();
-
-  const int failedStep = runBootSequence(uiBootSetStep);
+  bootScreenInit();
+  const int failedStep = runBootSequence(bootScreenSetStep);
   bootOk = failedStep < 0;
 
-  if (bootOk) uiBootFinish();
-  else uiBootHalt(failedStep);
+  if (bootOk == false) {
+    bootScreenHalt(failedStep);
+    return;
+  }
+
+  delay(BOOT_HOLD_MS);
+  uiSetup();
 }
 
 
 void loop (){
-  // Always: the halted boot screen is still being repainted from here, and on a good boot this is
-  // what fires the timer that hands over to Home.
-  uiLoop();
-
-  // A halt can happen before the WebSocket step ran and before the config that names the server
-  // was read, so neither of these has anything to talk to.
+  // Nothing is safe to run after a halt: LVGL was never initialised, the WebSocket client may
+  // never have been begun, and the config naming the server may never have been read. The boot
+  // screen needs no upkeep — it is drawn on the panel, not rendered.
   if (bootOk == false) return;
 
+  uiLoop();
   webSocketLoop();
   uartSerialLoop();
 }

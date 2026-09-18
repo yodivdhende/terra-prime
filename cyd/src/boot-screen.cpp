@@ -3,7 +3,9 @@
 #include <globals.h>
 
 /**
- * Layout, in the landscape orientation `screenSetup()` now leaves the panel in:
+ * Layout, in the portrait orientation `screenSetup()` leaves the panel in — 240 across by 320
+ * down, which is 20 lines of text rather than the 15 landscape would give. The boot log is what
+ * wants them, so boot keeps the long edge vertical and `uiSetup()` turns it to landscape:
  *
  *     AguesGuard V0.0.4            <- title
  *     ok  SD card and config       <- one row per boot step, marker redrawn as it changes
@@ -19,7 +21,10 @@
 
 #define TITLE_Y 4
 #define LIST_Y 28
+/** Row pitch: the glyph box plus 2px of leading. */
 #define ROW_HEIGHT 18
+/** Height of a font-2 glyph. Clears use this, not the pitch, so they cannot bleed into the next row. */
+#define FONT_HEIGHT 16
 #define MARKER_X 6
 #define MARKER_WIDTH 26
 #define LABEL_X 34
@@ -47,15 +52,21 @@ static int rowY(int index)
     return LIST_Y + index * ROW_HEIGHT;
 }
 
+/**
+ * The panel is portrait while boot owns it, so it is `screenHeight` across and `screenWidth` tall
+ * — the globals are named for the landscape orientation LVGL switches to, and read backwards here.
+ */
+#define PANEL_WIDTH screenHeight
+
 /** Clear a band the full width of the screen. */
 static void clearBand(int y, int height)
 {
-    tft.fillRect(0, y, screenWidth, height, TFT_BLACK);
+    tft.fillRect(0, y, PANEL_WIDTH, height, TFT_BLACK);
 }
 
 static void drawMarker(int index, const char* marker, uint16_t colour)
 {
-    tft.fillRect(MARKER_X, rowY(index), MARKER_WIDTH, ROW_HEIGHT, TFT_BLACK);
+    tft.fillRect(MARKER_X, rowY(index), MARKER_WIDTH, FONT_HEIGHT, TFT_BLACK);
     tft.setTextColor(colour, TFT_BLACK);
     tft.setCursor(MARKER_X, rowY(index));
     tft.print(marker);
@@ -97,7 +108,7 @@ void bootScreenSetStep(int index, BootStepState state, const char* detail)
 
     if (detail != NULL && detail[0] != '\0') {
         // In place: the WiFi step reports once a second and must not scroll the list away.
-        clearBand(detailY, ROW_HEIGHT);
+        clearBand(detailY, FONT_HEIGHT);
         tft.setTextColor(TFT_LIGHTGREY, TFT_BLACK);
         tft.setCursor(MARKER_X, detailY);
         tft.print(detail);
@@ -107,7 +118,7 @@ void bootScreenSetStep(int index, BootStepState state, const char* detail)
 void bootScreenHalt(int failedIndex)
 {
     const KeepCursor keep;
-    clearBand(detailY, ROW_HEIGHT);
+    clearBand(detailY, FONT_HEIGHT);
     tft.setTextColor(TFT_RED, TFT_BLACK);
     tft.setCursor(MARKER_X, detailY);
     tft.print(bootStepLabel(failedIndex));

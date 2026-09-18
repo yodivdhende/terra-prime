@@ -107,7 +107,8 @@ flowchart TB
 ```
 
 > Note: the boot steps live in `boot.cpp` as a table and report to a boot screen drawn straight to
-> the panel with TFT_eSPI — not LVGL, which only starts once they have all passed. A failure halts
+> the panel with TFT_eSPI — not LVGL, which only starts once they have all passed. Boot keeps the
+> panel portrait for the extra text rows its log needs; `uiSetup()` turns it landscape. A failure halts
 > with the screen and its reason left on the panel. See `cyd/CLAUDE.md`.
 
 ---
@@ -146,13 +147,13 @@ sequenceDiagram
     participant WS as websocket-server\n(/connections)
     participant A as Admin browser\n(manage/sessions)
 
-    D->>D: screenSetup() - panel ready
+    D->>D: screenSetup() - panel ready, portrait
     D->>D: bootScreenInit() - step list drawn to the panel
     D->>D: setupSD() -> /config.json, marks the row
     D->>D: connectToWifi() - gives up after wifiTimeout
     D->>D: fetchCharacter() - or the SD cache
     D->>WS: connect ws://{domain}:{port}/connections
-    D->>D: all steps green -> hold ~1.2s -> uiSetup() -> Home
+    D->>D: all steps green -> hold ~1.2s -> uiSetup() turns it landscape -> Home
     D->>WS: {"status": {"sessionToken": "...", "connectionType": "CYD"}}
     WS->>WS: store in connection Map
     WS->>A: broadcast updated session list

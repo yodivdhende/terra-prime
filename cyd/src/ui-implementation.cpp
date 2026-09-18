@@ -104,9 +104,10 @@ void uiSetup()
     lv_log_register_print_cb(my_print); /* register print function for debugging */
 #endif
 
-    // LVGL owns the display from here, so raw writes have to stop. screenSetup() already set the
-    // rotation LVGL needs.
+    // LVGL owns the display from here: raw writes have to stop, and the panel turns from the
+    // portrait the boot screen used to the landscape every game screen is designed for.
     logSetTftEnabled(false);
+    tft.setRotation(1); /* Landscape orientation, flipped */
 
     static lv_disp_t *disp;
     disp = lv_display_create(screenWidth, screenHeight);

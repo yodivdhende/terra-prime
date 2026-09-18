@@ -43,7 +43,7 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
 ## Architecture
 
 **Boot sequence** (`src/main.cpp`):
-1. `screenSetup()` — init TFT + touch SPI, landscape
+1. `screenSetup()` — init TFT + touch SPI, **portrait**
 2. `bootScreenInit()` — draw the title and every step as pending, **straight to the panel**
 3. `runBootSequence()` (`src/boot.cpp`) runs the four steps, marking each as it goes:
    1. `setupSD()` — mount the card, parse `/config.json` into globals
@@ -51,9 +51,15 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
    3. `fetchCharacter()` — GET `{apiUrl}my/character`, authenticated as this device
    4. `webSocketSetup()` — configure the client; it connects asynchronously from `loop()`
 4. All passed → hold ~1.2s so the finished list can be read, then `uiSetup()` (LVGL, `ui_init()`,
-   `uiExpertiseInit()`, `uiImplantsInit()`), which repaints the whole panel with Home
+   `uiExpertiseInit()`, `uiImplantsInit()`), which turns the panel landscape and repaints it with Home
 5. Any failure → `bootScreenHalt()` and `setup()` returns. `uiSetup()` is never reached, so the boot
    screen and the failing step's `logRed` line stay on the panel
+
+**Boot runs portrait, the UI runs landscape.** The long edge vertical is 20 lines of text against
+landscape's 15, and the boot log is what needs them: a successful boot prints 8 lines (card type and
+size, three config lines, the AP and the IP, the character name) into a log area that starts below
+the step list. Portrait fits that with four lines to spare; landscape would clip the last one.
+`uiSetup()` turns the panel for LVGL, which owns it from then on.
 
 **The boot screen is not an LVGL screen, deliberately.** An LVGL one would mean initialising LVGL
 before the steps could be reported, pumping it by hand so anything that blocks still paints,
@@ -239,7 +245,13 @@ The cache is disposable. Deleting `/cache` costs one round trip per screen.
   cache would start paying off on an offline boot, since Home is what asks for the cached data.
 - **`src/ui/` is generated code.** Manual edits are overwritten on the next SquareLine Studio export.
 - **SquareLine Studio export path** may be set to an absolute Windows path. Update it in SquareLine preferences when exporting from a different machine.
-- **TFT rotation:** `screenSetup()` sets rotation 0 (portrait); `uiSetup()` overrides to rotation 1 (landscape) for LVGL. Don't change the `uiSetup()` rotation without also updating LVGL display dimensions.
+- **TFT rotation changes mid-boot.** `screenSetup()` sets rotation 0 (portrait) because the boot
+  screen wants the extra lines; `uiSetup()` turns it to 1 (landscape) for LVGL. So `screenWidth` and
+  `screenHeight` are named for the landscape the UI uses and read backwards during boot —
+  `boot-screen.cpp` defines `PANEL_WIDTH` as `screenHeight` for exactly that reason. Don't change
+  the `uiSetup()` rotation without also updating the LVGL display dimensions.
+- **Boot-screen clears are sized to the glyph box (16px), not the row pitch (18px)**, so clearing
+  one row cannot bleed into the next.
 - **UART unlink is commented out.** `sendLink(token, false)` is never called — tokens are never automatically unlinked.
 - **`setupSD()` mounts at 80 MHz**, which is past the SPI-mode SD ceiling of 40 MHz. It predates
   the offline cache, which depends on the card mounting, so it is worth checking on hardware — if

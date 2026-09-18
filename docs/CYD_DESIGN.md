@@ -79,13 +79,18 @@ flowchart TB
     screens["ui/*\nSquareLine Studio screens:\nHome, DownloadScreen, LootScreen,\nVirusScreen, Expertise, Implants, Messages"]
     xition["ui-downloading.cpp / ui-loot.cpp / ui-virus.cpp\nscreen-transition logic"]
     data["ui-expertise.cpp / ui-implants.cpp\nscreen contents from api/my/*"]
+    boot["boot.h/.cpp\nthe boot step table\nand its runner"]
+    uiboot["ui-boot.h/.cpp\nboot screen: a row per step"]
 
-    main --> sd
-    main --> conn
-    main --> ws
-    main --> char
-    main --> uart
     main --> ui
+    main --> boot
+    main --> uiboot
+    main --> uart
+    boot --> sd
+    boot --> conn
+    boot --> char
+    boot --> ws
+    boot -- "step state" --> uiboot
     sd --> globals
     conn --> globals
     ws --> globals
@@ -101,8 +106,9 @@ flowchart TB
     uart --> ws
 ```
 
-> Note: as of the current firmware, `main.cpp` boots directly into the UI with SD/WiFi/
-> character-fetch/WebSocket init **commented out** (dev-mode state) — see `cyd/CLAUDE.md`.
+> Note: LVGL is initialised **before** the network steps, so the boot screen can report them. The
+> steps themselves live in `boot.cpp` as a table; a failure halts on the boot screen rather than
+> continuing to Home — see `cyd/CLAUDE.md`.
 
 ---
 
@@ -140,13 +146,22 @@ sequenceDiagram
     participant WS as websocket-server\n(/connections)
     participant A as Admin browser\n(manage/sessions)
 
-    D->>D: load /config.json from SD
+    D->>D: screenSetup(), uiSetup() - LVGL up first
+    D->>D: uiBootInit() - boot screen, every step pending
+    D->>D: setupSD() -> /config.json, marks the row
+    D->>D: connectToWifi() - gives up after wifiTimeout
+    D->>D: fetchCharacter() - or the SD cache
     D->>WS: connect ws://{domain}:{port}/connections
+    D->>D: all steps green -> hold ~1.2s -> Home
     D->>WS: {"status": {"sessionToken": "...", "connectionType": "CYD"}}
     WS->>WS: store in connection Map
     WS->>A: broadcast updated session list
     A->>A: render device row (Wifi icon)
 ```
+
+> A failed step stops here: the boot screen stays up with that row marked and the reason on its
+> detail line, and `loop()` skips `webSocketLoop()` / `uartSerialLoop()` because the config naming
+> the server may never have been read.
 
 ### 5.2 Character fetch, and the device's own reads
 
@@ -259,7 +274,15 @@ so they're visible, not silently worked around.
    is taken at face value. Closing it means a per-device secret on `Devices` and signing or
    presenting it per request; nothing does that yet.
 
-4. **Nothing tells the player the values are old.** The device falls back to the copy on its SD
+4. **SD and touch share VSPI on different pins.** `screenSetup()` begins the touch bus (VSPI,
+   CLK 25 / MISO 39 / MOSI 32 / CS 33); `setupSD()` hands a second `SPIClass(VSPI)` to `SD.begin()`,
+   which begins it on VSPI's defaults (18/19/23, CS 5). SCK and MOSI are outputs and can fan out,
+   but MISO is an input driven by one pad, so whichever `begin()` ran last owns it and
+   `XPT2046_Touchscreen` never re-attaches. Latent while the SD step was disabled; live now that it
+   runs, and not fixable by ordering, since `cache.cpp` also reads the card while the UI is up.
+   Needs either a re-attach after every card access or the touch controller moved off VSPI.
+
+5. **Nothing tells the player the values are old.** The device falls back to the copy on its SD
    card when a request fails, and `ApiResult.stale` marks that body as stored rather than live, but
    no screen shows it. The header's WiFi icon is the intended home for it and is a static image
    today, as is the header's clock. Until one of them is driven, a player cannot tell a cached
@@ -275,6 +298,7 @@ so they're visible, not silently worked around.
 | Firmware shared state | `cyd/src/globals.h`, `cyd/src/globals.cpp` |
 | SD config loading | `cyd/src/sd-reader.h`, `cyd/src/sd-reader.cpp` |
 | Offline cache on the card | `cyd/src/cache.h`, `cyd/src/cache.cpp` |
+| Boot sequence / boot screen | `cyd/src/boot.h`, `cyd/src/boot.cpp`, `cyd/src/ui-boot.h`, `cyd/src/ui-boot.cpp` |
 | Icon pack export | `site/src/lib/utils/icon-export.ts`, `.../lvgl-image.ts`, `.../zip.ts`, `.../rasterize-svg.ts` |
 | WiFi connect | `cyd/src/connection.cpp` |
 | WebSocket client | `cyd/src/web-socket.h`, `cyd/src/web-socket.cpp` |

@@ -19,8 +19,10 @@ String wifi_ssid;
 String wifi_password;
 String domain;
 int webSocketPort;
+// Defaulted here as well as in readConfig(), so a boot that never reaches the card still has a
+// deadline rather than one that has already expired.
+int wifiTimeout = 20;
 String api_url;
-String boot_gif_path;
 String sessionToken;
 String deviceUid;
 

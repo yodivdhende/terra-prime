@@ -88,14 +88,23 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
     }
 }
 
+static bool webSocketStarted = false;
+
 void webSocketSetup()
 {
-    webSocket.begin(domain, webSocketPort, "/connections");
+    // Handler first: begin() starts the connection, and an event that arrives before onEvent() has
+    // been registered is lost.
     webSocket.onEvent(webSocketEvent);
     webSocket.setReconnectInterval(5000);
+    webSocket.begin(domain, webSocketPort, "/connections");
+    webSocketStarted = true;
 }
 
 void webSocketLoop()
 {
+    // Boot can halt before the WebSocket step, leaving a client that was never begun. Driving it
+    // then means retrying a TCP connect to an empty host every five seconds, which stalls the loop
+    // the halted boot screen is repainting from.
+    if (webSocketStarted == false) return;
     webSocket.loop();
 }

@@ -1,46 +1,66 @@
 #include <log.h>
-#include <globals.h>
+
+/**
+ * Serial only.
+ *
+ * These used to write to the `tft` object as well, which was fine while the boot sequence owned the
+ * display and a documented hazard afterwards — raw TFT writes corrupt whatever LVGL has drawn. LVGL
+ * now starts before any of the boot steps run, so there is no longer a window in which writing to
+ * the panel from here is safe. The boot screen shows progress instead, and `logLastError()` carries
+ * a failure reason to it.
+ */
+
+static char lastError[96] = "";
+
+static void remember(const char* message)
+{
+  snprintf(lastError, sizeof(lastError), "%s", message);
+}
+
+const char* logLastError()
+{
+  return lastError;
+}
+
+/** Both format overloads cap at the same size; `param` is the only substitution any caller uses. */
+static void formatInto(char* buffer, size_t size, const char* log, const char* param)
+{
+  snprintf(buffer, size, log, param);
+}
 
 void logWhite(const char* log) {
     Serial.println(log);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.println(log);
 }
-void logWhite(char* log, const char* param)
+
+void logWhite(const char* log, const char* param)
 {
   char buffer[253];
-  sprintf(buffer,log, param);
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  formatInto(buffer, sizeof(buffer), log, param);
   Serial.println(buffer);
-  tft.println(buffer);
 }
 
 void logGreen(const char* log)
 {
-  tft.setTextColor(TFT_GREEN, TFT_BLACK);
   Serial.println(log);
-  tft.println(log);
 }
-void logGreen(char* log,const char* param)
+
+void logGreen(const char* log, const char* param)
 {
   char buffer[253];
-  sprintf(buffer,log, param);
-  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  formatInto(buffer, sizeof(buffer), log, param);
   Serial.println(buffer);
-  tft.println(buffer);
 }
 
 void logRed(const char* log)
 {
-  tft.setTextColor(TFT_RED, TFT_BLACK);
   Serial.println(log);
-  tft.println(log);
+  remember(log);
 }
-void logRed(char* log,const char* param)
+
+void logRed(const char* log, const char* param)
 {
   char buffer[253];
-  sprintf(buffer,log, param);
-  tft.setTextColor(TFT_RED, TFT_BLACK);
+  formatInto(buffer, sizeof(buffer), log, param);
   Serial.println(buffer);
-  tft.println(buffer);
+  remember(buffer);
 }

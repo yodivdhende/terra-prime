@@ -42,18 +42,28 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
 
 ## Architecture
 
-**Boot sequence** (`src/main.cpp`):
+**Boot sequence** (`src/main.cpp`) — **LVGL comes up first**, so the boot screen can report the
+rest:
 1. `screenSetup()` — init TFT + touch SPI
-2. `setupSD()` — read `/config.json` from SD into globals *(commented out)*
-3. `connectToWifi()` *(commented out)*
-4. `fetchCharacter()` — GET `{apiUrl}my/character`, authenticated as this device *(commented out)*
-5. `webSocketSetup()` — connect to `{domain}:{webSocketPort}/connections` *(commented out)*
-6. `uiSetup()` — init LVGL, register callbacks, call `ui_init()`
+2. `clearScreen()`
+3. `uiSetup()` — init LVGL, register callbacks, call `ui_init()`, `uiExpertiseInit()`, `uiImplantsInit()`
+4. `uiBootInit()` — build the boot screen from `boot.h`'s step table and show it
+5. `runBootSequence()` (`src/boot.cpp`) runs the four steps, reporting each to the screen:
+   1. `setupSD()` — mount the card, parse `/config.json` into globals
+   2. `connectToWifi()` — give up after `wifiTimeout` seconds
+   3. `fetchCharacter()` — GET `{apiUrl}my/character`, authenticated as this device
+   4. `webSocketSetup()` — configure the client; it connects asynchronously from `loop()`
+6. All passed → `uiBootFinish()` holds ~1.2s, then loads Home. Any failure → `uiBootHalt()` stays
+   on the boot screen with the failed step marked and the reason on the detail line.
 
-**Main loop** runs three handlers:
-- `uiLoop()` — `lv_timer_handler()` every 5 ms
-- `webSocketLoop()` — processes WebSocket frames
-- `uartSerialLoop()` — reads newline-delimited serial tokens, calls `sendLink()`
+The step table in `src/boot.h`/`boot.cpp` is the single source for both the sequence and the screen's
+rows, so a new step cannot be added to one and missed by the other.
+
+**Main loop**:
+- `uiLoop()` — `lv_timer_handler()` every 5 ms. Runs unconditionally: it repaints a halted boot
+  screen and it fires the timer that hands over to Home.
+- `webSocketLoop()` and `uartSerialLoop()` — **only when every boot step passed**. A halt can
+  happen before the config naming the server was even read, so there is nothing for them to talk to.
 
 **Communication channels:**
 
@@ -66,7 +76,9 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
 
 WebSocket routing (`src/web-socket.cpp`): incoming `{ "goTo": { "screen": "loading|loot|virus" } }` calls the corresponding `Ui*Setup()`.
 
-**Current dev state:** Network init is **commented out** in `main.cpp`. The device boots directly into LVGL for UI development without SD or WiFi.
+**The network steps are live.** They are no longer commented out, so the device needs a card with a
+valid `/config.json` and a reachable AP to reach the Home screen. A failure halts on the boot screen
+naming the step and the reason.
 
 ---
 
@@ -79,13 +91,15 @@ WebSocket routing (`src/web-socket.cpp`): incoming `{ "goTo": { "screen": "loadi
 | `src/globals.h/cpp` | Global state: screen dims, WiFi creds, API URL, touch SPI pins, `screenSetup()` |
 | `src/ui-implementation.h/cpp` | LVGL init, display flush, touch read callbacks, `uiSetup()` / `uiLoop()` |
 | `src/web-socket.h/cpp` | WebSocket client — setup, event handler, `sendLink()`, screen routing |
+| `src/boot.h/cpp` | The boot step table and `runBootSequence()` — no LVGL, no screen knowledge |
+| `src/ui-boot.h/cpp` | The boot screen: a row per step, marked as it runs |
 | `src/api.h/cpp` | `apiGet()` — every REST read: device credentials on the way out, SD fallback on failure |
 | `src/cache.h/cpp` | `cacheRead()` / `cacheWrite()` — the stored copy of each `api/my` answer |
 | `src/character.h/cpp` | `Character` struct, `fetchCharacter()` |
 | `src/sd-reader.h/cpp` | `setupSD()` + `readConfig()` — parses `/config.json` into globals |
 | `src/uart-interface.h/cpp` | `uartSerialLoop()` — reads serial tokens |
 | `src/connection.h/cpp` | `connectToWifi()` |
-| `src/log.h/cpp` | `logWhite/logGreen/logRed()` — color output to Serial + TFT |
+| `src/log.h/cpp` | `logWhite/logGreen/logRed()` — Serial output; `logLastError()` feeds the boot screen |
 | `src/ui-downloading.cpp` | `UiLoadingSetup()` — animated progress bar |
 | `src/ui-loot.cpp` | `UiLootSetup()` |
 | `src/ui-virus.cpp` | `UiVirusSetup()` |
@@ -101,6 +115,10 @@ WebSocket routing (`src/web-socket.cpp`): incoming `{ "goTo": { "screen": "loadi
 UI is designed in **SquareLine Studio 1.5.1**. Never manually edit `src/ui/` — it is regenerated on every export.
 
 Screens: `Home`, `DownloadScreen`, `LootScreen`, `VirusScreen`, `Expertise`, `Implants`, `Messages`.
+
+The **boot screen has no SquareLine counterpart** — it lives only for the length of a boot and is
+built entirely in `src/ui-boot.cpp` with `lv_obj_create(NULL)`, then deleted on hand-over. It still
+inherits the dark theme `ui_init()` installs, so it matches the rest.
 
 **Edit workflow:**
 1. Open `ui-project/cyd-interface.spj` in SquareLine Studio 1.5.1
@@ -127,10 +145,16 @@ Device reads `/config.json` from SD card root at boot (`src/sd-reader.cpp`):
   "apiUrl": "http://host/api/",
   "domain": "host",
   "webSocketPort": 80,
+  "wifiTimeout": 20,
   "deviceUid": "...",
   "sessionToken": "..."
 }
 ```
+
+`wifiTimeout` is **seconds** to wait for the AP before the WiFi boot step fails. Missing, zero, or
+outside 1-120 falls back to 20 — the key exists so boot always terminates, so there is deliberately
+no way to ask for an unlimited wait. `connectToWifi()` also gives up early on the radio's terminal
+answers (SSID not found, password rejected) rather than burning the whole timeout on them.
 
 `apiUrl` must include a trailing slash — `apiGet()` appends the path directly.
 
@@ -205,13 +229,27 @@ The cache is disposable. Deleting `/cache` costs one round trip per screen.
 
 ## Gotchas
 
-- **Network init is commented out.** Uncomment the four blocks in `setup()` (`src/main.cpp`) to enable full runtime. The device will hang on boot if SD is missing or WiFi is unreachable.
+- **A bad card or AP now stops boot.** The four network steps are live and a failure halts on the
+  boot screen, so the device never reaches Home without a valid `/config.json` and a reachable AP.
+  Making a step non-fatal is one field on `BootStep` in `src/boot.cpp` — which is also where the SD
+  cache would start paying off on an offline boot, since Home is what asks for the cached data.
 - **`src/ui/` is generated code.** Manual edits are overwritten on the next SquareLine Studio export.
 - **SquareLine Studio export path** may be set to an absolute Windows path. Update it in SquareLine preferences when exporting from a different machine.
 - **TFT rotation:** `screenSetup()` sets rotation 0 (portrait); `uiSetup()` overrides to rotation 1 (landscape) for LVGL. Don't change the `uiSetup()` rotation without also updating LVGL display dimensions.
 - **UART unlink is commented out.** `sendLink(token, false)` is never called — tokens are never automatically unlinked.
-- **`connectToWifi()` blocks indefinitely** — no timeout if the network is unreachable.
 - **`setupSD()` mounts at 80 MHz**, which is past the SPI-mode SD ceiling of 40 MHz. It predates
   the offline cache, which depends on the card mounting, so it is worth checking on hardware — if
   the card is unreliable, this is the first thing to lower.
-- **`logRed/logGreen/logWhite` write to TFT directly.** After LVGL takes over, raw TFT writes conflict with LVGL rendering. Code that runs from a screen logs to `Serial` instead — see `src/api.cpp`.
+- **`log*` is Serial-only.** It used to write to the `tft` object as well, which was safe only while
+  the boot sequence owned the display. LVGL now starts before any boot step runs, so there is no
+  such window left. `logRed()` additionally keeps its last message, which `logLastError()` hands to
+  the boot screen — that is the only way a failure reason reaches the halted screen, so keep using
+  `logRed` for failures rather than `Serial.println`.
+- **SD and touch are both on VSPI, with different pins — enabling the SD step may cost touch.**
+  `screenSetup()` begins `tsSpi` (VSPI) on CLK 25 / MISO 39 / MOSI 32 / CS 33; `setupSD()` hands
+  `sdSpi` (also VSPI) to `SD.begin()`, which begins it on VSPI's default 18/19/23 with CS 5. SCK and
+  MOSI are outputs and can fan out, but **MISO is an input and only one pad can drive it** — so
+  whichever `begin()` ran last owns it, and `XPT2046_Touchscreen` never re-attaches. The TFT is
+  unaffected (HSPI, 12/13/14/15). This was latent while `setupSD()` was commented out and is not a
+  timing race, so serialising access does not fix it; `cache.cpp` also touches the card while the UI
+  runs. **Verify a touch on Home on real hardware before building anything else on this.**

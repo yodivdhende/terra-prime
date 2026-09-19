@@ -4,11 +4,12 @@
 	import DeviceForm from '$lib/components/device-form.svelte';
 	import type { DeviceDraft } from '$lib/types/device';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
+	import { generateUuid } from '$lib/utils/uuid';
 
 	let device: DeviceDraft = $state({
 		id: null,
 		name: '',
-		uid: crypto.randomUUID(),
+		uid: generateUuid(),
 		roles: []
 	});
 

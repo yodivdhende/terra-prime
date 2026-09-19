@@ -1,3 +1,5 @@
+import { generateUuid } from '$lib/utils/uuid';
+
 export type ToastType = 'success' | 'error' | 'warning';
 
 export type ToastItem = {
@@ -15,7 +17,7 @@ function createToastManager() {
 	}
 
 	function add(message: string, type: ToastType) {
-		const id = crypto.randomUUID();
+		const id = generateUuid();
 		toasts.push({ id, message, type });
 		setTimeout(() => remove(id), 3000);
 	}

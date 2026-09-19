@@ -64,6 +64,27 @@ MYSQLDATABASE=testaliceDB
 > When running via Docker Compose, these values are already set in `compose.yml`. The `.env`
 > file is only needed for running the app outside of Docker (e.g. `pnpm dev` on the host).
 
+#### Running over plain HTTP (self-hosted, LAN-only deployment)
+
+`docker compose` always reads `site/.env` (see `env_file` in `compose.yml`), so it applies there
+too. SvelteKit marks its session cookie `Secure` by default for any hostname other than exactly
+`localhost`, regardless of whether the connection is actually HTTPS — over plain HTTP (e.g. a
+self-hosted instance reached by LAN IP or hostname, with no TLS in front of it) the browser
+silently drops that cookie and login appears to succeed but no session is ever stored. Set this
+in that deployment's `site/.env` to opt out:
+
+```env
+LAN_MODE=true
+```
+
+Leave it unset everywhere else (local dev and TLS-terminated deployments like Railway keep
+SvelteKit's default). See `src/lib/utils/cookies.ts` for where this is read.
+
+One feature doesn't have a workaround here: `manage/devices` uses the Web Serial API to flash
+Arduino UIDs, and Web Serial is a browser-enforced secure-context requirement — no env flag can
+unlock it for an origin other than `localhost` over plain HTTP. Run that step from the server's
+own `localhost`, or accept it's unavailable from other machines on the LAN.
+
 ---
 
 ## Running with Docker Compose (recommended)

@@ -1,9 +1,5 @@
-<script lang="ts">
-	import Icon from '$lib/components/icon.svelte';
-	import ProgressBar from '$lib/components/progress-bar.svelte';
-	import type { ExpertiseManager } from '$lib/managers/expertise-manager.svelte';
-
-	type ExpertiseGroupEntry = {
+<script module lang="ts">
+	export type ExpertiseGroupEntry = {
 		id: number;
 		group: number;
 		groupName: string;
@@ -14,14 +10,37 @@
 		groupColor?: string | null;
 	};
 
+	/**
+	 * A group a caller has already bucketed itself, for callers that carry their own grouping and
+	 * their own group value rather than an average of the entries. A `value` of null renders the
+	 * group header with no bar.
+	 */
+	export type ExpertiseGroupBucket = {
+		id: number;
+		name: string;
+		color?: string | null;
+		icon?: string | null;
+		value?: number | null;
+		expertise?: ExpertiseGroupEntry[];
+	};
+</script>
+
+<script lang="ts">
+	import Icon from '$lib/components/icon.svelte';
+	import ProgressBar from '$lib/components/progress-bar.svelte';
+	import type { ExpertiseManager } from '$lib/managers/expertise-manager.svelte';
+
 	let {
 		expertise = [],
+		groups: groupBuckets,
 		manager,
 		size = '2em',
 		showNames = false,
 		showExpertiseNames = false
 	}: {
 		expertise?: ExpertiseGroupEntry[];
+		/** Pre-bucketed groups, taken ahead of `expertise` and `manager` when given. */
+		groups?: ExpertiseGroupBucket[];
 		manager?: ExpertiseManager;
 		size?: string;
 		/** Label each group with its name. */
@@ -31,6 +50,17 @@
 	} = $props();
 
 	const groups = $derived.by(() => {
+		if (groupBuckets) {
+			return groupBuckets.map((group) => ({
+				id: group.id,
+				name: group.name,
+				color: group.color ?? 'var(--color-accent)',
+				icon: group.icon ?? null,
+				average: group.value ?? null,
+				expertise: group.expertise ?? []
+			}));
+		}
+
 		if (manager) {
 			return manager.groups
 				.map((g) => ({
@@ -95,9 +125,11 @@
 					<span style="color: var(--expertise-group-name-color, {group.color})">{group.name}</span>
 				</div>
 			{/if}
-			<div class="expertise-bar bar">
-				<ProgressBar value={group.average} color={group.color} name={group.name} />
-			</div>
+			{#if group.average != null}
+				<div class="expertise-bar bar">
+					<ProgressBar value={group.average} color={group.color} name={group.name} />
+				</div>
+			{/if}
 		</div>
 		{#each group.expertise as entry (entry.id)}
 			<div class="expertise">

@@ -20,18 +20,16 @@
 	<span class="corners" aria-hidden="true"></span>
 
 	<header class="header">
-		<div class="system-line">expertise test</div>
-		<div class="title-row">
-			<h2 class="test-name">{name.trim() === '' ? 'unnamed test' : name}</h2>
-			<div class="effort">
-				{#if effort === 'group'}
-					<Users size="1.1em" />
-				{:else}
-					<User size="1.1em" />
-				{/if}
-				<span class="effort-label">[{effort === 'group' ? 'group' : 'single'}]</span>
-			</div>
+		<div class="system-line">[E.T.-4V1X]</div>
+		<div class="effort">
+			{#if effort === 'group'}
+				<Users size="4em" />
+			{:else}
+				<User size="4em" />
+			{/if}
+			<span class="effort-label">[{effort === 'group' ? 'group' : 'single'}]</span>
 		</div>
+		<h2 class="title">{name.trim() === '' ? 'unnamed test' : name}</h2>
 	</header>
 
 	{#if groups.length > 0}
@@ -44,12 +42,6 @@
 </article>
 
 <style>
-	/*
-	 * A teletype printout: dark ink on white so it costs no toner and survives a printer dropping
-	 * backgrounds, but dressed as terminal output — square corners, dashed rules, a `>` prompt and
-	 * bracketed tags. Group colours still come from the data so the bars match the character sheet
-	 * this is held next to.
-	 */
 	.test-card {
 		position: relative;
 		display: flex;
@@ -103,8 +95,9 @@
 	}
 
 	.header {
-		display: flex;
-		flex-direction: column;
+		display: grid;
+		grid-template-columns: 1fr min-content;
+		width: 100%;
 		gap: 0.5rem;
 		border-bottom: 1px dashed #111;
 		padding-bottom: 0.6rem;
@@ -112,34 +105,16 @@
 
 	/* The line a terminal prints above its output. */
 	.system-line {
+		grid-column: 1;
 		font-size: 0.6rem;
 		text-transform: uppercase;
 		letter-spacing: 0.35em;
 		color: #666;
 	}
 
-	.title-row {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 1rem;
-	}
-
-	.test-name {
-		margin: 0;
-		font-size: 1.15rem;
-		font-weight: bold;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-	}
-
-	.test-name::before {
-		content: '> ';
-		color: #666;
-	}
-
-	/* The icon carries the meaning; the bracketed tag keeps it unambiguous on paper. */
 	.effort {
+		grid-column: 2;
+		grid-row: 1 / span 2;
 		display: flex;
 		align-items: center;
 		gap: 0.3rem;
@@ -154,6 +129,22 @@
 		white-space: nowrap;
 	}
 
+	.title {
+		grid-column: 1;
+		grid-row: 2;
+		margin: 0;
+		font-size: 1.15rem;
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	.title::before {
+		content: '> ';
+		color: #666;
+	}
+
+	/* The icon carries the meaning; the bracketed tag keeps it unambiguous on paper. */
 	/*
 	 * Custom properties inherit through the component boundary, so this re-themes the ProgressBar
 	 * track inside CharacterExpertiseGroups without a :global() escape hatch.

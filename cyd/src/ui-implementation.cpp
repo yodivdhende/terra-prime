@@ -127,6 +127,11 @@ void uiSetup()
     uiExpertiseInit();
     uiImplantsInit();
 
+    // The generated header ships with a placeholder label; fill it in from the character fetched
+    // at boot rather than editing generated code.
+    lv_obj_t * homeNameLabel = ui_comp_get_child(ui_Header, UI_COMP_HEADER_NAMELABEL);
+    lv_label_set_text(homeNameLabel, currentCharacter.name.c_str());
+
     Serial.println("Setup done");
 }
 

@@ -1,13 +1,14 @@
 #include <log.h>
 #include <globals.h>
+#include <boot-screen.h>
 
 /**
  * Serial always; the panel only while boot owns it.
  *
- * Writing to the `tft` object is how the boot steps report — the boot screen is drawn the same way
- * — but raw writes corrupt whatever LVGL has drawn, so `uiSetup()` turns the panel output off as it
- * takes the display over. That is why a `logRed` from a failing boot step lands on the boot screen
- * while one from `api.cpp` at runtime goes to Serial alone.
+ * `bootScreenLog()` is how the boot steps report — the boot screen is drawn the same way — but raw
+ * writes corrupt whatever LVGL has drawn, so `uiSetup()` turns the panel output off as it takes the
+ * display over. That is why a `logRed` from a failing boot step lands on the boot screen (scrolling
+ * the log area, same as every other line) while one from `api.cpp` at runtime goes to Serial alone.
  */
 
 static bool tftEnabled = true;
@@ -21,8 +22,7 @@ static void emit(const char* message, uint16_t colour)
 {
   Serial.println(message);
   if (tftEnabled == false) return;
-  tft.setTextColor(colour, TFT_BLACK);
-  tft.println(message);
+  bootScreenLog(message, colour);
 }
 
 /** `param` is the only substitution any caller uses. */

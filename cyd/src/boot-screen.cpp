@@ -13,7 +13,7 @@
  *     ..  Character
  *     ..  Realtime link configured
  *     connecting... 7s             <- detail line, overwritten in place
- *     (log output flows from here down)
+ *     (log output fills the rows below, scrolling once they run out)
  *
  * Markers are cleared with a filled rectangle before being drawn, because font 2 is proportional
  * and a shorter marker would otherwise leave the tail of the previous one behind.
@@ -30,8 +30,24 @@
 #define LABEL_X 34
 /** Clear air under the detail line, so clearing it can never clip the first line of log output. */
 #define LOG_GAP 8
+/**
+ * Upper bound on how many log rows the area under the list could ever hold, sized for a panel taller
+ * than this device has. `bootScreenInit()` computes the real capacity from what is actually left
+ * below the step list and never exceeds this.
+ */
+#define MAX_LOG_LINES 16
+/** Long enough for the widest line boot logs (matches the `detail` buffer in `boot.cpp`). */
+#define LOG_LINE_LEN 40
 
 static int detailY = 0;
+
+/** The scrolling log buffer under the detail line. */
+static char logLines[MAX_LOG_LINES][LOG_LINE_LEN];
+static uint16_t logColours[MAX_LOG_LINES];
+static int logLineCount = 0;
+/** How many rows actually fit below the list, computed in `bootScreenInit()`. */
+static int logCapacity = 0;
+static int logY = 0;
 
 /**
  * `log*` prints at whatever the cursor happens to be, and drawing a row or the detail line moves
@@ -57,6 +73,8 @@ static int rowY(int index)
  * — the globals are named for the landscape orientation LVGL switches to, and read backwards here.
  */
 #define PANEL_WIDTH screenHeight
+/** Same backwards reading as `PANEL_WIDTH`: portrait height is `screenWidth`. */
+#define PANEL_HEIGHT screenWidth
 
 /** Clear a band the full width of the screen. */
 static void clearBand(int y, int height)
@@ -91,7 +109,41 @@ void bootScreenInit()
     detailY = rowY(count) + 6;
     // Log output starts below the detail line, so a logRed from a failing step lands under the
     // list instead of on top of it, with a gap so redrawing the detail cannot clip it.
-    tft.setCursor(MARKER_X, detailY + ROW_HEIGHT + LOG_GAP);
+    logY = detailY + ROW_HEIGHT + LOG_GAP;
+    logCapacity = (PANEL_HEIGHT - logY) / ROW_HEIGHT;
+    if (logCapacity > MAX_LOG_LINES) logCapacity = MAX_LOG_LINES;
+    if (logCapacity < 0) logCapacity = 0;
+    logLineCount = 0;
+}
+
+void bootScreenLog(const char* message, uint16_t colour)
+{
+    if (logCapacity <= 0) return;
+    const KeepCursor keep;
+
+    char line[LOG_LINE_LEN];
+    snprintf(line, sizeof(line), "%s", message);
+
+    if (logLineCount < logCapacity) {
+        memcpy(logLines[logLineCount], line, sizeof(line));
+        logColours[logLineCount] = colour;
+        logLineCount++;
+    } else {
+        // Full: drop the oldest line and shift the rest up a row, same as a terminal scrolling.
+        for (int i = 1; i < logCapacity; i++) {
+            memcpy(logLines[i - 1], logLines[i], LOG_LINE_LEN);
+            logColours[i - 1] = logColours[i];
+        }
+        memcpy(logLines[logCapacity - 1], line, sizeof(line));
+        logColours[logCapacity - 1] = colour;
+    }
+
+    clearBand(logY, logCapacity * ROW_HEIGHT);
+    for (int i = 0; i < logLineCount; i++) {
+        tft.setTextColor(logColours[i], TFT_BLACK);
+        tft.setCursor(MARKER_X, logY + i * ROW_HEIGHT);
+        tft.print(logLines[i]);
+    }
 }
 
 void bootScreenSetStep(int index, BootStepState state, const char* detail)

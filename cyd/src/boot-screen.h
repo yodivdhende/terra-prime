@@ -21,6 +21,15 @@ void bootScreenInit();
 void bootScreenSetStep(int index, BootStepState state, const char* detail);
 
 /**
+ * Append a line to the log area under the step list.
+ *
+ * The area only fits so many rows; once it is full, the oldest line is dropped and the rest scroll
+ * up by one to make room, the way a terminal does, so the most recent output is always the part
+ * that stays on screen. `log.cpp` calls this for every `log*` while the panel is boot's to write to.
+ */
+void bootScreenLog(const char* message, uint16_t colour);
+
+/**
  * A step failed and boot is stopping here.
  *
  * The reason is already on screen: `logRed()` writes to the panel during boot, so whatever the

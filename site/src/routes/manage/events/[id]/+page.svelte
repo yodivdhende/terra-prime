@@ -173,6 +173,10 @@
 		)
 	);
 
+	const hasPrintableSheets = $derived(
+		participants.length > 0 || extras.some(({ extra }) => extra.characterVersionId != null)
+	);
+
 	const extraUserIds = $derived(new Set(extras.map(({ extra }) => extra.userId)));
 
 	const extraUserOptions = $derived(
@@ -398,7 +402,7 @@
 		{#if event?.id != null}
 			<a href={resolve('/manage/events/[id]/coupons', { id: String(event.id) })}>Manage Coupons →</a
 			>
-			{#if participants.length > 0}
+			{#if hasPrintableSheets}
 				<a href={resolve('/manage/events/[id]/sheets', { id: String(event.id) })}
 					>Print all sheets →</a
 				>
@@ -559,6 +563,17 @@
 													size="1em"
 												/>
 											</div>
+										{/if}
+										{#if event?.id != null}
+											<a
+												class="print-link"
+												aria-label="Print sheet for {assignment.characterName}"
+												href="{resolve('/manage/events/[id]/sheets', {
+													id: String(event.id)
+												})}?versionId={assignment.characterVersionId}"
+											>
+												<Printer size="1.1em" />
+											</a>
 										{/if}
 										<button
 											class="btn btn-danger"

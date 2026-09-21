@@ -150,14 +150,18 @@ static void addMessage(const char * text)
 static void fillExpertise(lv_event_t * e)
 {
     LV_UNUSED(e);
+    Serial.println("expertise: rendering screen");
     lv_obj_clean(expertiseList);
 
     // The version this device believes it is: a stored body for any other character is not used.
+    Serial.println("expertise: fetching my/expertise");
     const ApiResult result = apiGet("my/expertise", currentCharacter.versionId);
     if (result.body == "") {
+        Serial.println("expertise: no data, nothing stored either");
         addMessage("No connection, and nothing stored yet.");
         return;
     }
+    Serial.println(result.stale ? "expertise: using stored copy" : "expertise: fetched live data");
 
     JsonDocument document;
     const DeserializationError error = deserializeJson(document, result.body);
@@ -170,6 +174,7 @@ static void fillExpertise(lv_event_t * e)
 
     JsonArray expertise = document["expertise"].as<JsonArray>();
     if (expertise.isNull() || expertise.size() == 0) {
+        Serial.println("expertise: no expertise on record");
         addMessage("No expertise on record.");
         return;
     }
@@ -203,6 +208,9 @@ static void fillExpertise(lv_event_t * e)
         }
         start = end;
     }
+    Serial.print("expertise: done, filled ");
+    Serial.print(expertise.size());
+    Serial.println(" rows");
 }
 
 void uiExpertiseInit()

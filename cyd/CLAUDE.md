@@ -263,11 +263,15 @@ The cache is disposable. Deleting `/cache` costs one round trip per screen.
 - **Boot-screen drawing preserves the log cursor.** `log*` prints wherever the cursor is, and
   drawing a step row moves it. `boot-screen.cpp` saves and restores it (`KeepCursor`); without that
   a `logRed` lands on top of the step list instead of below it.
-- **SD and touch are both on VSPI, with different pins — enabling the SD step may cost touch.**
+- **SD and touch are both on VSPI, with different pins, and only one can own MISO at a time.**
   `screenSetup()` begins `tsSpi` (VSPI) on CLK 25 / MISO 39 / MOSI 32 / CS 33; `setupSD()` hands
   `sdSpi` (also VSPI) to `SD.begin()`, which begins it on VSPI's default 18/19/23 with CS 5. SCK and
   MOSI are outputs and can fan out, but **MISO is an input and only one pad can drive it** — so
-  whichever `begin()` ran last owns it, and `XPT2046_Touchscreen` never re-attaches. The TFT is
-  unaffected (HSPI, 12/13/14/15). This was latent while `setupSD()` was commented out and is not a
-  timing race, so serialising access does not fix it; `cache.cpp` also touches the card while the UI
-  runs. **Verify a touch on Home on real hardware before building anything else on this.**
+  whichever `begin()` ran last owns it. The TFT is unaffected (HSPI, 12/13/14/15). This is not a
+  timing race, so serialising access alone does not fix it — ownership has to be handed over
+  explicitly. `globals.cpp`'s `reattachTouch()` does this for touch (called once from `uiSetup()`,
+  since `setupSD()` steals MISO during boot); `sd-reader.cpp`'s `reattachSd()` does the mirror image
+  for the card, and `cache.cpp` wraps every runtime `cacheRead()`/`cacheWrite()` in an `SdBusHold`
+  that calls `reattachSd()` on entry and `reattachTouch()` on exit, since it touches the card while
+  the UI runs. Both `begin()`s are internally idempotent (`SDFS`'s `_pdrv`, `SPIClass`'s `_spi`), so
+  reclaiming either side needs the matching `end()` first or the reattach silently no-ops.

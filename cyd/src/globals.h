@@ -28,5 +28,12 @@ extern String deviceUid;
 extern XPT2046_Touchscreen ts;
 void clearScreen();
 void screenSetup();
+/**
+ * Re-attaches the touch controller to its SPI pins. `setupSD()` shares the VSPI peripheral with
+ * the touchscreen but wires it to different physical pins, and whichever `begin()` ran last owns
+ * the peripheral's MISO line — `SD.begin()` runs after touch is attached during boot, so touch is
+ * left broken by the time boot hands off to the UI unless this is called first.
+ */
+void reattachTouch();
 
 #endif

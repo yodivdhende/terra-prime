@@ -24,6 +24,19 @@ bool isSdReady() {
   return sdReady;
 }
 
+void reattachSd() {
+  if (!sdReady) return;
+  // Both ends have their own "already attached" guard (SDFS's _pdrv, SPIClass's _spi) that
+  // makes a bare SD.begin() a no-op once the card mounted at boot — clearing both is what makes
+  // the following begin() actually re-run the pin attach and take MISO back from touch.
+  SD.end();
+  sdSpi.end();
+  if (!SD.begin(SS, sdSpi, 20000000)) {
+    Serial.println("reattachSd: card did not come back");
+    sdReady = false;
+  }
+}
+
 bool setupSD() {
 
   // 20 MHz: the SPI-mode ceiling is 40 and this used to ask for 80. A marginal mount used to

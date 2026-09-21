@@ -114,6 +114,11 @@ void uiSetup()
     lv_display_set_buffers(disp, buf, NULL, SCREENBUFFER_SIZE_PIXELS * sizeof(lv_color_t), LV_DISPLAY_RENDER_MODE_PARTIAL);
     lv_display_set_flush_cb(disp, my_disp_flush);
 
+    // setupSD() steals the touch controller's VSPI pins during boot (see the shared-VSPI gotcha
+    // in CLAUDE.md) — reclaim them now, before LVGL starts reading touch, or nothing on any
+    // screen responds to a tap.
+    reattachTouch();
+
     static lv_indev_t *indev;
     indev = lv_indev_create();
     lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
@@ -122,6 +127,16 @@ void uiSetup()
     lv_tick_set_cb(my_tick_get_cb);
 
     ui_init();
+
+    // SquareLine marks these icon images clickable, so LVGL's hit-test resolves a tap on the
+    // icon to the image (the topmost clickable object under the finger) instead of the button
+    // beneath it. The image has no event callback and doesn't bubble, so the icon itself eats
+    // the touch and only the button's uncovered edge responds. Can't fix this in the .spj
+    // without losing it on the next export, so it's cleared here instead.
+    lv_obj_remove_flag(ui_ExpertiseButtonImage, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_remove_flag(ui_ImplantButtonImage, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_remove_flag(ui_MessagesButtonImage, LV_OBJ_FLAG_CLICKABLE);
+
     // Screen contents that come from the API live outside the generated `ui/`, and are wired up
     // once the generated objects exist.
     uiExpertiseInit();

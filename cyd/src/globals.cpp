@@ -35,6 +35,16 @@ void clearScreen()
   tft.setCursor(0,0);
 }
 
+void reattachTouch()
+{
+  // tsSpi.begin() no-ops once the peripheral is already attached, so pins can only be reclaimed
+  // by tearing it down first. This re-binds VSPI's MISO to the touch controller's pin (39) after
+  // setupSD()'s SD.begin() has rebound it to the card's (19).
+  tsSpi.end();
+  tsSpi.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
+  ts.begin(tsSpi);
+}
+
 void screenSetup()
 {
   tsSpi.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);

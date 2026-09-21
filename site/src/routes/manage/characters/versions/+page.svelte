@@ -3,6 +3,7 @@
 	import { type PageProps } from './$types';
 	import ConfirmModal from '$lib/components/confirm-modal.svelte';
 	import CharacterVersionPreview from '$lib/components/character-version-preview.svelte';
+	import { CirclePlus } from '@lucide/svelte';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 
 	let { data }: PageProps = $props();
@@ -36,6 +37,8 @@
 
 <main>
 	<a href={resolve('/manage/characters')}>back</a>
+
+	<a class="add-version" href={resolve('/manage/characters/versions/new')}><CirclePlus size={14} /></a>
 
 	<table>
 		<thead>
@@ -94,6 +97,18 @@
 		display: flex;
 		flex-direction: column;
 		padding: 8px;
+	}
+
+	.add-version {
+		display: flex;
+		align-items: center;
+		align-self: flex-start;
+		margin-top: 8px;
+		color: var(--color-accent);
+	}
+
+	.add-version:hover {
+		opacity: 0.6;
 	}
 
 	table {

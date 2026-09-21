@@ -1,3 +1,4 @@
+#include <api.h>
 #include <boot.h>
 #include <character.h>
 #include <connection.h>
@@ -49,6 +50,19 @@ static bool stepWebSocket()
     return true;
 }
 
+/**
+ * Warms the SD cache for the Expertise and Implants screens, so the player's first visit to either
+ * paints from the card instead of a blank "Loading...". Best-effort only: a missing network here
+ * just means those screens fetch live on first visit as they always have, so this step cannot fail
+ * — the boot screen would otherwise be reporting a failure nothing downstream treats as one.
+ */
+static bool prefetchDetails()
+{
+    apiGet("my/expertise", currentCharacter.versionId);
+    apiGet("my/implants", currentCharacter.versionId);
+    return true;
+}
+
 typedef struct {
     const char* label;
     bool (*run)();
@@ -58,6 +72,7 @@ static const BootStep steps[] = {
     { "SD card and config", setupSD },
     { "WiFi", stepWifi },
     { "Character", fetchCharacter },
+    { "Expertise & Implants", prefetchDetails },
     { "Realtime link configured", stepWebSocket }
 };
 

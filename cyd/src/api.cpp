@@ -26,8 +26,7 @@
  * once the UI is up, and these requests run from screens.
  */
 
-/** The live request. Returns "" for anything that is not a 200 with a body. */
-static String httpGet(const String& path)
+String apiHttpGet(const String& path)
 {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("apiGet: no WiFi");
@@ -64,7 +63,7 @@ static String httpGet(const String& path)
 
 ApiResult apiGet(const String& path, int characterVersionId)
 {
-  const String fresh = httpGet(path);
+  const String fresh = apiHttpGet(path);
   if (fresh != "") {
     cacheWrite(path, fresh, characterVersionId);
     return { fresh, false };

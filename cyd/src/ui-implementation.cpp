@@ -6,6 +6,8 @@
 #include <globals.h>
 #include <character.h>
 #include <log.h>
+#include <cache.h>
+#include <async-fetch.h>
 #include <ui-expertise.h>
 #include <ui-implants.h>
 #include <XPT2046_Touchscreen.h>
@@ -153,5 +155,16 @@ void uiSetup()
 void uiLoop()
 {
     lv_timer_handler(); /* let the GUI do its work */
+
+    // The only place a background `async-fetch` result is drained: writing it to the SD cache and
+    // touching the screens it belongs to both have to happen from the main loop, the one thread
+    // allowed near the SD card and touch controller's shared VSPI bus (see `async-fetch.h`).
+    String path, body;
+    if (asyncFetchPoll(path, body)) {
+        if (body != "") cacheWrite(path, body, currentCharacter.versionId);
+        if (path == "my/expertise") uiExpertiseApplyFetch(body);
+        else if (path == "my/implants") uiImplantsApplyFetch(body);
+    }
+
     delay(5);
 }

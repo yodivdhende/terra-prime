@@ -3,6 +3,8 @@
 #include <lvgl.h>
 #include <ui/ui.h>
 #include <api.h>
+#include <cache.h>
+#include <async-fetch.h>
 #include <character.h>
 #include <ui-implants.h>
 
@@ -10,9 +12,14 @@
  * The Implants screen: every implant the character carries, each with its description.
  *
  * Same shape as `ui-expertise.cpp` — `src/ui/` is generated, so this hangs a list under the
- * generated header and title and refills it on every `LV_EVENT_SCREEN_LOADED`, which also refreshes
- * the copy on the SD card that `api.cpp` falls back to offline. Rows arrive sorted by slot, so the
- * list reads in the order the implants sit in the body.
+ * generated header and title and refills it on every `LV_EVENT_SCREEN_LOADED`. Rows arrive sorted
+ * by slot, so the list reads in the order the implants sit in the body.
+ *
+ * Each visit paints instantly from the SD cache (`cacheRead()`, no network wait), then starts a
+ * background fetch (`async-fetch.h`) of the live answer. `uiImplantsApplyFetch()` — called from
+ * `uiLoop()` once that lands — redraws only if the body actually changed, and only if this screen
+ * is still the one on screen; either way the fresh answer is written back to the SD cache so the
+ * next offline visit has it too.
  */
 
 static lv_obj_t * implantList = NULL;
@@ -49,20 +56,15 @@ static void addMessage(const char * text)
     lv_obj_set_style_text_font(label, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
-static void fillImplants(lv_event_t * e)
+/** What's currently drawn into `implantList`, so a same-content refresh can skip redrawing and an
+ *  empty-cache screen knows whether it's shown anything yet. "" means nothing has. */
+static String lastRenderedBody = "";
+
+/** Parses `body` and draws it into `implantList`. Caller has already cleared the list. */
+static void renderImplants(const String & body)
 {
-    LV_UNUSED(e);
-    lv_obj_clean(implantList);
-
-    // The version this device believes it is: a stored body for any other character is not used.
-    const ApiResult result = apiGet("my/implants", currentCharacter.versionId);
-    if (result.body == "") {
-        addMessage("No connection, and nothing stored yet.");
-        return;
-    }
-
     JsonDocument document;
-    const DeserializationError error = deserializeJson(document, result.body);
+    const DeserializationError error = deserializeJson(document, body);
     if (error) {
         Serial.print("implants: JSON error ");
         Serial.println(error.c_str());
@@ -79,6 +81,42 @@ static void fillImplants(lv_event_t * e)
     for (JsonObject entry : implants) {
         addImplant(entry["name"] | "?", entry["description"] | "");
     }
+}
+
+static void fillImplants(lv_event_t * e)
+{
+    LV_UNUSED(e);
+    lv_obj_clean(implantList);
+
+    // The version this device believes it is: a stored body for any other character is not used.
+    lastRenderedBody = cacheRead("my/implants", currentCharacter.versionId);
+    if (lastRenderedBody != "") {
+        renderImplants(lastRenderedBody);
+    } else {
+        addMessage("Loading...");
+    }
+
+    asyncFetchStart("my/implants");
+}
+
+void uiImplantsApplyFetch(const String & body)
+{
+    if (body == "") {
+        // Something's already on screen (from cache, or an earlier fetch this visit) - the offline
+        // fallback is exactly that, so leave it. Only say so if there truly is nothing to show.
+        if (lastRenderedBody != "") return;
+        if (lv_screen_active() != ui_Implants) return;
+        lv_obj_clean(implantList);
+        addMessage("No connection, and nothing stored yet.");
+        return;
+    }
+
+    if (body == lastRenderedBody) return; // fresh data matches what's already shown
+    lastRenderedBody = body;
+
+    if (lv_screen_active() != ui_Implants) return; // player moved on; next visit paints this
+    lv_obj_clean(implantList);
+    renderImplants(body);
 }
 
 void uiImplantsInit()

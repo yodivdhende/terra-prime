@@ -11,6 +11,7 @@
  *     ok  SD card and config       <- one row per boot step, marker redrawn as it changes
  *     >>  WiFi
  *     ..  Character
+ *     ..  Expertise & Implants
  *     ..  Realtime link configured
  *     connecting... 7s             <- detail line, overwritten in place
  *     (log output fills the rows below, scrolling once they run out)

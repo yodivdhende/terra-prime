@@ -18,4 +18,13 @@
      * version that is.
      */
     ApiResult apiGet(const String& path, int characterVersionId);
+
+    /**
+     * The live request alone, with no cache read or write — `apiGet()`'s network half. Returns ""
+     * for anything that is not a 200 with a body.
+     *
+     * Exposed so `async-fetch.cpp` can run it on a background task: it touches only WiFi/HTTP, never
+     * the SD card, which is what makes it safe to call off the main loop (see `async-fetch.h`).
+     */
+    String apiHttpGet(const String& path);
 #endif

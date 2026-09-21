@@ -3,6 +3,8 @@
 #include <lvgl.h>
 #include <ui/ui.h>
 #include <api.h>
+#include <cache.h>
+#include <async-fetch.h>
 #include <character.h>
 #include <ui-expertise.h>
 
@@ -16,8 +18,13 @@
  * `src/ui/` is generated from the SquareLine project, so nothing here edits it — the screen arrives
  * with a header and a title, and this file hangs a list under them and refills it on every
  * `LV_EVENT_SCREEN_LOADED`. Refilling rather than fetching once means a value an admin changes
- * mid-event shows up the next time the player opens the screen, and that every visit refreshes the
- * copy on the SD card that `api.cpp` falls back to when the network is gone.
+ * mid-event shows up the next time the player opens the screen.
+ *
+ * Each visit paints instantly from the SD cache (`cacheRead()`, no network wait), then starts a
+ * background fetch (`async-fetch.h`) of the live answer. `uiExpertiseApplyFetch()` — called from
+ * `uiLoop()` once that lands — redraws only if the body actually changed, and only if this screen
+ * is still the one on screen; either way the fresh answer is written back to the SD cache so the
+ * next offline visit has it too.
  *
  * The server sends this device no icons: they are SVG documents, which LVGL cannot draw and the
  * ESP32 cannot afford to parse. Icons come off the SD card instead, pre-rasterized by the site's
@@ -147,24 +154,15 @@ static void addMessage(const char * text)
     lv_obj_set_style_text_font(label, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
-static void fillExpertise(lv_event_t * e)
+/** What's currently drawn into `expertiseList`, so a same-content refresh can skip redrawing and
+ *  an empty-cache screen knows whether it's shown anything yet. "" means nothing has. */
+static String lastRenderedBody = "";
+
+/** Parses `body` and draws it into `expertiseList`. Caller has already cleared the list. */
+static void renderExpertise(const String & body)
 {
-    LV_UNUSED(e);
-    Serial.println("expertise: rendering screen");
-    lv_obj_clean(expertiseList);
-
-    // The version this device believes it is: a stored body for any other character is not used.
-    Serial.println("expertise: fetching my/expertise");
-    const ApiResult result = apiGet("my/expertise", currentCharacter.versionId);
-    if (result.body == "") {
-        Serial.println("expertise: no data, nothing stored either");
-        addMessage("No connection, and nothing stored yet.");
-        return;
-    }
-    Serial.println(result.stale ? "expertise: using stored copy" : "expertise: fetched live data");
-
     JsonDocument document;
-    const DeserializationError error = deserializeJson(document, result.body);
+    const DeserializationError error = deserializeJson(document, body);
     if (error) {
         Serial.print("expertise: JSON error ");
         Serial.println(error.c_str());
@@ -211,6 +209,47 @@ static void fillExpertise(lv_event_t * e)
     Serial.print("expertise: done, filled ");
     Serial.print(expertise.size());
     Serial.println(" rows");
+}
+
+static void fillExpertise(lv_event_t * e)
+{
+    LV_UNUSED(e);
+    Serial.println("expertise: rendering screen");
+    lv_obj_clean(expertiseList);
+
+    // The version this device believes it is: a stored body for any other character is not used.
+    lastRenderedBody = cacheRead("my/expertise", currentCharacter.versionId);
+    if (lastRenderedBody != "") {
+        Serial.println("expertise: painting from the SD cache");
+        renderExpertise(lastRenderedBody);
+    } else {
+        addMessage("Loading...");
+    }
+
+    Serial.println("expertise: fetching my/expertise in the background");
+    asyncFetchStart("my/expertise");
+}
+
+void uiExpertiseApplyFetch(const String & body)
+{
+    if (body == "") {
+        Serial.println("expertise: background fetch failed");
+        // Something's already on screen (from cache, or an earlier fetch this visit) - the offline
+        // fallback is exactly that, so leave it. Only say so if there truly is nothing to show.
+        if (lastRenderedBody != "") return;
+        if (lv_screen_active() != ui_Expertise) return;
+        lv_obj_clean(expertiseList);
+        addMessage("No connection, and nothing stored yet.");
+        return;
+    }
+
+    if (body == lastRenderedBody) return; // fresh data matches what's already shown
+    Serial.println("expertise: background fetch landed, redrawing");
+    lastRenderedBody = body;
+
+    if (lv_screen_active() != ui_Expertise) return; // player moved on; next visit paints this
+    lv_obj_clean(expertiseList);
+    renderExpertise(body);
 }
 
 void uiExpertiseInit()

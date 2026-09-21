@@ -7,12 +7,41 @@
 #include <globals.h>
 #include <ArduinoJson.h>
 
+/** Matches the default in `globals.cpp`, for a card whose config omits the key. */
+#define WIFI_TIMEOUT_DEFAULT_SECONDS 20
+
+
+/**
+ * The card outlives `setupSD()` now — the cache in `cache.cpp` reads and writes it while the UI is
+ * running — and `SD.begin()` keeps a pointer to the bus it is handed, not a copy. This used to be a
+ * local, which left that pointer dangling the moment `setupSD()` returned; it was harmless only
+ * because nothing touched the card afterwards.
+ */
+static SPIClass sdSpi(VSPI);
+static bool sdReady = false;
+
+bool isSdReady() {
+  return sdReady;
+}
+
+void reattachSd() {
+  if (!sdReady) return;
+  // Both ends have their own "already attached" guard (SDFS's _pdrv, SPIClass's _spi) that
+  // makes a bare SD.begin() a no-op once the card mounted at boot — clearing both is what makes
+  // the following begin() actually re-run the pin attach and take MISO back from touch.
+  SD.end();
+  sdSpi.end();
+  if (!SD.begin(SS, sdSpi, 20000000)) {
+    Serial.println("reattachSd: card did not come back");
+    sdReady = false;
+  }
+}
 
 bool setupSD() {
 
-  SPIClass spi = SPIClass(VSPI);
-
-  if (!SD.begin(SS, spi, 80000000)) {
+  // 20 MHz: the SPI-mode ceiling is 40 and this used to ask for 80. A marginal mount used to
+  // mean "no SD"; now it means "will not boot", so the number has to be in spec.
+  if (!SD.begin(SS, sdSpi, 20000000)) {
     logRed("Card Mount Failed");
     return false;
   }
@@ -35,7 +64,8 @@ bool setupSD() {
   }
 
   uint64_t cardSize = SD.cardSize() / (1024 * 1024);
-  logGreen("SD Card Size: %lluMB", String(cardSize).c_str());
+  logGreen("SD Card Size: %sMB", String(cardSize).c_str());
+  sdReady = true;
   return readConfig(SD);
 }
 
@@ -66,21 +96,33 @@ bool readConfig(fs::FS &fs) {
 
   logWhite("Setting config");
 
-  int characterId = configObject["characterId"];
+  // No `characterId`: which character this device shows is the server's answer, read from the
+  // `aguesguard` role of the device registered under `deviceUid`.
+  String deviceUidString = configObject["deviceUid"];
+  // Defaulted and clamped: a missing key parses as 0, which would fail WiFi before it started, and
+  // a typo should not make the AP unreachable either.
+  int wifiTimeoutSeconds = configObject["wifiTimeout"] | WIFI_TIMEOUT_DEFAULT_SECONDS;
+  if (wifiTimeoutSeconds < 1 || wifiTimeoutSeconds > 120) {
+    wifiTimeoutSeconds = WIFI_TIMEOUT_DEFAULT_SECONDS;
+  }
   String sessionTokenString= configObject["sessionToken"];
   String ssid = configObject["wifi"]["ssid"];
   String password = configObject["wifi"]["password"];
   String baseUrl = configObject["domain"];
   String apiUrl= configObject["apiUrl"];
-  int id = configObject["characterId"];
   int port = configObject["webSocketPort"];
   wifi_ssid = ssid;
   wifi_password = password;
   api_url = apiUrl;
   domain = baseUrl;
-  character_id = id;
+  deviceUid = deviceUidString;
+  wifiTimeout = wifiTimeoutSeconds;
   sessionToken = sessionTokenString;
   webSocketPort = port;
+
+  if (deviceUid.length() == 0) {
+    logRed("No deviceUid in config.json - the API will not know which character this is");
+  }
 
   return true;
 }

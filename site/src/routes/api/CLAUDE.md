@@ -279,9 +279,39 @@ All drive endpoints are public (no auth). Responses are non-JSON where noted.
 
 All endpoints under `/api/my/...` operate on the authenticated user. Auth: `user` role unless stated otherwise. Use these instead of branching on roles inside a shared handler.
 
+### The caller's own character version
+
+Some `/api/my/**` reads answer for **one** character version — the one the caller is playing —
+rather than listing everything they own. They accept two kinds of caller, resolved in
+`src/lib/server/my-character.service.ts`:
+
+- **a player**, by the `session-token` cookie (`user` role). `?characterVersionId=<id>` picks which
+  of their versions to answer for; without it the newest owned version is used. A version the
+  caller does not own answers 404, not 403, so the response does not say which ids exist.
+- **an AguesGuard**, by an `X-Device-Uid` header carrying the UID it is registered under in
+  `Devices`. The device asserts nothing about which character it shows: the server reads that from
+  the device's `aguesguard` role, so the prop carries no player's session token. 401 for an unknown
+  UID, 403 for a device without the `aguesguard` role, 404 when the bound version is gone.
+
+The device header wins when both arrive. A UID is a bearer credential sent in the clear — the same
+self-asserted device identity the WebSocket channel has; a per-device secret would close it and
+does not exist yet.
+
+`/api/my/expertise` sends `icon` and `groupIcon` as null to a device caller: they are multi-kilobyte
+SVG documents an ESP32 can neither render nor afford to parse. `groupColor` is always sent, and is
+what the device tints both its bars and its icons with.
+
+A device gets its icons from its own SD card instead, as 24px LVGL A8 images exported from
+`manage/expertise` and keyed on expertise/group id — so `id` in this response is what the firmware
+builds an icon path from. No server route serves those files; the export is built in the admin's
+browser (`src/lib/utils/icon-export.ts`).
+
 | Method | Path | Returns | Description |
 |--------|------|---------|-------------|
 | GET | `/api/my/user` | `User` (JSON) | Get the currently authenticated user |
+| GET | `/api/my/character` | `MyCharacterResponse` (JSON) — `{ id, name, versionId, versionName, companyId }` | The single character version the caller is playing. This is what an AguesGuard fetches at boot |
+| GET | `/api/my/expertise` | `MyExpertiseResponse` (JSON) — `{ characterId, characterName, versionId, versionName, expertise: VersionExpertise[] }`, ordered by group then name | The caller's own expertise with catalog names, values and icons — everything needed to draw a bar per entry |
+| GET | `/api/my/implants` | `MyImplantsResponse` (JSON) — `{ characterId, characterName, versionId, versionName, implants: VersionImplant[] }`, ordered by slot then name | The caller's own implants with their descriptions |
 | GET | `/api/my/characters` | `Character[]` (JSON) | List characters owned by the current user. `kind: 'npc'` rows are excluded — an admin's NPC pool is not a character they play |
 | GET | `/api/my/characters/with-events` | `(Character & { events: Array<{ id: number, name: string }> })[]` (JSON) | List the current user's characters, each with an `events` array |
 | GET | `/api/my/characters/versions` | `MyCharacterVersionsResponse` (JSON) — `{ characters: (Character & { versions: CharacterVersionFull[] })[], assignedCharacters: AssignedCharacterVersion[] }` where each version's `expertise`/`items`/`implants` are joined with the catalog and `events` is the list of events the version is registered for: `expertise: { id, name, group, groupName, value }[]`, `items: { id, name, description, count }[]`, `implants: { id, name, description }[]`, `events: { id, name }[]`. `assignedCharacters` holds the NPC sheets handed to this user as an extra — `CharacterVersionFull & { characterName: string, event: { id, name } }`, hydrated the same way but read-only, since the user does not own them | List the current user's characters with their versions, plus the NPC versions assigned to them as an extra |

@@ -1,46 +1,41 @@
 #include <log.h>
 #include <globals.h>
+#include <boot-screen.h>
 
-void logWhite(const char* log) {
-    Serial.println(log);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.println(log);
-}
-void logWhite(char* log, const char* param)
-{
-  char buffer[253];
-  sprintf(buffer,log, param);
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  Serial.println(buffer);
-  tft.println(buffer);
-}
+/**
+ * Serial always; the panel only while boot owns it.
+ *
+ * `bootScreenLog()` is how the boot steps report — the boot screen is drawn the same way — but raw
+ * writes corrupt whatever LVGL has drawn, so `uiSetup()` turns the panel output off as it takes the
+ * display over. That is why a `logRed` from a failing boot step lands on the boot screen (scrolling
+ * the log area, same as every other line) while one from `api.cpp` at runtime goes to Serial alone.
+ */
 
-void logGreen(const char* log)
+static bool tftEnabled = true;
+
+void logSetTftEnabled(bool enabled)
 {
-  tft.setTextColor(TFT_GREEN, TFT_BLACK);
-  Serial.println(log);
-  tft.println(log);
-}
-void logGreen(char* log,const char* param)
-{
-  char buffer[253];
-  sprintf(buffer,log, param);
-  tft.setTextColor(TFT_GREEN, TFT_BLACK);
-  Serial.println(buffer);
-  tft.println(buffer);
+  tftEnabled = enabled;
 }
 
-void logRed(const char* log)
+static void emit(const char* message, uint16_t colour)
 {
-  tft.setTextColor(TFT_RED, TFT_BLACK);
-  Serial.println(log);
-  tft.println(log);
+  Serial.println(message);
+  if (tftEnabled == false) return;
+  bootScreenLog(message, colour);
 }
-void logRed(char* log,const char* param)
+
+/** `param` is the only substitution any caller uses. */
+static void emitFormatted(const char* log, const char* param, uint16_t colour)
 {
   char buffer[253];
-  sprintf(buffer,log, param);
-  tft.setTextColor(TFT_RED, TFT_BLACK);
-  Serial.println(buffer);
-  tft.println(buffer);
+  snprintf(buffer, sizeof(buffer), log, param);
+  emit(buffer, colour);
 }
+
+void logWhite(const char* log)                        { emit(log, TFT_WHITE); }
+void logWhite(const char* log, const char* param)     { emitFormatted(log, param, TFT_WHITE); }
+void logGreen(const char* log)                        { emit(log, TFT_GREEN); }
+void logGreen(const char* log, const char* param)     { emitFormatted(log, param, TFT_GREEN); }
+void logRed(const char* log)                          { emit(log, TFT_RED); }
+void logRed(const char* log, const char* param)       { emitFormatted(log, param, TFT_RED); }

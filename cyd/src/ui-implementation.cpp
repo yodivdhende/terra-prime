@@ -5,6 +5,11 @@
 #include <ui/ui.h>
 #include <globals.h>
 #include <character.h>
+#include <log.h>
+#include <cache.h>
+#include <async-fetch.h>
+#include <ui-expertise.h>
+#include <ui-implants.h>
 #include <XPT2046_Touchscreen.h>
 
 /*Don't forget to set Sketchbook location in File/Preferences to the path of your UI project (the parent foder of this INO file)*/
@@ -101,12 +106,20 @@ void uiSetup()
     lv_log_register_print_cb(my_print); /* register print function for debugging */
 #endif
 
+    // LVGL owns the display from here: raw writes have to stop, and the panel turns from the
+    // portrait the boot screen used to the landscape every game screen is designed for.
+    logSetTftEnabled(false);
     tft.setRotation(1); /* Landscape orientation, flipped */
 
     static lv_disp_t *disp;
     disp = lv_display_create(screenWidth, screenHeight);
     lv_display_set_buffers(disp, buf, NULL, SCREENBUFFER_SIZE_PIXELS * sizeof(lv_color_t), LV_DISPLAY_RENDER_MODE_PARTIAL);
     lv_display_set_flush_cb(disp, my_disp_flush);
+
+    // setupSD() steals the touch controller's VSPI pins during boot (see the shared-VSPI gotcha
+    // in CLAUDE.md) — reclaim them now, before LVGL starts reading touch, or nothing on any
+    // screen responds to a tap.
+    reattachTouch();
 
     static lv_indev_t *indev;
     indev = lv_indev_create();
@@ -117,11 +130,41 @@ void uiSetup()
 
     ui_init();
 
+    // SquareLine marks these icon images clickable, so LVGL's hit-test resolves a tap on the
+    // icon to the image (the topmost clickable object under the finger) instead of the button
+    // beneath it. The image has no event callback and doesn't bubble, so the icon itself eats
+    // the touch and only the button's uncovered edge responds. Can't fix this in the .spj
+    // without losing it on the next export, so it's cleared here instead.
+    lv_obj_remove_flag(ui_ExpertiseButtonImage, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_remove_flag(ui_ImplantButtonImage, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_remove_flag(ui_MessagesButtonImage, LV_OBJ_FLAG_CLICKABLE);
+
+    // Screen contents that come from the API live outside the generated `ui/`, and are wired up
+    // once the generated objects exist.
+    uiExpertiseInit();
+    uiImplantsInit();
+
+    // The generated header ships with a placeholder label; fill it in from the character fetched
+    // at boot rather than editing generated code.
+    lv_obj_t * homeNameLabel = ui_comp_get_child(ui_Header, UI_COMP_HEADER_NAMELABEL);
+    lv_label_set_text(homeNameLabel, currentCharacter.name.c_str());
+
     Serial.println("Setup done");
 }
 
 void uiLoop()
 {
     lv_timer_handler(); /* let the GUI do its work */
+
+    // The only place a background `async-fetch` result is drained: writing it to the SD cache and
+    // touching the screens it belongs to both have to happen from the main loop, the one thread
+    // allowed near the SD card and touch controller's shared VSPI bus (see `async-fetch.h`).
+    String path, body;
+    if (asyncFetchPoll(path, body)) {
+        if (body != "") cacheWrite(path, body, currentCharacter.versionId);
+        if (path == "my/expertise") uiExpertiseApplyFetch(body);
+        else if (path == "my/implants") uiImplantsApplyFetch(body);
+    }
+
     delay(5);
 }

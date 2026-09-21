@@ -1,0 +1,11 @@
+{
+  "wifi": {
+    "ssid": "De Notenboom ",
+    "password": "X4k9*9wS!K2eEp2b"
+  },
+  "apiUrl": "http://local.terraprime.com/api/",
+  "domain": "local.terraprime.com",
+  "webSocketPort": 5174,
+  "deviceUid": "dc7c893e-1fc2-479c-bbce-850935ec530a",
+  "sessionToken": "593a59b1-f03f-4bc8-8baa-2c4efb881cd3"
+}

@@ -19,10 +19,12 @@ String wifi_ssid;
 String wifi_password;
 String domain;
 int webSocketPort;
+// Defaulted here as well as in readConfig(), so a boot that never reaches the card still has a
+// deadline rather than one that has already expired.
+int wifiTimeout = 20;
 String api_url;
-int character_id;
-String boot_gif_path;
 String sessionToken;
+String deviceUid;
 
 
 TFT_eSPI tft = TFT_eSPI( screenHeight ,screenWidth ); /* TFT instance */
@@ -33,13 +35,26 @@ void clearScreen()
   tft.setCursor(0,0);
 }
 
+void reattachTouch()
+{
+  // tsSpi.begin() no-ops once the peripheral is already attached, so pins can only be reclaimed
+  // by tearing it down first. This re-binds VSPI's MISO to the touch controller's pin (39) after
+  // setupSD()'s SD.begin() has rebound it to the card's (19).
+  tsSpi.end();
+  tsSpi.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
+  ts.begin(tsSpi);
+}
+
 void screenSetup()
 {
   tsSpi.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
   ts.begin(tsSpi);
   ts.setRotation(1);
   tft.init();
-  tft.setRotation(0) ;
+  // Portrait while boot owns the panel: the long edge is vertical, which is 20 lines of text
+  // against landscape's 15, and the boot log is what needs them. `uiSetup()` turns it to landscape
+  // when LVGL takes over.
+  tft.setRotation(0);
   clearScreen();
   tft.setTextFont(2);
 }

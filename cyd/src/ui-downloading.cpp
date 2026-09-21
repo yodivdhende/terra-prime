@@ -17,6 +17,6 @@ static void set_downloadBar(lv_timer_t *timer) {
 }
 
 void UiLoadingSetup(){
-    _ui_screen_change(&ui_DownloadScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, &ui_DownloadScreen_screen_init);
+    _ui_screen_change(&ui_DownloadScreen, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_DownloadScreen_screen_init);
     downloadBarTimer = lv_timer_create(set_downloadBar,10, NULL);
 }

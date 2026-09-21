@@ -1,17 +1,13 @@
 #include <TFT_eSPI.h>
 #include <Arduino.h>
 #include <XPT2046_Touchscreen.h>
+#include <globals.h>
 
 
 const uint16_t screenWidth  = 320;
 const uint16_t screenHeight = 240;
 
-/*Touch screen config*/
-#define XPT2046_IRQ 36 //GPIO driver cảm ứng 
-#define XPT2046_MOSI 32
-#define XPT2046_MISO 39
-#define XPT2046_CLK 25
-#define XPT2046_CS 33
+// Touch screen pins live in globals.h: power save wakes the board on the touch IRQ line.
 SPIClass tsSpi = SPIClass(VSPI);
 XPT2046_Touchscreen ts(XPT2046_CS, XPT2046_IRQ);
 

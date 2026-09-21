@@ -6,6 +6,7 @@
 #include <ui-implementation.h>
 #include <uart-interface.h>
 #include <web-socket.h>
+#include <power.h>
 
 /**
  * Boot draws straight to the panel, then LVGL starts and takes it over.
@@ -28,6 +29,7 @@ static bool bootOk = false;
 void setup () {
   Serial.begin(115200);
   screenSetup();
+  powerSetup();
   logWhite("booting " FIRMWARE_VERSION);
 
   bootScreenInit();
@@ -45,9 +47,13 @@ void setup () {
 
 
 void loop (){
-  // Nothing is safe to run after a halt: LVGL was never initialised, the WebSocket client may
-  // never have been begun, and the config naming the server may never have been read. The boot
-  // screen needs no upkeep — it is drawn on the panel, not rendered.
+  // Runs regardless of boot success: it touches only the I2C battery IC and the radio's power
+  // mode, neither of which depends on LVGL, the WebSocket client, or the boot screen.
+  powerLoop();
+
+  // Nothing else is safe to run after a halt: LVGL was never initialised, the WebSocket client
+  // may never have been begun, and the config naming the server may never have been read. The
+  // boot screen needs no upkeep — it is drawn on the panel, not rendered.
   if (bootOk == false) return;
 
   uiLoop();

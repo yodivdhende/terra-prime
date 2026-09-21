@@ -5,12 +5,12 @@
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
-	const participants = $derived(data.participants ?? []);
+	const sheets = $derived(data.sheets ?? []);
 	const eventId = $derived(data.event?.id != null ? String(data.event.id) : null);
 
 	// Open the print dialog straight away — this page exists to be printed.
 	onMount(() => {
-		if (participants.length > 0) window.print();
+		if (sheets.length > 0) window.print();
 	});
 </script>
 
@@ -22,23 +22,23 @@
 		<button class="btn" onclick={() => window.print()}>print</button>
 	</div>
 
-	{#if participants.length === 0}
-		<p class="status no-print">No participants to print for this event.</p>
+	{#if sheets.length === 0}
+		<p class="status no-print">No sheets to print for this event.</p>
 	{:else}
-		{#each participants as { character, version } (character.characterVersionId)}
+		{#each sheets as { characterVersionId, characterName, ownerName, version } (characterVersionId)}
 			<div class="sheet">
 				{#if version != null}
 					<CharacterSheet
-						characterName={character.name}
+						{characterName}
 						versionName={version.name}
 						companyName={version.company?.name ?? null}
-						ownerName={character.ownerName}
+						{ownerName}
 						eventName={data.event?.name ?? null}
 						expertise={version.expertise}
 						implants={version.implants}
 					/>
 				{:else}
-					<p class="status">version not found for {character.name}</p>
+					<p class="status">version not found for {characterName}</p>
 				{/if}
 			</div>
 		{/each}

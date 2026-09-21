@@ -1,5 +1,5 @@
 import { characterVersionRepo } from "$lib/db/character_version.repo";
-import { eventParticipantsRepo } from "$lib/db/event_participants.repo";
+import { findAttendanceForCharacter } from "$lib/server/event-attendance.service";
 import { isNumberOrError } from "$lib/request.utils";
 import { UserRole } from "$lib/types/roles";
 import { getSessionToken } from "$lib/utils/cookies";
@@ -12,10 +12,10 @@ export const GET: RequestHandler = async ({cookies, params}) => {
     const characterId = isNumberOrError(params.characterId);
     const eventId = isNumberOrError(params.eventId);
 
-    const participant = await eventParticipantsRepo.getParticipantForCharacter({eventId, characterId});
-    if(participant?.characterVersion == null) return json({ characterVersion: undefined });
+    const attendance = await findAttendanceForCharacter({eventId, characterId});
+    if(attendance?.characterVersion == null) return json({ characterVersion: undefined });
 
-    const characterVersion = await characterVersionRepo.getWithId(participant.characterVersion);
+    const characterVersion = await characterVersionRepo.getWithId(attendance.characterVersion);
     return json({ characterVersion });
   })
 }

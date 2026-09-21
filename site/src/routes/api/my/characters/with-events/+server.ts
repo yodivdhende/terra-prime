@@ -1,5 +1,5 @@
 import { characterRepo } from '$lib/db/character.repo';
-import { eventParticipantsRepo } from '$lib/db/event_participants.repo';
+import { eventPlayersRepo } from '$lib/db/event_players.repo';
 import { getSessionToken } from '$lib/utils/cookies';
 import { authGuardForUser, handleRequest } from '$lib/utils/request';
 import { json, type RequestHandler } from '@sveltejs/kit';
@@ -10,7 +10,7 @@ export const GET: RequestHandler = async ({ cookies }) => {
 		const { userId } = await authGuardForUser(getSessionToken(cookies), [UserRole.user]);
 		const characters = await characterRepo.getByOwner(userId);
 		const ids = characters.map((c) => c.id);
-		const eventRows = await eventParticipantsRepo.getEventsForCharacters(ids);
+		const eventRows = await eventPlayersRepo.getEventsForCharacters(ids);
 
 		const result = characters.map((c) => ({
 			...c,

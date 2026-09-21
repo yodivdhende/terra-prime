@@ -1,7 +1,7 @@
 import { companyDiscountsRepo } from '$lib/db/company_discounts.repo';
 import type { CharacterVersionBare } from '$lib/db/character_version.repo';
 import { eventCouponRepo } from '$lib/db/event_coupon.repo';
-import { eventParticipantsRepo } from '$lib/db/event_participants.repo';
+import { eventPlayersRepo } from '$lib/db/event_players.repo';
 import { eventRepo } from '$lib/db/event.repo';
 import { expertisePointCostsRepo } from '$lib/db/expertise_point_costs.repo';
 import { implantRepo } from '$lib/db/implants.repo';
@@ -20,7 +20,7 @@ export async function getAvailableBudget({
 }): Promise<number> {
 	const [event, priorReward, couponBudget] = await Promise.all([
 		eventRepo.getWithId(eventId),
-		eventParticipantsRepo.getSumPriorRewardBudget({ characterId, excludeEventId: eventId }),
+		eventPlayersRepo.getSumPriorRewardBudget({ characterId, excludeEventId: eventId }),
 		eventCouponRepo.getRedeemedBudgetSumForUser(eventId, ownerId)
 	]);
 	return (event?.budget ?? 0) + priorReward + couponBudget;

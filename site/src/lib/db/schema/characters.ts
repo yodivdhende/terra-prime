@@ -4,7 +4,16 @@
  * Part of the schema described in `./index.ts` — see that file for the naming and
  * constraint-pinning rules that apply to every table here.
  */
-import { foreignKey, index, int, mysqlTable, primaryKey, varchar } from 'drizzle-orm/mysql-core';
+import {
+	foreignKey,
+	index,
+	int,
+	mysqlEnum,
+	mysqlTable,
+	primaryKey,
+	varchar
+} from 'drizzle-orm/mysql-core';
+import { characterKind } from './enums';
 import { users } from './auth';
 import { expertise, implants, items } from './catalog';
 import { companies } from './companies';
@@ -16,7 +25,10 @@ export const characters = mysqlTable(
 		name: varchar('Name', { length: 254 }),
 		owner: int('Owner'),
 		backstoryId: varchar('BackstoryId', { length: 128 }),
-		implantLimit: int('ImplantLimit').notNull().default(2)
+		implantLimit: int('ImplantLimit').notNull().default(2),
+		// `npc` rows are authored by an admin and handed to an event's extras; everything below
+		// `Characters` — versions and their contents — is shared with player characters.
+		kind: mysqlEnum('Kind', characterKind).notNull().default('player')
 	},
 	(table) => [
 		index('Owner').on(table.owner),

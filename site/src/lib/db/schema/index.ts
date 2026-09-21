@@ -7,7 +7,7 @@
  * | `catalog.ts`    | expertise (+groups, point costs), items, implants            |
  * | `companies.ts`  | companies and their discount tables                          |
  * | `characters.ts` | characters, versions, version contents, access grants, party |
- * | `events.ts`     | events, participants, coupons                                |
+ * | `events.ts`     | events, players, extras, coupons                             |
  * | `relations.ts`  | relations for the relational query API                       |
  *
  * Modules import in one direction only — `auth`/`catalog` -> `companies` -> `characters` ->

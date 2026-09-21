@@ -18,8 +18,8 @@ export const GET: RequestHandler = async ({ cookies, params }) => {
 export const POST: RequestHandler = async ({ cookies, params, request }) => {
   return handleRequest(async () => {
     await authGuardForUser(getSessionToken(cookies), ['admin']);
-    const { id } = params;
-    isNumberOrError(id);
+    const { characterId } = params;
+    isNumberOrError(characterId);
     const character = await request.json();
     if (isCharacter(character) === false && isNewCharacter(character) === false) {
       throw new RequestError(400, 'body was not of type character');

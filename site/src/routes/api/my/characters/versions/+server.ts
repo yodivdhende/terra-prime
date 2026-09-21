@@ -1,7 +1,8 @@
 import { characterRepo, type Character } from "$lib/db/character.repo";
 import { characterVersionRepo, type CharacterVersionBare } from "$lib/db/character_version.repo";
 import { companyRepo, type Company } from "$lib/db/companies.repo";
-import { eventParticipantsRepo } from "$lib/db/event_participants.repo";
+import { eventExtrasRepo } from "$lib/db/event_extras.repo";
+import { eventPlayersRepo } from "$lib/db/event_players.repo";
 import { implantRepo, type Implant } from "$lib/db/implants.repo";
 import { itemRepo, type Item } from "$lib/db/items.repo";
 import { expertiseRepo, type Expertise } from "$lib/db/expertise.repo";
@@ -50,44 +51,75 @@ export type CharacterVersionFull = Omit<CharacterVersionBare, 'expertise' | 'ite
 
 export type CharacterWithVersions = Character & { versions: CharacterVersionFull[] };
 
+/** An NPC sheet handed to this user as an extra. Read-only — they do not own the character. */
+export type AssignedCharacterVersion = CharacterVersionFull & {
+	characterName: string;
+	event: { id: number; name: string };
+};
+
 export type MyCharacterVersionsResponse = {
 	characters: CharacterWithVersions[];
+	assignedCharacters: AssignedCharacterVersion[];
 };
 
 export const GET: RequestHandler = async ({ cookies }) => {
 	return handleRequest(async () => {
 		const { userId } = await authGuardForUser(getSessionToken(cookies), [UserRole.user]);
-		const [characters, versions, expertise, items, implants, companies] = await Promise.all([
+		const [characters, versions, expertise, items, implants, companies, assignments] = await Promise.all([
 			characterRepo.getByOwner(userId),
 			characterVersionRepo.getForUser(userId),
 			expertiseRepo.getAll(),
 			itemRepo.getAll(),
 			implantRepo.getAll(),
-			companyRepo.getAll()
+			companyRepo.getAll(),
+			eventExtrasRepo.getForUser(userId)
 		]);
-		const events = await eventParticipantsRepo.getEventsForCharacters(characters.map((c) => c.id));
+		const events = await eventPlayersRepo.getEventsForCharacters(characters.map((c) => c.id));
+		const assignedVersions = await characterVersionRepo.getWithdIds(
+			assignments.map((assignment) => assignment.characterVersionId)
+		);
+		const expertiseById = new Map(expertise.flatMap((e) => (e.id == null ? [] : [[e.id, e] as const])));
+		const itemById = new Map(items.flatMap((i) => (i.id == null ? [] : [[i.id, i] as const])));
+		const implantById = new Map(implants.flatMap((i) => (i.id == null ? [] : [[i.id, i] as const])));
+		const companyById = new Map(companies.flatMap((c) => (c.id == null ? [] : [[c.id, c] as const])));
 		const response: MyCharacterVersionsResponse = {
-			characters: toCharactersWithVersions(characters, versions, expertise, items, implants, events, companies)
+			characters: toCharactersWithVersions(characters, versions, events, {
+				expertiseById,
+				itemById,
+				implantById,
+				companyById
+			}),
+			// An assignment names the event it was made for, so these carry `event` rather than the
+			// `events` list an owned version gets from `Event_Players`.
+			assignedCharacters: assignments.flatMap((assignment): AssignedCharacterVersion[] => {
+				const version = assignedVersions.find((v) => v.id === assignment.characterVersionId);
+				if (version == null) return [];
+				return [
+					{
+						...toFullVersion(version, expertiseById, itemById, implantById, new Map(), companyById),
+						characterName: assignment.characterName,
+						event: { id: assignment.eventId, name: assignment.eventName }
+					}
+				];
+			})
 		};
 		return json(response);
 	});
 };
 
+type CatalogMaps = {
+	expertiseById: Map<number, Expertise>;
+	itemById: Map<number, Item>;
+	implantById: Map<number, Implant>;
+	companyById: Map<number, Company>;
+};
+
 function toCharactersWithVersions(
 	characters: Character[],
 	versions: CharacterVersionBare[],
-	expertise: Expertise[],
-	items: Item[],
-	implants: Implant[],
 	events: { characterVersionId: number; eventId: number; eventName: string }[],
-	companies: Company[]
+	{ expertiseById, itemById, implantById, companyById }: CatalogMaps
 ): CharacterWithVersions[] {
-	const expertiseById = new Map(expertise.flatMap((e) => (e.id == null ? [] : [[e.id, e] as const])));
-	const itemById = new Map(items.flatMap((i) => (i.id == null ? [] : [[i.id, i] as const])));
-	const implantById = new Map(
-		implants.flatMap((i) => (i.id == null ? [] : [[i.id, i] as const]))
-	);
-	const companyById = new Map(companies.flatMap((c) => (c.id == null ? [] : [[c.id, c] as const])));
 	const eventsByVersionId = new Map<number, VersionEvent[]>();
 	for (const e of events) {
 		const list = eventsByVersionId.get(e.characterVersionId) ?? [];

@@ -159,13 +159,32 @@ Event dates (`start`, `end`) are sent as ISO strings and converted to `Date` obj
 
 ### Event Participants
 
+An event has two kinds of attendee, held in two tables. `Event_Players` (renamed from
+`Event_Participants`) keeps its `(Event, User)` key: the one character version a **player** builds
+and plays. `Event_Extras` holds **extras** — crew / NPC actors who do not build a character — with
+many rows per `(Event, User)` and a null `CharacterVersion` until an admin assigns one. Which table
+a row is in *is* the signup type; there is no discriminator column. Characters carry a
+`kind: 'player' | 'npc'`, and the endpoints below refuse the wrong one rather than crossing over.
+
 | Method | Path | Auth | Returns | Description |
 |--------|------|------|---------|-------------|
-| GET | `/api/events/[eventId]/participants` | admin | `Character[]` (JSON) — repo returns the characters playing in this event | List all participants for event |
+| GET | `/api/events/[eventId]/participants` | admin | `Character[]` (JSON) — repo returns the characters playing in this event | List all players for event |
 | PUT | `/api/events/[eventId]/participants` | admin | empty body (200) | Register a participant; body: `CharacterWithVersions` (`{ id: number \| null, name, ownerId, ownerName, versions: CharacterVersionBare[] }`). Creates the character when `id` is null, otherwise updates it; then creates/updates the **last** entry in `versions` (create when its `id` is null) and registers that version for the event under `ownerId` |
-| POST | `/api/events/[eventId]/participants` | admin | empty body (200) | Attach an **existing** character version to the event; body: `{ characterVersionId: number }`. The owner is derived from the version server-side. Returns 404 when the version is unknown, and 400 when that owner already participates in this event (`Event_Participants` is keyed on (Event, User)) |
-| DELETE | `/api/events/[eventId]/participants` | admin | empty body (200) | Remove participant; body: `EventParticipant` (`{ eventId, userId, characterVersion }`) |
-| GET | `/api/events/[eventId]/participants/characters/[characterId]` | user | `EventParticipant \| null` (JSON; null when not found) | Get participation record for a specific character |
+| POST | `/api/events/[eventId]/participants` | admin | empty body (200) | Attach an **existing** character version to the event; body: `{ characterVersionId: number }`. The owner is derived from the version server-side. Returns 404 when the version is unknown, and 400 when that owner already participates in this event (`Event_Players` is keyed on (Event, User)) or when the version's character has `kind: 'npc'` — those go through the extras endpoint |
+| DELETE | `/api/events/[eventId]/participants` | admin | empty body (200) | Remove player; body: `EventPlayer` (`{ eventId, userId, characterVersion }`) |
+| GET | `/api/events/[eventId]/participants/characters/[characterId]` | user | `EventAttendance \| null` (JSON; null when not found) | Get the attendance record for a specific character at this event: `{ eventId, userId, characterVersion, as: 'player' \| 'extra' }`. Checks both tables, so an NPC assigned to an extra resolves here exactly as a player character does |
+
+### Event Extras
+
+Admin-only. An extra accumulates characters: `PUT` fills the empty row an enrolment leaves behind
+and inserts a new row after that, so one extra may hold several NPC versions at one event.
+
+| Method | Path | Auth | Returns | Description |
+|--------|------|------|---------|-------------|
+| GET | `/api/events/[eventId]/extras` | admin | `EventExtra[]` (JSON) — `{ id, userId, userName, characterVersionId, characterVersionName, characterId, characterName }`; the character fields are null for an extra with nothing assigned yet | List the extras enrolled for this event and the versions they hold |
+| POST | `/api/events/[eventId]/extras` | admin | empty body (200) | Enrol a user as an extra; body: `{ userId: number }`. Idempotent for an already-enrolled user |
+| PUT | `/api/events/[eventId]/extras` | admin | empty body (200) | Assign an NPC version to an extra; body: `{ userId: number, characterVersionId: number }`. 404 when the version is unknown; 400 when its character is not `kind: 'npc'`, or when the user is not enrolled as an extra here |
+| DELETE | `/api/events/[eventId]/extras` | admin | empty body (200) | Unassign one version, or remove the extra and every assignment when `characterVersionId` is omitted; body: `{ userId: number, characterVersionId?: number }` |
 
 ### Event Coupons
 
@@ -218,9 +237,10 @@ All endpoints under `/api/my/...` operate on the authenticated user. Auth: `user
 | Method | Path | Returns | Description |
 |--------|------|---------|-------------|
 | GET | `/api/my/user` | `User` (JSON) | Get the currently authenticated user |
-| GET | `/api/my/characters` | `Character[]` (JSON) | List characters owned by the current user |
+| GET | `/api/my/characters` | `Character[]` (JSON) | List characters owned by the current user. `kind: 'npc'` rows are excluded — an admin's NPC pool is not a character they play |
 | GET | `/api/my/characters/with-events` | `(Character & { events: Array<{ id: number, name: string }> })[]` (JSON) | List the current user's characters, each with an `events` array |
-| GET | `/api/my/characters/versions` | `MyCharacterVersionsResponse` (JSON) — `{ characters: (Character & { versions: CharacterVersionFull[] })[] }` where each version's `expertise`/`items`/`implants` are joined with the catalog and `events` is the list of events the version is registered for: `expertise: { id, name, group, groupName, value }[]`, `items: { id, name, description, count }[]`, `implants: { id, name, description }[]`, `events: { id, name }[]` | List the current user's characters with their versions, each version's expertise/item/implant IDs resolved to full catalog entries plus the events the version is registered for |
-| GET | `/api/my/events/[eventId]/participants` | `{ characterId: number, characterVersionId: number }` (JSON, 200) or empty body (204 when not registered) | Get the current user's participation for an event |
-| PUT | `/api/my/events/[eventId]/participants` | `{ characterId: number }` (JSON) | Register/update the current user's character for an event; body: `CharacterWithVersions & { couponCode?: string \| null }` (`{ id: number \| null, name, ownerId, ownerName, backstoryId?, versions: CharacterVersionBare[], couponCode? }`). Creates the character when `id` is null, otherwise updates it; saves the **last** entry in `versions` and registers it for the event. Rejects with 400 if `couponCode` doesn't match an unredeemed coupon for this user+event, or if the version's total cost exceeds the available budget (base + prior reward + redeemed coupons, including the one being redeemed). Marks a matched coupon redeemed on success |
+| GET | `/api/my/characters/versions` | `MyCharacterVersionsResponse` (JSON) — `{ characters: (Character & { versions: CharacterVersionFull[] })[], assignedCharacters: AssignedCharacterVersion[] }` where each version's `expertise`/`items`/`implants` are joined with the catalog and `events` is the list of events the version is registered for: `expertise: { id, name, group, groupName, value }[]`, `items: { id, name, description, count }[]`, `implants: { id, name, description }[]`, `events: { id, name }[]`. `assignedCharacters` holds the NPC sheets handed to this user as an extra — `CharacterVersionFull & { characterName: string, event: { id, name } }`, hydrated the same way but read-only, since the user does not own them | List the current user's characters with their versions, plus the NPC versions assigned to them as an extra |
+| GET | `/api/my/events/[eventId]/participants` | `{ type: 'player', characterId: number, characterVersionId: number }` or `{ type: 'extra' }` (JSON, 200), or empty body (204 when not enrolled) | Get the current user's enrolment for an event, whichever kind it is |
+| POST | `/api/my/events/[eventId]/participants` | `{ ok: true }` (JSON) | Sign up as an **extra**; body: `{ type: 'extra' }`. Writes one `Event_Extras` row with a null `CharacterVersion` — no character, no budget, no coupon. The organisers assign NPCs afterwards |
+| PUT | `/api/my/events/[eventId]/participants` | `{ characterId: number }` (JSON) | Register/update the current user's character for an event as a **player**; rejects with 400 when the referenced character has `kind: 'npc'`. Body: `CharacterWithVersions & { couponCode?: string \| null }` (`{ id: number \| null, name, ownerId, ownerName, backstoryId?, versions: CharacterVersionBare[], couponCode? }`). Creates the character when `id` is null, otherwise updates it; saves the **last** entry in `versions` and registers it for the event. Rejects with 400 if `couponCode` doesn't match an unredeemed coupon for this user+event, or if the version's total cost exceeds the available budget (base + prior reward + redeemed coupons, including the one being redeemed). Marks a matched coupon redeemed on success |
 | POST | `/api/my/events/[eventId]/form-submit` | `{ ok: true, status: 200 }` (JSON) | Append the current user's Google Form answers as a row in the event's linked spreadsheet. Body: `AnswerMap` (`Record<string, string \| string[]>` keyed by `questionId`). Returns 404 if the event has no `formId`. Row layout: `[ISO timestamp, userId, name, email, ...answers in form order]`. If the form's question titles no longer match the latest tab's header, a new `Responses <ISO>` tab is added to the same spreadsheet for the new schema |

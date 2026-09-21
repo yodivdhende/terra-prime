@@ -1,6 +1,6 @@
-import type { eventParticipants } from '../../src/lib/db/schema';
+import type { eventPlayers } from '../../src/lib/db/schema';
 
-export const rows: (typeof eventParticipants.$inferInsert)[] = [
+export const rows: (typeof eventPlayers.$inferInsert)[] = [
 	{ eventId: 1, userId: 1, characterVersionId: 1 },
 	{ eventId: 1, userId: 2, characterVersionId: 5 },
 	{ eventId: 1, userId: 5, characterVersionId: null },

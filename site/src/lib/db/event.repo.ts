@@ -1,7 +1,7 @@
 import { EventStatus } from '$lib/types/event-status';
 import { desc, eq } from 'drizzle-orm';
 import { db } from './mysql';
-import { characterVersions, eventParticipants, events } from './schema';
+import { characterVersions, eventPlayers, events } from './schema';
 
 const eventColumns = {
 	id: events.id,
@@ -145,8 +145,8 @@ class EventRepo {
 		const rows = await db
 			.select(eventColumns)
 			.from(events)
-			.innerJoin(eventParticipants, eq(eventParticipants.eventId, events.id))
-			.innerJoin(characterVersions, eq(characterVersions.id, eventParticipants.characterVersionId))
+			.innerJoin(eventPlayers, eq(eventPlayers.eventId, events.id))
+			.innerJoin(characterVersions, eq(characterVersions.id, eventPlayers.characterVersionId))
 			.where(eq(characterVersions.characterId, characterId));
 		return toLarpEvents(rows);
 	}

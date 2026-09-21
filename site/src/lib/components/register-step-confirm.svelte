@@ -15,6 +15,7 @@
 	}: { REGISTER_MANAGER: RegisterManager; CHARACTER_MANAGER: CharacterManager } = $props();
 
 	let event = $derived(REGISTER_MANAGER.selectedEvent);
+	let isExtra = $derived(REGISTER_MANAGER.participantType === 'extra');
 	let submitting = $state(false);
 	let error = $state<string | null>(null);
 	let success = $state(false);
@@ -88,6 +89,24 @@
 				}
 			}
 
+			if (isExtra) {
+				// An extra brings no character, so there is nothing to price and no coupon to redeem.
+				const extraRes = await fetch(
+					`/api/my/events/${REGISTER_MANAGER.selectedEventId}/participants`,
+					{
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ type: 'extra' })
+					}
+				);
+				if (!extraRes.ok) {
+					const errBody = await extraRes.json().catch(() => null);
+					throw new Error(errBody?.message ?? `registration failed (${extraRes.status})`);
+				}
+				success = true;
+				return;
+			}
+
 			const body = {
 				...toCharacterWithVersions({
 					character: $state.snapshot(CHARACTER_MANAGER.character),
@@ -148,10 +167,18 @@
 	{#if success}
 		<div class="success">
 			<p class="success-title">registration confirmed</p>
-			<p class="success-hint">
-				you are registered for <span class="highlight">{event?.name}</span> as
-				<span class="highlight">{CHARACTER_MANAGER.character.name}</span>
-			</p>
+			{#if isExtra}
+				<p class="success-hint">
+					you are registered for <span class="highlight">{event?.name}</span> as an
+					<span class="highlight">extra</span>. your characters appear here once the organisers
+					assign them.
+				</p>
+			{:else}
+				<p class="success-hint">
+					you are registered for <span class="highlight">{event?.name}</span> as
+					<span class="highlight">{CHARACTER_MANAGER.character.name}</span>
+				</p>
+			{/if}
 		</div>
 		{#if FEATURE_MANAGER.backstoryEnabled && registeredCharacterId != null}
 			<div class="success create-backround">
@@ -162,12 +189,21 @@
 		<div class="event-row">
 			<span class="event-label">event</span>
 			<span class="event-name">{event?.name ?? '—'}</span>
-			{#if REGISTER_MANAGER.isNewCharacter}
+			{#if isExtra}
+				<span class="badge">extra</span>
+			{:else if REGISTER_MANAGER.isNewCharacter}
 				<span class="badge">new character</span>
 			{/if}
 		</div>
 
-		{#if CHARACTER_MANAGER.character.name}
+		{#if isExtra}
+			<p class="extra-hint">
+				you are signing up as an extra. the organisation provides the characters you play; nothing
+				is spent from an event budget.
+			</p>
+		{/if}
+
+		{#if !isExtra && CHARACTER_MANAGER.character.name}
 			<CharacterVersion
 				characterName={CHARACTER_MANAGER.character.name}
 				versionName={CHARACTER_MANAGER.version.name}
@@ -269,6 +305,13 @@
 		font-size: 0.75em;
 		color: #d95c5c;
 		opacity: 0.85;
+	}
+
+	.extra-hint {
+		margin: 0;
+		font-size: 0.72em;
+		color: var(--color-main-dim);
+		opacity: 0.7;
 	}
 
 	.form-error {

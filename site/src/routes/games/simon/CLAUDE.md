@@ -18,7 +18,7 @@ player's character by name, because `/api/events` and `/api/characters` are admi
 routes. This route doesn't have that problem: `lookup/+server.ts` runs *inside* the same
 server process as those routes, so `$lib/server/games/simon.service.ts` calls
 `characterRepo` / `eventRepo` / `characterVersionRepo` / `expertiseRepo` /
-`eventParticipantsRepo` directly — the same functions the admin-gated HTTP routes call
+`eventPlayersRepo` directly — the same functions the admin-gated HTTP routes call
 internally — with no HTTP hop and no privileged session token.
 
 The page and the lookup endpoint carry no session check of their own either (TP-0206) —
@@ -36,7 +36,7 @@ registered to the most recent `Live` event — mirrors
 
 1. `eventRepo.getWithStatus(EventStatus.Live)` → latest by `start`, ties broken by id
 2. `characterRepo.getAll()` → match name case-insensitively (names aren't unique)
-3. `eventParticipantsRepo.getParticipantForCharacter({eventId, characterId})` → the
+3. `eventPlayersRepo.getPlayerForCharacter({eventId, characterId})` → the
    version registered for that event
 4. `characterVersionRepo.getWithId(versionId)` + `expertiseRepo.getAll()` → resolve
    `Software & Hacking` by name (id 6 is only a fallback — production ids are

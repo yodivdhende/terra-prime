@@ -1,170 +1,92 @@
-// Arduino-TFT_eSPI board-template main routine. There's a TFT_eSPI create+flush driver already in LVGL-9.1 but we create our own here for more control (like e.g. 16-bit color swap).
-
-#include <lvgl.h>
+#include <ui-implementation.h>
 #include <TFT_eSPI.h>
-#include <ui/ui.h>
-#include <globals.h>
-#include <character.h>
-#include <log.h>
-#include <cache.h>
 #include <async-fetch.h>
-#include <ui-expertise.h>
-#include <ui-implants.h>
-#include <ui-status-bar.h>
-#include <XPT2046_Touchscreen.h>
+#include <cache.h>
+#include <character.h>
+#include <connection.h>
+#include <gfx-header.h>
+#include <gfx-theme.h>
+#include <globals.h>
+#include <log.h>
+#include <power.h>
+#include <screen.h>
+#include <screens.h>
+#include <touch.h>
 
-/*Don't forget to set Sketchbook location in File/Preferences to the path of your UI project (the parent foder of this INO file)*/
-// The display buffer below is sized at compile time, which the shared `extern const`
-// screenWidth/screenHeight (`globals.cpp`) cannot give within this translation unit — hence these
-// same-value, differently-named compile-time copies used only for that one enum.
-#define LV_DISPLAY_WIDTH  320
-#define LV_DISPLAY_HEIGHT 240
+/**
+ * Where boot hands the panel over, and the loop that keeps the UI alive.
+ *
+ * There is no framework under this any more. `uiLoop()` reads one touch event, gives it to the
+ * header and then the current screen, lets the screen advance whatever animation it has, and drains
+ * a finished background fetch — and that is the whole of it. What used to be `lv_timer_handler()`
+ * is gone, along with the 23 KB draw buffer it fed, the seven screen object trees created eagerly
+ * by `ui_init()` and never freed, and the image and layer caches behind them.
+ *
+ * `main.cpp` needs no change: `uiSetup()` and `uiLoop()` keep their names and their contract.
+ */
 
-/*Loading sreen*/
+/** How often the header's WiFi and battery cells are re-checked. The readings move far slower. */
+#define STATUS_REFRESH_MS 2000
 
+/** Paced the way the LVGL loop was, so nothing else in `loop()` is starved by a busy UI. */
+#define UI_LOOP_DELAY_MS 5
 
+static uint32_t lastStatusAt = 0;
 
-
-/*Change to your screen resolution*/
-enum
+/**
+ * Push the two indicators that have a real data source into the header.
+ *
+ * The setters repaint only their own cell and only when the value actually changed, so calling
+ * this on a timer costs nothing while the readings are steady. The clock is not driven: the device
+ * has neither an RTC nor an NTP client, so it stays the placeholder the header draws it as.
+ */
+static void refreshStatusCells()
 {
-    SCREENBUFFER_SIZE_PIXELS = LV_DISPLAY_WIDTH * LV_DISPLAY_HEIGHT / 10
-};
-static lv_color_t buf[SCREENBUFFER_SIZE_PIXELS];
+    if (millis() - lastStatusAt < STATUS_REFRESH_MS) return;
+    lastStatusAt = millis();
 
-uint16_t touchScreenMinimumX = 200, touchScreenMaximumX = 3700, touchScreenMinimumY = 240,touchScreenMaximumY = 3800; //Chạy Calibration để lấy giá trị mỗi màn hình mỗi khácj
+    const Screen* screen = screenCurrent();
+    if (screen == NULL || screen->showHeader == false) return;
 
-#if LV_USE_LOG != 0
-/* Serial debugging */
-void my_print(const char *buf)
-{
-    Serial.printf(buf);
-    Serial.flush();
+    headerSetWifi(wifiStrengthLevel());
+    const BatteryReading battery = batteryReading();
+    headerSetBattery(battery.metered ? battery.percentage : -1, battery.charging);
 }
-#endif
-
-/* Display flushing */
-void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *pixelmap)
-{
-    uint32_t w = (area->x2 - area->x1 + 1);
-    uint32_t h = (area->y2 - area->y1 + 1);
-
-    if (LV_COLOR_16_SWAP)
-    {
-        size_t len = lv_area_get_size(area);
-        lv_draw_sw_rgb565_swap(pixelmap, len);
-    }
-
-    tft.startWrite();
-    tft.setAddrWindow(area->x1, area->y1, w, h);
-    tft.pushColors((uint16_t *)pixelmap, w * h, true);
-    tft.endWrite();
-
-    lv_disp_flush_ready(disp);
-}
-
-/*Read the touchpad*/
-void my_touchpad_read(lv_indev_t *indev_driver, lv_indev_data_t *data)
-{
-    if (ts.touched())
-    {
-        TS_Point p = ts.getPoint();
-        // Some very basic auto calibration so it doesn't go out of range
-        if (p.x < touchScreenMinimumX)
-            touchScreenMinimumX = p.x;
-        if (p.x > touchScreenMaximumX)
-            touchScreenMaximumX = p.x;
-        if (p.y < touchScreenMinimumY)
-            touchScreenMinimumY = p.y;
-        if (p.y > touchScreenMaximumY)
-            touchScreenMaximumY = p.y;
-        // Map this to the pixel position
-        data->point.x = map(p.x, touchScreenMinimumX, touchScreenMaximumX, 1, screenWidth);  /* Touchscreen X calibration */
-        data->point.y = map(p.y, touchScreenMinimumY, touchScreenMaximumY, 1, screenHeight); /* Touchscreen Y calibration */
-        data->state = LV_INDEV_STATE_PR;
-
-        // Serial.print( "Touch x " );
-        // Serial.print( data->point.x );
-        // Serial.print( " y " );
-        // Serial.println( data->point.y );
-    }
-    else
-    {
-        data->state = LV_INDEV_STATE_REL;
-    }
-}
-
-/*Set tick routine needed for LVGL internal timings*/
-static uint32_t my_tick_get_cb(void) { return millis(); }
 
 void uiSetup()
 {
-    String LVGL_Arduino = "Hello Arduino! ";
-    LVGL_Arduino += String('V') + lv_version_major() + "." + lv_version_minor() + "." + lv_version_patch();
-
-    Serial.println(LVGL_Arduino);
-    Serial.println("I am LVGL_Arduino");
-
-    lv_init();
-#if LV_USE_LOG != 0
-    lv_log_register_print_cb(my_print); /* register print function for debugging */
-#endif
-
-    // LVGL owns the display from here: raw writes have to stop, and the panel turns from the
-    // portrait the boot screen used to the landscape every game screen is designed for.
+    // The UI owns the display from here: raw `log*` writes have to stop, and the panel turns from
+    // the portrait the boot screen used to the landscape every game screen is designed for.
     logSetTftEnabled(false);
-    tft.setRotation(1); /* Landscape orientation, flipped */
+    tft.setRotation(1);
 
-    static lv_disp_t *disp;
-    disp = lv_display_create(screenWidth, screenHeight);
-    lv_display_set_buffers(disp, buf, NULL, SCREENBUFFER_SIZE_PIXELS * sizeof(lv_color_t), LV_DISPLAY_RENDER_MODE_PARTIAL);
-    lv_display_set_flush_cb(disp, my_disp_flush);
+    // Both of these are needed before a single header glyph will render, and both are set exactly
+    // once. UTF-8 decoding is on at construction (`TFT_eSPI.cpp:471`), which makes `decodeUTF8()`
+    // swallow any byte >= 0x80 as a lead byte — so `0xDB`, `0xB0`-`0xB2` and `0xF9` would draw
+    // nothing at all. CP437 correction is off by default, which shifts every GLCD code above 175
+    // by one (`TFT_eSPI.cpp:3202`) — so the shade blocks would draw, but the wrong ones.
+    tft.setAttribute(UTF8_SWITCH, false);
+    tft.setAttribute(CP437_SWITCH, true);
 
-    // setupSD() steals the touch controller's VSPI pins during boot (see the shared-VSPI gotcha
-    // in CLAUDE.md) — reclaim them now, before LVGL starts reading touch, or nothing on any
-    // screen responds to a tap.
-    reattachTouch();
+    // Every primitive positions text itself, from the top-left of the glyph box.
+    tft.setTextDatum(TL_DATUM);
 
-    static lv_indev_t *indev;
-    indev = lv_indev_create();
-    lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
-    lv_indev_set_read_cb(indev, my_touchpad_read);
+    touchSetup();
+    screenShow(screenHome());
 
-    lv_tick_set_cb(my_tick_get_cb);
-
-    ui_init();
-
-    // SquareLine marks these icon images clickable, so LVGL's hit-test resolves a tap on the
-    // icon to the image (the topmost clickable object under the finger) instead of the button
-    // beneath it. The image has no event callback and doesn't bubble, so the icon itself eats
-    // the touch and only the button's uncovered edge responds. Can't fix this in the .spj
-    // without losing it on the next export, so it's cleared here instead.
-    lv_obj_remove_flag(ui_ExpertiseButtonImage, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_remove_flag(ui_ImplantButtonImage, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_remove_flag(ui_MessagesButtonImage, LV_OBJ_FLAG_CLICKABLE);
-
-    // Screen contents that come from the API live outside the generated `ui/`, and are wired up
-    // once the generated objects exist.
-    uiExpertiseInit();
-    uiImplantsInit();
-    // The header's battery and WiFi icons are the same: generated as one static frame, given their
-    // state from outside.
-    uiStatusBarInit();
-
-    // The generated header ships with a placeholder label; fill it in from the character fetched
-    // at boot rather than editing generated code.
-    lv_obj_t * homeNameLabel = ui_comp_get_child(ui_Header, UI_COMP_HEADER_NAMELABEL);
-    lv_label_set_text(homeNameLabel, currentCharacter.name.c_str());
-
-    Serial.println("Setup done");
+    Serial.printf("ui: setup done, free heap %u\n", (unsigned)ESP.getFreeHeap());
 }
 
 void uiLoop()
 {
-    lv_timer_handler(); /* let the GUI do its work */
+    TouchEvent event;
+    if (touchPoll(event)) screenHandleTouch(event);
+
+    screenTick();
+    refreshStatusCells();
 
     // The only place a background `async-fetch` result is drained: writing it to the SD cache and
-    // touching the screens it belongs to both have to happen from the main loop, the one thread
+    // redrawing the screen it belongs to both have to happen from the main loop, the one thread
     // allowed near the SD card and touch controller's shared VSPI bus (see `async-fetch.h`).
     String path, body;
     if (asyncFetchPoll(path, body)) {
@@ -173,5 +95,5 @@ void uiLoop()
         else if (path == "my/implants") uiImplantsApplyFetch(body);
     }
 
-    delay(5);
+    delay(UI_LOOP_DELAY_MS);
 }

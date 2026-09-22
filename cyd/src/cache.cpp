@@ -11,11 +11,11 @@
  *
  * The card is already mounted at boot for `/config.json` and has no size limit worth worrying
  * about, which NVS would (its per-value ceiling is a few kilobytes and a long expertise list could
- * reach it). Nothing here can race the touch controller it shares the VSPI bus with: `LV_USE_OS` is
- * `LV_OS_NONE`, so screen callbacks and touch reads are both driven from `loop()`, one at a time.
- * They do fight over VSPI's MISO line rather than the CPU, though — `reattachTouch()` leaves it
- * wired to touch, so every access here reclaims it with `reattachSd()` first and hands it back
- * with `reattachTouch()` on the way out, via `SdBusHold` below.
+ * reach it). Nothing here can race the touch controller it shares the VSPI bus with: drawing and
+ * touch reads are both driven from `loop()`, one at a time. They do fight over VSPI's MISO line
+ * rather than the CPU, though — `reattachTouch()` leaves it wired to touch, so every access here
+ * reclaims it with `reattachSd()` first and hands it back on the way out, via `sd-reader.h`'s
+ * `SdBusHold`.
  *
  * Each file is a header line then the body:
  *
@@ -45,13 +45,6 @@ static String readWholeFile(File& file)
     while (file.available()) contents += (char)file.read();
     return contents;
 }
-
-/** Holds VSPI's MISO line for the SD card for as long as it's in scope, then hands it back to
- *  touch — so every return path below leaves the bus in the state LVGL expects. */
-struct SdBusHold {
-    SdBusHold() { reattachSd(); }
-    ~SdBusHold() { reattachTouch(); }
-};
 
 String cacheRead(const String& path, int characterVersionId)
 {

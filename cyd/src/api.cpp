@@ -22,7 +22,7 @@
  * the network mid-event keeps showing the player their own sheet. A cached body is marked stale on
  * the way out, and the screens say so rather than passing old numbers off as current.
  *
- * Logging here is Serial-only on purpose: `log.cpp` writes straight to the TFT, which fights LVGL
+ * Logging here is Serial-only on purpose: `log.cpp` writes straight to the TFT, which fights the UI
  * once the UI is up, and these requests run from screens.
  */
 

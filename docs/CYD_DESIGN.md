@@ -12,8 +12,8 @@ integrated 320x240 ILI9341 TFT screen and an XPT2046 resistive touch controller 
 the well-known RandomNerdTutorials hardware guide). In this repo, `cyd/` is a PlatformIO/Arduino
 firmware project that turns one of these boards into a **physical tabletop-RPG companion prop**:
 it sits at a player's table during a live session, renders character stats and animated
-screens (loading / loot / virus / expertise / implants / messages) built with
-**LVGL** + **SquareLine Studio**, and reacts in real time to commands pushed from the server.
+screens (loading / loot / virus / expertise / implants / messages) drawn **straight to the panel
+with TFT_eSPI**, and reacts in real time to commands pushed from the server.
 
 The device is not autonomous — it is a thin client. All game logic, session state, and
 character data live on the site (SvelteKit + MySQL). CYD talks to the site over four channels:
@@ -39,7 +39,7 @@ flowchart LR
     subgraph Table["Tabletop prop"]
         UART[UART peripheral\ntoken/RFID reader]
         SD[(SD card\nconfig.json + api cache\n+ icon pack)]
-        CYD["CYD device\nESP32 + LVGL UI"]
+        CYD["CYD device\nESP32 + TFT_eSPI UI"]
         UART -- "serial tokens" --> CYD
         SD -- "WiFi/API/WS config" --> CYD
         CYD -- "last api/my answers" --> SD
@@ -77,13 +77,16 @@ flowchart TB
     char["character.h/.cpp\nCharacter struct,\nfetchCharacter()"]
     uart["uart-interface.h/.cpp\nreads serial tokens,\ncalls sendLink(token, true)"]
     power["power.h/.cpp\nINA219 over I2C, charge curve,\nidle → light sleep, wake on touch"]
-    status["ui-status-bar.h/.cpp\nbattery + WiFi icons\nin every screen's header"]
-    ui["ui-implementation.h/.cpp\nLVGL init, display flush,\ntouch read, uiSetup()/uiLoop()"]
-    screens["ui/*\nSquareLine Studio screens:\nHome, DownloadScreen, LootScreen,\nVirusScreen, Expertise, Implants, Messages"]
-    xition["ui-downloading.cpp / ui-loot.cpp / ui-virus.cpp\nscreen-transition logic"]
-    data["ui-expertise.cpp / ui-implants.cpp\nscreen contents from api/my/*"]
+    gfx["gfx-theme.h / gfx-draw.* / gfx-icon.*\npalette, layout metrics,\ndrawing primitives, A8 icon reader"]
+    header["gfx-header.h/.cpp\nshared header: home, name,\nWiFi, battery, clock"]
+    listv["gfx-list.h/.cpp\nListView — the scrolling viewport"]
+    touch["touch.h/.cpp\nXPT2046 → down / move / up"]
+    ui["ui-implementation.h/.cpp\nuiSetup() / uiLoop()"]
+    nav["screen.h/.cpp + screens.h\nScreen table, screenShow(),\ntouch routing"]
+    screens["screen-*.cpp\nHome, Expertise, Implants, Messages,\nLoading, Loot, Virus"]
+    data["screen-expertise.cpp / screen-implants.cpp\nscreen contents from api/my/*"]
     boot["boot.h/.cpp\nthe boot step table\nand its runner"]
-    bootui["boot-screen.h/.cpp\nboot screen, drawn to the\npanel (not LVGL)"]
+    bootui["boot-screen.h/.cpp\nboot screen, drawn to the\npanel before the UI starts"]
 
     main --> power
     main --> ui
@@ -97,26 +100,34 @@ flowchart TB
     boot -- "step state" --> bootui
     sd --> globals
     conn --> globals
+    power --> touch
     power --> conn
-    ui --> status
-    status --> power
-    status --> conn
-    status --> screens
+    ui --> touch
+    ui --> nav
+    ui -- "WiFi + battery cells" --> header
+    header --> power
+    header --> conn
+    nav --> header
+    nav --> screens
+    screens --> gfx
+    screens --> listv
+    listv --> gfx
+    header --> gfx
+    gfx -- "icons, under an SdBusHold" --> sd
     ws --> globals
     api --> globals
     api -- "store / fall back" --> cache
     char --> api
     data --> api
-    ws -- "goTo command" --> xition
-    xition --> screens
-    ui --> screens
+    ws -- "goTo command" --> screens
     ui --> data
     data --> screens
     uart --> ws
 ```
 
 > Note: the boot steps live in `boot.cpp` as a table and report to a boot screen drawn straight to
-> the panel with TFT_eSPI — not LVGL, which only starts once they have all passed. Boot keeps the
+> the panel with TFT_eSPI, which the game screens now do too — `gfx-draw.cpp` is the same
+> clear-then-print discipline generalised. Boot keeps the
 > panel portrait for the extra text rows its log needs; `uiSetup()` turns it landscape. A failure halts
 > with the screen and its reason left on the panel. See `cyd/CLAUDE.md`.
 
@@ -134,7 +145,7 @@ from the current reading before looking the voltage up in a single-cell 18650 di
 sense IC is optional: with none on the bus every reading comes back unmetered and the status bar
 says `--` rather than inventing a number.
 
-**Making the charge last.** After two minutes without a touch — LVGL's own inactivity timer — the
+**Making the charge last.** After two minutes without a touch — `touchInactiveMs()` — the
 backlight goes out and the ESP32 enters **light** sleep. Light rather than deep is the whole point:
 RAM and the call stack survive, so the screen the player left is still built and still holds its
 data. The XPT2046 pulls its IRQ line (GPIO 36) low on touch, and that is the `ext0` wake source.
@@ -332,9 +343,11 @@ so they're visible, not silently worked around.
 
 5. **Nothing tells the player the values are old.** The device falls back to the copy on its SD
    card when a request fails, and `ApiResult.stale` marks that body as stored rather than live, but
-   no screen shows it. The header's WiFi icon is the intended home for it and is a static image
-   today, as is the header's clock. Until one of them is driven, a player cannot tell a cached
-   sheet from a current one.
+   no screen shows it. The header's WiFi cell is the intended home for it: since the TFT_eSPI
+   migration that cell is a real indicator driven from `wifiStrengthLevel()` every two seconds, with
+   a `headerSetWifi()` setter that repaints it alone — but nothing feeds `stale` into it yet, so a
+   player still cannot tell a cached sheet from a current one. The clock is still a placeholder; the
+   device has neither an RTC nor an NTP client.
 
 ---
 
@@ -350,16 +363,19 @@ so they're visible, not silently worked around.
 | Icon pack export | `site/src/lib/utils/icon-export.ts`, `.../lvgl-image.ts`, `.../zip.ts`, `.../rasterize-svg.ts` |
 | WiFi connect, reconnect, RSSI → bars | `cyd/src/connection.cpp` |
 | Battery metering and power save | `cyd/src/power.h`, `cyd/src/power.cpp` |
-| Header battery / WiFi icons | `cyd/src/ui-status-bar.h`, `cyd/src/ui-status-bar.cpp` |
+| Shared header, incl. battery / WiFi | `cyd/src/gfx-header.h`, `cyd/src/gfx-header.cpp` |
 | WebSocket client | `cyd/src/web-socket.h`, `cyd/src/web-socket.cpp` |
 | REST client / credentials | `cyd/src/api.h`, `cyd/src/api.cpp` |
 | Character fetch | `cyd/src/character.h`, `cyd/src/character.cpp` |
 | UART token input | `cyd/src/uart-interface.h`, `cyd/src/uart-interface.cpp` |
-| LVGL/display glue | `cyd/src/ui-implementation.h`, `cyd/src/ui-implementation.cpp` |
-| Screen-transition logic | `cyd/src/ui-downloading.cpp`, `cyd/src/ui-loot.cpp`, `cyd/src/ui-virus.cpp` |
-| Screen contents from the API | `cyd/src/ui-expertise.cpp`, `cyd/src/ui-implants.cpp` |
-| SquareLine-generated screens | `cyd/src/ui/*` |
-| SquareLine project source | `cyd/ui-project/cyd-interface.spj` |
+| UI entry point and loop | `cyd/src/ui-implementation.h`, `cyd/src/ui-implementation.cpp` |
+| Theme: palette, type roles, layout metrics | `cyd/src/gfx-theme.h` |
+| Drawing primitives | `cyd/src/gfx-draw.h`, `cyd/src/gfx-draw.cpp` |
+| Expertise icon reader (A8 off the card) | `cyd/src/gfx-icon.h`, `cyd/src/gfx-icon.cpp` |
+| Scrolling viewport | `cyd/src/gfx-list.h`, `cyd/src/gfx-list.cpp` |
+| Touch input | `cyd/src/touch.h`, `cyd/src/touch.cpp` |
+| Navigation model | `cyd/src/screen.h`, `cyd/src/screen.cpp`, `cyd/src/screens.h` |
+| Screens | `cyd/src/screen-home.cpp`, `.../screen-expertise.cpp`, `.../screen-implants.cpp`, `.../screen-messages.cpp`, `.../screen-loading.cpp`, `.../screen-loot.cpp`, `.../screen-virus.cpp` |
 | Firmware architecture notes | `cyd/CLAUDE.md` |
 | WS Express entry point | `site/websocket-server/index.ts` |
 | WS upgrade routing | `site/websocket-server/socket-server.ts` |

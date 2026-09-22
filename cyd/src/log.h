@@ -14,7 +14,8 @@
      * Whether these also write to the panel. On until `uiSetup()` turns it off.
      *
      * Boot reports through these calls and the boot screen is drawn the same way, so the panel is
-     * the right destination until LVGL owns the display — after which a raw write corrupts it.
+     * the right destination until the UI owns the display — after which a raw write corrupts
+     * whatever the current screen has drawn.
      */
     void logSetTftEnabled(bool enabled);
 #endif

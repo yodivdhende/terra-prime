@@ -3,16 +3,17 @@
     #include <Arduino.h>
 
     /**
-     * A small background GET, so a screen can refresh over the network without blocking the LVGL
+     * A small background GET, so a screen can refresh over the network without blocking the UI
      * loop (and the touch reads that share it) for the round trip.
      *
      * Knows nothing about expertise, implants, or the SD cache — it runs `apiHttpGet()` on a
      * FreeRTOS task and hands the raw body back. That's deliberate: the SD card and the touch
      * controller share one VSPI bus and only one may hold MISO at a time (see the shared-VSPI
      * gotcha in `CLAUDE.md`), and the existing code keeps that safe by only ever touching either
-     * from the single-threaded main loop. A task here that also called `cacheWrite()` or touched
-     * LVGL would break that invariant. So the task does only the network call; `uiLoop()` is the
-     * one place that drains a finished fetch and is the one place that writes it to the cache.
+     * from the single-threaded main loop. A task here that also called `cacheWrite()` or drew to
+     * the panel would break that invariant — and the draw layer has no thread safety at all. So the
+     * task does only the network call; `uiLoop()` is the one place that drains a finished fetch and
+     * is the one place that writes it to the cache.
      */
 
     /**

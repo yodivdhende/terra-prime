@@ -16,7 +16,6 @@ Part of the terra-prime monorepo. The web server lives at `../site/` (SvelteKit 
 - **Hardware** — ESP32 dev board with 320×240 TFT (ILI9341) and XPT2046 touch controller
 - **Battery** (optional) — dual-18650 "V8" shield with an **INA219** across its raw cell terminals (see Battery & Power Save)
 - **SD card** — FAT-formatted with `/config.json` at the root (see Runtime Config)
-- **SquareLine Studio 1.5.1** — only needed for UI design changes
 
 External libs fetched automatically by PlatformIO on first build:
 - `XPT2046_Touchscreen` (GitHub)
@@ -54,8 +53,8 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
    4. `prefetchDetails()` — GET `my/expertise` and `my/implants` to warm the SD cache for those
       screens; best-effort, so it always reports OK even offline
    5. `webSocketSetup()` — configure the client; it connects asynchronously from `loop()`
-5. All passed → hold ~1.2s so the finished list can be read, then `uiSetup()` (LVGL, `ui_init()`,
-   `uiExpertiseInit()`, `uiImplantsInit()`), which turns the panel landscape and repaints it with Home
+5. All passed → hold ~1.2s so the finished list can be read, then `uiSetup()`, which turns the
+   panel landscape, sets the two text attributes the header glyphs need, starts touch, and shows Home
 6. Any failure → `bootScreenHalt()` and `setup()` returns. `uiSetup()` is never reached, so the boot
    screen and the failing step's `logRed` line stay on the panel
 
@@ -63,25 +62,25 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
 landscape's 15, and the boot log is what needs them: a successful boot prints 8 lines (card type and
 size, three config lines, the AP and the IP, the character name) into a log area that starts below
 the step list. Portrait fits that with three lines to spare; landscape would clip more than one.
-`uiSetup()` turns the panel for LVGL, which owns it from then on.
+`uiSetup()` turns the panel for the UI, which owns it from then on.
 
-**The boot screen is not an LVGL screen, deliberately.** An LVGL one would mean initialising LVGL
-before the steps could be reported, pumping it by hand so anything that blocks still paints,
-allocating and freeing a screen around a handover, and competing with the WiFi stack for heap at
-the worst moment. Drawing text with `tft.print` needs none of it: `screenSetup()` has already
-readied the display, a print is on the glass when it returns, and LVGL overwrites the screen when
-it starts anyway.
+**The boot screen draws straight to the panel, and so does everything else now.** It always did —
+the reasoning was that an LVGL boot screen would mean initialising LVGL before the steps could be
+reported, pumping it by hand so anything that blocks still paints, and competing with the WiFi stack
+for heap at the worst moment. Since [TP-0239] the game screens work the same way: `gfx-draw.cpp` is
+`boot-screen.cpp`'s clear-then-print discipline generalised, and `boot-screen.cpp` is unchanged.
 
 The step table in `src/boot.h`/`boot.cpp` is the single source for both the sequence and the screen's
 rows, so a new step cannot be added to one and missed by the other. `boot.cpp` knows nothing about
 how progress is displayed — it takes an observer.
 
 **Main loop** runs `powerLoop()` unconditionally — it only touches the I2C battery IC and the
-radio's power mode, neither of which depends on LVGL, the WebSocket client, or the boot screen — then
-does nothing else at all after a failed boot: LVGL was never initialised, the WebSocket client may
+radio's power mode, neither of which depends on the UI, the WebSocket client, or the boot screen —
+then does nothing else at all after a failed boot: the UI was never started, the WebSocket client may
 never have been begun, and the config naming the server may never have been read. The boot screen
 needs no upkeep — it is drawn on the panel, not rendered. When boot succeeded, it also runs:
-- `uiLoop()` — `lv_timer_handler()` every 5 ms
+- `uiLoop()` — one touch event, the current screen's `tick()`, the header's status cells, and a
+  finished background fetch, every 5 ms
 - `webSocketLoop()` — processes WebSocket frames, re-sends `status` when the WiFi bars change
 - `uartSerialLoop()` — reads newline-delimited serial tokens, calls `sendLink()`
 
@@ -110,54 +109,74 @@ naming the step and the reason.
 | `platformio.ini` | Build config — board, framework, baud rate, lib deps |
 | `src/main.cpp` | Entry point — `setup()` / `loop()` wiring |
 | `src/globals.h/cpp` | Global state: screen dims, WiFi creds, API URL, touch SPI pins, `screenSetup()` |
-| `src/ui-implementation.h/cpp` | LVGL init, display flush, touch read callbacks, `uiSetup()` / `uiLoop()` |
+| `src/ui-implementation.h/cpp` | `uiSetup()` / `uiLoop()` — where boot hands the panel over, and the loop that keeps the UI alive |
 | `src/web-socket.h/cpp` | WebSocket client — setup, event handler, `sendLink()`, screen routing |
-| `src/boot.h/cpp` | The boot step table and `runBootSequence()` — no LVGL, no screen knowledge |
-| `src/boot-screen.h/cpp` | The boot screen, drawn to the panel with TFT_eSPI — not LVGL |
+| `src/boot.h/cpp` | The boot step table and `runBootSequence()` — no screen knowledge at all, it takes an observer |
+| `src/boot-screen.h/cpp` | The boot screen. Untouched by the TFT_eSPI migration — it already drew this way |
 | `src/api.h/cpp` | `apiGet()` — every REST read: device credentials on the way out, SD fallback on failure. `apiHttpGet()` is the network half alone, for `async-fetch.cpp` |
 | `src/cache.h/cpp` | `cacheRead()` / `cacheWrite()` — the stored copy of each `api/my` answer |
-| `src/async-fetch.h/cpp` | `asyncFetchStart()` / `asyncFetchPoll()` — a background GET on a FreeRTOS task, so a screen refresh doesn't block touch. Network only — never SD or LVGL |
+| `src/async-fetch.h/cpp` | `asyncFetchStart()` / `asyncFetchPoll()` — a background GET on a FreeRTOS task, so a screen refresh doesn't block touch. Network only — never SD, never the panel |
 | `src/character.h/cpp` | `Character` struct, `fetchCharacter()` |
 | `src/sd-reader.h/cpp` | `setupSD()` + `readConfig()` — parses `/config.json` into globals |
 | `src/uart-interface.h/cpp` | `uartSerialLoop()` — reads serial tokens |
 | `src/connection.h/cpp` | `connectToWifi()`, `reconnectWifi()`, `wifiRssi()` / `wifiStrengthLevel()` |
 | `src/power.h/cpp` | INA219 battery read, charge curve, idle → light sleep, wake on touch |
-| `src/ui-status-bar.h/cpp` | `uiStatusBarInit()` — battery and WiFi icons in every screen's header |
 | `src/log.h/cpp` | `logWhite/logGreen/logRed()` — Serial, plus the panel until `uiSetup()` calls `logSetTftEnabled(false)` |
-| `src/ui-downloading.cpp` | `UiLoadingSetup()` — animated progress bar |
-| `src/ui-loot.cpp` | `UiLootSetup()` |
-| `src/ui-virus.cpp` | `UiVirusSetup()` |
-| `src/ui-expertise.h/cpp` | `uiExpertiseInit()` — paints the Expertise screen from the SD cache, then `uiExpertiseApplyFetch()` redraws it once a background `api/my/expertise` refresh lands |
-| `src/ui-implants.h/cpp` | `uiImplantsInit()` — paints the Implants screen from the SD cache, then `uiImplantsApplyFetch()` redraws it once a background `api/my/implants` refresh lands |
-| `src/ui/` | **Generated by SquareLine Studio — do not hand-edit** |
-| `ui-project/` | SquareLine Studio source project (`cyd-interface.spj`) |
+| `src/gfx-theme.h` | The palette, the three type roles, and every layout metric. Retuning the look means editing this and nothing else |
+| `src/gfx-draw.h/cpp` | The primitives: frame, heading, button, chrome button, bar, clipped text, band clear |
+| `src/gfx-icon.h/cpp` | `drawIconA8()` — the expertise icon pack, read off the card a row at a time |
+| `src/gfx-header.h/cpp` | The shared header: home button, name, WiFi, battery, clock. Per-cell setters |
+| `src/gfx-list.h/cpp` | `ListView` — the scrolling viewport, shared by Expertise and Implants |
+| `src/touch.h/cpp` | `touchPoll()` — down/move/up events off the XPT2046, with fixed calibration |
+| `src/screen.h/cpp` | The `Screen` table, `screenShow()`, and the touch routing that gives the header first refusal |
+| `src/screens.h` | Every screen's accessor, plus the `Ui*Setup()` entry points the WebSocket router calls |
+| `src/screen-home.cpp` | Three outline buttons — Expertise, Implants, Messages |
+| `src/screen-expertise.cpp` | A `ListView` over `api/my/expertise`; `uiExpertiseApplyFetch()` redraws it when a background refresh lands |
+| `src/screen-implants.cpp` | A `ListView` over `api/my/implants`, descriptions word-wrapped by division |
+| `src/screen-messages.cpp` | A titled empty frame |
+| `src/screen-loading.cpp` | `UiLoadingSetup()` — the progress bar, animated from `tick()` |
+| `src/screen-loot.cpp` | `UiLootSetup()` — full-bleed |
+| `src/screen-virus.cpp` | `UiVirusSetup()` — full-bleed, red |
 
 ---
 
-## UI Development Workflow
+## The UI
 
-UI is designed in **SquareLine Studio 1.5.1**. Never manually edit `src/ui/` — it is regenerated on every export.
+There is no UI framework and no design tool. Every screen is drawn straight to the panel with
+TFT_eSPI, the way `boot-screen.cpp` always drew the boot sequence, and the look follows the site's
+`/codex` terminal: black surfaces, a white frame, green headings, monospaced body text.
 
-Screens: `Home`, `DownloadScreen`, `LootScreen`, `VirusScreen`, `Expertise`, `Implants`, `Messages`.
+Screens: `Home`, `Expertise`, `Implants`, `Messages`, `Loading`, `Loot`, `Virus`. One is on the
+panel at a time and it owns the whole panel — no z-order, no overlapping windows, no slide
+animation. A screen change is a repaint, about 22ms at 55MHz for 320x240.
 
-**Edit workflow:**
-1. Open `ui-project/cyd-interface.spj` in SquareLine Studio 1.5.1
-2. Make design changes
-3. **File → Export UI Files** → outputs to `src/ui/`
-4. `pio run --target upload`
+**The layers, bottom up:**
 
-Screen transition logic lives in `src/ui-downloading.cpp`, `src/ui-loot.cpp`, `src/ui-virus.cpp` — not in `src/ui/`.
+| Layer | What it is |
+|---|---|
+| `gfx-theme.h` | The palette, the three type roles, and every layout metric — **the one place to retune the look** |
+| `gfx-draw.*` | Primitives: `drawFrame()`, `drawHeading()`, `drawButton()`, `drawBar()`, `drawTextClipped()`, `clearBand()` |
+| `gfx-icon.*`, `gfx-header.*`, `gfx-list.*` | The icon reader, the shared header, and the scrolling viewport |
+| `screen.*` | The `Screen` table, `screenShow()`, and touch routing |
+| `screen-*.cpp` | One file per screen: its `Screen` table and the handlers in it |
 
-Screen *contents* that come from the API live outside `src/ui/` too. `uiSetup()` calls a
-`ui<Screen>Init()` per data-backed screen after `ui_init()`; each hangs its own list under the
-generated header and title and refills it on `LV_EVENT_SCREEN_LOADED`, so a value an admin changes
-mid-event shows up the next time the player opens that screen. Expertise and Implants refill in two
-steps — paint from the SD cache immediately, then redraw again if a background network refresh
-turns up something different — see **Offline cache** below.
+**Adding a screen** is a `screen-<name>.cpp` with a static `Screen` (heading, `showHeader`, and the
+`enter`/`draw`/`tick`/`touch` it actually needs — the rest stay NULL), an accessor declared in
+`screens.h`, and whoever navigates to it calling `screenShow()`.
 
-The header's status icons work the same way: SquareLine exports one static frame each, and
-`uiStatusBarInit()` (`src/ui-status-bar.cpp`) gives them their state on an `lv_timer` — reaching the
-icons through `ui_comp_get_child(header, UI_COMP_HEADER_*)` rather than editing generated code.
+**Three type roles, and the rule that tells them apart:** uppercase + accent green is a heading,
+sentence case + `#DDDDDD` is content, uppercase + dim is status. `gfx-draw.cpp` uppercases at draw
+time, so a heading is declared in the case it reads best in.
+
+**Screen contents that come from the API** are read in `enter()` and painted in `draw()`, so a value
+an admin changes mid-event shows up the next time the player opens that screen. Expertise and
+Implants fill in two steps — paint from the SD cache immediately, then redraw if a background
+network refresh turns up something different — see **Offline cache** below.
+
+**The header's indicators are characters, not bitmaps.** See the gotcha about `UTF8_SWITCH` and
+`CP437_SWITCH` below before touching them; both are set once in `uiSetup()` and neither is optional.
+WiFi and battery are driven from `uiLoop()` every two seconds and each setter repaints only its own
+cell. The clock is a placeholder — the device has neither an RTC nor an NTP client.
 
 ---
 
@@ -186,11 +205,11 @@ reading is used to add the I·R sag back before the voltage is looked up in a si
 discharge curve. If no INA219 answers, readings come back `metered = false`, the status bar shows
 `--`, and everything else runs unchanged.
 
-**Power save.** After `POWER_SAVE_IDLE_MS` (2 min) without a touch — measured with LVGL's own
-inactivity timer — the backlight goes out, the radio is taken down, and the ESP32 enters **light**
+**Power save.** After `POWER_SAVE_IDLE_MS` (2 min) without a touch — measured by `touchInactiveMs()`
+— the backlight goes out, the radio is taken down, and the ESP32 enters **light**
 sleep. Light, not deep: RAM and the call stack survive, so the screen the player was on comes back
 already built. The XPT2046's IRQ line (GPIO 36) is the `ext0` wake source; on wake the backlight
-comes back, LVGL's inactivity is reset, and `reconnectWifi()` re-associates if the device was
+comes back, `touchNoteActivity()` resets the idle clock, and `reconnectWifi()` re-associates if the device was
 online — the WebSocket client reconnects itself from there.
 
 Re-associating takes a few seconds, so a screen opened right after a wake may find no network. That
@@ -252,8 +271,8 @@ player spending points both need them. The rule is about the player-facing devic
 
 ### Expertise icons
 
-The device cannot draw the site's expertise SVGs — LVGL has no SVG renderer — so they are
-rasterized once on the site and copied to the card. In `manage/expertise`, **icon pack for
+The device cannot draw the site's expertise SVGs — no SVG renderer, and no memory to gain one — so
+they are rasterized once on the site and copied to the card. In `manage/expertise`, **icon pack for
 AguesGuard** downloads a zip that unpacks onto the card root:
 
 ```
@@ -262,17 +281,24 @@ icons/expertise-groups/<group id>.bin
 ```
 
 Each file is a 24x24 `LV_COLOR_FORMAT_A8` LVGL binary image: a 12-byte header and 576 alpha bytes,
-588 bytes in total. A8 is a bare mask, and LVGL tints it with the widget's `image_recolor` style —
-`ui-expertise.cpp` sets that from the group colour the API sends, so re-colouring a group on the
-site needs no re-export. Only the ids change the files.
+588 bytes in total. **The format outlived LVGL and is deliberately unchanged** — it is a header and
+a bare coverage mask, which `gfx-icon.cpp` reads in twenty lines, so dropping the framework needed no
+site-side change and cards already in the field keep working. `drawIconA8()` tints the mask from the
+group colour the API sends, so re-colouring a group on the site needs no re-export. Only the ids
+change the files.
 
-Keyed on id because names get edited and ids do not. A missing file draws nothing and keeps the
-row's indent, so a card with a partial pack, or no `icons/` at all, still lays out correctly.
+Keyed on id because names get edited and ids do not. A missing or malformed file draws nothing and
+returns false, and the caller keeps the row's indent either way, so a card with a partial pack — or
+no `icons/` at all — still lays out correctly.
 
-LVGL reaches the card through `LV_USE_FS_STDIO` with `LV_FS_STDIO_PATH "/sd/"` — the Arduino SD
-library mounts through the ESP32's VFS at `/sd`, so `fopen()` gets there and no custom `lv_fs`
-driver is needed. Paths are written `A:icons/expertise/12.bin`. `LV_CACHE_DEF_SIZE` is 32 KB so
-scrolling does not re-read every icon off the card each frame.
+The Arduino SD library mounts through the ESP32's VFS at `/sd`, so an icon is a plain
+`fopen("/sd/icons/expertise/12.bin")`. Rows are read one at a time into a 24-byte buffer, blended
+against the background and pushed with `tft.pushImage()`: 72 bytes of peak RAM, against the 32 KB
+`LV_CACHE_DEF_SIZE` image cache that used to stop scrolling re-reading the card. There is no decode
+cache now. Reading 588 bytes per row entering the viewport is about a millisecond, and the repaint
+that triggers it holds the card's bus for its whole duration (see the shared-VSPI gotcha) — **one
+`SdBusHold` per repaint, not one per icon.** If dragging ever feels sticky, a bounded LRU of decoded
+masks (576 bytes each) is the fallback; measure before building it.
 
 ### Offline cache
 
@@ -304,8 +330,9 @@ still the one on screen.
 
 **This is why the task touches the network and nothing else.** SD and touch share one VSPI bus (see
 **Gotchas**), and the existing code keeps that safe by only ever touching either from the single
-main loop. A background task that also called `cacheWrite()` or an LVGL function would touch that
-bus, or LVGL's non-thread-safe state, from a second thread. Keeping the task to `apiHttpGet()` alone
+main loop. A background task that also called `cacheWrite()` or drew to the panel would touch that
+bus, or the draw layer, from a second thread — and the draw layer has no thread safety at all, which
+makes the rule *more* important than it was. Keeping the task to `apiHttpGet()` alone
 and doing the `cacheWrite()`/redraw from `uiLoop()` sidesteps this rather than needing a lock.
 
 ---
@@ -317,18 +344,44 @@ and doing the `cacheWrite()`/redraw from `uiLoop()` sidesteps this rather than n
   `/config.json` and a reachable AP. `prefetchDetails` (the Expertise/Implants cache warm-up) is the
   one step that can't fail boot — it always returns `true` — since Expertise and Implants already
   have their own offline fallback and shouldn't be able to strand the device on the boot screen.
-- **The async-fetch task must never touch SD, cache, or LVGL.** `src/async-fetch.cpp`'s background
-  task exists solely to keep a slow network call off the main loop; it's pinned to core 0 (Arduino's
-  `loop()` runs on core 1) and calls only `apiHttpGet()`. Reaching into `cache.cpp` or an LVGL widget
-  from that task would touch the SD/touch VSPI bus, or LVGL's state, from a second thread — see the
-  shared-VSPI gotcha below. `uiLoop()` is the only place that drains a finished fetch and acts on it.
-- **`src/ui/` is generated code.** Manual edits are overwritten on the next SquareLine Studio export.
-- **SquareLine Studio export path** may be set to an absolute Windows path. Update it in SquareLine preferences when exporting from a different machine.
+- **The async-fetch task must never touch SD, the cache, or the panel.** `src/async-fetch.cpp`'s
+  background task exists solely to keep a slow network call off the main loop; it's pinned to core 0
+  (Arduino's `loop()` runs on core 1) and calls only `apiHttpGet()`. Reaching into `cache.cpp` or a
+  `gfx-*` call from that task would touch the SD/touch VSPI bus, or the draw layer, from a second
+  thread — and the draw layer has no thread safety at all, which makes this rule *more* important
+  than it was under LVGL, not less. See the shared-VSPI gotcha below. `uiLoop()` is the only place
+  that drains a finished fetch and acts on it.
+- **The header glyphs need two `setAttribute()` calls, and both are set once in `uiSetup()`.**
+  `UTF8_SWITCH` **off**: TFT_eSPI sets `_utf8 = true` at construction (`TFT_eSPI.cpp:471`), which
+  makes `decodeUTF8()` swallow any byte >= 0x80 as a lead byte, so `0xDB`, `0xB0`-`0xB2` and `0xF9`
+  would render as nothing at all. `CP437_SWITCH` **on**: it is off by default, and the Adafruit
+  compatibility fixup at `TFT_eSPI.cpp:3202` then shifts every GLCD code above 175 by one, so the
+  shade blocks would draw — the wrong ones. A blank header cell means the first was missed; a
+  wrong-looking one means the second. Glyphs are therefore written as escapes in `char` literals
+  (`"[\xDB]"`), **never** as UTF-8 source text.
+- **Font 1 is the only font that reaches CP437.** Fonts 2 and 3-8 hard-reject anything outside
+  32-127 (`TFT_eSPI.cpp:5094`, `:5111`) and the `FreeMono*` GFX fonts stop at 0x7E
+  (`FreeMono9pt7b.h`: `0x20, 0x7E`). Use `0xF9` for the WiFi bullet and **not** CP437 `0x07`, which
+  sits in the control range `TFT_eSPI.cpp:5068` rejects whenever a smooth font is loaded.
+- **`pushImage()` needs `setSwapBytes(true)` for a host-order array.** The ESP32 SPI path writes
+  whole words into the peripheral's FIFO, which transmits low byte first — the opposite of what the
+  panel wants — so a little-endian `uint16_t[]` comes out byte-swapped unless TFT_eSPI is asked to
+  correct it. `drawIconA8()` sets it and restores it, so it stays self-contained.
+- **Scrolling must repaint the list viewport, not the panel.** A full-panel repaint is ~22ms; the
+  314x183 viewport is ~12ms. `listDraw()` clips with `tft.setViewport()` and never touches the frame
+  or the header, which must not flicker while a list moves under it.
+- **A GFX free font's `drawString()` y is the top of the glyph box, not the baseline** — TFT_eSPI
+  moves the datum itself when `textdatum` is `TL_DATUM`, which `uiSetup()` sets once. `gfx-theme.h`
+  carries the box heights (`THEME_BODY_BOX_H`, `THEME_TITLE_BOX_H`) for centring a line in a row.
+- **Neither font has an ellipsis.** `drawTextClipped()` truncates with `...`, which is what `…`
+  degrades to here. The header's name cell is 9 characters wide; if that proves too tight on
+  hardware, the documented remedy is dropping the clock to `setTextSize(1)`, which costs 30px and
+  buys the name back to about twelve.
 - **TFT rotation changes mid-boot.** `screenSetup()` sets rotation 0 (portrait) because the boot
-  screen wants the extra lines; `uiSetup()` turns it to 1 (landscape) for LVGL. So `screenWidth` and
+  screen wants the extra lines; `uiSetup()` turns it to 1 (landscape) for the UI. So `screenWidth` and
   `screenHeight` are named for the landscape the UI uses and read backwards during boot —
   `boot-screen.cpp` defines `PANEL_WIDTH` as `screenHeight` for exactly that reason. Don't change
-  the `uiSetup()` rotation without also updating the LVGL display dimensions.
+  the `uiSetup()` rotation without also updating `THEME_PANEL_W`/`THEME_PANEL_H` in `gfx-theme.h`.
 - **Boot-screen clears are sized to the glyph box (16px), not the row pitch (18px)**, so clearing
   one row cannot bleed into the next.
 - **UART unlink is commented out.** `sendLink(token, false)` is never called — tokens are never automatically unlinked.
@@ -336,7 +389,7 @@ and doing the `cacheWrite()`/redraw from `uiLoop()` sidesteps this rather than n
   the offline cache, which depends on the card mounting, so it is worth checking on hardware — if
   the card is unreliable, this is the first thing to lower.
 - **`log*` writes to the panel until `uiSetup()` runs**, then Serial only — raw writes corrupt what
-  LVGL has drawn. So a `logRed` from a failing boot step appears under the boot screen's step list,
+  the current screen has drawn. So a `logRed` from a failing boot step appears under the step list,
   which is how a halt explains itself, while one from `api.cpp` at runtime goes to Serial alone.
   Keep using `logRed` for boot failures rather than `Serial.println`.
 - **Boot-screen drawing preserves the log cursor.** `log*` prints wherever the cursor is, and

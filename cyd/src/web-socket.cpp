@@ -3,9 +3,7 @@
 #include <log.h>
 #include <ArduinoJson.h>
 #include <globals.h>
-#include <ui-downloading.h>
-#include <ui-loot.h>
-#include <ui-virus.h>
+#include <screens.h>
 #include <connection.h>
 
 /** How often the reported signal strength is re-checked against what the server was last told. */

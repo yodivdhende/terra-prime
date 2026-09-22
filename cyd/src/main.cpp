@@ -9,7 +9,8 @@
 #include <power.h>
 
 /**
- * Boot draws straight to the panel, then LVGL starts and takes it over.
+ * Boot draws straight to the panel, and then the UI does too — `uiSetup()` just turns the panel
+ * landscape and takes ownership of it.
  *
  * The four network steps used to sit commented out here, each shaped
  * `if (x() == false) { return; }` — so a failure aborted `setup()` silently and a success reported
@@ -48,10 +49,10 @@ void setup () {
 
 void loop (){
   // Runs regardless of boot success: it touches only the I2C battery IC and the radio's power
-  // mode, neither of which depends on LVGL, the WebSocket client, or the boot screen.
+  // mode, neither of which depends on the UI, the WebSocket client, or the boot screen.
   powerLoop();
 
-  // Nothing else is safe to run after a halt: LVGL was never initialised, the WebSocket client
+  // Nothing else is safe to run after a halt: the UI was never started, the WebSocket client
   // may never have been begun, and the config naming the server may never have been read. The
   // boot screen needs no upkeep — it is drawn on the panel, not rendered.
   if (bootOk == false) return;

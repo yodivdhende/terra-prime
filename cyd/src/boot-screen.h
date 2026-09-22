@@ -6,12 +6,11 @@
 /**
  * The boot screen, drawn straight to the panel with TFT_eSPI.
  *
- * Not an LVGL screen, deliberately. LVGL would have to be initialised before the boot steps could
- * be reported, and then everything that blocks during boot needs LVGL pumped by hand to paint at
- * all, the screen has to be allocated and freed around a handover, and all of it competes for heap
- * with the WiFi stack at exactly the wrong moment. Writing text to the panel needs none of that:
- * `screenSetup()` has already initialised the display, a `tft.print` is on the glass when it
- * returns, and LVGL starting afterwards overwrites the whole screen anyway.
+ * This was always the odd one out — every game screen was an LVGL object tree and this was not —
+ * because a framework here would have to be initialised before the boot steps could be reported,
+ * pumped by hand so anything that blocks still paints, and would compete for heap with the WiFi
+ * stack at exactly the wrong moment. Since [TP-0239] the game screens draw this way too, and
+ * `gfx-draw.cpp` is this file's clear-then-print discipline generalised. Nothing here changed.
  */
 
 /** Draw the title and every step as pending. Call after `screenSetup()`, before the steps run. */

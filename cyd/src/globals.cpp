@@ -49,7 +49,7 @@ void screenSetup()
   tft.init();
   // Portrait while boot owns the panel: the long edge is vertical, which is 20 lines of text
   // against landscape's 15, and the boot log is what needs them. `uiSetup()` turns it to landscape
-  // when LVGL takes over.
+  // when the UI takes over.
   tft.setRotation(0);
   clearScreen();
   tft.setTextFont(2);

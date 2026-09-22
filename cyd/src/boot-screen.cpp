@@ -71,7 +71,8 @@ static int rowY(int index)
 
 /**
  * The panel is portrait while boot owns it, so it is `screenHeight` across and `screenWidth` tall
- * — the globals are named for the landscape orientation LVGL switches to, and read backwards here.
+ * — the globals are named for the landscape orientation `uiSetup()` switches to, and are read
+ * backwards here.
  */
 #define PANEL_WIDTH screenHeight
 /** Same backwards reading as `PANEL_WIDTH`: portrait height is `screenWidth`. */

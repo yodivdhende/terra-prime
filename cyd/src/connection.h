@@ -6,8 +6,8 @@
 /**
  * Called about once a second while waiting for the AP, with the whole seconds elapsed.
  *
- * The wait blocks, and LVGL only paints when something pumps it, so this is what keeps the boot
- * screen alive and ticking during the one boot step that can take twenty seconds.
+ * The wait blocks, so this is what keeps the boot screen alive and ticking during the one boot
+ * step that can take twenty seconds.
  */
 typedef void (*WifiWaitTick)(int secondsElapsed);
 
@@ -21,7 +21,7 @@ bool connectToWifi(WifiWaitTick onTick);
 
 /**
  * Associate again after the radio was taken down — coming out of power save, say. Logs to Serial
- * only, because by then LVGL owns the screen. Returns false once `timeoutMs` has elapsed.
+ * only, because by then the UI owns the screen. Returns false once `timeoutMs` has elapsed.
  */
 bool reconnectWifi(uint32_t timeoutMs);
 

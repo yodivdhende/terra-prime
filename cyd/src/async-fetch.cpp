@@ -48,7 +48,7 @@ void asyncFetchStart(const String& path)
 
     String* heapPath = new String(path);
     // Pinned to core 0, away from the Arduino loop's core 1, so the blocking HTTP call in
-    // `apiHttpGet()` can't delay `lv_timer_handler()`/touch reads even briefly.
+    // `apiHttpGet()` can't delay the UI loop's drawing or touch reads even briefly.
     xTaskCreatePinnedToCore(fetchTask, "asyncFetch", 8192, heapPath, 1, NULL, 0);
 }
 

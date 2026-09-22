@@ -2,10 +2,10 @@
 #include <Wire.h>
 #include <WiFi.h>
 #include <esp_sleep.h>
-#include <lvgl.h>
 #include <globals.h>
 #include <connection.h>
 #include <power.h>
+#include <touch.h>
 
 /**
  * Battery metering and power save for the untethered handheld.
@@ -213,9 +213,9 @@ static void enterPowerSave()
     setBacklight(true);
     Serial.println("power: woken by touch");
 
-    // LVGL has been counting the whole sleep as idle time; without this the device would sleep
-    // again on the next pass, before the touch that woke it is ever handled.
-    lv_display_trigger_activity(NULL);
+    // The whole sleep counted as idle time; without this the device would sleep again on the
+    // next pass, before the touch that woke it is ever handled.
+    touchNoteActivity();
 
     if (wasConnected)
     {
@@ -247,8 +247,10 @@ void powerLoop()
         sampleBattery();
     }
 
-    if (idleTimeoutMs == 0 || lv_is_initialized() == false) return;
-    if (lv_display_get_inactive_time(NULL) < idleTimeoutMs) return;
+    // `touchIsReady()` is false until `uiSetup()` runs, which keeps a halted boot screen awake
+    // rather than sleeping on top of the failure it is reporting.
+    if (idleTimeoutMs == 0 || touchIsReady() == false) return;
+    if (touchInactiveMs() < idleTimeoutMs) return;
     enterPowerSave();
 }
 

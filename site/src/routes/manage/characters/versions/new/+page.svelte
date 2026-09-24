@@ -3,7 +3,10 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import CharacterVersionShop from '$lib/components/character-version-shop.svelte';
-	import { createCharacterManager, type CharacterManager } from '$lib/managers/character-manager.svelte';
+	import {
+		createCharacterManager,
+		type CharacterManager
+	} from '$lib/managers/character-manager.svelte';
 	import { TOAST_MANAGER } from '$lib/managers/toast-manager.svelte';
 	import type { ShopExpertise } from '$lib/components/shop-expertise.svelte';
 	import type { ShopItem } from '$lib/components/shop-items.svelte';
@@ -40,7 +43,9 @@
 			if (!characterRes.ok) throw new Error(`create character failed (${characterRes.status})`);
 			const { id: newCharacterId } = await characterRes.json();
 
-			const versionRes = await fetch(`/api/characters/${newCharacterId}/versions`, { method: 'put' });
+			const versionRes = await fetch(`/api/characters/${newCharacterId}/versions`, {
+				method: 'put'
+			});
 			if (!versionRes.ok) throw new Error(`create version failed (${versionRes.status})`);
 			const { id: newVersionId } = await versionRes.json();
 
@@ -115,7 +120,11 @@
 			/>
 		</div>
 		<div class="actions">
-			<button class="btn" onclick={saveNewVersion} disabled={saving || manager.character.name.trim().length === 0}>
+			<button
+				class="btn"
+				onclick={saveNewVersion}
+				disabled={saving || manager.character.name.trim().length === 0}
+			>
 				{saving ? 'saving…' : 'save'}
 			</button>
 		</div>
@@ -128,6 +137,7 @@
 		flex-direction: column;
 		padding: 8px;
 		height: 90vh;
+		min-width: 60vh;
 		box-sizing: border-box;
 	}
 

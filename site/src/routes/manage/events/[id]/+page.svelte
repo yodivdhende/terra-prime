@@ -84,6 +84,10 @@
 		if (eventToSave == null) return;
 		const { id: eventId } = eventToSave;
 		if (eventId == null) return;
+		const confirmed = confirm(
+			`Delete "${eventToSave.name}"? Its players, extras and coupons are deleted with it.`
+		);
+		if (!confirmed) return;
 		try {
 			const result = await fetch(`/api/events/${eventId}`, {
 				method: 'delete',
@@ -91,10 +95,12 @@
 					'content-type': 'application/json'
 				}
 			});
-			if (result.ok) {
-				TOAST_MANAGER.success('Event deleted');
-				await goto(resolve('/manage/events'));
+			if (!result.ok) {
+				TOAST_MANAGER.error(await errorMessage(result));
+				return;
 			}
+			TOAST_MANAGER.success('Event deleted');
+			await goto(resolve('/manage/events'));
 		} catch (err) {
 			TOAST_MANAGER.error(err instanceof Error ? err.message : 'Something went wrong');
 		}

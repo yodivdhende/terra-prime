@@ -1,7 +1,7 @@
 import { EventStatus } from '$lib/types/event-status';
 import { desc, eq } from 'drizzle-orm';
 import { db } from './mysql';
-import { characterVersions, eventPlayers, events } from './schema';
+import { characterVersions, eventCoupons, eventExtras, eventPlayers, events } from './schema';
 
 const eventColumns = {
 	id: events.id,
@@ -137,8 +137,19 @@ class EventRepo {
 		await db.update(events).set({ sheetId }).where(eq(events.id, id));
 	}
 
-	public async delete({ id }: { id: number }) {
-		await db.delete(events).where(eq(events.id, id));
+	/**
+	 * Delete the event together with its players, extras and coupons. Their foreign keys are
+	 * `ON DELETE no action`, so the child rows have to go first or MySQL rejects the delete.
+	 * Returns `false` when there was no event with that id.
+	 */
+	public async delete({ id }: { id: number }): Promise<boolean> {
+		return db.transaction(async (tx) => {
+			await tx.delete(eventPlayers).where(eq(eventPlayers.eventId, id));
+			await tx.delete(eventExtras).where(eq(eventExtras.eventId, id));
+			await tx.delete(eventCoupons).where(eq(eventCoupons.eventId, id));
+			const [result] = await tx.delete(events).where(eq(events.id, id));
+			return result.affectedRows > 0;
+		});
 	}
 
 	public async getForCharacter({ characterId }: { characterId: number }): Promise<LarpEvent[]> {

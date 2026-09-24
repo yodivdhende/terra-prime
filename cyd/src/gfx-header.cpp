@@ -13,31 +13,47 @@
  */
 
 /* ── Glyphs ──────────────────────────────────────────────────────────────────────────────────
- * Verified present in `lib/TFT_eSPI/Fonts/glcdfont.c`. Written as escapes, never as UTF-8 source.
+ * Each ladder is a fixed-width string at every rung, so a state change repaints one cell and can
+ * never reflow the row. Both ladders below are plain ASCII; the house is the one glyph on the
+ * device that is not, which is why the header still draws in the GLCD font — see `gfx-header.h`.
  */
 
-/** CP437 0x7F, a house. */
+/** CP437 0x7F, a house. Verified present in `lib/TFT_eSPI/Fonts/glcdfont.c`. */
 #define GLYPH_HOME "\x7F"
+
 /**
- * The WiFi ladder, five characters wide at every rung.
+ * The WiFi ladder: three growing bars, three characters wide at every rung.
  *
- * `0xF9` is the bullet, deliberately, and **not** CP437 `0x07`: `0x07` sits in the control range
- * that `TFT_eSPI.cpp:5068` rejects whenever a smooth font is loaded. `0xFA` is the smaller dot.
+ * `.` sits low, `o` is mid-height and `O` is full-height, so the rungs read as a staircase rather
+ * than as three different symbols. `_` is the empty slot, on the baseline where a bar would start.
+ *
+ * `wifiStrengthLevel()` reports 0-4 and the ladder has four rungs, so one rung covers two levels.
+ * The doubling is deliberately in the **middle**: both ends stay exact, so `___` means there is no
+ * link at all and `.oO` means the signal really is at the top bucket, not "3 or 4 bars".
  */
 static const char* const WIFI_LADDER[] = {
-    "  \xFA  ", /* 0 — no link */
-    "  \xFA  ", /* 1 */
-    "  \xF9  ", /* 2 */
-    " (\xF9) ", /* 3 */
-    "((\xF9))"  /* 4 — full */
+    "___", /* 0 — no link */
+    ".__", /* 1 */
+    ".o_", /* 2 */
+    ".o_", /* 3 */
+    ".oO"  /* 4 — full */
 };
 
-/** The battery ladder: full block, then three shade levels, then an empty cell for unmetered. */
-#define BATTERY_FULL "[\xDB]"
-#define BATTERY_HIGH "[\xB2]"
-#define BATTERY_MID "[\xB1]"
-#define BATTERY_LOW "[\xB0]"
-#define BATTERY_UNMETERED "[ ]"
+/**
+ * The battery ladder: three segments draining right to left, five characters wide at every rung.
+ *
+ * `[ X ]` is "no charge to show", which covers both a flat pack and an unmetered one — a device
+ * with no INA219 on the bus has nothing to draw either. The colour tells them apart: `batteryColour()`
+ * returns the hairline for unmetered and the error red for flat.
+ */
+#define BATTERY_FULL "[===]"
+#define BATTERY_MID "[== ]"
+#define BATTERY_LOW "[=  ]"
+#define BATTERY_EMPTY "[ X ]"
+
+/** Charge at or above these keeps the next segment lit. */
+#define BATTERY_FULL_PERCENTAGE 66
+#define BATTERY_MID_PERCENTAGE 33
 
 /** Charge below this is worth a warning colour, and below the second a red one. */
 #define BATTERY_LOW_PERCENTAGE 50
@@ -89,10 +105,10 @@ static void drawWifiCell()
 
 static const char* batteryGlyph()
 {
-    if (batteryPercent < 0) return BATTERY_UNMETERED;
-    if (batteryPercent >= 75) return BATTERY_FULL;
-    if (batteryPercent >= 50) return BATTERY_HIGH;
-    if (batteryPercent >= 25) return BATTERY_MID;
+    // Unmetered and flat share a rung: neither has a charge worth drawing. The colour separates them.
+    if (batteryPercent <= 0) return BATTERY_EMPTY;
+    if (batteryPercent >= BATTERY_FULL_PERCENTAGE) return BATTERY_FULL;
+    if (batteryPercent >= BATTERY_MID_PERCENTAGE) return BATTERY_MID;
     return BATTERY_LOW;
 }
 

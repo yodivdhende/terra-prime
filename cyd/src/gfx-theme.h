@@ -60,11 +60,13 @@
 /** Meta and status lines: TFT_eSPI's built-in 16px font, number 2. */
 #define THEME_FONT_META 2
 /**
- * The built-in GLCD font, number 1 — the only font on the device that reaches CP437.
+ * The built-in GLCD font, number 1 — fixed width, and the only font here that reaches CP437.
  *
- * Fonts 2 and 3-8 hard-reject anything outside 32-127 (`TFT_eSPI.cpp:5094`, `:5111`) and the GFX
- * fonts stop at 0x7E, so the header's indicator glyphs (house, bullet, shade blocks) can only come
- * from here. `uiSetup()` turns UTF-8 decoding off and CP437 correction on for exactly this.
+ * The header draws its indicators in this. Fixed width is why: a cell sized to its widest rung can
+ * then never be reflowed by a state change. Reaching CP437 matters for one glyph — fonts 2 and 3-8
+ * hard-reject anything outside 32-127 (`TFT_eSPI.cpp:5094`, `:5111`) and the GFX fonts stop at
+ * 0x7E, so the home button's house (`0x7F`) has nowhere else to come from. `uiSetup()` turns UTF-8
+ * decoding off and CP437 correction on so a glyph above 0x7F would work here too.
  */
 #define THEME_FONT_GLYPH 1
 
@@ -83,7 +85,7 @@
 /* ── Panel layout, 320x240 landscape ─────────────────────────────────────────────────────────
  *
  *   y=0    +----------------------------------------------------------+  3px #FFFFFF border
- *   y=3    | [home]  RIVET KANE              ((.))    [#]   12:04     |  header, 28px
+ *   y=3    | [home]  RIVET KANE            .oO   [===]   12:04        |  header, 28px
  *   y=31   +----------------------------------------------------------+  3px #FFFFFF rule
  *   y=34   |  EXPERTISE                                               |  screen heading, 20px
  *   y=54   |                                                         #|  content viewport
@@ -125,16 +127,21 @@
 /* ── Header cell budget ──────────────────────────────────────────────────────────────────────
  * Every cell is a fixed box drawn from its own left edge, and each indicator is a fixed-width
  * string, so a state change repaints one cell and never reflows the row.
+ *
+ * The three indicator cells are sized from their content: the GLCD font advances 6px per glyph and
+ * the header draws it at `setTextSize(2)`, so a cell is 12px per character. WiFi is `.oO`, three
+ * characters; battery is `[===]` and the clock `12:04`, five each. Laid out from the right, against
+ * the frame's inner edge at 317, with 4px between indicators and 6px before the name.
  */
 
 #define THEME_HOME_X 6
 #define THEME_HOME_W 26
 #define THEME_NAME_X 40
-#define THEME_NAME_W 103
-#define THEME_WIFI_X 149
-#define THEME_WIFI_W 60
-#define THEME_BATTERY_X 215
-#define THEME_BATTERY_W 36
+#define THEME_NAME_W 107
+#define THEME_WIFI_X 153
+#define THEME_WIFI_W 36
+#define THEME_BATTERY_X 193
+#define THEME_BATTERY_W 60
 #define THEME_CLOCK_X 257
 #define THEME_CLOCK_W 60
 

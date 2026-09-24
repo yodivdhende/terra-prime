@@ -9,15 +9,21 @@
  *
  * **The indicators are characters, not bitmaps.** Codex already works this way — literal `>`/`v`
  * tree arrows, `◉`/`◎` password toggles, `[####....]` ASCII progress bars — and a glyph costs five
- * bytes of an already-linked font against a few hundred for an image. They come from TFT_eSPI's
- * built-in GLCD font, the only font on the device that reaches CP437: fonts 2 and 3-8 reject
- * anything outside 32-127 outright, and the `FreeMono*` GFX fonts stop at 0x7E.
+ * bytes of an already-linked font against a few hundred for an image. WiFi is a `.oO` staircase and
+ * battery a `[===]` cell that drains; both are plain ASCII.
  *
- * Two things have to be true before any of it renders, and `uiSetup()` sets both, once:
- * UTF-8 decoding **off**, or every byte over 0x7F is swallowed as a lead byte and draws nothing;
- * and CP437 correction **on**, or TFT_eSPI's Adafruit-compatibility fixup shifts every code above
- * 175 by one and the shade blocks come out as the wrong glyph. Glyphs are therefore written as
- * escapes in `char` literals (`"[\xDB]"`) and never as UTF-8 source text.
+ * They are drawn in TFT_eSPI's built-in GLCD font all the same, for two reasons. It is **fixed
+ * width**, so a cell sized at 12px per character (6px advance at `setTextSize(2)`) fits its widest
+ * rung exactly and no state change can reflow the row. And it is the only font on the device that
+ * reaches **CP437**: fonts 2 and 3-8 reject anything outside 32-127 outright and the `FreeMono*`
+ * GFX fonts stop at 0x7E, so the house on the home button — `0x7F` — has nowhere else to come from.
+ *
+ * `uiSetup()` turns UTF-8 decoding off and CP437 correction on, once. Neither is load-bearing for
+ * what ships today, since `0x7F` is below both thresholds, but they are what makes a glyph above
+ * 0x7F work at all: with UTF-8 on it is swallowed as a lead byte and draws nothing, and with CP437
+ * correction off every code above 175 lands one glyph along. Add a non-ASCII glyph here and both
+ * become load-bearing immediately — write it as an escape in a `char` literal (`"\x7F"`), never as
+ * UTF-8 source text.
  *
  * Each indicator is a **fixed-width string** and each setter repaints **only its own cell**, so a
  * clock ticking once a second can never reflow the row or trigger a panel repaint.
@@ -35,13 +41,18 @@ void headerDraw(const char* characterName, bool homeEnabled);
 /**
  * Signal strength, as the 0-4 bars `wifiStrengthLevel()` reports.
  *
- * Drawn as a ladder of CP437 glyphs — `((.))`, ` (.) `, `  .  `, `  ·  ` — all five characters
- * wide, so the cell never moves. This is also where `ApiResult.stale` belongs when it is finally
- * wired: it is the indicator that already means "the network".
+ * Drawn as three growing bars — `.oO`, `.o_`, `.__`, `___` — all three characters wide, so the cell
+ * never moves. This is also where `ApiResult.stale` belongs when it is finally wired: it is the
+ * indicator that already means "the network".
  */
 void headerSetWifi(int level);
 
-/** Charge left, 0-100, or -1 for unmetered. `charging` tints the cell rather than widening it. */
+/**
+ * Charge left, 0-100, or -1 for unmetered.
+ *
+ * Drawn as a draining cell — `[===]`, `[== ]`, `[=  ]`, `[ X ]` — five characters wide throughout.
+ * `charging` and the charge bands tint the cell rather than widening it.
+ */
 void headerSetBattery(int percent, bool charging);
 
 /** Wall clock. Nothing drives this yet — the device has neither an RTC nor an NTP client. */

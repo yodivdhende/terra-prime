@@ -60,11 +60,13 @@ void uiSetup()
     logSetTftEnabled(false);
     tft.setRotation(1);
 
-    // Both of these are needed before a single header glyph will render, and both are set exactly
-    // once. UTF-8 decoding is on at construction (`TFT_eSPI.cpp:471`), which makes `decodeUTF8()`
-    // swallow any byte >= 0x80 as a lead byte — so `0xDB`, `0xB0`-`0xB2` and `0xF9` would draw
-    // nothing at all. CP437 correction is off by default, which shifts every GLCD code above 175
-    // by one (`TFT_eSPI.cpp:3202`) — so the shade blocks would draw, but the wrong ones.
+    // What makes the GLCD font behave as CP437, set exactly once. UTF-8 decoding is on at
+    // construction (`TFT_eSPI.cpp:471`), which makes `decodeUTF8()` swallow any byte >= 0x80 as a
+    // lead byte, so such a glyph draws nothing at all; CP437 correction is off by default, which
+    // shifts every GLCD code above 175 by one (`TFT_eSPI.cpp:3202`), so it draws the wrong glyph.
+    // Nothing on screen today needs either — the header's ladders are ASCII and the home button's
+    // house is `0x7F`, below both thresholds — but they are what lets a glyph above 0x7F be used at
+    // all, and leaving them unset would break the next one added rather than the code setting them.
     tft.setAttribute(UTF8_SWITCH, false);
     tft.setAttribute(CP437_SWITCH, true);
 

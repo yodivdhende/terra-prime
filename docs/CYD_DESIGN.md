@@ -142,8 +142,8 @@ the converter gives up. So an **INA219** sits across the shield's *raw* cell ter
 bus voltage and current over I2C (SDA 27, SCL 22 — clear of the display and touch SPI buses; no ADC
 pin). A pack under load sags well below its resting voltage, so `power.cpp` adds the I·R drop back
 from the current reading before looking the voltage up in a single-cell 18650 discharge curve. The
-sense IC is optional: with none on the bus every reading comes back unmetered and the status bar
-says `--` rather than inventing a number.
+sense IC is optional: with none on the bus every reading comes back unmetered and the header's
+battery cell shows a dim `[ X ]` rather than inventing a number.
 
 **Making the charge last.** After two minutes without a touch — `touchInactiveMs()` — the
 backlight goes out and the ESP32 enters **light** sleep. Light rather than deep is the whole point:

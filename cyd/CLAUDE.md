@@ -54,7 +54,7 @@ All commands run from the `cyd/` directory. Config: `platformio.ini`.
       screens; best-effort, so it always reports OK even offline
    5. `webSocketSetup()` — configure the client; it connects asynchronously from `loop()`
 5. All passed → hold ~1.2s so the finished list can be read, then `uiSetup()`, which turns the
-   panel landscape, sets the two text attributes the header glyphs need, starts touch, and shows Home
+   panel landscape, sets the two text attributes the GLCD font needs, starts touch, and shows Home
 6. Any failure → `bootScreenHalt()` and `setup()` returns. `uiSetup()` is never reached, so the boot
    screen and the failing step's `logRed` line stay on the panel
 
@@ -173,10 +173,12 @@ an admin changes mid-event shows up the next time the player opens that screen. 
 Implants fill in two steps — paint from the SD cache immediately, then redraw if a background
 network refresh turns up something different — see **Offline cache** below.
 
-**The header's indicators are characters, not bitmaps.** See the gotcha about `UTF8_SWITCH` and
-`CP437_SWITCH` below before touching them; both are set once in `uiSetup()` and neither is optional.
-WiFi and battery are driven from `uiLoop()` every two seconds and each setter repaints only its own
-cell. The clock is a placeholder — the device has neither an RTC nor an NTP client.
+**The header's indicators are characters, not bitmaps.** WiFi is a `.oO` staircase of three
+growing bars and battery a `[===]` cell that drains right to left; both are plain ASCII, drawn in
+the fixed-width GLCD font so a state change can never reflow the row. WiFi and battery are driven
+from `uiLoop()` every two seconds and each setter repaints only its own cell. The clock is a
+placeholder — the device has neither an RTC nor an NTP client. Read the `UTF8_SWITCH` /
+`CP437_SWITCH` gotcha below before adding a glyph above 0x7F.
 
 ---
 
@@ -202,8 +204,8 @@ discharging**, negative while charging.
 
 Voltage alone would read a handheld as half-empty the moment its backlight came on, so the current
 reading is used to add the I·R sag back before the voltage is looked up in a single-cell 18650
-discharge curve. If no INA219 answers, readings come back `metered = false`, the status bar shows
-`--`, and everything else runs unchanged.
+discharge curve. If no INA219 answers, readings come back `metered = false`, the header's battery
+cell shows a dim `[ X ]`, and everything else runs unchanged.
 
 **Power save.** After `POWER_SAVE_IDLE_MS` (2 min) without a touch — measured by `touchInactiveMs()`
 — the backlight goes out, the radio is taken down, and the ESP32 enters **light**
@@ -351,18 +353,23 @@ and doing the `cacheWrite()`/redraw from `uiLoop()` sidesteps this rather than n
   thread — and the draw layer has no thread safety at all, which makes this rule *more* important
   than it was under LVGL, not less. See the shared-VSPI gotcha below. `uiLoop()` is the only place
   that drains a finished fetch and acts on it.
-- **The header glyphs need two `setAttribute()` calls, and both are set once in `uiSetup()`.**
-  `UTF8_SWITCH` **off**: TFT_eSPI sets `_utf8 = true` at construction (`TFT_eSPI.cpp:471`), which
-  makes `decodeUTF8()` swallow any byte >= 0x80 as a lead byte, so `0xDB`, `0xB0`-`0xB2` and `0xF9`
-  would render as nothing at all. `CP437_SWITCH` **on**: it is off by default, and the Adafruit
+- **Adding a header glyph above 0x7F needs two `setAttribute()` calls, and `uiSetup()` already
+  makes both.** `UTF8_SWITCH` **off**: TFT_eSPI sets `_utf8 = true` at construction
+  (`TFT_eSPI.cpp:471`), which makes `decodeUTF8()` swallow any byte >= 0x80 as a lead byte, so the
+  glyph renders as nothing at all. `CP437_SWITCH` **on**: it is off by default, and the Adafruit
   compatibility fixup at `TFT_eSPI.cpp:3202` then shifts every GLCD code above 175 by one, so the
-  shade blocks would draw — the wrong ones. A blank header cell means the first was missed; a
-  wrong-looking one means the second. Glyphs are therefore written as escapes in `char` literals
-  (`"[\xDB]"`), **never** as UTF-8 source text.
-- **Font 1 is the only font that reaches CP437.** Fonts 2 and 3-8 hard-reject anything outside
+  glyph draws — the wrong one. A blank cell means the first was missed; a wrong-looking one means
+  the second. Nothing shipped depends on either today (the ladders are ASCII and the house is
+  `0x7F`, below both thresholds), which is exactly why they are easy to delete and expensive to
+  have deleted. Write such a glyph as an escape in a `char` literal, **never** as UTF-8 source text,
+  and avoid CP437 `0x07` — it sits in the control range `TFT_eSPI.cpp:5068` rejects whenever a
+  smooth font is loaded.
+- **Font 1 is the header's font for two reasons, and fixed width is the everyday one.** A cell sized
+  at 12px per character (6px advance at `setTextSize(2)`) fits its widest rung exactly, so a state
+  change repaints one cell and cannot reflow the row — which is what `gfx-theme.h`'s cell budget
+  assumes. It is also the only font that reaches CP437: fonts 2 and 3-8 hard-reject anything outside
   32-127 (`TFT_eSPI.cpp:5094`, `:5111`) and the `FreeMono*` GFX fonts stop at 0x7E
-  (`FreeMono9pt7b.h`: `0x20, 0x7E`). Use `0xF9` for the WiFi bullet and **not** CP437 `0x07`, which
-  sits in the control range `TFT_eSPI.cpp:5068` rejects whenever a smooth font is loaded.
+  (`FreeMono9pt7b.h`: `0x20, 0x7E`), so the home button's house has nowhere else to come from.
 - **`pushImage()` needs `setSwapBytes(true)` for a host-order array.** The ESP32 SPI path writes
   whole words into the peripheral's FIFO, which transmits low byte first — the opposite of what the
   panel wants — so a little-endian `uint16_t[]` comes out byte-swapped unless TFT_eSPI is asked to

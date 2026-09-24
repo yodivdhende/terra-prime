@@ -89,6 +89,7 @@
 		display: flex;
 		flex-direction: column;
 		padding: 8px;
+		min-width: 60vw;
 		height: 90vh;
 		box-sizing: border-box;
 	}

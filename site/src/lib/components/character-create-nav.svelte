@@ -39,6 +39,8 @@
 		expertiseManager?: ExpertiseManager;
 	} = $props();
 
+	const total: number = $derived(budget > 0 ? remaining : remaining * -1);
+
 	const iconSize = '2em';
 </script>
 
@@ -129,16 +131,16 @@
 		</li>
 	</ul>
 
-	{#if budget > 0}
-		<div class="budget" class:over={remaining < 0}>
-			<span class="budget-label">total cost</span>
-			<span class="budget-value">
-				<span class="remaining">{remaining}</span>
+	<div class="budget" class:over={total < 0}>
+		<span class="budget-label">total cost</span>
+		<span class="budget-value">
+			<span class="remaining">{total}</span>
+			{#if budget > 0}
 				<span class="sep">/</span>
 				<span class="total">{budget}</span>
-			</span>
-		</div>
-	{/if}
+			{/if}
+		</span>
+	</div>
 </nav>
 
 <style>

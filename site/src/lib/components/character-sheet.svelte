@@ -13,6 +13,7 @@
 		ownerName = null,
 		eventName = null,
 		expertise = [],
+		groupSizes,
 		implants = [],
 		items = []
 	}: {
@@ -22,6 +23,8 @@
 		ownerName?: string | null;
 		eventName?: string | null;
 		expertise?: VersionExpertise[];
+		/** Catalog size per expertise group, so group bars average over the whole group. */
+		groupSizes?: Record<number, number>;
 		implants?: VersionImplant[];
 		items?: VersionItem[];
 	} = $props();
@@ -44,7 +47,13 @@
 		<h2 class="section-label">expertise</h2>
 		{#if expertise.length > 0}
 			<div class="expertise-groups">
-				<CharacterExpertiseGroups {expertise} showNames showExpertiseNames size="1.5em" />
+				<CharacterExpertiseGroups
+					{expertise}
+					{groupSizes}
+					showNames
+					showExpertiseNames
+					size="1.5em"
+				/>
 			</div>
 		{:else}
 			<p class="empty">no expertise</p>

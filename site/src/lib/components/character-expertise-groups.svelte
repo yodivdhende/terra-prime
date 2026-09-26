@@ -10,11 +10,6 @@
 		groupColor?: string | null;
 	};
 
-	/**
-	 * A group a caller has already bucketed itself, for callers that carry their own grouping and
-	 * their own group value rather than an average of the entries. A `value` of null renders the
-	 * group header with no bar.
-	 */
 	export type ExpertiseGroupBucket = {
 		id: number;
 		name: string;
@@ -33,19 +28,18 @@
 	let {
 		expertise = [],
 		groups: groupBuckets,
+		groupSizes,
 		manager,
 		size = '2em',
 		showNames = false,
 		showExpertiseNames = false
 	}: {
 		expertise?: ExpertiseGroupEntry[];
-		/** Pre-bucketed groups, taken ahead of `expertise` and `manager` when given. */
 		groups?: ExpertiseGroupBucket[];
+		groupSizes?: Record<number, number>;
 		manager?: ExpertiseManager;
 		size?: string;
-		/** Label each group with its name. */
 		showNames?: boolean;
-		/** Label each individual expertise bar with its name. */
 		showExpertiseNames?: boolean;
 	} = $props();
 
@@ -105,10 +99,12 @@
 			group.total += entry.value;
 			group.count += 1;
 		}
-		return Array.from(map.values()).map((group) => ({
-			...group,
-			average: group.count > 0 ? group.total / group.count : 0
-		}));
+		return Array.from(map.values()).map((group) => {
+			// Never divide by less than the entries in hand, so a stale or partial `groupSizes`
+			// cannot push an average above the values it averages.
+			const size = Math.max(groupSizes?.[group.id] ?? 0, group.count);
+			return { ...group, average: size > 0 ? group.total / size : 0 };
+		});
 	});
 </script>
 

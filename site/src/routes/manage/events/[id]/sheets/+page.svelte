@@ -35,6 +35,7 @@
 						{ownerName}
 						eventName={data.event?.name ?? null}
 						expertise={version.expertise}
+						groupSizes={data.groupSizes}
 						implants={version.implants}
 						items={version.items}
 					/>

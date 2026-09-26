@@ -5,44 +5,58 @@ import type { SheetEntry } from '$lib/server/event-sheets';
 
 export type { SheetEntry } from '$lib/server/event-sheets';
 
+async function loadExpertiseGroupSizes(
+  fetch: typeof globalThis.fetch
+): Promise<Record<number, number>> {
+  const res = await fetch('/api/expertise');
+  if (!res.ok) return {};
+  const catalog: { groupId: number }[] = await res.json();
+  const sizes: Record<number, number> = {};
+  for (const entry of catalog ?? []) sizes[entry.groupId] = (sizes[entry.groupId] ?? 0) + 1;
+  return sizes;
+}
+
 export const load: PageServerLoad = async ({ params, url, fetch }) => {
-	return handleRequest(async () => {
-		const { id } = params;
-		if (id == null || typeof id != 'string') return { event: undefined, sheets: [] };
-		const event = await (await fetch(`/api/events/${id}`, { method: 'GET' }))?.json();
-		if (event == null) return { event: undefined, sheets: [] };
+  return handleRequest(async () => {
+    const { id } = params;
+    if (id == null || typeof id != 'string')
+      return { event: undefined, sheets: [], groupSizes: {} };
+    const event = await (await fetch(`/api/events/${id}`, { method: 'GET' }))?.json();
+    if (event == null) return { event: undefined, sheets: [], groupSizes: {} };
 
-		const [participants, extras] = await Promise.all([
-			loadEventParticipants(fetch, id),
-			loadEventExtras(fetch, id)
-		]);
+    const [participants, extras, groupSizes] = await Promise.all([
+      loadEventParticipants(fetch, id),
+      loadEventExtras(fetch, id),
+      loadExpertiseGroupSizes(fetch)
+    ]);
 
-		const playerSheets: SheetEntry[] = participants.map(({ character, version }) => ({
-			characterVersionId: character.characterVersionId,
-			characterName: character.name,
-			ownerName: character.ownerName,
-			version
-		}));
+    const playerSheets: SheetEntry[] = participants.map(({ character, version }) => ({
+      characterVersionId: character.characterVersionId,
+      characterName: character.name,
+      ownerName: character.ownerName,
+      version
+    }));
 
-		const extraSheets: SheetEntry[] = extras
-			.filter(({ extra }) => extra.characterVersionId != null && extra.characterName != null)
-			.map(({ extra, version }) => ({
-				characterVersionId: extra.characterVersionId as number,
-				characterName: extra.characterName as string,
-				ownerName: extra.userName,
-				version
-			}));
+    const extraSheets: SheetEntry[] = extras
+      .filter(({ extra }) => extra.characterVersionId != null && extra.characterName != null)
+      .map(({ extra, version }) => ({
+        characterVersionId: extra.characterVersionId as number,
+        characterName: extra.characterName as string,
+        ownerName: extra.userName,
+        version
+      }));
 
-		const sheets = [...playerSheets, ...extraSheets];
+    const sheets = [...playerSheets, ...extraSheets];
 
-		// Absent `versionId` prints every sheet; present narrows it to that one.
-		const versionId = Number(url.searchParams.get('versionId'));
-		return {
-			event,
-			sheets:
-				Number.isFinite(versionId) && versionId > 0
-					? sheets.filter((sheet) => sheet.characterVersionId === versionId)
-					: sheets
-		};
-	});
+    // Absent `versionId` prints every sheet; present narrows it to that one.
+    const versionId = Number(url.searchParams.get('versionId'));
+    return {
+      event,
+      groupSizes,
+      sheets:
+        Number.isFinite(versionId) && versionId > 0
+          ? sheets.filter((sheet) => sheet.characterVersionId === versionId)
+          : sheets
+    };
+  });
 };

@@ -1,6 +1,10 @@
 <script lang="ts">
 	import CharacterExpertiseGroups from './character-expertise-groups.svelte';
-	import type { VersionExpertise, VersionImplant } from '$lib/managers/character-manager.svelte';
+	import type {
+		VersionExpertise,
+		VersionImplant,
+		VersionItem
+	} from '$lib/managers/character-manager.svelte';
 
 	let {
 		characterName,
@@ -9,7 +13,8 @@
 		ownerName = null,
 		eventName = null,
 		expertise = [],
-		implants = []
+		implants = [],
+		items = []
 	}: {
 		characterName: string;
 		versionName?: string | null;
@@ -18,6 +23,7 @@
 		eventName?: string | null;
 		expertise?: VersionExpertise[];
 		implants?: VersionImplant[];
+		items?: VersionItem[];
 	} = $props();
 
 	const orderedImplants = $derived([...implants].sort((a, b) => a.slot - b.slot));
@@ -61,6 +67,25 @@
 			</ul>
 		{:else}
 			<p class="empty">no implants</p>
+		{/if}
+	</section>
+
+	<section class="section">
+		<h2 class="section-label">starting items</h2>
+		{#if items.length > 0}
+			<ul class="entry-list">
+				{#each items as item (item.id)}
+					<li class="entry">
+						<span class="entry-slot">{item.count}&times;</span>
+						<span class="entry-name">{item.name}</span>
+						{#if item.description}
+							<span class="entry-desc">{item.description}</span>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		{:else}
+			<p class="empty">no starting items</p>
 		{/if}
 	</section>
 </article>

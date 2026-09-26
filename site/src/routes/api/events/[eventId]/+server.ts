@@ -21,7 +21,8 @@ export const DELETE: RequestHandler = async ({ cookies, params}) => {
 		await authGuard(getSessionToken(cookies), ['admin']);
 		const { eventId } = params;
 		const numberId = isNumberOrError(eventId);
-        await eventRepo.delete({id: numberId});
+		const deleted = await eventRepo.delete({ id: numberId });
+		if (!deleted) throw new NotFoundRequest();
 		return new Response();
 	});
 };

@@ -20,7 +20,7 @@
 		<Navigation />
 	</header>
 	{#if sectionManager.showSection}
-		<section>
+		<section class="scroll">
 			<div class="section-container">
 				{@render children()}
 			</div>
@@ -47,8 +47,8 @@
 <style>
 	main {
 		display: grid;
-		grid-template-columns: auto 1fr;
-		grid-template-rows: 1fr;
+		grid-template-columns: auto minmax(0, 1fr);
+		grid-template-rows: minmax(0, 1fr);
 		grid-template-areas: 'header section';
 		width: 100vw;
 		height: 100vh;
@@ -68,16 +68,21 @@
 		grid-area: header;
 		background-color: black;
 		z-index: 2;
-		height: 100vh;
+		height: 100%;
 	}
 
 	section {
 		grid-area: section;
 		display: flex;
-		align-items: center;
-		justify-content: center;
+		align-items: safe center;
+		justify-content: safe center;
+		box-sizing: border-box;
 		width: 100%;
 		height: 100%;
+		min-width: 0;
+		min-height: 0;
+		padding: var(--section-padding) var(--section-padding) 6em;
+		overflow: auto;
 		z-index: 1;
 	}
 
@@ -182,6 +187,7 @@
 		section {
 			display: block;
 			height: auto;
+			overflow: visible;
 		}
 
 		.section-container {

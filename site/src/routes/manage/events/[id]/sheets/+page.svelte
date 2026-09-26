@@ -36,6 +36,7 @@
 						eventName={data.event?.name ?? null}
 						expertise={version.expertise}
 						implants={version.implants}
+						items={version.items}
 					/>
 				{:else}
 					<p class="status">version not found for {characterName}</p>

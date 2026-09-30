@@ -48,7 +48,41 @@ export type Dossier = {
 export type ArchiveEntry =
   | { id: string; name: string; kind: 'folder'; children: ArchiveEntry[] }
   | { id: string; name: string; kind: 'dossier'; dossier: Dossier }
+  | { id: string; name: string; kind: 'memo'; memo: Memo }
   | { id: string; name: string; kind: 'corrupt'; size: string };
+
+/** A plain service note; `code` is rendered as big dial digits. */
+export type Memo = {
+  header: string[];
+  lines: DossierLine[];
+  code: string;
+  footer: string[];
+};
+
+/** Combination of the physical number lock in the room. Change here if the lock is reset. */
+export const LOCK_COMBINATION = '4719';
+
+const LOCK_MEMO: Memo = {
+  header: [
+    'VOSTOK-9 · DIENST BEVEILIGING',
+    'Dienstnota nr. B-66/41 — Wijziging combinatie',
+    'Verspreiding: uitsluitend personeel niveau −3'
+  ],
+  lines: [
+    { label: 'Betreft', text: 'Archiefkist medische dienst, niveau −3, gang C.' },
+    {
+      label: 'Reden',
+      text: 'Na het incident van 20.11 is de vorige combinatie als gecompromitteerd beschouwd. Het slot werd opnieuw ingesteld.'
+    },
+    {
+      label: 'Nieuwe combinatie',
+      text: 'zie hieronder. Niet noteren, niet doorgeven.',
+      highlight: true
+    }
+  ],
+  code: LOCK_COMBINATION,
+  footer: ['Deze nota na lezing vernietigen.', 'Kpt. V. Ivanov, hoofd beveiliging niveau −3']
+};
 
 export const DOSSIER_HEADER = [
   'STRIKT GEHEIM  /  СОВЕРШЕННО СЕКРЕТНО',
@@ -115,8 +149,7 @@ const ANATOLI: Dossier = {
       INTEL_NOTE
     ]
   },
-  sections: [
-  ],
+  sections: [],
   log: [
     {
       stamp: '03.11.66 09:00',
@@ -238,8 +271,7 @@ const KATERINA: Dossier = {
       INTEL_NOTE
     ]
   },
-  sections: [
-  ],
+  sections: [],
   log: [
     {
       stamp: '03.11.66 10:00',
@@ -343,6 +375,14 @@ export const ARCHIVE: ArchiveEntry[] = [
       { id: 'volorin', name: 'VOLORIN_A_NOTITIES.txt', kind: 'corrupt', size: '48 KB' },
       { id: 'bereza', name: 'BEREZA_OBSERVATIE.dat', kind: 'corrupt', size: '22 KB' },
       { id: 'personeel', name: 'PERSONEEL_NIVEAU-3_IVANOV.lst', kind: 'corrupt', size: '5 KB' }
+    ]
+  },
+  {
+    id: 'beveiliging',
+    name: 'DIENST_BEVEILIGING',
+    kind: 'folder',
+    children: [
+      { id: 'b-66-41', name: 'B-66-41_COMBINATIE_NIV-3.txt', kind: 'memo', memo: LOCK_MEMO }
     ]
   }
 ];

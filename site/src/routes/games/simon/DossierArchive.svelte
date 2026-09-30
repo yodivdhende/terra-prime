@@ -88,6 +88,28 @@
 						<p class="dim">BESTAND: {selected.name} · {selected.size} · 0 BYTES LEESBAAR</p>
 						<pre class="noise">{corruptLines(selected.id).join('\n')}</pre>
 						<p class="warning">ONLEESBAAR — HERSTEL NIET MOGELIJK</p>
+					{:else if selected.kind === 'memo'}
+						{@const memo = selected.memo}
+						<header>
+							<p class="secret">{DOSSIER_HEADER[0]}</p>
+							{#each memo.header as line, i (i)}
+								<p>{line}</p>
+							{/each}
+						</header>
+						{#each memo.lines as line, i (i)}
+							{@render docLine(line)}
+						{/each}
+						<div class="combination" aria-label="combinatie {memo.code.split('').join(' ')}">
+							{#each memo.code.split('') as digit, i (i)}
+								<span class="dial glow">{digit}</span>
+							{/each}
+						</div>
+						<footer>
+							{#each memo.footer as line, i (i)}
+								<p class:dim={i === 0}>{line}</p>
+							{/each}
+							<p class="dim">-- EINDE BESTAND --</p>
+						</footer>
 					{:else}
 						{@const doc = selected.dossier}
 						<header>
@@ -396,6 +418,23 @@
 
 	footer {
 		margin-top: 1.5rem;
+	}
+
+	.combination {
+		display: flex;
+		justify-content: center;
+		gap: 0.75rem;
+		margin: 1.5rem 0;
+	}
+
+	.dial {
+		display: grid;
+		place-items: center;
+		width: 2.5em;
+		height: 3.2em;
+		font-size: 1.8em;
+		border: 1px solid var(--color-accent);
+		box-shadow: inset 0 0 12px color-mix(in srgb, var(--color-accent) 25%, transparent);
 	}
 
 	@media (max-width: 760px) {

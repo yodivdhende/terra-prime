@@ -5,7 +5,7 @@
  *                ^          |                          ^         |
  *                \----------/ (lookup error)            \--------/
  *                                                  round-clear -> playback
- *                                                  round-failed -> playback (streak resets)
+ *                                                  round-failed -> playback (streak is kept)
  *                                                  win (streak reaches WIN_STREAK): Vostok-9 archive
  *                                                  win -> login (Escape / [ AFMELDEN ])
  *
@@ -185,7 +185,6 @@ export function createSimonGameManager() {
 
 		if (pad !== sequence[inputIndex]) {
 			failedPad = pad;
-			streak = 0;
 			enter('round-failed');
 			return;
 		}
@@ -237,7 +236,6 @@ export function createSimonGameManager() {
 			inputRemaining = Math.max(0, inputDeadline - stateElapsed);
 			if (inputRemaining <= 0) {
 				failedPad = null;
-				streak = 0;
 				enter('round-failed');
 			}
 		} else if (state === 'round-clear') {

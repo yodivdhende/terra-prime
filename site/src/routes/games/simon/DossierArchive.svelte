@@ -129,7 +129,7 @@
 							{/each}
 						{/each}
 
-						<h2>== IV. KLINISCH REGISTER ==</h2>
+						<h2>== II. KLINISCH REGISTER ==</h2>
 						{#each doc.log as entry (entry.stamp)}
 							<div class="log" class:highlight={entry.highlight}>
 								<p class="stamp">
@@ -140,7 +140,7 @@
 							</div>
 						{/each}
 
-						<h2>== V. BEOORDELING & EINDBESTEMMING ==</h2>
+						<h2>== III. BEOORDELING & EINDBESTEMMING ==</h2>
 						{#each doc.assessment as line, i (i)}
 							{@render docLine(line)}
 						{/each}

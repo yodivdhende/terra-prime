@@ -5,8 +5,9 @@
  *                ^          |                          ^         |
  *                \----------/ (lookup error)            \--------/
  *                                                  round-clear -> playback
- *                                                  round-failed -> playback (streak resets)
- *                                                  win (streak reaches WIN_STREAK) -> login
+ *                                                  round-failed -> playback (streak is kept)
+ *                                                  win (streak reaches WIN_STREAK): Vostok-9 archive
+ *                                                  win -> login (Escape / [ AFMELDEN ])
  *
  * Ticked from a `requestAnimationFrame` loop in `+page.svelte` via `tick(delta, now)`,
  * mirroring `minigames/simon-says/simon/game.py`'s `update(delta, now)` — the same
@@ -15,7 +16,12 @@
  * background-thread/queue dance `game.py` used to keep the loop non-blocking.
  */
 
-import { PAD_IDS, type ActiveCharacterInfo, type AmbiguousCandidate, type PadId } from '$lib/games/simon/types';
+import {
+	PAD_IDS,
+	type ActiveCharacterInfo,
+	type AmbiguousCandidate,
+	type PadId
+} from '$lib/games/simon/types';
 
 export type SimonState =
 	| 'boot'
@@ -179,7 +185,6 @@ export function createSimonGameManager() {
 
 		if (pad !== sequence[inputIndex]) {
 			failedPad = pad;
-			streak = 0;
 			enter('round-failed');
 			return;
 		}
@@ -195,9 +200,10 @@ export function createSimonGameManager() {
 		if (key === 'Enter') {
 			if (state === 'boot') return skipBoot();
 			if (state === 'briefing') return startRun();
-			if (state === 'win') return restart();
+			// 'win' shows the dossier archive, which uses Enter to open files — leave it via Escape.
 			return; // 'round-clear'/'round-failed' auto-advance via tick()
 		}
+		if (key === 'Escape' && state === 'win') return restart();
 		const pad = KEY_MAP[key];
 		if (pad) handlePad(pad, now);
 	}
@@ -230,7 +236,6 @@ export function createSimonGameManager() {
 			inputRemaining = Math.max(0, inputDeadline - stateElapsed);
 			if (inputRemaining <= 0) {
 				failedPad = null;
-				streak = 0;
 				enter('round-failed');
 			}
 		} else if (state === 'round-clear') {

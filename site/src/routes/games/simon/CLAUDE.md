@@ -48,6 +48,26 @@ registered to the most recent `Live` event — mirrors
 every boundary): 100→2, 80-99→3, 60-79→4, 40-59→5, 20-39→6, 0-19→7. Three clean rounds in
 a row wins; a mistake resets the streak but doesn't end the run.
 
+## Win screen: Vostok-9 dossierarchief (TP-0245)
+
+Winning (`state === 'win'`) swaps the pad grid for `DossierArchive.svelte`, a file browser
+laid out like the codex `$lib/components/dir-window.svelte` (tree left, preview right) but
+over static data rather than `/api/drive`. `Escape` or `[ AFMELDEN ]` calls `game.restart()`;
+`Enter` no longer restarts in `win` because the archive uses it (with the arrow keys) to
+open entries.
+
+- The file tree lives in `$lib/games/simon/archive.ts`; file content in
+  `$lib/games/simon/dossiers.ts`. Anatoli's and Katerina's dossiers are
+  transcribed from the organizers' Google Docs (`Medisch_Dossier_Anatoli_Lebedev` /
+  `Medisch_Dossier_Katerina_Lebedeva`). They're hardcoded on purpose: loading them from
+  Drive would also expose them on the codex desktop and in its Drive search. If those docs
+  change, update `dossiers.ts` by hand.
+- `AvixGraph.svelte` plots `avix.series` on a shared 0–70 E/ml scale, so the siblings compare
+  directly. Anatoli's line stops at the drift (`avix.lost`). Katerina's weekly values other
+  than 03.11 (58,3) and 05.12 (62,9) are invented to fill the prescribed weekly afnames.
+- Corrupt files (`kind: 'corrupt'`) render `corruptLines(id)`: seeded glyph noise that is
+  stable per file and unreadable by design. To add one, add an entry with a Russian name.
+
 ## Styling note
 
 `--phosphor-glow-color` / `--phosphor-glow-shadow` in `$lib/styles/theme.css` are

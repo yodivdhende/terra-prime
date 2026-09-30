@@ -5,6 +5,10 @@
 	import type { PadId } from '$lib/games/simon/types';
 	import Pad from './Pad.svelte';
 	import AsciiBar from './AsciiBar.svelte';
+	import DossierArchive from './DossierArchive.svelte';
+	import Icon from '$lib/components/icon.svelte';
+
+	let { data } = $props();
 
 	const game = createSimonGameManager();
 
@@ -91,8 +95,6 @@
 </svelte:head>
 
 <div class="terminal">
-	<div class="scanlines"></div>
-
 	{#if game.state === 'boot'}
 		<section class="screen boot" onclick={() => game.skipBoot()} role="presentation">
 			{#each BOOT_LINES as line, i (i)}
@@ -116,9 +118,12 @@
 			{/if}
 		</header>
 
-		<section class="screen">
+		<section class="screen" class:win={game.state === 'win'}>
 			{#if game.state === 'login'}
 				<div class="panel">
+					{#if data.hackingIcon}
+						<span class="hack-icon"><Icon src={data.hackingIcon} size="4.5rem" /></span>
+					{/if}
 					<h1 class="glow">TOEGANG TERMINAL</h1>
 					<p class="label">voer personage naam in</p>
 					<div class="field">
@@ -154,14 +159,18 @@
 					<h1 class="glow">DOELWIT GEVONDEN</h1>
 					<p>{game.character.name} ({game.character.ownerName})</p>
 					<p>{bandLabel(game.character.hackingXp)}</p>
-					<p class="label">{game.sequenceLength} signalen per ronde &middot; 3 rondes op rij nodig</p>
+					<p class="label">
+						{game.sequenceLength} signalen per ronde &middot; 3 rondes op rij nodig
+					</p>
 					<button class="btn" onclick={() => game.startRun()}>[ ENTER ] START HACK</button>
 				</div>
 			{:else if game.state === 'win'}
-				<div class="panel">
-					<h1 class="glow">TOEGANG VERLEEND</h1>
-					<p>{game.character?.name}</p>
-					<button class="btn" onclick={() => game.restart()}>[ ENTER ] ANDER PERSONAGE</button>
+				<div class="archive-panel">
+					<div class="archive-bar">
+						<span class="glow">TOEGANG VERLEEND — ARCHIEF VOSTOK-9</span>
+						<button class="btn" onclick={() => game.restart()}>[ ESC ] AFMELDEN</button>
+					</div>
+					<DossierArchive />
 				</div>
 			{:else}
 				<div class="pad-grid">
@@ -200,7 +209,7 @@
 						<p class="glow">UITZENDING...</p>
 					{:else if game.state === 'input'}
 						<AsciiBar value={game.inputRemaining} max={game.inputBudget} />
-						<p class="label">herhaal {game.inputIndex} / {game.sequenceCount}   [u] [d] [l] [r]</p>
+						<p class="label">herhaal {game.inputIndex} / {game.sequenceCount} [u] [d] [l] [r]</p>
 					{:else if game.state === 'round-clear'}
 						<p class="glow">SIGNAAL BEVESTIGD</p>
 					{:else if game.state === 'round-failed'}
@@ -222,20 +231,6 @@
 		color: var(--color-main);
 		font-family: var(--font-mono);
 		overflow: hidden;
-	}
-
-	.scanlines {
-		pointer-events: none;
-		position: absolute;
-		inset: 0;
-		z-index: 10;
-		background: repeating-linear-gradient(
-			to bottom,
-			transparent 0px,
-			transparent 3px,
-			rgba(0, 0, 0, 0.15) 3px,
-			rgba(0, 0, 0, 0.15) 4px
-		);
 	}
 
 	.hud {
@@ -262,6 +257,36 @@
 		gap: 1.5em;
 		padding: 2em;
 		text-align: center;
+	}
+
+	.screen.win {
+		align-items: stretch;
+		justify-content: stretch;
+		min-height: 0;
+		padding: 1em 1.5em;
+	}
+
+	.archive-panel {
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+	}
+
+	.archive-bar {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1em;
+		padding: 0.5em 0.75em;
+		border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+		letter-spacing: 0.08em;
+		font-size: 0.85em;
+	}
+
+	.archive-panel :global(.archive) {
+		flex: 1;
 	}
 
 	.boot {
@@ -299,6 +324,12 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.75em;
+	}
+
+	.hack-icon {
+		display: inline-flex;
+		color: var(--color-accent);
+		filter: drop-shadow(0 0 4px #00ff41) drop-shadow(0 0 10px #003b00);
 	}
 
 	.label {

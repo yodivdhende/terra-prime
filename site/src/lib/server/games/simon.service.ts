@@ -52,6 +52,20 @@ function toCandidate(character: Character): AmbiguousCandidate {
 	return { id: character.id, name: character.name, ownerName: character.ownerName };
 }
 
+function isHackingExpertise(expertise: Expertise): boolean {
+	return expertise.name.toLowerCase().includes(HACKING_NAME_FRAGMENT);
+}
+
+/** The `Software & Hacking` catalog entry — name match first, seed id as fallback. */
+function findHackingExpertise(catalog: Expertise[]): Expertise | undefined {
+	return catalog.find(isHackingExpertise) ?? catalog.find((e) => e.id === HACKING_EXPERTISE_ID);
+}
+
+/** SVG icon of `Software & Hacking`, or null when it has none. Shown on the start screen. */
+export async function getHackingIcon(): Promise<string | null> {
+	return findHackingExpertise(await expertiseRepo.getAll())?.icon ?? null;
+}
+
 /** Pulls the hacking value out of a version's `{id, value}` expertise rows.
  * Matches on the name first, falling back to the seed id. A character who has
  * never bought hacking has no row at all — the site deletes the row when a
@@ -62,8 +76,8 @@ function hackingXpFromExpertise(
 ): number {
 	let byId: number | null = null;
 	for (const entry of entries) {
-		const catalogName = expertiseById.get(entry.id)?.name;
-		if (catalogName && catalogName.toLowerCase().includes(HACKING_NAME_FRAGMENT)) {
+		const catalogEntry = expertiseById.get(entry.id);
+		if (catalogEntry && isHackingExpertise(catalogEntry)) {
 			return entry.value;
 		}
 		if (entry.id === HACKING_EXPERTISE_ID) byId = entry.value;
@@ -105,9 +119,7 @@ export async function resolveActiveCharacter(
 		characterId: chosen.id
 	});
 	if (attendance?.characterVersion == null) {
-		throw new NotInLiveEventError(
-			`character ${chosen.id} is not registered for event ${event.id}`
-		);
+		throw new NotInLiveEventError(`character ${chosen.id} is not registered for event ${event.id}`);
 	}
 
 	const version = await characterVersionRepo.getWithId(attendance.characterVersion);

@@ -77,7 +77,7 @@
 		{/each}
 	</div>
 
-	<div class="preview">
+	<div class="preview scroll">
 		{#if selected == null}
 			<span class="status">selecteer een bestand &middot; [&uarr;][&darr;] [enter]</span>
 		{:else}

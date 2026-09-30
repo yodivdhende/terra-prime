@@ -1,11 +1,10 @@
 <script lang="ts">
+	import { ARCHIVE, type ArchiveEntry } from '$lib/games/simon/archive';
 	import {
-		ARCHIVE,
 		AVIX_SCALE_MAX,
 		DOSSIER_HEADER,
 		DOSSIER_SIGNATURE,
 		corruptLines,
-		type ArchiveEntry,
 		type DossierLine
 	} from '$lib/games/simon/dossiers';
 	import AsciiBar from './AsciiBar.svelte';

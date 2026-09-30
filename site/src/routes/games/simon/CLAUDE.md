@@ -56,7 +56,8 @@ over static data rather than `/api/drive`. `Escape` or `[ AFMELDEN ]` calls `gam
 `Enter` no longer restarts in `win` because the archive uses it (with the arrow keys) to
 open entries.
 
-- Content lives in `$lib/games/simon/dossiers.ts`. Anatoli's and Katerina's dossiers are
+- The file tree lives in `$lib/games/simon/archive.ts`; file content in
+  `$lib/games/simon/dossiers.ts`. Anatoli's and Katerina's dossiers are
   transcribed from the organizers' Google Docs (`Medisch_Dossier_Anatoli_Lebedev` /
   `Medisch_Dossier_Katerina_Lebedeva`). They're hardcoded on purpose: loading them from
   Drive would also expose them on the codex desktop and in its Drive search. If those docs

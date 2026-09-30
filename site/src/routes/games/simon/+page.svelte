@@ -6,6 +6,9 @@
 	import Pad from './Pad.svelte';
 	import AsciiBar from './AsciiBar.svelte';
 	import DossierArchive from './DossierArchive.svelte';
+	import Icon from '$lib/components/icon.svelte';
+
+	let { data } = $props();
 
 	const game = createSimonGameManager();
 
@@ -92,8 +95,6 @@
 </svelte:head>
 
 <div class="terminal">
-	<div class="scanlines"></div>
-
 	{#if game.state === 'boot'}
 		<section class="screen boot" onclick={() => game.skipBoot()} role="presentation">
 			{#each BOOT_LINES as line, i (i)}
@@ -120,6 +121,9 @@
 		<section class="screen" class:win={game.state === 'win'}>
 			{#if game.state === 'login'}
 				<div class="panel">
+					{#if data.hackingIcon}
+						<span class="hack-icon"><Icon src={data.hackingIcon} size="4.5rem" /></span>
+					{/if}
 					<h1 class="glow">TOEGANG TERMINAL</h1>
 					<p class="label">voer personage naam in</p>
 					<div class="field">
@@ -229,20 +233,6 @@
 		overflow: hidden;
 	}
 
-	.scanlines {
-		pointer-events: none;
-		position: absolute;
-		inset: 0;
-		z-index: 10;
-		background: repeating-linear-gradient(
-			to bottom,
-			transparent 0px,
-			transparent 3px,
-			rgba(0, 0, 0, 0.15) 3px,
-			rgba(0, 0, 0, 0.15) 4px
-		);
-	}
-
 	.hud {
 		display: flex;
 		gap: 2em;
@@ -334,6 +324,12 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.75em;
+	}
+
+	.hack-icon {
+		display: inline-flex;
+		color: var(--color-accent);
+		filter: drop-shadow(0 0 4px #00ff41) drop-shadow(0 0 10px #003b00);
 	}
 
 	.label {

@@ -1,7 +1,9 @@
 /**
  * Server-only lookup chain for the Simon Says minigame: given a character name,
- * resolve that character's Software & Hacking experience for the version
- * registered to the most recent `Live` event.
+ * resolve that character's hacking experience for the version registered to
+ * the most recent `Live` event. Hacking experience is the higher of the
+ * `Software & Hacking` value and the average of the `Information Technology`
+ * group (the same per-group average the character sheet shows).
  *
  * This runs in-process, inside the same server that owns the database — unlike
  * an HTTP client, it calls the repos directly rather than going through the
@@ -85,8 +87,38 @@ function hackingXpFromExpertise(
 	return byId ?? 0;
 }
 
+/** Average over every expertise of `groupId` the character has access to, with
+ * absent rows counted as 0 — mirrors `groupExpertise` in
+ * `$lib/utils/expertise.svelte.ts`, so the value matches the character sheet. */
+function groupAverage(
+	entries: { id: number; value: number }[],
+	accessible: Expertise[],
+	groupId: number
+): number {
+	const inGroup = accessible.filter((e) => e.groupId === groupId && e.id != null);
+	if (inGroup.length === 0) return 0;
+	const valueById = new Map(entries.map((entry) => [entry.id, entry.value]));
+	const sum = inGroup.reduce((total, e) => total + (valueById.get(e.id as number) ?? 0), 0);
+	return sum / inGroup.length;
+}
+
+/** Higher of `Software & Hacking` and the average of its group (`Information
+ * Technology`), rounded down to a whole number for the difficulty bands. */
+function effectiveHackingXp(
+	entries: { id: number; value: number }[],
+	catalog: Expertise[],
+	accessible: Expertise[]
+): number {
+	const expertiseById = new Map(catalog.flatMap((e) => (e.id == null ? [] : [[e.id, e] as const])));
+	const hacking = hackingXpFromExpertise(entries, expertiseById);
+	const groupId = findHackingExpertise(catalog)?.groupId;
+	if (groupId == null) return hacking;
+	return Math.max(hacking, Math.floor(groupAverage(entries, accessible, groupId)));
+}
+
 /**
- * Resolve `name` to the character's live-event version and hacking XP.
+ * Resolve `name` to the character's live-event version and hacking XP
+ * (see `effectiveHackingXp`).
  * Pass `characterId` to disambiguate when a previous call threw
  * `AmbiguousCharacterError`.
  */
@@ -127,10 +159,10 @@ export async function resolveActiveCharacter(
 		throw new NotInLiveEventError(`version ${attendance.characterVersion} not found`);
 	}
 
-	const expertiseCatalog = await expertiseRepo.getAll();
-	const expertiseById = new Map(
-		expertiseCatalog.flatMap((e) => (e.id == null ? [] : [[e.id, e] as const]))
-	);
+	const [expertiseCatalog, accessibleExpertise] = await Promise.all([
+		expertiseRepo.getAll(),
+		expertiseRepo.getAllForCharacter(chosen.id)
+	]);
 
 	return {
 		id: chosen.id,
@@ -140,6 +172,6 @@ export async function resolveActiveCharacter(
 		versionName: version.name ?? '',
 		eventId: event.id,
 		eventName: event.name,
-		hackingXp: hackingXpFromExpertise(version.expertise, expertiseById)
+		hackingXp: effectiveHackingXp(version.expertise, expertiseCatalog, accessibleExpertise)
 	};
 }

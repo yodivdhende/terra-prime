@@ -41,6 +41,10 @@ registered to the most recent `Live` event — mirrors
 4. `characterVersionRepo.getWithId(versionId)` + `expertiseRepo.getAll()` → resolve
    `Software & Hacking` by name (id 6 is only a fallback — production ids are
    AUTO_INCREMENT)
+5. Hacking XP = the higher of `Software & Hacking` and the average of its group
+   (`Information Technology`). The average is over every group expertise the character
+   has access to (`expertiseRepo.getAllForCharacter`), absent rows counting as 0 — the
+   same number the character sheet's group bar shows (`groupExpertise`). Floored.
 
 ## Difficulty
 

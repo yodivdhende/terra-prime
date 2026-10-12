@@ -2,6 +2,7 @@
 
 # Output
 stemtest/dist
+polygons/dist
 site/.output
 site/.vercel
 site/.netlify

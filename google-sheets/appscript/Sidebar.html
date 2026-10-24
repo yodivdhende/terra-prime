@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 13px; padding: 8px 12px; color: #202124; }
+      h2 { font-size: 15px; margin: 0 0 12px; }
+      label { display: block; margin-bottom: 4px; font-weight: bold; }
+      select, button { width: 100%; padding: 6px; box-sizing: border-box; font-size: 13px; }
+      select { margin-bottom: 8px; }
+      button { margin-top: 4px; border: none; border-radius: 4px; color: #fff; cursor: pointer; }
+      button:disabled { opacity: 0.6; cursor: default; }
+      #load { background: #4285f4; }
+      #update { background: #34a853; }
+      #status { margin-top: 12px; font-size: 12px; white-space: pre-wrap; }
+      #status.error { color: #c5221f; }
+      #status.success { color: #188038; }
+      hr { margin: 16px 0; border: none; border-top: 1px solid #e0e0e0; }
+      p.hint { color: #5f6368; font-size: 11px; margin: 0 0 8px; }
+    </style>
+  </head>
+  <body>
+    <h2>Terra Prime</h2>
+
+    <label for="table">Table to display</label>
+    <select id="table"></select>
+    <button id="load">Load table into sheet</button>
+
+    <hr />
+
+    <label>Active sheet</label>
+    <p class="hint" id="activeSheet">&mdash;</p>
+    <button id="update">Update database</button>
+
+    <div id="status"></div>
+
+    <script>
+      const tableSelect = document.getElementById('table');
+      const loadBtn = document.getElementById('load');
+      const updateBtn = document.getElementById('update');
+      const status = document.getElementById('status');
+      const activeSheetLabel = document.getElementById('activeSheet');
+
+      function setStatus(message, kind) {
+        status.textContent = message;
+        status.className = kind || '';
+      }
+
+      function setBusy(busy) {
+        loadBtn.disabled = busy;
+        updateBtn.disabled = busy;
+      }
+
+      google.script.run
+        .withSuccessHandler((tables) => {
+          tables.forEach((name) => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            tableSelect.appendChild(option);
+          });
+        })
+        .withFailureHandler((err) => setStatus(err.message, 'error'))
+        .getTableNames();
+
+      google.script.run
+        .withSuccessHandler((name) => {
+          activeSheetLabel.textContent = name || '—';
+        })
+        .getActiveSheetName();
+
+      loadBtn.addEventListener('click', () => {
+        const table = tableSelect.value;
+        if (!table) return;
+        setBusy(true);
+        setStatus(`Loading ${table}...`);
+        google.script.run
+          .withSuccessHandler((rowCount) => {
+            setBusy(false);
+            setStatus(`Loaded ${rowCount} row(s) from ${table}.`, 'success');
+            activeSheetLabel.textContent = table;
+          })
+          .withFailureHandler((err) => {
+            setBusy(false);
+            setStatus(err.message, 'error');
+          })
+          .loadTable(table);
+      });
+
+      updateBtn.addEventListener('click', () => {
+        setBusy(true);
+        setStatus('Saving changes to the database...');
+        google.script.run
+          .withSuccessHandler((result) => {
+            setBusy(false);
+            setStatus(`Saved: ${result.updated} updated, ${result.inserted} inserted.`, 'success');
+          })
+          .withFailureHandler((err) => {
+            setBusy(false);
+            setStatus(err.message, 'error');
+          })
+          .saveActiveSheet();
+      });
+    </script>
+  </body>
+</html>

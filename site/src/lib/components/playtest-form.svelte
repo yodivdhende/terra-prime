@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { isEmail, isNotEmptyString } from '$lib/validators/util-validations';
-	import type { ActionResult } from '@sveltejs/kit';
+	import type { ActionResult } from '$app/forms';
 
 	let { action = undefined }: { action?: string } = $props();
 

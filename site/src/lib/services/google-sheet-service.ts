@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import { VITE_GOOGLE_CLIENT_EMAIL, VITE_GOOGLE_PRIVATE_KEY } from '$env/static/private';
+import { VITE_GOOGLE_CLIENT_EMAIL, VITE_GOOGLE_PRIVATE_KEY } from '$app/env/private';
 
 const SCOPES = [
   'https://www.googleapis.com/auth/spreadsheets',

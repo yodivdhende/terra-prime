@@ -1,4 +1,4 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle } from '@sveltejs/kit/hooks';
 import { getFeatureFlags } from '$lib/server/feature-flags';
 import { sessionRepo } from '$lib/db/session.repo';
 

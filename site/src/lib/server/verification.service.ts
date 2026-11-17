@@ -1,5 +1,5 @@
 import { emailVerificationRepo } from '$lib/db/email_verification.repo';
-import { PUBLIC_BASE_URL } from '$env/static/public';
+import { PUBLIC_BASE_URL } from '$app/env/public';
 import { sendTemplated } from './email.service';
 
 export async function sendVerificationEmail(userId: number, email: string): Promise<void> {

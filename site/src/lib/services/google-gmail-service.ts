@@ -3,7 +3,7 @@ import {
   VITE_GOOGLE_CLIENT_EMAIL,
   VITE_GOOGLE_PRIVATE_KEY,
   VITE_GOOGLE_EMAIL_SUBJECT
-} from '$env/static/private';
+} from '$app/env/private';
 
 const SCOPES = ['https://www.googleapis.com/auth/gmail.send'];
 

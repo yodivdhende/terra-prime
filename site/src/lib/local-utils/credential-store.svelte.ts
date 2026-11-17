@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { localStorageKeys } from '$lib/managers/local-storage';
 
 export type Credentials = { roles: string[]; name: string; id: number | null };

@@ -1,12 +1,11 @@
 import { google } from 'googleapis';
-import { VITE_GOOGLE_CLIENT_EMAIL, VITE_GOOGLE_PRIVATE_KEY } from '$env/static/private';
-import { env } from '$env/dynamic/private';
+import { PLATFORM, VITE_GOOGLE_CLIENT_EMAIL, VITE_GOOGLE_PRIVATE_KEY } from '$app/env/private';
 
 type Platform = 'dev' | 'test' | 'live';
 const PLATFORM_COLUMN: Record<Platform, number> = { dev: 1, test: 2, live: 3 };
 
 function getPlatformColumn(): number {
-  const platform = (env.PLATFORM ?? 'dev').toLowerCase() as Platform;
+  const platform = (PLATFORM ?? 'dev').toLowerCase() as Platform;
   return PLATFORM_COLUMN[platform] ?? PLATFORM_COLUMN.dev;
 }
 

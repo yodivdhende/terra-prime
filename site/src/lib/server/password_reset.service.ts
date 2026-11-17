@@ -1,6 +1,6 @@
 import { passwordResetRepo } from '$lib/db/password_reset.repo';
 import { authenticationRepo } from '$lib/db/authentication.repo';
-import { PUBLIC_BASE_URL } from '$env/static/public';
+import { PUBLIC_BASE_URL } from '$app/env/public';
 import { sendTemplated } from './email.service';
 
 export async function sendPasswordResetEmail(userId: number, email: string): Promise<void> {

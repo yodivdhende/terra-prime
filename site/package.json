@@ -21,10 +21,10 @@
 	"devDependencies": {
 		"@eslint/compat": "^1.4.1",
 		"@eslint/js": "^9.39.5",
-		"@sveltejs/adapter-auto": "^4.0.0",
-		"@sveltejs/adapter-node": "^5.5.7",
-		"@sveltejs/kit": "^2.70.3",
-		"@sveltejs/vite-plugin-svelte": "^5.1.1",
+		"@sveltejs/adapter-auto": "^8.0.1",
+		"@sveltejs/adapter-node": "^6.0.2",
+		"@sveltejs/kit": "^3.2.0",
+		"@sveltejs/vite-plugin-svelte": "^7.3.1",
 		"@types/bcrypt": "^5.0.2",
 		"@types/node": "^22.20.2",
 		"drizzle-kit": "^0.31.10",
@@ -34,11 +34,11 @@
 		"globals": "^16.5.0",
 		"prettier": "^3.9.6",
 		"prettier-plugin-svelte": "^3.5.2",
-		"svelte": "^5.57.0",
+		"svelte": "^5.57.3",
 		"svelte-check": "^4.7.6",
-		"typescript": "^5.9.3",
+		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.70.0",
-		"vite": "^6.4.3"
+		"vite": "^8.3.8"
 	},
 	"dependencies": {
 		"@google-cloud/local-auth": "^2.1.1",
